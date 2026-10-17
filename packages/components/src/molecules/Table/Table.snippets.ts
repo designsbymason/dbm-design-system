@@ -198,6 +198,10 @@ ${wideTable('stickyLastColumn striped hoverable tone="success"')}`,
   stickyFirstAndLastColumns: `{/* Both edges pinned, plus the header — scroll in either direction. */}
 ${wideTable('stickyFirstColumn stickyLastColumn stickyHeader maxHeight="13rem" striped')}`,
 
+  stickySeveralColumns: `{/* A number pins that many columns (up to 4), each against the one pinned before it; their widths are measured from
+    the header row, so a column that grows pushes the next along. Keep spanning cells out of the pinned columns. */}
+${wideTable('stickyFirstColumn={2} stickyLastColumn={2} stickyHeader maxHeight="13rem" striped')}`,
+
   stickyHeaderAndColumn: `{/* The header row and the first column both stay in view, with the corner cell above both. */}
 ${wideTable('stickyHeader stickyFirstColumn maxHeight="13rem" tone="info" striped')}`,
 
@@ -285,7 +289,7 @@ export interface TablePlaygroundSnippetArgs {
   striped?: boolean;
   hoverable?: boolean;
   stickyHeader?: boolean;
-  stickyFirstColumn?: boolean;
+  stickyFirstColumn?: boolean | number;
   stickyLastColumn?: boolean;
   maxHeight?: string;
 }

@@ -633,6 +633,18 @@ export const StickyFirstAndLastColumns: Story = {
   ),
 };
 
+export const StickySeveralColumns: Story = {
+  name: "Several sticky columns at each edge",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: tableSnippets.stickySeveralColumns } } },
+  render: () => (
+    // A number pins that many columns, each against the one pinned before it.
+    <div style={{ maxWidth: "34rem", marginInline: "auto" }}>
+      <WideTable stickyFirstColumn={2} stickyLastColumn={2} stickyHeader maxHeight="13rem" striped />
+    </div>
+  ),
+};
+
 export const StickyHeaderAndColumn: Story = {
   name: "Sticky header and first column together",
   argTypes: noControls,

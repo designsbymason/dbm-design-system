@@ -1,9 +1,8 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import type { ComponentType } from "react";
-import { useState } from "react";
-import { Button } from "../../atoms/Button";
+import { Spacer } from "../../atoms/Spacer";
 import { EmptyState } from "../../molecules/EmptyState";
-import { Menu } from "../Menu";
+import { TableToolbar } from "../../molecules/TableToolbar";
 import { DataTable } from "./DataTable";
 import { dataTablePlaygroundSnippet, dataTableSnippets } from "./DataTable.snippets";
 import type { DataTableProps } from "./DataTable.types";
@@ -35,12 +34,21 @@ const meta: Meta<Args> = {
       description: "client sorts and pages data in the browser; manual draws data as given and leaves sorting and paging to you.",
       table: { defaultValue: { summary: "client" } },
     },
+    multiSort: {
+      control: "boolean",
+      description:
+        "Lets a person sort by several columns: a press with Shift held adds the column to the sort (or turns it round, then takes it off), where a plain press makes it the only one.",
+      table: { defaultValue: { summary: "true" } },
+    },
     selectionMode: {
       control: "radio",
       options: ["none", "single", "multiple"],
       description: "How many rows can be chosen. multiple adds a checkbox column with a header checkbox; single replaces the choice.",
       table: { defaultValue: { summary: "none" } },
     },
+    allSelected: { ...noControls, description: "Whether every row of the whole table is chosen, on every page, without their ids being listed: \"select all 137\" for a manual table with a totalCount. Controlled with onAllSelectedChange." },
+    defaultAllSelected: { ...noControls, description: "Whether every row is chosen to begin with.", table: { defaultValue: { summary: "false" } } },
+    onAllSelectedChange: { ...noControls, description: "Called when a person chooses every row of the whole table, or goes back to a list of ids." },
     selection: { ...noControls, description: "The ids of the chosen rows. Controlled with onSelectionChange." },
     defaultSelection: { ...noControls, description: "The rows chosen to begin with." },
     onSelectionChange: { ...noControls, description: "Called with the ids a person asked to have chosen." },
@@ -69,6 +77,17 @@ const meta: Meta<Args> = {
     emptyState: { ...noControls, description: "What an empty table says: text, or an EmptyState." },
     rowActions: { ...noControls, description: "Draws a trailing column for each row's actions, usually an IconButton that opens a Menu." },
     onRowClick: { ...noControls, description: "Called when a row is pressed or Enter is pressed on it. Makes each row a tab stop; offer the action another way as well." },
+    resizable: {
+      control: "boolean",
+      description:
+        "Lets a person resize every column by dragging the end edge of its heading, or by keyboard on the handle (arrow keys, Shift for larger steps, Home and End for the limits, Enter to reset). A column's own resizable turns it off or on.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    columnWidths: { ...noControls, description: "The widths a person has given columns, in pixels, by column id. Controlled with onColumnWidthsChange." },
+    defaultColumnWidths: { ...noControls, description: "The widths to begin with.", table: { defaultValue: { summary: "{}" } } },
+    onColumnWidthsChange: { ...noControls, description: "Called with the widths a gesture asks for, on every step of a drag." },
+    selectionColumnWidth: { control: "text", description: "The width of the column of checkboxes (any CSS length)." },
+    actionsColumnWidth: { control: "text", description: "The width of the column of row actions (any CSS length). It is as narrow as its button without one." },
     hiddenColumns: { ...noControls, description: "The ids of the columns that are not drawn. Controlled with onHiddenColumnsChange." },
     defaultHiddenColumns: { ...noControls, description: "The columns hidden to begin with." },
     onHiddenColumnsChange: { ...noControls, description: "Called with the ids a person asked to have hidden." },
@@ -93,8 +112,8 @@ const meta: Meta<Args> = {
     striped: { control: "boolean", description: "Alternates the background of every other row.", table: { defaultValue: { summary: "false" } } },
     hoverable: { control: "boolean", description: "Highlights the row under the pointer.", table: { defaultValue: { summary: "true" } } },
     stickyHeader: { control: "boolean", description: "Pins the header row to the top of the scroll area. Needs a maxHeight.", table: { defaultValue: { summary: "false" } } },
-    stickyFirstColumn: { control: "boolean", description: "Pins the first column (the checkbox column when there is one) to the start edge.", table: { defaultValue: { summary: "false" } } },
-    stickyLastColumn: { control: "boolean", description: "Pins the last column (the actions column when there is one) to the end edge.", table: { defaultValue: { summary: "false" } } },
+    stickyFirstColumn: { control: "boolean", description: "Pins the first column to the start edge; a number pins that many data columns. The checkbox column, when there is one, is pinned beside them. At most four columns are pinned at an edge in all.", table: { defaultValue: { summary: "false" } } },
+    stickyLastColumn: { control: "boolean", description: "Pins the last column to the end edge; a number pins that many data columns. The actions column, when there is one, is pinned beside them. At most four columns are pinned at an edge in all.", table: { defaultValue: { summary: "false" } } },
     maxHeight: { control: "text", description: "Caps the height of the scroll area (any CSS max-height), so a long body scrolls inside it." },
     labels: { ...noControls, description: "Text written for the table, replacing the English defaults one by one." },
     formatNumber: { ...noControls, description: "Writes the numbers the table displays (a count in an announcement).", table: { defaultValue: { summary: "String" } } },
@@ -112,6 +131,8 @@ const meta: Meta<Args> = {
     data: employees.slice(0, 8),
     "aria-label": "Team",
     sortMode: "client",
+    multiSort: true,
+    resizable: false,
     selectionMode: "none",
     virtualize: "auto",
     loading: false,
@@ -125,8 +146,18 @@ const meta: Meta<Args> = {
     stickyFirstColumn: false,
     stickyLastColumn: false,
     maxHeight: "",
+    selectionColumnWidth: "",
+    actionsColumnWidth: "",
   },
-  render: ({ maxHeight, ...args }) => <DataTable<Employee> {...args} maxHeight={maxHeight || undefined} getRowLabel={(row) => row.name} />,
+  render: ({ maxHeight, selectionColumnWidth, actionsColumnWidth, ...args }) => (
+    <DataTable<Employee>
+      {...args}
+      maxHeight={maxHeight || undefined}
+      selectionColumnWidth={selectionColumnWidth || undefined}
+      actionsColumnWidth={actionsColumnWidth || undefined}
+      getRowLabel={(row) => row.name}
+    />
+  ),
 };
 
 export default meta;
@@ -212,43 +243,26 @@ export const ServerSide: Story = {
   parameters: { docs: { source: { code: dataTableSnippets.serverSide } } },
   // The demo owns the sort, the page, the count and the loading state, as a server-backed table does.
   argTypes: { sortMode: noControls, loading: noControls, loadingRows: noControls },
+  args: { selectionMode: "multiple" },
   render: ({ maxHeight, ...args }) => <ServerDemo {...args} maxHeight={maxHeight || undefined} />,
 };
 
 export const ColumnVisibility: Story = {
+  name: "Column menu",
   parameters: { docs: { source: { code: dataTableSnippets.columnVisibility } } },
-  render: function Render({ maxHeight, ...args }) {
-    const [hidden, setHidden] = useState<string[]>(["started"]);
-    return (
-      <div style={column}>
-        <div>
-          <Menu>
-            <Menu.Trigger asChild>
-              <Button variant="secondary">Columns</Button>
-            </Menu.Trigger>
-            <Menu.Content>
-              {employeeColumns.map((item) => (
-                <Menu.CheckboxItem
-                  key={item.id}
-                  checked={!hidden.includes(item.id)}
-                  onCheckedChange={(shown) => setHidden(shown ? hidden.filter((id) => id !== item.id) : [...hidden, item.id])}
-                >
-                  {item.header}
-                </Menu.CheckboxItem>
-              ))}
-            </Menu.Content>
-          </Menu>
-        </div>
-        <DataTable<Employee>
-          {...args}
-          maxHeight={maxHeight || undefined}
-          data={employees.slice(0, 6)}
-          hiddenColumns={hidden}
-          onHiddenColumnsChange={setHidden}
-        />
-      </div>
-    );
-  },
+  args: { defaultHiddenColumns: ["started"] },
+  render: ({ maxHeight, ...args }) => (
+    <div style={{ minHeight: "18rem" }}>
+      <DataTable<Employee> {...args} maxHeight={maxHeight || undefined} data={employees.slice(0, 6)}>
+        <DataTable.Toolbar aria-label="Team table tools">
+          <TableToolbar.Row>
+            <Spacer />
+            <DataTable.ColumnMenu />
+          </TableToolbar.Row>
+        </DataTable.Toolbar>
+      </DataTable>
+    </div>
+  ),
 };
 
 export const LoadingAndEmpty: Story = {
@@ -289,10 +303,27 @@ export const AllSizes: Story = {
   ),
 };
 
+export const ResizableColumns: Story = {
+  name: "Resizable columns",
+  parameters: { docs: { source: { code: dataTableSnippets.resizable } } },
+  args: { resizable: true, selectionMode: "multiple", selectionColumnWidth: "4rem" },
+  render: ({ maxHeight, selectionColumnWidth, actionsColumnWidth, ...args }) => (
+    <DataTable<Employee>
+      {...args}
+      maxHeight={maxHeight || undefined}
+      selectionColumnWidth={selectionColumnWidth || undefined}
+      actionsColumnWidth={actionsColumnWidth || undefined}
+      data={employees.slice(0, 6)}
+      columns={employeeColumns.map((item) => (item.id === "name" ? { ...item, width: "12rem", minWidth: "8rem", maxWidth: "24rem" } : item))}
+      getRowLabel={(row) => row.name}
+    />
+  ),
+};
+
 export const PinnedColumns: Story = {
   name: "Pinned first and last columns",
   parameters: { docs: { source: { code: dataTableSnippets.pinnedColumns } } },
-  args: { selectionMode: "multiple", stickyFirstColumn: true, stickyLastColumn: true },
+  args: { selectionMode: "multiple", stickyFirstColumn: 2, stickyLastColumn: true },
   render: ({ maxHeight, ...args }) => (
     <div style={{ maxWidth: "32rem" }}>
       <DataTable<Employee>

@@ -1,4 +1,6 @@
+import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
 import type { ComponentPropsWithoutRef, CSSProperties, KeyboardEvent, MouseEvent, ReactNode } from "react";
+import type { ButtonSize, ButtonVariant } from "../../atoms/Button";
 import type { PaginationProps } from "../../molecules/Pagination";
 import type { TableSize, TableTone, TableVariant } from "../../molecules/Table";
 import type { TableToolbarProps, TableToolbarSelectionProps } from "../../molecules/TableToolbar";
@@ -66,8 +68,15 @@ export interface DataTableColumn<TRow> {
   numeric?: boolean;
   /** The column's width (any CSS length). Without it the column takes what its content asks for. */
   width?: CSSProperties["inlineSize"];
-  /** The narrowest the column gets (any CSS length). */
+  /** The narrowest the column gets (any CSS length). Dragging a resizable column also stops here (a number is pixels; `px` and `rem` are understood). */
   minWidth?: CSSProperties["minInlineSize"];
+  /** The widest the column gets (any CSS length), and the widest a drag makes a resizable column (a number is pixels; `px` and `rem` are understood). */
+  maxWidth?: CSSProperties["maxInlineSize"];
+  /**
+   * Lets a person drag the end edge of this column's heading to resize it, or turns that off for it when the table is `resizable`.
+   * Follows the table's `resizable` when left out.
+   */
+  resizable?: boolean;
   /**
    * Draws this column's cells as row headers (`<th scope="row">`), so a screen reader reads a row's name when it
    * enters the row. Use it on the one column that names each row.
@@ -86,6 +95,13 @@ export interface DataTableColumn<TRow> {
 export interface DataTableLabels {
   /** What is announced after a sort, for the column's `headerLabel` or header text and the way it is ordered. */
   sorted: (column: string, direction: DataTableSortDirection) => string;
+  /**
+   * What is announced after a sort by several columns, in order of weight: "Sorted by Name, ascending, then Age, descending".
+   * The label of a sort by one column is `sorted`.
+   */
+  sortedMultiple: (items: Array<{ column: string; direction: DataTableSortDirection }>) => string;
+  /** Said, after the heading, by a sorted column's button while the sort is by several columns: "sort order 2". */
+  sortOrder: (position: number) => string;
   /** What is announced when the sort is taken off. */
   sortCleared: string;
   /** The name of the header checkbox that chooses every row on the page. */
@@ -98,6 +114,10 @@ export interface DataTableLabels {
   selectColumn: string;
   /** The heading of the column of `rowActions`, read by a screen reader but not drawn. */
   actionsColumn: string;
+  /** The name of a column's resize handle, a separator: "Resize Name column". */
+  resizeColumn: (column: string) => string;
+  /** What is said after the handle's name, about its keys. */
+  resizeHint: string;
   /** What an empty table says when there is no `emptyState`. */
   empty: string;
   /** What a screen reader hears while rows are loading. */
@@ -137,6 +157,13 @@ export interface DataTableProps<TRow>
   /** Called with the ordering a person asked for. A controlled table changes only when `sort` does. */
   onSortChange?: (sort: DataTableSort) => void;
   /**
+   * Lets a person sort by several columns: a press with Shift held adds the column to the sort (or turns it round, then takes it
+   * off), where a plain press makes it the only one. The columns then show their order. A list of several in `sort` is honoured
+   * whether or not this is on.
+   * @default true
+   */
+  multiSort?: boolean;
+  /**
    * `"client"` sorts and pages `data` in the browser; `"manual"` draws `data` as given and leaves the sorting and
    * paging to the caller, who answers `onSortChange` and `onPageChange` with new rows.
    * @default 'client'
@@ -157,6 +184,20 @@ export interface DataTableProps<TRow>
   defaultSelection?: string[];
   /** Called with the ids a person asked to have chosen. A controlled table changes only when `selection` does. */
   onSelectionChange?: (selection: string[]) => void;
+  /**
+   * Whether every row of the whole table is chosen, on every page, without their ids being listed: "select all 137" for a table that
+   * holds one page of them (`sortMode="manual"` with a `totalCount`). Every row shows as chosen, the count is the `totalCount`, and
+   * unchecking one goes back to a list of ids (the page's rows but that one). Reset it (`onAllSelectedChange(false)`) when the filter
+   * changes, since "all" meant the rows matching the old one. Controlled with `onAllSelectedChange`.
+   */
+  allSelected?: boolean;
+  /**
+   * Whether every row is chosen to begin with.
+   * @default false
+   */
+  defaultAllSelected?: boolean;
+  /** Called when a person chooses every row of the whole table, or goes back to a list of ids. */
+  onAllSelectedChange?: (allSelected: boolean) => void;
   /** Says a row can't be chosen. Its checkbox is disabled, and the header checkbox leaves it out. */
   isRowSelectable?: (row: TRow) => boolean;
   /** The page, from 1. Controlled with `onPageChange`. Setting `pageSize` or adding a `DataTable.Pagination` turns paging on. */
@@ -216,6 +257,29 @@ export interface DataTableProps<TRow>
    * (a checkbox, a link, a menu button) is that control's, and doesn't reach this.
    */
   onRowClick?: (row: TRow, event: MouseEvent<HTMLTableRowElement> | KeyboardEvent<HTMLTableRowElement>) => void;
+  /**
+   * Lets a person resize every column by dragging the end edge of its heading, or by keyboard on the handle (arrow keys, Shift for
+   * larger steps, Home and End for the limits, Enter to reset). A column's own `resizable` turns it off or on for it. Each handle is a
+   * tab stop, so a table with many resizable columns adds that many; turn it on where it is wanted.
+   * @default false
+   */
+  resizable?: boolean;
+  /**
+   * The widths a person has given columns, in pixels, by column id; a column not listed has its `width`, or what its content asks
+   * for. Controlled with `onColumnWidthsChange` (to remember them, say).
+   */
+  columnWidths?: Record<string, number>;
+  /**
+   * The widths to begin with.
+   * @default {}
+   */
+  defaultColumnWidths?: Record<string, number>;
+  /** Called with the widths a gesture asks for, on every step of a drag. A controlled table changes only when `columnWidths` does. */
+  onColumnWidthsChange?: (widths: Record<string, number>) => void;
+  /** The width of the column of checkboxes (any CSS length). */
+  selectionColumnWidth?: CSSProperties["inlineSize"];
+  /** The width of the column of row actions (any CSS length). It is as narrow as its button without one. */
+  actionsColumnWidth?: CSSProperties["inlineSize"];
   /** The ids of the columns that are not drawn. Controlled with `onHiddenColumnsChange`. */
   hiddenColumns?: string[];
   /**
@@ -257,16 +321,17 @@ export interface DataTableProps<TRow>
    */
   stickyHeader?: boolean;
   /**
-   * Pins the first column (the checkbox column when there is one) to the start edge while the rest scrolls
-   * sideways.
+   * Pins the first column to the start edge while the rest scrolls sideways; a number pins that many data columns. The checkbox
+   * column, when there is one, is pinned beside them. The table pins at most four columns at an edge in all.
    * @default false
    */
-  stickyFirstColumn?: boolean;
+  stickyFirstColumn?: boolean | number;
   /**
-   * Pins the last column (the actions column when there is one) to the end edge while the rest scrolls sideways.
+   * Pins the last column to the end edge while the rest scrolls sideways; a number pins that many data columns. The actions
+   * column, when there is one, is pinned beside them. The table pins at most four columns at an edge in all.
    * @default false
    */
-  stickyLastColumn?: boolean;
+  stickyLastColumn?: boolean | number;
   /** Caps the height of the scroll area (any CSS `max-height`), so a long body scrolls inside it. */
   maxHeight?: CSSProperties["maxHeight"];
   /** Text written for the table, replacing the English defaults one by one. */
@@ -303,8 +368,9 @@ export type DataTableToolbarProps = TableToolbarProps;
 /** The properties of `DataTable.Selection`: `TableToolbar.Selection` read from the table's own selection. */
 export interface DataTableSelectionProps extends Omit<TableToolbarSelectionProps, "count" | "totalCount" | "onClear"> {
   /**
-   * Called to choose every row, for a table whose `data` holds only one page (a `manual` one). A `client` table
-   * chooses every selectable row itself when this is left out.
+   * Called to choose every row, for a table whose `data` holds only one page (a `manual` one) when you would rather list the ids
+   * than use `allSelected`. Left out, a `client` table chooses every selectable row itself, and a `manual` one with a `totalCount`
+   * chooses "all" (`allSelected`).
    */
   onSelectAll?: () => void;
 }
@@ -353,4 +419,51 @@ export interface DataTablePaginationProps
    * @default String
    */
   formatNumber?: (value: number) => string;
+}
+
+/** The text `DataTable.ColumnMenu` writes itself. */
+export interface DataTableColumnMenuLabels {
+  /** The trigger button's text, and the menu's name. */
+  trigger: string;
+  /** Why the last drawn column's item can't be turned off. */
+  lastColumn: string;
+}
+
+/** The properties of `DataTable.ColumnMenu`: a button that opens a menu with one checkbox item per column. */
+export interface DataTableColumnMenuProps {
+  /**
+   * The button's treatment, on `Button`'s scale.
+   * @default 'secondary'
+   */
+  variant?: ButtonVariant;
+  /**
+   * The button's size, on the shared scale. Say the same size as the toolbar's other controls.
+   * @default 'md'
+   */
+  size?: ButtonSize;
+  /**
+   * The icon before the button's text, as a component reference. Pass `null` for none.
+   * @default ColumnsIcon
+   */
+  icon?: PhosphorIcon | null;
+  /**
+   * Where the menu lines up with the button.
+   * @default 'end'
+   */
+  align?: "start" | "center" | "end";
+  /**
+   * The direction of the menu, which is a Radix list that doesn't read the page's: pass `"rtl"` on a right-to-left page.
+   * @default 'ltr'
+   */
+  dir?: "ltr" | "rtl";
+  /** Text written for the menu, replacing the English defaults one by one. */
+  labels?: Partial<DataTableColumnMenuLabels>;
+  /** Additional CSS classes for the button. */
+  className?: string;
+  /** Inline styles for the button. */
+  style?: CSSProperties;
+  /** Standard DOM id, applied to the button. */
+  id?: string;
+  /** Test identifier for automated testing, on the button. */
+  "data-testid"?: string;
 }

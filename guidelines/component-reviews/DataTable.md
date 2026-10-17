@@ -13,14 +13,13 @@ only the user declares that. A `/review-component DataTable` pass was run on 202
 - `Table` grew `Table.Row` `selected` and `containerRef`, additive and approved with the plan ([Table.md](Table.md)).
 - New component tokens, `data-table.row-height.{xs…xl}` (`2rem`, `2.5rem`, `2.75rem`, `3.5rem`, `4rem`), each just above the `IconButton` of
   its size. No new semantic token: a chosen row is `bg.brand-subtle` (the `brand` tone's own stripe), its hover `bg.brand-subtle-hover`.
-- No new dependency. Bundle size is 17.20KB JS and 6.35KB CSS, because the bundle holds `Table`, `TableToolbar`, `Pagination`, `Select` and
-  `Checkbox`; budgets are 20KB and 8KB with the reason beside them in `check-component-bundle-size.mjs` (a `CSS_BUDGET_OVERRIDES_KB` was added).
+- No new dependency. Bundle size is 23.59KB JS and 7.68KB CSS, because the bundle holds `Table`, `TableToolbar`, `Pagination`, `Select`, `Checkbox`, `Menu` and
+  `Button`; budgets are 26KB and 8KB with the reason beside them in `check-component-bundle-size.mjs` (a `CSS_BUDGET_OVERRIDES_KB` was added).
 - Defaults: `tone` is `brand` (a solid brand header, as a data table's header usually wants), and `DataTable.Pagination` is size `sm`, since the
   footer is secondary to the rows. Text is ordered with one `Intl.Collator("en")`, not the browser's locale, so a server and a browser agree
   (ADR-0021); a column that needs another language's order gives its own `compare`.
-- Left out of v1, as agreed: column reordering (the sortable hook of [ADR-0043](../adr/0043-reordering-is-a-hand-rolled-sortable-hook-in-primitives-for-a-single-list-over-a-drag-and-drop-dependency.md)
-  waits for `EditorTabs`), multi-column sorting from the UI (the sort is already a list), expandable rows, column resize, grouping, cell editing
-  and saved views.
+- Left out, as agreed: column reordering (the sortable hook of [ADR-0043](../adr/0043-reordering-is-a-hand-rolled-sortable-hook-in-primitives-for-a-single-list-over-a-drag-and-drop-dependency.md)
+  waits for `EditorTabs`), expandable rows, grouping, cell editing and saved views.
 
 ## What was found while building it
 Real-browser checks caught each of these; none showed in a unit test.
@@ -70,9 +69,32 @@ Fourteen findings, all fixed:
 One pitfall found writing the checks: a probe element made inside a `waitFor` callback changes the document and re-runs the callback forever
 (06 §9 names it); the forced-colours check hung until the colours were resolved outside the callback.
 
+## Added after the review (2026-10-17)
+Five gaps named by the review's follow-up, built in this order:
+- **`DataTable.ColumnMenu`:** a `Button` and a `Menu` of one checkbox item per column, reading and setting the hidden columns; the last column drawn can't be turned
+  off, and says why.
+- **Sorting by several columns:** a press with Shift held adds a column to the sort, turns it round, then takes it off, where a plain press makes it the only
+  one (`multiSort`, on by default). The columns show their order, the button says "sort order 2" after the heading, and the announcement lists every column.
+  The sort was already a list, so nothing about `sort` changed.
+- **Select all across pages:** `allSelected` for a `manual` table with a `totalCount` ([ADR-0087](../adr/0087-select-all-across-pages-is-a-state-of-its-own-for-a-table-that-holds-one-page-over-listing-ids-it-doesnt-have-or-an-inverted-selection.md)).
+- **Several pinned columns:** `Table` pins a number of columns, measured from the header ([ADR-0089](../adr/0089-table-pins-a-number-of-columns-by-measuring-the-header-over-fixed-offsets-or-a-sticky-column-per-part.md),
+  [Table.md](Table.md)); `DataTable` counts data columns and pins the checkbox and actions columns beside them, so `stickyFirstColumn` now keeps the name beside
+  its checkbox.
+- **Column sizes:** `resizable`, a focusable separator at each heading's edge, `columnWidths`, a `maxWidth`, and `selectionColumnWidth` and `actionsColumnWidth`
+  ([ADR-0088](../adr/0088-datatable-columns-are-resized-with-a-focusable-separator-at-the-heading-edge-and-widths-are-pixels-the-caller-can-keep-over-a-resize-observer-layout-or-percentage-widths.md)).
+
+Found while building them:
+- **A hint inside a heading is part of its name.** The first handle drew its keys' hint inside the `<th>`, and a header cell's name comes from its content, so
+  "Name" became "Name Arrow keys resize…". The hint is drawn once, outside the table's cells, and a heading with a handle is named by `aria-label`.
+- **A resize can't narrow a column past its minimum**, so a keyboard check that pressed "narrower" at the minimum measured no change; the check now presses the
+  widening key from there and back.
+- **Storybook's `userEvent.click` and `userEvent.keyboard` don't share a keyboard,** so a Shift pressed in one was not held by the other; a check that
+  needs a modifier uses one `userEvent.setup()`.
+- **A hover-sized check can't see what a probe-in-`waitFor` does** (06 §9): the forced-colours check keeps resolving colours outside its callback.
+
 ## Verified
-- `eslint`, `tsc` and the Storybook `tsc`: clean. The `unit` project: 8649 passing. The `storybook` project in a real browser: 1803
-  passing (224 files), including thirteen hidden checks for this component and one for `Checkbox`. `pnpm build`, `pnpm check-component-bundle-size` and
+- `eslint`, `tsc` and the Storybook `tsc`: clean. The `unit` project: 8684 passing. The `storybook` project in a real browser: 1811
+  passing (225 files), including eighteen hidden checks for this component and one for `Checkbox` (one run showed the known `TimePicker` width flake, which passed on a rerun of its folder). `pnpm build`, `pnpm check-component-bundle-size` and
   `pnpm check-guidelines`: clean.
 - Unit: sort, selection, paging and their pure helpers; the controlled/uncontrolled pairs wired to state; shift ranges; single mode;
   non-selectable rows; manual mode; the live-region announcement; `aria-rowcount` and `aria-rowindex`; `onRowClick` (and a control in the row not
@@ -89,9 +111,12 @@ One pitfall found writing the checks: a probe element made inside a `waitFor` ca
 ## Open at this point
 Not verified, and none of it should be assumed:
 - **Emerald light** was not looked at on screen (its sort-arrow contrast is measured); Purple light, Purple dark and Emerald dark were.
+- **Resizing and the headers' tab stops.** Each resizable column adds a tab stop (it is opt-in, and said so on the Docs page); a table with many resizable columns was
+  not walked by hand with a screen reader.
+- **Several pinned columns with a spanning cell.** A cell that spans columns in the first pinned columns is not pinned and shifts the others out of their columns;
+  the prop's JSDoc says so, and no check pins it.
 - **Windowed rows and focus.** A row scrolled out of a windowed table takes its controls out of the page, so Tab can't reach them and find-in-page
   can't see them; the Docs page says so, and the consequence is recorded in ADR-0086.
 - **Widths between the extremes.** The phone check is at 375px and the others at the desktop width; the steps in between were not asserted.
 - **Hand-driven keyboard and screen reader use.** The Tab order and the sort keys are asserted in a real browser, but no screen reader was run.
-- **Column sizing, more than one pinned column, select all across a manual table's pages, multi-column sorting from the UI, expandable rows and
-  reordering** are not built (the first two need an ADR, and more than one pinned column is a change to `Table`).
+- **Expandable rows, column reordering, density and saved views, export, footer aggregates and column-level filters** are not built.

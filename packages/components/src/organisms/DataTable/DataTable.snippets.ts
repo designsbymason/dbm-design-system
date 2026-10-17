@@ -10,7 +10,8 @@ const columnsNote = `{/* columns: [{ id: "name", header: "Name", accessor: (row)
 
 export const dataTableSnippets = {
   sorting: `${columnsNote}
-{/* A header button cycles ascending, descending, none. aria-sort and a live announcement say so.
+{/* A header button cycles ascending, descending, none. aria-sort and a live announcement say so. A press with Shift held
+    adds the column to the sort instead of replacing it, and the columns show their order (multiSort, on by default).
     Controlled: sort={sort} onSortChange={setSort}. */}
 <DataTable
   aria-label="Team"
@@ -83,7 +84,8 @@ export const dataTableSnippets = {
 
   serverSide: `${columnsNote}
 {/* sortMode="manual": the table draws data as given and asks. Answer onSortChange and onPageChange with new rows, and say
-    how many there are in all with totalCount. */}
+    how many there are in all with totalCount. Its "Select all 137" chooses every row of every page without listing their ids
+    (allSelected / onAllSelectedChange): reset it when the filter changes, since "all" meant the rows matching the old one. */}
 <DataTable
   aria-label="Team"
   columns={columns}
@@ -91,6 +93,7 @@ export const dataTableSnippets = {
   sortMode="manual"
   totalCount={137}
   loading={isFetching}
+  selectionMode="multiple"
   sort={sort}
   onSortChange={setSort}
   page={page}
@@ -98,29 +101,24 @@ export const dataTableSnippets = {
   pageSize={pageSize}
   onPageSizeChange={setPageSize}
 >
+  <DataTable.Toolbar aria-label="Team table tools">
+    <DataTable.Selection />
+  </DataTable.Toolbar>
   <DataTable.Pagination />
 </DataTable>`,
 
   columnVisibility: `${columnsNote}
-{/* hiddenColumns / onHiddenColumnsChange (or defaultHiddenColumns, uncontrolled). The menu is your own: one checkbox item per
-    column. Inside the table's children, useDataTable() reads and sets the same list. */}
-<Menu>
-  <Menu.Trigger asChild>
-    <Button variant="secondary">Columns</Button>
-  </Menu.Trigger>
-  <Menu.Content>
-    {columns.map((column) => (
-      <Menu.CheckboxItem
-        key={column.id}
-        checked={!hidden.includes(column.id)}
-        onCheckedChange={(shown) => setHidden(shown ? hidden.filter((id) => id !== column.id) : [...hidden, column.id])}
-      >
-        {column.header}
-      </Menu.CheckboxItem>
-    ))}
-  </Menu.Content>
-</Menu>
-<DataTable aria-label="Team" columns={columns} data={rows} hiddenColumns={hidden} onHiddenColumnsChange={setHidden} />`,
+{/* DataTable.ColumnMenu is a button that opens one checkbox item per column; the last column drawn can't be turned off.
+    hiddenColumns / onHiddenColumnsChange make it controlled (to keep it in the URL, say); defaultHiddenColumns is uncontrolled.
+    Inside the table's children, useDataTable() reads and sets the same list for a menu of your own. */}
+<DataTable aria-label="Team" columns={columns} data={rows} defaultHiddenColumns={["started"]}>
+  <DataTable.Toolbar aria-label="Team table tools">
+    <TableToolbar.Row>
+      <Spacer />
+      <DataTable.ColumnMenu />
+    </TableToolbar.Row>
+  </DataTable.Toolbar>
+</DataTable>`,
 
   loadingAndEmpty: `${columnsNote}
 {/* loading draws placeholder rows (and aria-busy); an empty table says emptyState, or "No results". */}
@@ -140,10 +138,26 @@ export const dataTableSnippets = {
 {/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" — the cell type size, the row height and the controls in it. */}
 <DataTable aria-label="Team" columns={columns} data={rows} size="sm" />`,
 
+  resizable: `${columnsNote}
+{/* resizable puts a handle at the end of every heading: drag it, or focus it and use the arrow keys (Shift for larger steps,
+    Home and End for the limits, Enter to reset). A column's width, minWidth and maxWidth are where it begins and where a drag stops;
+    columnWidths / onColumnWidthsChange keep the widths (in the URL or storage, say). selectionColumnWidth and actionsColumnWidth
+    size the two columns the table adds. */}
+<DataTable
+  aria-label="Team"
+  columns={columns}
+  data={rows}
+  resizable
+  selectionMode="multiple"
+  selectionColumnWidth="4rem"
+  onColumnWidthsChange={saveWidths}
+/>`,
+
   pinnedColumns: `${columnsNote}
-{/* The first column (the checkbox column when there is one) and the last (the actions column) stay put while the
-    rest scrolls sideways. */}
-<DataTable aria-label="Team" columns={columns} data={rows} selectionMode="multiple" stickyFirstColumn stickyLastColumn />`,
+{/* A number pins that many data columns beside the checkbox column (and the actions column at the end), up to four at an
+    edge in all: here the checkbox and the name stay put at the start, and the actions at the end, while the rest scrolls
+    sideways. true pins one. */}
+<DataTable aria-label="Team" columns={columns} data={rows} selectionMode="multiple" stickyFirstColumn={2} stickyLastColumn />`,
 
   tones: `${columnsNote}
 {/* tone: "brand" (default) | "neutral" | "info" | "success" | "warning" | "danger" — the header's solid fill, and the stripe and
@@ -169,6 +183,10 @@ export interface DataTablePlaygroundSnippetArgs {
   stickyHeader?: boolean;
   selectionMode?: string;
   sortMode?: string;
+  multiSort?: boolean;
+  resizable?: boolean;
+  selectionColumnWidth?: string;
+  actionsColumnWidth?: string;
   loading?: boolean;
   maxHeight?: string;
   "aria-label"?: string;
@@ -192,6 +210,10 @@ export function dataTablePlaygroundSnippet(args: DataTablePlaygroundSnippetArgs)
   if (args.maxHeight) props.push(`maxHeight="${args.maxHeight}"`);
   if (args.selectionMode && args.selectionMode !== "none") props.push(`selectionMode="${args.selectionMode}"`);
   if (args.sortMode === "manual") props.push('sortMode="manual"');
+  if (args.resizable) props.push("resizable");
+  if (args.selectionColumnWidth) props.push(`selectionColumnWidth="${args.selectionColumnWidth}"`);
+  if (args.actionsColumnWidth) props.push(`actionsColumnWidth="${args.actionsColumnWidth}"`);
+  if (args.multiSort === false) props.push("multiSort={false}");
   if (args.loading) props.push("loading");
   return `${columnsNote}
 <DataTable

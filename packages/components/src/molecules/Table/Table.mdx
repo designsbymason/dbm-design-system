@@ -184,6 +184,15 @@ from the table's first row.
 
 <Canvas of={TableStories.StickyFirstAndLastColumns} />
 
+### Several sticky columns at each edge
+
+A number pins that many columns, up to four: `stickyFirstColumn={2}` keeps an ID and a name in view together. Each pinned column
+sits against the one before it, and their widths are measured from the header row and measured again when a column is resized, so
+one that grows pushes the next along. Only the last pinned column draws the divider. Keep cells that span columns out of the pinned
+columns: a spanning cell isn't pinned and moves the cells after it out of their columns.
+
+<Canvas of={TableStories.StickySeveralColumns} />
+
 ### Sticky header and first column together
 
 <Canvas of={TableStories.StickyHeaderAndColumn} />

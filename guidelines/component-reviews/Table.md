@@ -459,3 +459,16 @@ doesn't pass them renders the same DOM and styles. Each got the scoped mini-pass
 the Docs page (`Table.Row` has its own order list now), `argTypes` descriptions, and unit tests (the class and `data-selected`, a stray
 `data-selected` not winning, `containerRef` and `ref` landing on different elements). The `Table` suite (377 tests) and the real-browser
 `Table` stories pass, and the fill is quiet by design (1.14:1 against the surface in Purple light), so a consumer carries the state in another mark too (`DataTable`'s checkbox and edge marker).
+
+## Post-Finalization follow-up (2026-10-17, at explicit direction) — `stickyFirstColumn` and `stickyLastColumn` take a count
+
+The two props widen from `boolean` to `boolean | number`: `true` is one column, a number pins that many (up to four), each against the one pinned before it,
+with offsets measured from the header row ([ADR-0089](../adr/0089-table-pins-a-number-of-columns-by-measuring-the-header-over-fixed-offsets-or-a-sticky-column-per-part.md)).
+This closes the "pinning more than one leading (or trailing) column" gap named above.
+
+**Finalized status is unchanged.** Three-question test (`06-engineering-standards.md` §9), question 1: does it change the rendered or behavioural output of anything that
+already existed? No: `true`, `false` and an omitted prop render the same DOM and styles (one pinned column keeps its own class and rules), and a table that
+pins one never measures anything. The new surface got the scoped mini-pass of a new prop: JSDoc on both props, a story, snippet and Docs section ("Several sticky
+columns at each edge"), unit tests (the marks on the row groups and the cap, the offsets from mocked widths and again when a width changes, a consumer's `style`
+kept), and two real-browser checks through `DataTable` (the pinned cells sit against each other and at the edge after a long scroll, in both directions). One
+caveat is recorded on the prop: a cell that spans columns isn't pinned and moves the cells after it out of their columns.

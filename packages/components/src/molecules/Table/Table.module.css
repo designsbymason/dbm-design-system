@@ -156,6 +156,119 @@
   position: static;
 }
 
+/* More than one pinned column (`stickyFirstColumn={2}` to `{4}`; the `<thead>`, `<tbody>` and `<tfoot>` carry `data-pin-start` with the
+   count). Each pinned cell sits where the columns pinned before it end: `usePinOffsets` measures the header row and sets
+   `--pin-start-2` … `--pin-start-4`, so the offset of a column is the sum of the widths between it and the edge. The cells are
+   opaque as one pinned column's are, and only the last of them draws the divider. A cell that spans columns, and the full-width
+   empty-state cell, opt out for the reason one pinned column's do. Declared before the header rules, like the single-column ones
+   above, so a toned or pinned header keeps its own fill. The same again, mirrored, for `data-pin-end`. */
+:is(
+    [data-pin-start="2"] > tr > :nth-child(-n + 2),
+    [data-pin-start="3"] > tr > :nth-child(-n + 3),
+    [data-pin-start="4"] > tr > :nth-child(-n + 4)
+  ) {
+  background-color: var(--row-tint, var(--dbm-bg-surface));
+  inset-inline-start: 0;
+  position: sticky;
+  transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+  z-index: var(--dbm-z-index-sticky);
+}
+
+:is([data-pin-start] > tr > :nth-child(2)) {
+  inset-inline-start: var(--pin-start-2, 0);
+}
+
+:is([data-pin-start="3"], [data-pin-start="4"]) > tr > :nth-child(3) {
+  inset-inline-start: var(--pin-start-3, 0);
+}
+
+:is([data-pin-start="4"] > tr > :nth-child(4)) {
+  inset-inline-start: var(--pin-start-4, 0);
+}
+
+:is(
+    [data-pin-start="2"] > tr > :nth-child(2),
+    [data-pin-start="3"] > tr > :nth-child(3),
+    [data-pin-start="4"] > tr > :nth-child(4)
+  ) {
+  border-inline-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+:is(
+    [data-pin-start="2"] > tr > :nth-child(-n + 2),
+    [data-pin-start="3"] > tr > :nth-child(-n + 3),
+    [data-pin-start="4"] > tr > :nth-child(-n + 4)
+  )[colspan]:not([colspan="1"]),
+[data-pin-start] > .emptyRow > td {
+  background-color: transparent;
+  border-inline-end: none;
+  position: static;
+}
+
+:is(
+    [data-pin-end="2"] > tr > :nth-last-child(-n + 2),
+    [data-pin-end="3"] > tr > :nth-last-child(-n + 3),
+    [data-pin-end="4"] > tr > :nth-last-child(-n + 4)
+  ) {
+  background-color: var(--row-tint, var(--dbm-bg-surface));
+  inset-inline-end: 0;
+  position: sticky;
+  transition: background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+  z-index: var(--dbm-z-index-sticky);
+}
+
+:is([data-pin-end] > tr > :nth-last-child(2)) {
+  inset-inline-end: var(--pin-end-2, 0);
+}
+
+:is([data-pin-end="3"], [data-pin-end="4"]) > tr > :nth-last-child(3) {
+  inset-inline-end: var(--pin-end-3, 0);
+}
+
+:is([data-pin-end="4"] > tr > :nth-last-child(4)) {
+  inset-inline-end: var(--pin-end-4, 0);
+}
+
+:is(
+    [data-pin-end="2"] > tr > :nth-last-child(2),
+    [data-pin-end="3"] > tr > :nth-last-child(3),
+    [data-pin-end="4"] > tr > :nth-last-child(4)
+  ) {
+  border-inline-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+:is(
+    [data-pin-end="2"] > tr > :nth-last-child(-n + 2),
+    [data-pin-end="3"] > tr > :nth-last-child(-n + 3),
+    [data-pin-end="4"] > tr > :nth-last-child(-n + 4)
+  )[colspan]:not([colspan="1"]),
+[data-pin-end] > .emptyRow > td {
+  background-color: transparent;
+  border-inline-start: none;
+  position: static;
+}
+
+/* A header that is pinned and sticky puts its pinned cells above the rest, as the corner cell of one pinned column is. */
+:is(
+    .headerSticky[data-pin-start="2"] > tr > :nth-child(-n + 2),
+    .headerSticky[data-pin-start="3"] > tr > :nth-child(-n + 3),
+    .headerSticky[data-pin-start="4"] > tr > :nth-child(-n + 4),
+    .headerSticky[data-pin-end="2"] > tr > :nth-last-child(-n + 2),
+    .headerSticky[data-pin-end="3"] > tr > :nth-last-child(-n + 3),
+    .headerSticky[data-pin-end="4"] > tr > :nth-last-child(-n + 4)
+  ) {
+  z-index: calc(var(--dbm-z-index-sticky) + 2);
+}
+
+/* A toned header's divider is its own fill, so it reads as part of it. */
+.headerTinted[data-pin-start] > tr > .headerCell {
+  border-inline-end-color: var(--tone-solid);
+}
+
+.headerTinted[data-pin-end] > tr > .headerCell {
+  border-inline-start-color: var(--tone-solid);
+}
+
 /* `stickyHeader` — pinned on the header cells themselves (not the `<thead>`),
    which is the placement browsers support consistently. Resolves against
    `.container`'s own scroll, so it only bites once `maxHeight` gives the

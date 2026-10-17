@@ -724,4 +724,347 @@ describe("DataTable", () => {
       spy.mockRestore();
     });
   });
+  describe("the column menu", () => {
+    const wide: DataTableColumn<Person>[] = [
+      { id: "name", header: "Name", accessor: (row) => row.name, rowHeader: true },
+      { id: "age", header: "Age", accessor: (row) => row.age },
+      { id: "id", header: "Code", accessor: (row) => row.id },
+    ];
+    const open = async (user: ReturnType<typeof userEvent.setup>) => {
+      await user.click(screen.getByRole("button", { name: "Columns" }));
+      return screen.findByRole("menu");
+    };
+
+    it("lists every column as a checkbox item and hides one when it is turned off", async () => {
+      const user = userEvent.setup();
+      render(
+        <DataTable<Person> columns={wide} data={people} aria-label="People">
+          <DataTable.ColumnMenu />
+        </DataTable>,
+      );
+      const menu = await open(user);
+      expect(within(menu).getAllByRole("menuitemcheckbox").map((item) => item.textContent)).toEqual(["Name", "Age", "Code"]);
+      await user.click(within(menu).getByRole("menuitemcheckbox", { name: "Age" }));
+      await user.keyboard("{Escape}");
+      expect(screen.queryByRole("columnheader", { name: "Age" })).toBeNull();
+      expect(screen.getByRole("columnheader", { name: "Name" })).toBeInTheDocument();
+    });
+
+    it("starts from the hidden columns and reports each change", async () => {
+      const onHiddenColumnsChange = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <DataTable<Person> columns={wide} data={people} aria-label="People" defaultHiddenColumns={["id"]} onHiddenColumnsChange={onHiddenColumnsChange}>
+          <DataTable.ColumnMenu />
+        </DataTable>,
+      );
+      const menu = await open(user);
+      expect(within(menu).getByRole("menuitemcheckbox", { name: "Code" })).toHaveAttribute("aria-checked", "false");
+      await user.click(within(menu).getByRole("menuitemcheckbox", { name: "Code" }));
+      expect(onHiddenColumnsChange).toHaveBeenLastCalledWith([]);
+    });
+
+    it("won't turn off the last column still drawn, and says why", async () => {
+      const user = userEvent.setup();
+      render(
+        <DataTable<Person> columns={wide} data={people} aria-label="People" defaultHiddenColumns={["age", "id"]}>
+          <DataTable.ColumnMenu />
+        </DataTable>,
+      );
+      const menu = await open(user);
+      const last = within(menu).getByRole("menuitemcheckbox", { name: /Name/ });
+      expect(last).toHaveAttribute("aria-disabled", "true");
+      expect(last).toHaveTextContent("At least one column stays");
+    });
+
+    it("takes its words from labels, and gives the menu the footer-style direction", async () => {
+      const user = userEvent.setup();
+      render(
+        <DataTable<Person> columns={wide} data={people} aria-label="People">
+          <DataTable.ColumnMenu labels={{ trigger: "Colonnes", lastColumn: undefined }} dir="rtl" />
+        </DataTable>,
+      );
+      await user.click(screen.getByRole("button", { name: "Colonnes" }));
+      expect(await screen.findByRole("menu", { name: "Colonnes" })).toHaveAttribute("dir", "rtl");
+    });
+  });
+
+  describe("sorting by several columns", () => {
+    const headerOf = (name: string) => screen.getByRole("columnheader", { name: new RegExp(`^${name}`) });
+
+    it("adds a column with a shift press, keeping the first, and shows the order", async () => {
+      const user = userEvent.setup();
+      renderTable();
+      await user.click(screen.getByRole("button", { name: "Name" }));
+      await user.keyboard("{Shift>}");
+      await user.click(screen.getByRole("button", { name: "Age" }));
+      await user.keyboard("{/Shift}");
+      expect(headerOf("Name")).toHaveAttribute("aria-sort", "ascending");
+      expect(headerOf("Age")).toHaveAttribute("aria-sort", "ascending");
+      expect(screen.getByRole("button", { name: "Name, sort order 1" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Age, sort order 2" })).toBeInTheDocument();
+    });
+
+    it("orders by each column in turn", async () => {
+      const user = userEvent.setup();
+      const rows: Person[] = [
+        { id: "a", name: "Same", age: 3 },
+        { id: "b", name: "Same", age: 1 },
+        { id: "c", name: "Alone", age: 2 },
+      ];
+      render(<DataTable<Person> columns={columns} data={rows} aria-label="People" />);
+      await user.click(screen.getByRole("button", { name: "Name" }));
+      await user.keyboard("{Shift>}");
+      await user.click(screen.getByRole("button", { name: "Age" }));
+      await user.keyboard("{/Shift}");
+      expect(screen.getAllByRole("row").slice(1).map((row) => within(row).getAllByRole("cell").at(-1)?.textContent)).toEqual(["2", "1", "3"]);
+    });
+
+    it("turns a column round, then takes it off, with the shift press, and the others stay", async () => {
+      const onSortChange = vi.fn();
+      const user = userEvent.setup();
+      renderTable({ onSortChange });
+      await user.click(screen.getByRole("button", { name: "Name" }));
+      await user.keyboard("{Shift>}");
+      await user.click(screen.getByRole("button", { name: "Age" }));
+      await user.click(screen.getByRole("button", { name: /^Age/ }));
+      expect(onSortChange).toHaveBeenLastCalledWith([
+        { columnId: "name", direction: "ascending" },
+        { columnId: "age", direction: "descending" },
+      ]);
+      await user.click(screen.getByRole("button", { name: /^Age/ }));
+      await user.keyboard("{/Shift}");
+      expect(onSortChange).toHaveBeenLastCalledWith([{ columnId: "name", direction: "ascending" }]);
+    });
+
+    it("a plain press makes the column the only one", async () => {
+      const onSortChange = vi.fn();
+      const user = userEvent.setup();
+      renderTable({ onSortChange, defaultSort: [{ columnId: "name", direction: "ascending" }, { columnId: "age", direction: "ascending" }] });
+      await user.click(screen.getByRole("button", { name: /^Age/ }));
+      expect(onSortChange).toHaveBeenLastCalledWith([{ columnId: "age", direction: "descending" }]);
+    });
+
+    it("lists every column in the announcement", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      renderTable({ defaultSort: [{ columnId: "name", direction: "ascending" }] });
+      await user.keyboard("{Shift>}");
+      await user.click(screen.getByRole("button", { name: /^Age/ }));
+      await user.keyboard("{/Shift}");
+      await act(async () => {
+        vi.advanceTimersByTime(150);
+      });
+      expect(screen.getByRole("status")).toHaveTextContent("Sorted by Name, ascending, then Age, ascending");
+      vi.useRealTimers();
+    });
+
+    it("ignores the shift with multiSort off", async () => {
+      const onSortChange = vi.fn();
+      const user = userEvent.setup();
+      renderTable({ multiSort: false, onSortChange, defaultSort: [{ columnId: "name", direction: "ascending" }] });
+      await user.keyboard("{Shift>}");
+      await user.click(screen.getByRole("button", { name: /^Age/ }));
+      await user.keyboard("{/Shift}");
+      expect(onSortChange).toHaveBeenLastCalledWith([{ columnId: "age", direction: "ascending" }]);
+    });
+  });
+
+  describe("select all across pages", () => {
+    const manual = (props: Partial<DataTableProps<Person>> = {}) =>
+      render(
+        <DataTable<Person>
+          columns={columns}
+          data={people}
+          aria-label="People"
+          sortMode="manual"
+          totalCount={137}
+          selectionMode="multiple"
+          getRowLabel={(row) => row.name}
+          {...props}
+        >
+          <DataTable.Toolbar aria-label="Tools">
+            <DataTable.Selection />
+          </DataTable.Toolbar>
+        </DataTable>,
+      );
+
+    it("offers select all with the whole count, and chooses every row without listing ids", async () => {
+      const onAllSelectedChange = vi.fn();
+      const onSelectionChange = vi.fn();
+      const user = userEvent.setup();
+      manual({ onAllSelectedChange, onSelectionChange });
+      await user.click(screen.getByRole("checkbox", { name: "Select Cy" }));
+      await user.click(screen.getByRole("button", { name: "Select all 137" }));
+      expect(onAllSelectedChange).toHaveBeenLastCalledWith(true);
+      expect(screen.getByText("137 selected")).toBeInTheDocument();
+      expect(screen.getAllByRole("checkbox", { checked: true })).toHaveLength(5);
+      expect(screen.getByRole("checkbox", { name: "Select all rows" })).toBeChecked();
+    });
+
+    it("goes back to a list of ids, the page's rows but that one, when a row is unchecked", async () => {
+      const onSelectionChange = vi.fn();
+      const onAllSelectedChange = vi.fn();
+      const user = userEvent.setup();
+      manual({ defaultAllSelected: true, onSelectionChange, onAllSelectedChange });
+      await user.click(screen.getByRole("checkbox", { name: "Select Ada" }));
+      expect(onAllSelectedChange).toHaveBeenLastCalledWith(false);
+      expect(onSelectionChange).toHaveBeenLastCalledWith(["p1", "p3", "p4"]);
+      expect(screen.getByRole("checkbox", { name: "Select Ada" })).not.toBeChecked();
+      expect(screen.getByText("3 selected")).toBeInTheDocument();
+    });
+
+    it("clears everything from the header checkbox and from Clear selection", async () => {
+      const user = userEvent.setup();
+      manual({ defaultAllSelected: true });
+      await user.click(screen.getByRole("checkbox", { name: "Select all rows" }));
+      expect(screen.queryAllByRole("checkbox", { checked: true })).toHaveLength(0);
+      await user.click(screen.getByRole("checkbox", { name: "Select Cy" }));
+      await user.click(screen.getByRole("button", { name: "Select all 137" }));
+      await user.click(screen.getByRole("button", { name: "Clear selection" }));
+      expect(screen.queryAllByRole("checkbox", { checked: true })).toHaveLength(0);
+    });
+
+    it("is controlled by allSelected, and a row that can't be chosen stays unchecked", async () => {
+      const user = userEvent.setup();
+      manual({ allSelected: true, isRowSelectable: (row) => row.id !== "p1" });
+      expect(screen.getByRole("checkbox", { name: "Select Cy" })).not.toBeChecked();
+      expect(screen.getByRole("checkbox", { name: "Select Ada" })).toBeChecked();
+      await user.click(screen.getByRole("checkbox", { name: "Select Ada" }));
+      expect(screen.getByRole("checkbox", { name: "Select Ada" })).toBeChecked();
+    });
+
+    it("keeps a client table listing ids, and a manual table without a total offers none", async () => {
+      const user = userEvent.setup();
+      const { unmount } = render(
+        <DataTable<Person> columns={columns} data={people} aria-label="People" selectionMode="multiple" getRowLabel={(row) => row.name}>
+          <DataTable.Toolbar aria-label="Tools">
+            <DataTable.Selection />
+          </DataTable.Toolbar>
+        </DataTable>,
+      );
+      await user.click(screen.getByRole("checkbox", { name: "Select Cy" }));
+      await user.click(screen.getByRole("button", { name: "Select all 4" }));
+      expect(screen.getAllByRole("checkbox", { checked: true })).toHaveLength(5);
+      unmount();
+      manual({ totalCount: undefined });
+      await user.click(screen.getByRole("checkbox", { name: "Select Cy" }));
+      expect(screen.queryByRole("button", { name: /^Select all \d/ })).toBeNull();
+    });
+  });
+
+  describe("pinning columns", () => {
+    it("pins the data columns asked for beside the checkbox and actions columns", () => {
+      renderTable({ selectionMode: "multiple", stickyFirstColumn: 2, stickyLastColumn: true, rowActions: () => <button type="button">More</button> });
+      const table = screen.getByRole("table");
+      expect(table.querySelector("thead")).toHaveAttribute("data-pin-start", "3");
+      expect(table.querySelector("tbody")).toHaveAttribute("data-pin-start", "3");
+      expect(table.querySelector("thead")).toHaveAttribute("data-pin-end", "2");
+    });
+
+    it("pins one column the way it always did when that is all it is asked for", () => {
+      renderTable({ stickyFirstColumn: true });
+      const head = screen.getByRole("table").querySelector("thead") as HTMLElement;
+      expect(head.className).toMatch(/firstColumnSticky/);
+      expect(head).not.toHaveAttribute("data-pin-start");
+    });
+  });
+
+  describe("column sizes", () => {
+    const sized: DataTableColumn<Person>[] = [
+      { id: "name", header: "Name", accessor: (row) => row.name, rowHeader: true, width: "10rem", minWidth: 80, maxWidth: 400 },
+      { id: "age", header: "Age", accessor: (row) => row.age },
+    ];
+    const widthOfCells = (width: number) =>
+      vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+        return { width: this.tagName === "TH" ? width : 0, height: 0, top: 0, left: 0, right: 0, bottom: 0, x: 0, y: 0, toJSON: () => ({}) };
+      });
+
+    it("draws no handles unless resizable, and one separator a column when it is", () => {
+      const { unmount } = render(<DataTable<Person> columns={sized} data={people} aria-label="People" />);
+      expect(screen.queryAllByRole("separator")).toHaveLength(0);
+      unmount();
+      render(<DataTable<Person> columns={sized} data={people} aria-label="People" resizable />);
+      expect(screen.getAllByRole("separator").map((handle) => handle.getAttribute("aria-label"))).toEqual(["Resize Name column", "Resize Age column"]);
+    });
+
+    it("lets one column opt out or in", () => {
+      const columnsWith: DataTableColumn<Person>[] = [
+        { id: "name", header: "Name", accessor: (row) => row.name, rowHeader: true, resizable: false },
+        { id: "age", header: "Age", accessor: (row) => row.age },
+      ];
+      render(<DataTable<Person> columns={columnsWith} data={people} aria-label="People" resizable />);
+      expect(screen.getAllByRole("separator")).toHaveLength(1);
+    });
+
+    it("says its limits and its keys", () => {
+      widthOfCells(200);
+      render(<DataTable<Person> columns={sized} data={people} aria-label="People" resizable />);
+      const handle = screen.getByRole("separator", { name: "Resize Name column" });
+      expect(handle).toHaveAttribute("aria-orientation", "vertical");
+      expect(handle).toHaveAttribute("aria-valuemin", "80");
+      expect(handle).toHaveAttribute("aria-valuemax", "400");
+      expect(handle).toHaveAccessibleDescription(/Arrow keys resize/);
+      expect(handle).toHaveAttribute("tabindex", "0");
+    });
+
+    it("moves a column with the arrow keys, by larger steps with Shift, to its limits with Home and End, and resets it with Enter", async () => {
+      widthOfCells(200);
+      const onColumnWidthsChange = vi.fn();
+      const user = userEvent.setup();
+      render(<DataTable<Person> columns={sized} data={people} aria-label="People" resizable onColumnWidthsChange={onColumnWidthsChange} />);
+      screen.getByRole("separator", { name: "Resize Name column" }).focus();
+      await user.keyboard("{ArrowRight}");
+      expect(onColumnWidthsChange).toHaveBeenLastCalledWith({ name: 216 });
+      await user.keyboard("{ArrowLeft}");
+      expect(onColumnWidthsChange).toHaveBeenLastCalledWith({ name: 184 });
+      await user.keyboard("{Shift>}{ArrowRight}{/Shift}");
+      expect(onColumnWidthsChange).toHaveBeenLastCalledWith({ name: 264 });
+      await user.keyboard("{Home}");
+      expect(onColumnWidthsChange).toHaveBeenLastCalledWith({ name: 80 });
+      await user.keyboard("{End}");
+      expect(onColumnWidthsChange).toHaveBeenLastCalledWith({ name: 400 });
+      await user.keyboard("{Enter}");
+      expect(onColumnWidthsChange).toHaveBeenLastCalledWith({});
+    });
+
+    it("applies the widths it is given as fixed sizes, and cuts the cells", () => {
+      render(<DataTable<Person> columns={sized} data={people} aria-label="People" columnWidths={{ age: 150 }} />);
+      const cell = screen.getByRole("columnheader", { name: "Age" });
+      expect(cell).toHaveStyle({ inlineSize: "150px", minInlineSize: "150px", maxInlineSize: "150px" });
+      expect(screen.getAllByRole("cell", { name: "30" })[0]).toHaveStyle({ maxInlineSize: "150px" });
+      expect(cell.className).toMatch(/truncate/);
+    });
+
+    it("keeps a width a person gave, uncontrolled, and a controlled one changes only with its prop", async () => {
+      widthOfCells(200);
+      const user = userEvent.setup();
+      const { unmount } = render(<DataTable<Person> columns={sized} data={people} aria-label="People" resizable />);
+      screen.getByRole("separator", { name: "Resize Name column" }).focus();
+      await user.keyboard("{ArrowRight}");
+      expect(screen.getByRole("columnheader", { name: "Name" })).toHaveStyle({ inlineSize: "216px" });
+      unmount();
+      render(<DataTable<Person> columns={sized} data={people} aria-label="People" resizable columnWidths={{}} />);
+      screen.getByRole("separator", { name: "Resize Name column" }).focus();
+      await user.keyboard("{ArrowRight}");
+      expect(screen.getByRole("columnheader", { name: "Name" })).not.toHaveStyle({ inlineSize: "216px" });
+    });
+
+    it("sizes the checkbox and actions columns", () => {
+      render(
+        <DataTable<Person>
+          columns={sized}
+          data={people}
+          aria-label="People"
+          selectionMode="multiple"
+          selectionColumnWidth="5rem"
+          actionsColumnWidth="7rem"
+          rowActions={() => <button type="button">More</button>}
+        />,
+      );
+      const header = screen.getAllByRole("columnheader");
+      expect(header[0]).toHaveStyle({ inlineSize: "5rem", maxInlineSize: "5rem" });
+      expect(header.at(-1)).toHaveStyle({ inlineSize: "7rem", maxInlineSize: "7rem" });
+    });
+  });
 });

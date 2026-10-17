@@ -11,6 +11,7 @@ import * as DataTableStories from "./DataTable.stories";
 import * as ToolbarStories from "./DataTableToolbar.stories";
 import * as SelectionStories from "./DataTableSelection.stories";
 import * as PaginationStories from "./DataTablePagination.stories";
+import * as ColumnMenuStories from "./DataTableColumnMenu.stories";
 
 export const propOrder = [
   "columns",
@@ -22,7 +23,11 @@ export const propOrder = [
   "defaultSort",
   "onSortChange",
   "sortMode",
+  "multiSort",
   "selectionMode",
+  "allSelected",
+  "defaultAllSelected",
+  "onAllSelectedChange",
   "selection",
   "defaultSelection",
   "onSelectionChange",
@@ -41,6 +46,12 @@ export const propOrder = [
   "emptyState",
   "rowActions",
   "onRowClick",
+  "resizable",
+  "columnWidths",
+  "defaultColumnWidths",
+  "onColumnWidthsChange",
+  "selectionColumnWidth",
+  "actionsColumnWidth",
   "hiddenColumns",
   "defaultHiddenColumns",
   "onHiddenColumnsChange",
@@ -68,6 +79,8 @@ export const propOrder = [
 export const toolbarPropOrder = ["children", "size", "aria-label", "aria-labelledby", "aria-describedby", "id", "className", "style", "data-testid"];
 
 export const selectionPropOrder = ["children", "onSelectAll", "size", "announce", "labels", "formatNumber", "id", "className", "style", "data-testid"];
+
+export const columnMenuPropOrder = ["variant", "size", "icon", "align", "dir", "labels", "id", "className", "style", "data-testid"];
 
 export const paginationPropOrder = [
   "showSummary",
@@ -132,6 +145,9 @@ reads and changes the table's state from your own parts inside it.
     "sort",
     "defaultSort",
     "onSortChange",
+    "allSelected",
+    "defaultAllSelected",
+    "onAllSelectedChange",
     "selection",
     "defaultSelection",
     "onSelectionChange",
@@ -147,6 +163,9 @@ reads and changes the table's state from your own parts inside it.
     "emptyState",
     "rowActions",
     "onRowClick",
+    "columnWidths",
+    "defaultColumnWidths",
+    "onColumnWidthsChange",
     "hiddenColumns",
     "defaultHiddenColumns",
     "onHiddenColumnsChange",
@@ -182,7 +201,8 @@ A column is an object, not a component:
 | `sortable` | Lets a person sort by it. Needs an `accessor` or a `compare`. |
 | `compare` | Orders two whole rows, smallest first, for a value that isn't a number, a date or text. |
 | `align`, `numeric` | Where the content sits, and end-aligned tabular figures. |
-| `width`, `minWidth` | A length. A column with a `width` cuts a long cell with an ellipsis instead of widening. |
+| `width`, `minWidth`, `maxWidth` | A length. A column with a `width` cuts a long cell with an ellipsis (its whole text is the cell's `title`) instead of widening; a drag on a resizable column stops at `minWidth` and `maxWidth`. |
+| `resizable` | Turns resizing on or off for this column; follows the table's `resizable`. |
 | `rowHeader` | Draws the cells as row headers, so a screen reader reads a row's name on entering it. |
 | `wrap` | Lets the text wrap. A table with any wrapping column is never drawn a window at a time. |
 | `headerLabel` | The words that name the column when `header` isn't text. |
@@ -201,6 +221,13 @@ selection** and **Select all N**, and holds your bulk actions.
 
 <PropertiesTable of={SelectionStories} order={selectionPropOrder} />
 
+### DataTable.ColumnMenu properties
+
+A button that opens a menu with one checkbox item per column, which shows or hides it. It reads and sets the table's hidden columns,
+and the last column still drawn can't be turned off. Place it anywhere in the table's children, usually in the toolbar.
+
+<PropertiesTable of={ColumnMenuStories} order={columnMenuPropOrder} />
+
 ### DataTable.Pagination properties
 
 The footer: the page controls, "1–10 of 47" and a page size select, read from the table's own page. Its presence turns paging
@@ -213,7 +240,9 @@ on. It takes `Pagination`'s presentation props; the page, the page count and the
 ### Sorting
 
 A sortable column's heading is a button that cycles ascending, descending and none. The sorted column carries `aria-sort`, and
-a live region says "Sorted by Salary, descending". Rows that tie keep their order, and an empty value goes last in either
+a live region says "Sorted by Salary, descending". A press with Shift held (Shift and Enter from the keyboard) adds the column to
+the sort instead of replacing it, so "Department, then Salary" is two presses; the columns then show their order, a screen reader
+hears "sort order 2" after the heading, and the announcement lists them all. `multiSort={false}` turns it off. Rows that tie keep their order, and an empty value goes last in either
 direction. Sorting happens before paging, so it orders the whole set.
 
 <Canvas of={DataTableStories.Sorting} />
@@ -227,6 +256,16 @@ checkbox, a marker on the start edge of its checkbox cell (in `border.brand`, he
 nothing), and a fill one step stronger than the `brand` tone's stripe, so a chosen row isn't mistaken for a striped one.
 
 <Canvas of={DataTableStories.Selection} />
+
+### Select all across pages
+
+A table that holds one page of its rows (`sortMode="manual"` with a `totalCount`) can't list the ids of the rest, so
+"Select all 137" in `DataTable.Selection` chooses *all* of them as a state of its own (`allSelected`, controlled with
+`onAllSelectedChange`): every row shows as chosen, on every page, and the count is the `totalCount`. Unchecking a row goes
+back to a list of ids, the page's rows but that one; clearing goes back to none. Reset it when the filter changes, since "all"
+meant the rows matching the old one. A `client` table lists the ids as before.
+
+<Canvas of={DataTableStories.ServerSide} />
 
 ### Pagination
 
@@ -264,10 +303,11 @@ and say how many there are in all with `totalCount`. `loading` draws placeholder
 
 <Canvas of={DataTableStories.ServerSide} />
 
-### Column visibility
+### Column menu
 
-`hiddenColumns` and `onHiddenColumnsChange` choose which columns are drawn. The menu is your own; `useDataTable()` reads and sets
-the same list from inside the table.
+`DataTable.ColumnMenu` is a button that opens a menu of the columns, each a checkbox item. `hiddenColumns` and
+`onHiddenColumnsChange` make the list controlled (to keep it in the URL, say); `useDataTable()` reads and sets the same list from
+inside the table for a menu of your own.
 
 <Canvas of={DataTableStories.ColumnVisibility} />
 
@@ -283,10 +323,21 @@ A loading table shows placeholder rows and is `aria-busy`. An empty one says `em
 
 <Canvas of={DataTableStories.AllSizes} />
 
+### Column sizes and resizing
+
+`resizable` puts a handle at the end of every heading. Drag it, or focus it and use the arrow keys (Shift for larger steps, Home and
+End for the limits, Enter to reset); a double press resets it too. A column begins at its `width` (or what its content asks for)
+and stops at its `minWidth` and `maxWidth`; a resized column is a fixed width and a long cell is cut with an ellipsis.
+`columnWidths` and `onColumnWidthsChange` keep the widths wherever you want them. `selectionColumnWidth` and `actionsColumnWidth`
+size the two columns the table adds. Each handle is a tab stop, so turn resizing on where it is wanted.
+
+<Canvas of={DataTableStories.ResizableColumns} />
+
 ### Pinned first and last columns
 
-`stickyFirstColumn` and `stickyLastColumn` are `Table`'s: they pin the first and last column. With a selection, the checkbox column
-is the first, so it is the one that stays; the actions column is the last.
+`stickyFirstColumn` and `stickyLastColumn` are `Table`'s, as a count: `true` pins one data column, a number pins that many, and
+the checkbox column (at the start) and the actions column (at the end) are pinned beside them, up to four columns at an edge in
+all. Each pinned column sits against the one before it.
 
 <Canvas of={DataTableStories.PinnedColumns} />
 
@@ -363,6 +414,12 @@ doesn't read the page's direction, so give `DataTable.Pagination` `dir="rtl"` as
 - A chosen row's fill is `bg.brand-subtle-hover` with `text.primary` over it, and it is quiet (1.14:1 against the surface in Purple
   light), so it is never the only mark: the checked checkbox and a 4px marker in `border.brand` on the edge of its checkbox cell
   say it too. Forced colours drops the fill and draws the marker in the system's highlight colour.
+- A resize handle is a focusable `separator` (the window-splitter pattern) named "Resize Name column", with `aria-valuenow`,
+  `aria-valuemin` and, when there is one, `aria-valuemax` in pixels, and a hidden hint about its keys. The arrow keys follow the
+  page's direction (right is wider in a left-to-right page and narrower in a right-to-left one), the hit area is 24px wide, and a drag
+  ends however the pointer ends.
+- A sort by several columns says its order: the digit beside a column's arrow is hidden from assistive technology, which hears
+  "sort order 2" after the heading, and the live region lists every column in the announcement.
 - An arrow on a column that isn't sorted is drawn at `opacity.80` and keeps 3:1 against its header (brand or neutral) in all four
   themes, which a real-browser check measures.
 - A cell cut with an ellipsis (a column with a `width`) carries its whole text as its `title`; a screen reader reads the full text
@@ -430,8 +487,10 @@ const columns: DataTableColumn<Employee>[] = [
 <TokenRow token="text.secondary" usage="the footer's range" />
 <TokenRow token="font-family.primary" usage="the type of the toolbar, table and footer" />
 <TokenRow token="font-size.sm" usage="the footer's range and page size label" />
+<TokenRow token="font-size.xs" usage="the number that says a column's place in a sort by several" />
 <TokenRow token="motion.duration.fast" usage="the fade of a sort arrow when it is reached" />
 <TokenRow token="motion.easing.standard" usage="the easing of that fade" />
+<TokenRow token="opacity.40" usage="the line of a resize handle until it is reached" />
 <TokenRow token="opacity.80" usage="a sort arrow on a column that isn't sorted, until it is reached" />
 
 ## Related components

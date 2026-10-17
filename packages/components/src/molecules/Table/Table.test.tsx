@@ -1290,4 +1290,89 @@ describe("Table", () => {
       expect(containerRef.current?.contains(ref.current)).toBe(true);
     });
   });
+  describe("pinning several columns", () => {
+    const wide = (props: Partial<TableProps>) =>
+      render(
+        <Table aria-label="Wide" data-testid="table" {...props}>
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell>A</Table.HeaderCell>
+              <Table.HeaderCell>B</Table.HeaderCell>
+              <Table.HeaderCell>C</Table.HeaderCell>
+              <Table.HeaderCell>D</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            <Table.Row>
+              <Table.Cell>1</Table.Cell>
+              <Table.Cell>2</Table.Cell>
+              <Table.Cell>3</Table.Cell>
+              <Table.Cell>4</Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table>,
+      );
+
+    it("keeps one pinned column on its own class, as it always was", () => {
+      wide({ stickyFirstColumn: true, stickyLastColumn: 1 });
+      const head = screen.getByTestId("table").querySelector("thead") as HTMLElement;
+      expect(head.className).toMatch(/firstColumnSticky/);
+      expect(head.className).toMatch(/lastColumnSticky/);
+      expect(head).not.toHaveAttribute("data-pin-start");
+      expect(head).not.toHaveAttribute("data-pin-end");
+    });
+
+    it("marks every row group with the count when several are pinned, up to four", () => {
+      wide({ stickyFirstColumn: 3, stickyLastColumn: 9 });
+      const table = screen.getByTestId("table");
+      for (const group of ["thead", "tbody"]) {
+        expect(table.querySelector(group)).toHaveAttribute("data-pin-start", "3");
+        expect(table.querySelector(group)).toHaveAttribute("data-pin-end", "4");
+      }
+    });
+
+    it("treats false, zero and a bad number as none", () => {
+      wide({ stickyFirstColumn: 0, stickyLastColumn: Number.NaN });
+      const head = screen.getByTestId("table").querySelector("thead") as HTMLElement;
+      expect(head).not.toHaveAttribute("data-pin-start");
+      expect(head.className).not.toMatch(/Sticky/);
+    });
+
+    it("sets where each pinned column sits from the widths of the header cells, and again when they change", async () => {
+      const widths = [100, 60, 40, 30];
+      vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+        const index = this.tagName === "TH" ? [...(this.parentElement?.children ?? [])].indexOf(this) : -1;
+        return { width: widths[index] ?? 0, height: 0, top: 0, left: 0, right: 0, bottom: 0, x: 0, y: 0, toJSON: () => ({}) };
+      });
+      const observers: Array<() => void> = [];
+      vi.stubGlobal(
+        "ResizeObserver",
+        class {
+          constructor(callback: () => void) {
+            observers.push(callback);
+          }
+          observe() {}
+          unobserve() {}
+          disconnect() {}
+        },
+      );
+      wide({ stickyFirstColumn: 3, stickyLastColumn: 2 });
+      const table = screen.getByTestId("table");
+      expect(table.style.getPropertyValue("--pin-start-2")).toBe("100px");
+      expect(table.style.getPropertyValue("--pin-start-3")).toBe("160px");
+      expect(table.style.getPropertyValue("--pin-end-2")).toBe("30px");
+      widths[0] = 140;
+      await act(async () => {
+        observers.forEach((callback) => callback());
+      });
+      expect(table.style.getPropertyValue("--pin-start-2")).toBe("140px");
+      expect(table.style.getPropertyValue("--pin-start-3")).toBe("200px");
+      vi.unstubAllGlobals();
+    });
+
+    it("keeps a style the consumer passes beside the offsets", () => {
+      wide({ stickyFirstColumn: 2, style: { color: "red" } });
+      expect(screen.getByTestId("table")).toHaveStyle({ color: "rgb(255, 0, 0)" });
+    });
+  });
 });

@@ -88,15 +88,21 @@ export interface TableProps
   /**
    * Pins the first column to the start edge of the table's own scroll area
    * while the rest of the table scrolls sideways beneath it, so a row's label
-   * (an ID, a name) stays in view in a wide table. Applies to the first cell
+   * (an ID, a name) stays in view in a wide table. A number pins that many
+   * columns (up to 4), each against the one before it: their widths are read
+   * from the header row and read again when a column is resized. A cell that
+   * spans several columns isn't pinned, and moves the cells after it out of
+   * their columns, so give a table that pins several no spanning cells in
+   * its first columns. Applies to the first cells
    * of every row in the header, body, and footer. Only has a visible effect
    * when the table is actually wider than its space; it needs no `maxHeight`.
    * The pinned cells are opaque so scrolling content never shows through them.
    * @default false
    */
-  stickyFirstColumn?: boolean;
+  stickyFirstColumn?: boolean | number;
   /**
    * Pins the last column to the end edge of the table's own scroll area while
+   * (A number pins that many, up to 4, as `stickyFirstColumn` does.)
    * the rest of the table scrolls sideways beneath it — the mirror of
    * `stickyFirstColumn`, for a trailing column that should stay in view (an
    * actions column, a running total). Applies to the last cell of every row in
@@ -106,7 +112,7 @@ export interface TableProps
    * never shows through them.
    * @default false
    */
-  stickyLastColumn?: boolean;
+  stickyLastColumn?: boolean | number;
   /**
    * Caps the height of the table's own scroll container (any valid CSS
    * `max-height` value, e.g. `"24rem"`), so a long body scrolls inside it

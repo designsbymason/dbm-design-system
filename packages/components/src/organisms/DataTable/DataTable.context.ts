@@ -7,6 +7,12 @@ export interface DataTableState {
   selection: string[];
   /** Replaces the chosen rows. */
   setSelection: (selection: string[]) => void;
+  /** How many rows are chosen: every one of the table when `allSelected`, else the length of `selection`. */
+  selectedCount: number;
+  /** Whether every row of the whole table is chosen, on every page, without their ids being listed. */
+  allSelected: boolean;
+  /** Chooses every row of the whole table, or goes back to the list of ids. */
+  setAllSelected: (allSelected: boolean) => void;
   /** Un-chooses every row. */
   clearSelection: () => void;
   /** How many rows can be chosen in all: the selectable rows of a `client` table, `totalCount` of a `manual` one. */
@@ -31,13 +37,17 @@ export interface DataTableState {
   total: number;
   /** Whether the table is divided into pages. */
   paginated: boolean;
+  /** The widths a person has given columns, in pixels, by column id. */
+  columnWidths: Record<string, number>;
+  /** Replaces the widths given to columns. */
+  setColumnWidths: (widths: Record<string, number>) => void;
   /** Every column's id and the words that name it, hidden or not. */
   columns: Array<{ id: string; label: string }>;
   /** The ids of the columns that are not drawn. */
   hiddenColumns: string[];
   /** Changes which columns are drawn. */
   setHiddenColumns: (hidden: string[]) => void;
-  /** Chooses every selectable row of a `client` table. */
+  /** Chooses every row: the ids of a `client` table, or "all of them" for a `manual` one that knows its `totalCount`. */
   selectAllRows: (() => void) | undefined;
 }
 

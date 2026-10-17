@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { DataTable } from "./DataTable";
-import { employeeColumns, employees, makeEmployees, RowMenu, TeamDemo, type Employee } from "./DataTableStoryKit";
+import { employeeColumns, employees, makeEmployees, RowMenu, ServerDemo, TeamDemo, type Employee } from "./DataTableStoryKit";
 
 // Real-browser checks for what jsdom can't evaluate: the height of a row against its token, a window of rows over a long
 // table, the ellipsis, the size of a target, the real Tab order and a pointer on a menu inside the scrolling frame. Hidden
@@ -35,6 +35,30 @@ async function realClick(element: Element) {
   await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
   await send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 });
   await send("Input.dispatchMouseEvent", { type: "mouseReleased", x, y, button: "left", clickCount: 1 });
+}
+
+/** The point the test iframe's own scale puts an element's centre at, for a real pointer driven through the protocol. */
+function pointOf(element: Element, offsetX = 0) {
+  const rect = element.getBoundingClientRect();
+  const frame = window.frameElement?.getBoundingClientRect();
+  const scale = frame ? frame.width / window.innerWidth : 1;
+  return {
+    x: (frame?.left ?? 0) + (rect.left + rect.width / 2 + offsetX) * scale,
+    y: (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale,
+    scale,
+  };
+}
+
+/** Presses on an element, moves `distance` pixels sideways in steps, and lets go: a real drag. */
+async function realDrag(element: Element, distance: number) {
+  const { x, y, scale } = pointOf(element);
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
+  await send("Input.dispatchMouseEvent", { type: "mousePressed", x, y, button: "left", clickCount: 1 });
+  const steps = 6;
+  for (let step = 1; step <= steps; step += 1) {
+    await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: x + (distance * scale * step) / steps, y, buttons: 1 });
+  }
+  await send("Input.dispatchMouseEvent", { type: "mouseReleased", x: x + distance * scale, y, button: "left", clickCount: 1 });
 }
 
 const bodyRows = (table: HTMLElement) => [...table.querySelectorAll<HTMLElement>("tbody > tr:not([aria-hidden]):not([hidden])")];
@@ -424,5 +448,195 @@ export const SortArrowsKeepTheirContrast: Story = {
       if (original === null) root.removeAttribute("data-theme");
       else root.setAttribute("data-theme", original);
     }
+  },
+};
+
+const wideColumns = employeeColumns.map((column) => ({ ...column, minWidth: "9rem" }));
+
+export const SeveralPinnedColumnsStayPut: Story = {
+  name: "Several pinned columns sit against each other and stay put while the table scrolls sideways, in both directions",
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem", maxWidth: "36rem" }}>
+      <DataTable<Employee>
+        aria-label="Pinned left to right"
+        columns={wideColumns}
+        data={employees.slice(0, 3)}
+        selectionMode="multiple"
+        stickyFirstColumn={2}
+        stickyLastColumn
+        rowActions={(row) => <RowMenu row={row} />}
+      />
+      <div dir="rtl">
+        <DataTable<Employee>
+          aria-label="Pinned right to left"
+          columns={wideColumns}
+          data={employees.slice(0, 3)}
+          selectionMode="multiple"
+          stickyFirstColumn={2}
+          stickyLastColumn
+          rowActions={(row) => <RowMenu row={row} />}
+        />
+      </div>
+    </div>
+  ),
+  play: async () => {
+    for (const [name, rtl] of [["Pinned left to right", false], ["Pinned right to left", true]] as const) {
+      const table = body.getByRole("table", { name });
+      const frame = table.parentElement as HTMLElement;
+      await expect(frame.scrollWidth).toBeGreaterThan(frame.clientWidth);
+      // far along the scroll, in the direction the page reads
+      frame.scrollLeft = rtl ? -(frame.scrollWidth - frame.clientWidth) / 2 : (frame.scrollWidth - frame.clientWidth) / 2;
+      await nextFrame();
+      await nextFrame();
+      const bounds = frame.getBoundingClientRect();
+      for (const row of [table.querySelector("thead tr"), table.querySelector("tbody tr")] as HTMLElement[]) {
+        const cells = [...row.children].map((cell) => cell.getBoundingClientRect());
+        const first = cells[0] as DOMRect;
+        const second = cells[1] as DOMRect;
+        const last = cells.at(-1) as DOMRect;
+        // the first two sit at the start edge, one against the other
+        if (rtl) {
+          await expect(Math.abs(first.right - bounds.right)).toBeLessThan(3);
+          await expect(Math.abs(second.right - first.left)).toBeLessThan(2);
+          await expect(Math.abs(last.left - bounds.left)).toBeLessThan(3);
+        } else {
+          await expect(Math.abs(first.left - bounds.left)).toBeLessThan(3);
+          await expect(Math.abs(second.left - first.right)).toBeLessThan(2);
+          await expect(Math.abs(last.right - bounds.right)).toBeLessThan(3);
+        }
+      }
+      // and a column between them has really scrolled
+      const middle = (table.querySelector("tbody tr")?.children[4] as HTMLElement).getBoundingClientRect();
+      await expect(middle.left < bounds.left || middle.right > bounds.right || middle.left > bounds.left).toBe(true);
+    }
+  },
+};
+
+export const ResizingWithARealPointerAndKeys: Story = {
+  name: "A column is resized by a real drag in both directions, by keys, and stops at its limits",
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <DataTable<Employee>
+        aria-label="Resizable left to right"
+        resizable
+        columns={employeeColumns.map((column) => (column.id === "role" ? { ...column, width: "10rem", minWidth: "8rem", maxWidth: "16rem" } : column))}
+        data={employees.slice(0, 3)}
+      />
+      <div dir="rtl">
+        <DataTable<Employee>
+          aria-label="Resizable right to left"
+          resizable
+          columns={employeeColumns.map((column) => (column.id === "role" ? { ...column, width: "10rem", minWidth: "8rem", maxWidth: "16rem" } : column))}
+          data={employees.slice(0, 3)}
+        />
+      </div>
+    </div>
+  ),
+  play: async () => {
+    for (const [name, rtl] of [["Resizable left to right", false], ["Resizable right to left", true]] as const) {
+      const table = body.getByRole("table", { name });
+      const handle = within(table).getByRole("separator", { name: "Resize Role column" });
+      const cell = handle.closest("th") as HTMLElement;
+      const widthNow = () => cell.getBoundingClientRect().width;
+      const start = widthNow();
+      const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+      const [narrowest, widest, step] = [8 * rem, 16 * rem, tokenPx("--dbm-space-4")];
+      // the handle is at least the minimum target wide, at the end edge of its heading
+      await expect(handle.getBoundingClientRect().width).toBeGreaterThanOrEqual(24);
+      const edge = rtl ? handle.getBoundingClientRect().left - cell.getBoundingClientRect().left : cell.getBoundingClientRect().right - handle.getBoundingClientRect().right;
+      await expect(Math.abs(edge)).toBeLessThan(2);
+      // dragging toward the end edge widens it, in either direction
+      await realDrag(handle, rtl ? -30 : 30);
+      await waitFor(() => expect(Math.abs(widthNow() - (start + 30))).toBeLessThan(2));
+      // it stops at its widest and its narrowest
+      await realDrag(handle, rtl ? -400 : 400);
+      await waitFor(() => expect(Math.abs(widthNow() - widest)).toBeLessThan(2));
+      await realDrag(handle, rtl ? 600 : -600);
+      await waitFor(() => expect(Math.abs(widthNow() - narrowest)).toBeLessThan(2));
+      // the keys follow the page's direction: the one that points toward the end edge widens, so it is Right in one and Left in the other
+      handle.focus();
+      await userEvent.keyboard(rtl ? "{ArrowLeft}" : "{ArrowRight}");
+      await waitFor(() => expect(Math.abs(widthNow() - (narrowest + step))).toBeLessThan(2));
+      // and the other narrows it, back to where it stopped
+      await userEvent.keyboard(rtl ? "{ArrowRight}" : "{ArrowLeft}");
+      await waitFor(() => expect(Math.abs(widthNow() - narrowest)).toBeLessThan(2));
+      await userEvent.keyboard(rtl ? "{ArrowLeft}" : "{ArrowRight}");
+      await waitFor(() => expect(Math.abs(widthNow() - (narrowest + step))).toBeLessThan(2));
+      await expect(getComputedStyle(handle).outlineStyle).toBe("solid");
+      // Enter puts it back
+      await userEvent.keyboard("{Enter}");
+      await waitFor(() => expect(Math.abs(widthNow() - start)).toBeLessThan(2));
+      await expect(handle).toHaveAttribute("aria-valuenow", String(Math.round(widthNow())));
+    }
+  },
+};
+
+export const ShiftPressSortsByTwoColumns: Story = {
+  name: "A press with Shift held adds a column to the sort, and the order is drawn",
+  render: () => <DataTable<Employee> aria-label="Two sorts" columns={employeeColumns} data={employees.slice(0, 12)} />,
+  play: async () => {
+    const table = body.getByRole("table", { name: "Two sorts" });
+    // one user for both presses, so the Shift held by the second is the one the first set down
+    const user = userEvent.setup();
+    await user.click(within(table).getByRole("button", { name: "Department" }));
+    await user.keyboard("{Shift>}");
+    await user.click(within(table).getByRole("button", { name: /^Salary/ }));
+    await user.keyboard("{/Shift}");
+    await expect(within(table).getByRole("columnheader", { name: /^Department/ })).toHaveAttribute("aria-sort", "ascending");
+    await expect(within(table).getByRole("columnheader", { name: /^Salary/ })).toHaveAttribute("aria-sort", "ascending");
+    // the first column of the sort decides, the second breaks its ties
+    const rows = [...table.querySelectorAll("tbody tr")].map((row) => [...row.children].map((cell) => cell.textContent ?? ""));
+    const department = (row: string[]) => row[2] as string;
+    const salary = (row: string[]) => Number((row[3] as string).replace(/[$,]/g, ""));
+    for (let index = 1; index < rows.length; index += 1) {
+      const [before, after] = [rows[index - 1] as string[], rows[index] as string[]];
+      await expect(department(before) <= department(after)).toBe(true);
+      if (department(before) === department(after)) await expect(salary(before)).toBeLessThanOrEqual(salary(after));
+    }
+    // the digits beside the arrows are drawn
+    const digits = [...table.querySelectorAll("thead button span[aria-hidden='true']")].map((span) => span.textContent).filter((text) => /^\d$/.test(text ?? ""));
+    await expect(digits).toEqual(["1", "2"]);
+  },
+};
+
+export const ColumnMenuToggleWithAPointer: Story = {
+  name: "The column menu opens with a real pointer and hides a column",
+  render: () => (
+    <div style={{ minHeight: "18rem" }}>
+      <DataTable<Employee> aria-label="Menu columns" columns={employeeColumns} data={employees.slice(0, 3)}>
+        <DataTable.ColumnMenu />
+      </DataTable>
+    </div>
+  ),
+  play: async () => {
+    await realClick(body.getByRole("button", { name: "Columns" }));
+    const menu = await body.findByRole("menu");
+    const item = within(menu).getByRole("menuitemcheckbox", { name: "Role" });
+    await nextFrame();
+    const rect = item.getBoundingClientRect();
+    await expect(document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)?.closest("[role=menuitemcheckbox]")).toBe(item);
+    await realClick(item);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body.queryByRole("menu")).toBeNull());
+    await expect(within(body.getByRole("table", { name: "Menu columns" })).queryByRole("columnheader", { name: "Role" })).toBeNull();
+  },
+};
+
+export const SelectAllAcrossPages: Story = {
+  name: "Select all chooses every row of every page, and unchecking one goes back to a list",
+  render: () => <ServerDemo selectionMode="multiple" />,
+  play: async () => {
+    const table = await body.findByRole("table", { name: "Team, from a server" });
+    await waitFor(() => expect(table.querySelector("tbody")).not.toHaveAttribute("aria-busy"), { timeout: 3000 });
+    await userEvent.click(within(table).getAllByRole("checkbox")[1] as HTMLElement);
+    await userEvent.click(await body.findByRole("button", { name: "Select all 137" }));
+    await expect(body.getByText("137 selected")).toBeInTheDocument();
+    // the next page, once it has arrived, is chosen too
+    await userEvent.click(body.getByRole("button", { name: "Next page" }));
+    await waitFor(() => expect(table.querySelector("tbody")).toHaveAttribute("aria-busy"));
+    await waitFor(() => expect(table.querySelector("tbody")).not.toHaveAttribute("aria-busy"), { timeout: 3000 });
+    await expect(within(table).getAllByRole("checkbox", { checked: true }).length).toBe(11);
+    await userEvent.click(within(table).getAllByRole("checkbox")[3] as HTMLElement);
+    await expect(body.getByText("9 selected")).toBeInTheDocument();
   },
 };

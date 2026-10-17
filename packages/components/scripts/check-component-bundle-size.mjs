@@ -70,7 +70,9 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 //   DataTable (2026-10-17): a table that draws with `Table` (2.38KB), `TableToolbar` (6.40KB), `Pagination` (5.10KB), `Select`,
 //   `Checkbox` and the windowing hook, plus its own sort, selection, paging and announcement code, 17.08KB measured. The parts it
 //   composes are most of it, and an app that wants a table with a toolbar and paging would pay for them either way (ADR-0085).
-const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DataTable: 20, DatePicker: 18, TimeRangePicker: 12, Toolbar: 12 };
+//   With the column menu (a `Menu` and a `Button`, 5KB and more), sorting by several columns, select all across pages and resizing
+//   columns (ADR-0087, ADR-0088): 23.59KB measured. The menu is the largest part, and every table pays for it whether or not it uses one.
+const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DataTable: 26, DatePicker: 18, TimeRangePicker: 12, Toolbar: 12 };
 
 // The same for CSS. `DataTable`'s bundle holds the stylesheets of the `Table`, `TableToolbar`, `Pagination`, `Select`,
 // `Checkbox` and `Menu` parts it draws with (6.30KB measured against 3.45KB for `TableToolbar`, the largest of them), plus its own.

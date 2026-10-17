@@ -155,6 +155,7 @@ export function ServerDemo({
   return (
     <DataTable<Employee>
       aria-label="Team, from a server"
+      getRowLabel={(row) => row.name}
       {...props}
       columns={employeeColumns}
       data={rows}
@@ -172,6 +173,13 @@ export function ServerDemo({
       pageSize={pageSize}
       onPageSizeChange={setPageSize}
     >
+      <DataTable.Toolbar aria-label="Team table tools">
+        <DataTable.Selection>
+          <Toolbar aria-label="Bulk actions" variant="secondary">
+            <Toolbar.Button leadingIcon={TrashIcon}>Delete</Toolbar.Button>
+          </Toolbar>
+        </DataTable.Selection>
+      </DataTable.Toolbar>
       <DataTable.Pagination />
     </DataTable>
   );

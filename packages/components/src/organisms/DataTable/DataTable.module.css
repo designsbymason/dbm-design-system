@@ -123,6 +123,12 @@ tr[data-selected] > .selectCell {
   min-inline-size: 0;
 }
 
+/* The place of a column in a sort by several, beside its arrow. */
+.sortOrder {
+  font-size: var(--dbm-font-size-xs);
+  font-variant-numeric: tabular-nums;
+}
+
 .sortIcon {
   flex-shrink: 0;
   transition: opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
@@ -193,4 +199,47 @@ tr[data-selected] > .selectCell {
 
 .pageSizeSelect {
   min-inline-size: var(--dbm-space-20);
+}
+
+/* A column that can be resized: its heading is a positioned box with room at the end edge for the handle, which is a separator
+   at least the minimum target wide, a line along its end edge drawn as a border (a background would vanish in forced colours). */
+.table > thead > tr > .resizableCell {
+  padding-inline-end: var(--dbm-space-6);
+  position: relative;
+}
+
+.resizeHandle {
+  align-items: stretch;
+  cursor: col-resize;
+  display: flex;
+  inline-size: var(--dbm-space-6);
+  inset-block: 0;
+  inset-inline-end: 0;
+  justify-content: flex-end;
+  position: absolute;
+  touch-action: none;
+}
+
+.resizeHandle::after {
+  border-inline-end: var(--dbm-border-width-2) solid currentcolor;
+  content: "";
+  opacity: var(--dbm-opacity-40);
+  transition: opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.resizeHandle:hover::after,
+.resizeHandle:focus-visible::after {
+  opacity: 1;
+}
+
+/* The ring is drawn inside the handle, which sits against the header cell's clipped edge. */
+.resizeHandle:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+/* On a solid tone's header the focus colour is unreadable against the fill, so the ring takes the text's own colour. */
+.resizeHandleTinted:focus-visible {
+  outline-color: currentcolor;
 }

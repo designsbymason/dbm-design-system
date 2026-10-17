@@ -1,11 +1,16 @@
+import { ColumnsIcon } from "@dbm-design-system/icons";
 import { cx, mergeDefined } from "@dbm-design-system/primitives";
 import { forwardRef, useContext } from "react";
+import { Button } from "../../atoms/Button";
 import { Pagination } from "../../molecules/Pagination";
 import { Select } from "../../molecules/Select";
 import { TableToolbar } from "../../molecules/TableToolbar";
+import { Menu } from "../Menu";
 import { DataTableContext, useDataTable } from "./DataTable.context";
 import styles from "./DataTable.module.css";
 import type {
+  DataTableColumnMenuLabels,
+  DataTableColumnMenuProps,
   DataTablePaginationLabels,
   DataTablePaginationProps,
   DataTableSelectionProps,
@@ -65,7 +70,7 @@ const DataTableSelection = forwardRef<HTMLDivElement, DataTableSelectionProps>((
     <TableToolbar.Selection
       {...props}
       ref={ref}
-      count={table.selection.length}
+      count={table.selectedCount}
       totalCount={table.selectableCount}
       onClear={table.clearSelection}
       onSelectAll={onSelectAll ?? table.selectAllRows}
@@ -156,4 +161,75 @@ const DataTablePagination = forwardRef<HTMLDivElement, DataTablePaginationProps>
 );
 DataTablePagination.displayName = "DataTable.Pagination";
 
-export { DataTablePagination, DataTableSelection, DataTableToolbar };
+const columnMenuLabels: DataTableColumnMenuLabels = {
+  trigger: "Columns",
+  lastColumn: "At least one column stays",
+};
+
+/**
+ * A button that opens a menu of the table's columns, each a checkbox item that shows or hides it. It reads and sets the table's
+ * hidden columns (`hiddenColumns`, controlled or not), and the last column still drawn can't be turned off. Place it anywhere in
+ * the table's children, usually in the toolbar.
+ *
+ * @example
+ * ```tsx
+ * <DataTable aria-label="Team" columns={columns} data={rows}>
+ *   <DataTable.Toolbar aria-label="Team table tools">
+ *     <TableToolbar.Row>
+ *       <Spacer />
+ *       <DataTable.ColumnMenu />
+ *     </TableToolbar.Row>
+ *   </DataTable.Toolbar>
+ * </DataTable>
+ * ```
+ */
+const DataTableColumnMenu = forwardRef<HTMLButtonElement, DataTableColumnMenuProps>(
+  (
+    { variant = "secondary", size = "md", icon = ColumnsIcon, align = "end", dir = "ltr", labels: labelOverrides, className, style, id, "data-testid": dataTestId },
+    ref,
+  ) => {
+    const table = useDataTable();
+    const labels = mergeDefined(columnMenuLabels, labelOverrides);
+    const shown = table.columns.filter((column) => !table.hiddenColumns.includes(column.id));
+    return (
+      <Menu dir={dir}>
+        <Menu.Trigger asChild>
+          <Button
+            ref={ref}
+            id={id}
+            data-testid={dataTestId}
+            className={className}
+            style={style}
+            variant={variant}
+            size={size}
+            leadingIcon={icon ?? undefined}
+          >
+            {labels.trigger}
+          </Button>
+        </Menu.Trigger>
+        <Menu.Content align={align} size={size} aria-label={labels.trigger}>
+          {table.columns.map((column) => {
+            const checked = !table.hiddenColumns.includes(column.id);
+            const last = checked && shown.length === 1;
+            return (
+              <Menu.CheckboxItem
+                key={column.id}
+                checked={checked}
+                disabled={last}
+                disabledReason={last ? labels.lastColumn : undefined}
+                onCheckedChange={(next) =>
+                  table.setHiddenColumns(next ? table.hiddenColumns.filter((id) => id !== column.id) : [...table.hiddenColumns, column.id])
+                }
+              >
+                {column.label}
+              </Menu.CheckboxItem>
+            );
+          })}
+        </Menu.Content>
+      </Menu>
+    );
+  },
+);
+DataTableColumnMenu.displayName = "DataTable.ColumnMenu";
+
+export { DataTableColumnMenu, DataTablePagination, DataTableSelection, DataTableToolbar };

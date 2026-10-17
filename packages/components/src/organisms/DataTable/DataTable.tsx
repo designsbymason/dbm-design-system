@@ -6,6 +6,7 @@ import {
   isValidElement,
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useSyncExternalStore,
@@ -21,10 +22,12 @@ import { Checkbox } from "../../atoms/Checkbox";
 import { Icon } from "../../atoms/Icon";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Table, type TableSize } from "../../molecules/Table";
+import { lengthToPx, readLengthToken } from "./DataTable.length";
+import { ColumnResizeHandle } from "./DataTable.resize";
 import { DataTableContext, useControllableValue, type DataTableState } from "./DataTable.context";
 import styles from "./DataTable.module.css";
 import { clampPage, pageCountOf } from "./DataTable.page";
-import { DataTablePagination, DataTableSelection, DataTableToolbar } from "./DataTable.parts";
+import { DataTableColumnMenu, DataTablePagination, DataTableSelection, DataTableToolbar } from "./DataTable.parts";
 import { headerState, idsBetween, setChosen } from "./DataTable.selection";
 import { directionOf, nextDirection, sortRows } from "./DataTable.sort";
 import type { DataTableColumn, DataTableLabels, DataTableProps, DataTableSort } from "./DataTable.types";
@@ -39,6 +42,7 @@ const DEFAULT_PAGE_SIZE = 10;
 const DEFAULT_PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 const NO_IDS: string[] = [];
 const NO_SORT: DataTableSort = [];
+const NO_WIDTHS: Record<string, number> = {};
 // Elements that answer a press themselves, which a row's own click must not also act on.
 const INTERACTIVE =
   "a, button, input, select, textarea, label, summary, [role='checkbox'], [role='menuitem'], [role='button'], [role='link'], [role='switch']";
@@ -53,30 +57,29 @@ const sizeClass: Record<TableSize, string | undefined> = {
 
 const makeLabels = (formatNumber: (value: number) => string): DataTableLabels => ({
   sorted: (column, direction) => `Sorted by ${column}, ${direction}`,
+  sortedMultiple: (items) => `Sorted by ${items.map((item, index) => `${index === 0 ? "" : "then "}${item.column}, ${item.direction}`).join(", ")}`,
+  sortOrder: (position) => `sort order ${position}`,
   sortCleared: "Sorting removed",
   selectAll: "Select all rows",
   selectRow: (rowLabel) => `Select ${rowLabel}`,
   row: (position) => `Row ${formatNumber(position)}`,
   selectColumn: "Select",
   actionsColumn: "Actions",
+  resizeColumn: (column) => `Resize ${column} column`,
+  resizeHint: "Arrow keys resize, Shift for larger steps, Home and End for the limits, Enter resets",
   empty: "No results",
   loading: "Loading",
   rowsShown: (count, total) => `Showing ${formatNumber(count)} of ${formatNumber(total)} rows`,
 });
 
-/** A length token such as `2.75rem` in pixels, or `undefined` when it can't be read (a server render). */
-function readLengthToken(name: string): number | undefined {
-  if (typeof document === "undefined") return undefined;
-  const root = getComputedStyle(document.documentElement);
-  const raw = root.getPropertyValue(name).trim();
-  const value = Number.parseFloat(raw);
-  if (Number.isNaN(value)) return undefined;
-  if (raw.endsWith("rem")) return value * Number.parseFloat(root.fontSize);
-  return raw.endsWith("px") ? value : undefined;
-}
-
 const noSubscription = () => () => undefined;
 const noSnapshot = (): undefined => undefined;
+
+/** The number of columns the table pins: the data columns asked for, and the checkbox or actions column beside them. */
+const pinned = (asked: boolean | number | undefined, extra: boolean): number => {
+  const count = asked === true ? 1 : typeof asked === "number" && Number.isFinite(asked) ? Math.max(0, Math.floor(asked)) : 0;
+  return count > 0 ? count + (extra ? 1 : 0) : 0;
+};
 
 const defaultRowId = (row: unknown, index: number): string => {
   const id = typeof row === "object" && row !== null ? (row as { id?: unknown }).id : undefined;
@@ -86,10 +89,15 @@ const defaultRowId = (row: unknown, index: number): string => {
 const columnLabel = <TRow,>(column: DataTableColumn<TRow>): string =>
   column.headerLabel ?? (typeof column.header === "string" || typeof column.header === "number" ? String(column.header) : column.id);
 
-const columnStyle = <TRow,>(column: DataTableColumn<TRow>): CSSProperties | undefined =>
-  column.width !== undefined || column.minWidth !== undefined
-    ? { inlineSize: column.width, maxInlineSize: column.width, minInlineSize: column.minWidth }
-    : undefined;
+const columnStyle = <TRow,>(column: DataTableColumn<TRow>, resized?: number): CSSProperties | undefined => {
+  // A width a person dragged to is the whole of it: a fixed size, which a long cell is cut to.
+  if (resized !== undefined) return { inlineSize: resized, minInlineSize: resized, maxInlineSize: resized };
+  if (column.width === undefined && column.minWidth === undefined && column.maxWidth === undefined) return undefined;
+  return { inlineSize: column.width, maxInlineSize: column.maxWidth ?? column.width, minInlineSize: column.minWidth };
+};
+
+const fixedWidth = (width: CSSProperties["inlineSize"] | undefined): CSSProperties | undefined =>
+  width === undefined ? undefined : { inlineSize: width, minInlineSize: width, maxInlineSize: width };
 
 function toText(value: unknown): ReactNode {
   if (value === null || value === undefined) return null;
@@ -125,10 +133,14 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
     defaultSort = NO_SORT,
     onSortChange,
     sortMode = "client",
+    multiSort = true,
     selectionMode = "none",
     selection: selectionProp,
     defaultSelection = NO_IDS,
     onSelectionChange,
+    allSelected: allSelectedProp,
+    defaultAllSelected = false,
+    onAllSelectedChange,
     isRowSelectable,
     page: pageProp,
     defaultPage: defaultPageProp,
@@ -144,6 +156,12 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
     emptyState,
     rowActions,
     onRowClick,
+    resizable = false,
+    columnWidths: columnWidthsProp,
+    defaultColumnWidths = NO_WIDTHS,
+    onColumnWidthsChange,
+    selectionColumnWidth,
+    actionsColumnWidth,
     hiddenColumns: hiddenProp,
     defaultHiddenColumns = NO_IDS,
     onHiddenColumnsChange,
@@ -171,6 +189,8 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
 
   const [sort, setSort] = useControllableValue(sortProp, defaultSort, onSortChange);
   const [selection, setSelection] = useControllableValue(selectionProp, defaultSelection, onSelectionChange);
+  const [allSelected, setAllSelected] = useControllableValue(allSelectedProp, defaultAllSelected, onAllSelectedChange);
+  const [columnWidths, setColumnWidths] = useControllableValue(columnWidthsProp, defaultColumnWidths, onColumnWidthsChange);
   const [hiddenColumns, setHiddenColumns] = useControllableValue(hiddenProp, defaultHiddenColumns, onHiddenColumnsChange);
   const [pageSize, setPageSizeState] = useControllableValue(pageSizeProp, defaultPageSizeProp ?? DEFAULT_PAGE_SIZE, onPageSizeChange);
   const [rawPage, setRawPage] = useControllableValue(pageProp, defaultPageProp ?? 1, onPageChange);
@@ -231,6 +251,7 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
     [displayed, selectable],
   );
   const selecting = selectionMode !== "none";
+  const allMatching = allSelected && selectionMode === "multiple";
   const hasWrap = visibleColumns.some((column) => column.wrap);
   const hasActions = Boolean(rowActions);
   const columnCount = visibleColumns.length + (selecting ? 1 : 0) + (hasActions ? 1 : 0);
@@ -256,6 +277,7 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
   const visibleEntries = windowed ? displayed.slice(start, end) : displayed;
 
   const { message, announce } = useAnnouncement();
+  const resizeHintId = useId();
   const lastToggled = useRef<string | undefined>(undefined);
   const shiftHeld = useRef(false);
 
@@ -270,9 +292,17 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
   );
 
   const selectAllRows = useMemo(() => {
-    if (manual) return undefined;
+    if (manual) {
+      // The caller holds one page, so "all" is a state of its own rather than a list of ids it hasn't got.
+      return totalCount === undefined
+        ? undefined
+        : () => {
+            setSelection([]);
+            setAllSelected(true);
+          };
+    }
     return () => setSelection(ordered.filter((entry) => selectable(entry.row)).map((entry) => entry.id));
-  }, [manual, ordered, selectable, setSelection]);
+  }, [manual, totalCount, ordered, selectable, setSelection, setAllSelected]);
   const selectableCount = useMemo(
     () => (manual ? totalCount : ordered.filter((entry) => selectable(entry.row)).length),
     [manual, totalCount, ordered, selectable],
@@ -281,7 +311,13 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
   const state: DataTableState = {
     selection,
     setSelection,
-    clearSelection: () => setSelection([]),
+    selectedCount: allMatching ? (selectableCount ?? 0) : selection.length,
+    allSelected: allMatching,
+    setAllSelected,
+    clearSelection: () => {
+      if (allMatching) setAllSelected(false);
+      setSelection([]);
+    },
     selectableCount,
     sort,
     setSort,
@@ -294,18 +330,43 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
     total,
     paginated,
     columns: columns.map((column) => ({ id: column.id, label: columnLabel(column) })),
+    columnWidths,
+    setColumnWidths,
     hiddenColumns,
     setHiddenColumns,
     selectAllRows,
   };
 
-  const pressHeader = (column: DataTableColumn<TRow>) => {
-    const next = nextDirection(directionOf(sort, column.id));
-    setSort(next ? [{ columnId: column.id, direction: next }] : []);
-    announce(next ? labels.sorted(columnLabel(column), next) : labels.sortCleared);
+  const pressHeader = (column: DataTableColumn<TRow>, event: MouseEvent<HTMLButtonElement>) => {
+    const current = directionOf(sort, column.id);
+    const next = nextDirection(current);
+    let nextSort: DataTableSort;
+    if (multiSort && event.shiftKey) {
+      // Shift keeps the other columns: add this one, turn it round, or take it off.
+      if (!next) nextSort = sort.filter((item) => item.columnId !== column.id);
+      else if (current) nextSort = sort.map((item) => (item.columnId === column.id ? { ...item, direction: next } : item));
+      else nextSort = [...sort, { columnId: column.id, direction: next }];
+    } else {
+      nextSort = next ? [{ columnId: column.id, direction: next }] : [];
+    }
+    setSort(nextSort);
+    const named = nextSort.map((item) => ({
+      column: columnLabel(columns.find((candidate) => candidate.id === item.columnId) ?? column),
+      direction: item.direction,
+    }));
+    const [only] = named;
+    announce(only === undefined ? labels.sortCleared : named.length === 1 ? labels.sorted(only.column, only.direction) : labels.sortedMultiple(named));
   };
 
   const toggleRow = (entry: Entry<TRow>, chosen: boolean) => {
+    if (allMatching) {
+      // Every row was chosen; unchecking one goes back to a list of ids: the page's rows, but that one.
+      setAllSelected(false);
+      setSelection(displayedSelectableIds.filter((id) => id !== entry.id));
+      lastToggled.current = entry.id;
+      shiftHeld.current = false;
+      return;
+    }
     if (selectionMode === "single") {
       setSelection(chosen ? [entry.id] : []);
     } else {
@@ -320,6 +381,11 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
   };
 
   const toggleHeader = () => {
+    if (allMatching) {
+      setAllSelected(false);
+      setSelection([]);
+      return;
+    }
     const current = headerState(selectedSet, displayedSelectableIds);
     setSelection(setChosen(selection, displayedSelectableIds, current !== true));
   };
@@ -376,22 +442,36 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
 
   const renderHeaderCell = (column: DataTableColumn<TRow>) => {
     const direction = directionOf(sort, column.id);
+    const position = sort.length > 1 ? sort.findIndex((item) => item.columnId === column.id) + 1 : 0;
+    const stored = columnWidths[column.id];
+    const canResize = column.resizable ?? resizable;
+    const label = columnLabel(column);
     return (
       <Table.HeaderCell
         key={column.id}
         align={column.align}
         numeric={column.numeric}
-        style={columnStyle(column)}
-        className={cx(column.width !== undefined && styles.truncate)}
+        style={columnStyle(column, stored)}
+        className={cx((column.width !== undefined || column.maxWidth !== undefined || stored !== undefined) && styles.truncate, canResize && styles.resizableCell)}
         {...(column.sortable && direction ? { "aria-sort": direction } : {})}
+        // The handle inside is named too, and would otherwise be read as part of the heading's own name.
+        {...(canResize ? { "aria-label": label } : {})}
       >
         {column.sortable ? (
           <button
             type="button"
             className={cx(styles.sortButton, tone !== "neutral" && styles.sortButtonTinted)}
-            onClick={() => pressHeader(column)}
+            onClick={(event) => pressHeader(column, event)}
           >
             <span className={styles.sortLabel}>{column.header}</span>
+            {position > 0 && (
+              <>
+                <span aria-hidden="true" className={styles.sortOrder}>
+                  {formatNumber(position)}
+                </span>
+                <VisuallyHidden>, {labels.sortOrder(position)}</VisuallyHidden>
+              </>
+            )}
             <Icon
               icon={direction === "ascending" ? ArrowUpIcon : direction === "descending" ? ArrowDownIcon : CaretUpDownIcon}
               size="xs"
@@ -401,12 +481,27 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
         ) : (
           column.header
         )}
+        {canResize && (
+          <ColumnResizeHandle
+            label={label}
+            name={labels.resizeColumn(label)}
+            hintId={resizeHintId}
+            minimum={lengthToPx(column.minWidth)}
+            maximum={lengthToPx(column.maxWidth)}
+            tinted={tone !== "neutral"}
+            onResize={(width) => setColumnWidths({ ...columnWidths, [column.id]: width })}
+            onReset={() => {
+              const { [column.id]: _dropped, ...rest } = columnWidths;
+              setColumnWidths(rest);
+            }}
+          />
+        )}
       </Table.HeaderCell>
     );
   };
 
   const renderRow = (entry: Entry<TRow>, position: number) => {
-    const chosen = selectedSet.has(entry.id);
+    const chosen = allMatching ? selectable(entry.row) : selectedSet.has(entry.id);
     const rowLabel = getRowLabel ? getRowLabel(entry.row, entry.index) : labels.row(firstPosition + position + 1);
     return (
       <Table.Row
@@ -423,7 +518,7 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
         className={cx(onRowClick && styles.rowClickable)}
       >
         {selecting && (
-          <Table.Cell className={styles.selectCell}>
+          <Table.Cell className={styles.selectCell} style={fixedWidth(selectionColumnWidth)}>
             <span className={styles.selectBox}>
               <Checkbox
                 size={size}
@@ -440,13 +535,14 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
         )}
         {visibleColumns.map((column) => {
           const content = column.cell ? column.cell(entry.row, { index: entry.index }) : toText(column.accessor?.(entry.row));
+          const cut = column.width !== undefined || column.maxWidth !== undefined || columnWidths[column.id] !== undefined;
           const common = {
             align: column.align,
             numeric: column.numeric,
-            style: columnStyle(column),
-            className: cx(column.width !== undefined && styles.truncate),
+            style: columnStyle(column, columnWidths[column.id]),
+            className: cx(cut && styles.truncate),
             // A cell cut with an ellipsis says its whole text on hover, for a column that has a width and plain text in it.
-            title: column.width !== undefined && (typeof content === "string" || typeof content === "number") ? String(content) : undefined,
+            title: cut && (typeof content === "string" || typeof content === "number") ? String(content) : undefined,
           };
           return column.rowHeader ? (
             <Table.HeaderCell key={column.id} scope="row" {...common}>
@@ -458,7 +554,7 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
             </Table.Cell>
           );
         })}
-        {hasActions && <Table.Cell className={styles.actionsCell}>{rowActions?.(entry.row, entry.index)}</Table.Cell>}
+        {hasActions && <Table.Cell className={styles.actionsCell} style={fixedWidth(actionsColumnWidth)}>{rowActions?.(entry.row, entry.index)}</Table.Cell>}
       </Table.Row>
     );
   };
@@ -479,8 +575,8 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
           striped={striped}
           hoverable={hoverable || Boolean(onRowClick)}
           stickyHeader={stickyHeader}
-          stickyFirstColumn={stickyFirstColumn}
-          stickyLastColumn={stickyLastColumn}
+          stickyFirstColumn={pinned(stickyFirstColumn, selecting)}
+          stickyLastColumn={pinned(stickyLastColumn, hasActions)}
           maxHeight={maxHeight}
           className={cx(styles.table, sizeClass[size], !hasWrap && styles.fixedRows)}
           {...(windowed || paginated ? { "aria-rowcount": total + 1 } : {})}
@@ -489,12 +585,12 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
           <Table.Header>
             <Table.Row {...(windowed || paginated ? { "aria-rowindex": 1 } : {})}>
               {selecting && (
-                <Table.HeaderCell className={styles.selectCell}>
+                <Table.HeaderCell className={styles.selectCell} style={fixedWidth(selectionColumnWidth)}>
                   {selectionMode === "multiple" ? (
                     <span className={styles.selectBox}>
                       <Checkbox
                         size={size}
-                        checked={headerState(selectedSet, displayedSelectableIds)}
+                        checked={allMatching ? true : headerState(selectedSet, displayedSelectableIds)}
                         disabled={displayedSelectableIds.length === 0}
                         aria-label={labels.selectAll}
                         onCheckedChange={toggleHeader}
@@ -507,7 +603,7 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
               )}
               {visibleColumns.map(renderHeaderCell)}
               {hasActions && (
-                <Table.HeaderCell className={styles.actionsCell}>
+                <Table.HeaderCell className={styles.actionsCell} style={fixedWidth(actionsColumnWidth)}>
                   <VisuallyHidden>{labels.actionsColumn}</VisuallyHidden>
                 </Table.HeaderCell>
               )}
@@ -532,6 +628,7 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
           </Table.Body>
         </Table>
         {bottom}
+        {resizable || columns.some((column) => column.resizable) ? <VisuallyHidden id={resizeHintId}>{labels.resizeHint}</VisuallyHidden> : null}
         <VisuallyHidden role="status">{message}</VisuallyHidden>
       </div>
     </DataTableContext.Provider>
@@ -541,6 +638,7 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
 type DataTableComponent = (<TRow>(props: DataTableProps<TRow> & RefAttributes<HTMLTableElement>) => ReactElement | null) & {
   displayName?: string;
   Toolbar: typeof DataTableToolbar;
+  ColumnMenu: typeof DataTableColumnMenu;
   Selection: typeof DataTableSelection;
   Pagination: typeof DataTablePagination;
 };
@@ -548,6 +646,7 @@ type DataTableComponent = (<TRow>(props: DataTableProps<TRow> & RefAttributes<HT
 const DataTableRoot = forwardRef(DataTableInner) as unknown as DataTableComponent;
 DataTableRoot.displayName = "DataTable";
 DataTableRoot.Toolbar = DataTableToolbar;
+DataTableRoot.ColumnMenu = DataTableColumnMenu;
 DataTableRoot.Selection = DataTableSelection;
 DataTableRoot.Pagination = DataTablePagination;
 

@@ -3,6 +3,8 @@ export { useDataTable } from "./DataTable.context";
 export type { DataTableState } from "./DataTable.context";
 export type {
   DataTableColumn,
+  DataTableColumnMenuLabels,
+  DataTableColumnMenuProps,
   DataTableLabels,
   DataTablePaginationLabels,
   DataTablePaginationProps,

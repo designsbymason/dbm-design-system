@@ -18,6 +18,7 @@ import type {
   TableTone,
 } from "./Table.types";
 import { useColumnCount } from "./useColumnCount";
+import { pinCount, usePinOffsets } from "./usePinOffsets";
 import { useScrollableRegion } from "./useScrollableRegion";
 
 interface TableContextValue {
@@ -26,8 +27,10 @@ interface TableContextValue {
   striped: boolean;
   hoverable: boolean;
   stickyHeader: boolean;
-  stickyFirstColumn: boolean;
-  stickyLastColumn: boolean;
+  /** How many columns are pinned at the start edge (0 for none). */
+  stickyFirstColumn: number;
+  /** How many columns are pinned at the end edge (0 for none). */
+  stickyLastColumn: number;
   columnCount: number;
   captionId: string | undefined;
 }
@@ -42,8 +45,8 @@ const TableContext = createContext<TableContextValue>({
   striped: false,
   hoverable: false,
   stickyHeader: false,
-  stickyFirstColumn: false,
-  stickyLastColumn: false,
+  stickyFirstColumn: 0,
+  stickyLastColumn: 0,
   columnCount: 1,
   captionId: undefined,
 });
@@ -69,6 +72,14 @@ const toneClass: Record<TableTone, string | undefined> = {
   warning: styles.toneWarning,
   danger: styles.toneDanger,
 };
+
+// One pinned column keeps its own class (the cell sits at the edge, nothing to measure); more than one is marked with the count and
+// `usePinOffsets` supplies where each sits.
+const pinProps = (first: number, last: number) => ({
+  className: cx(first === 1 && styles.firstColumnSticky, last === 1 && styles.lastColumnSticky),
+  "data-pin-start": first > 1 ? first : undefined,
+  "data-pin-end": last > 1 ? last : undefined,
+});
 
 const alignClass: Record<TableCellAlign, string | undefined> = {
   start: undefined,
@@ -134,8 +145,8 @@ const TableRoot = forwardRef<HTMLTableElement, TableProps>((tableProps, ref) => 
     striped = false,
     hoverable = false,
     stickyHeader = false,
-    stickyFirstColumn = false,
-    stickyLastColumn = false,
+    stickyFirstColumn: stickyFirstColumnProp = false,
+    stickyLastColumn: stickyLastColumnProp = false,
     maxHeight,
     containerClassName,
     containerRef: containerRefProp,
@@ -153,6 +164,9 @@ const TableRoot = forwardRef<HTMLTableElement, TableProps>((tableProps, ref) => 
   const tableRef = useRef<HTMLTableElement>(null);
   const { scrollable, captionId } = useScrollableRegion(containerRef);
   const columnCount = useColumnCount(tableRef);
+  const stickyFirstColumn = pinCount(stickyFirstColumnProp);
+  const stickyLastColumn = pinCount(stickyLastColumnProp);
+  const pinStyle = usePinOffsets(tableRef, stickyFirstColumn, stickyLastColumn);
   const generatedCaptionId = useId();
 
   // A dev-mode misuse warning, run as an effect rather than read-and-set from a
@@ -221,7 +235,7 @@ const TableRoot = forwardRef<HTMLTableElement, TableProps>((tableProps, ref) => 
           {...rest}
           ref={mergeRefs(ref, tableRef)}
           id={id}
-          style={style}
+          style={pinStyle ? { ...style, ...pinStyle } : style}
           data-testid={dataTestId}
           aria-label={ariaLabel}
           aria-labelledby={ariaLabelledBy}
@@ -239,6 +253,7 @@ TableRoot.displayName = "Table";
 /** The header group (`<thead>`) — holds the `Table.Row`(s) of column-label `Table.HeaderCell`s. Pinned in place while the body scrolls when the table's `stickyHeader` is set. */
 const TableHeader = forwardRef<HTMLTableSectionElement, TableHeaderProps>(({ className, ...props }, ref) => {
   const { tone, stickyHeader, stickyFirstColumn, stickyLastColumn } = useContext(TableContext);
+  const pin = pinProps(stickyFirstColumn, stickyLastColumn);
   return (
     <thead
       {...props}
@@ -248,10 +263,11 @@ const TableHeader = forwardRef<HTMLTableSectionElement, TableHeaderProps>(({ cla
         tone !== "neutral" && styles.headerTinted,
         toneClass[tone],
         stickyHeader && styles.headerSticky,
-        stickyFirstColumn && styles.firstColumnSticky,
-        stickyLastColumn && styles.lastColumnSticky,
+        pin.className,
         className,
       )}
+      data-pin-start={pin["data-pin-start"]}
+      data-pin-end={pin["data-pin-end"]}
     />
   );
 });
@@ -280,6 +296,7 @@ const TableBody = forwardRef<HTMLTableSectionElement, TableBodyProps>(
   ({ loading = false, loadingRows = 3, loadingLabel = "Loading", className, children, ...props }, ref) => {
     const { tone, striped, hoverable, stickyFirstColumn, stickyLastColumn } = useContext(TableContext);
     const isTinted = tone !== "neutral";
+    const pin = pinProps(stickyFirstColumn, stickyLastColumn);
     return (
       <tbody
         {...props}
@@ -291,10 +308,11 @@ const TableBody = forwardRef<HTMLTableSectionElement, TableBodyProps>(
           toneClass[tone],
           striped && (isTinted ? styles.bodyStripedTinted : styles.bodyStriped),
           hoverable && (isTinted ? styles.bodyHoverableTinted : styles.bodyHoverable),
-          stickyFirstColumn && styles.firstColumnSticky,
-          stickyLastColumn && styles.lastColumnSticky,
+          pin.className,
           className,
         )}
+        data-pin-start={pin["data-pin-start"]}
+        data-pin-end={pin["data-pin-end"]}
       >
         {loading ? <SkeletonRows rows={loadingRows} label={loadingLabel} /> : children}
       </tbody>
@@ -306,16 +324,14 @@ TableBody.displayName = "Table.Body";
 /** The footer group (`<tfoot>`) — holds summary/totals `Table.Row`s, set apart from the body rows. */
 const TableFooter = forwardRef<HTMLTableSectionElement, TableFooterProps>(({ className, ...props }, ref) => {
   const { stickyFirstColumn, stickyLastColumn } = useContext(TableContext);
+  const pin = pinProps(stickyFirstColumn, stickyLastColumn);
   return (
     <tfoot
       {...props}
       ref={ref}
-      className={cx(
-        styles.footer,
-        stickyFirstColumn && styles.firstColumnSticky,
-        stickyLastColumn && styles.lastColumnSticky,
-        className,
-      )}
+      className={cx(styles.footer, pin.className, className)}
+      data-pin-start={pin["data-pin-start"]}
+      data-pin-end={pin["data-pin-end"]}
     />
   );
 });
