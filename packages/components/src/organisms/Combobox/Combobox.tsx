@@ -26,7 +26,7 @@ import {
   stepEnabled,
 } from "./Combobox.rows";
 import type { Row } from "./Combobox.rows";
-import { useViewportRoom } from "./useViewportRoom";
+import { useViewportRoom } from "../../internal/useViewportRoom";
 import type {
   ComboboxInputChangeReason,
   ComboboxLabels,

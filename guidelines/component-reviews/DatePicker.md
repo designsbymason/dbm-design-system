@@ -13,6 +13,9 @@ component Finalized. What follows is what was decided and found while building i
 - Bundle: 15.39KB JS / 3.79KB CSS gzipped after the additions below, so an 18KB JS override with its reason in `check-component-bundle-size.mjs`.
 - No new dependency.
 
+## Shared hook
+`useViewportRoom` moved from `Combobox`'s folder to `internal/` (approved by the maintainer) now that two components use it; a file move and one import, with no change to `Combobox`'s behaviour, API or output, so its Finalized status stands.
+
 ## Added after the first build (2026-10-17, at the maintainer's direction)
 - **The panel is anchored to the whole field** with a trigger-less Radix anchor, and has `side`, `align` and a `presentation` (`"full-width"` spans the visible screen, with a map like `Combobox`'s): [ADR-0083](../adr/0083-datepicker-anchors-its-panel-to-the-whole-field-with-a-trigger-less-radix-anchor-and-offers-side-align-and-a-full-width-presentation-over-the-popover-molecule-and-its-button.md). This replaces the button-anchored panel, and the "starts left of a narrow field" finding below no longer applies. The button toggles the state itself; focus is handed back to it on close, except after a press elsewhere.
 - **`presets`:** `{ label, value }` buttons in a named group under the calendar; a value is a date or a function of today's date; one outside `min`/`max` or unavailable is disabled.
@@ -38,7 +41,6 @@ component Finalized. What follows is what was decided and found while building i
 - `pnpm build` and `check-component-bundle-size`: within budget.
 
 ## Open for the final review
-- `useViewportRoom` is imported from `Combobox`'s folder; moving it to `internal/` is a change to a Finalized component's files and needs the maintainer's go-ahead.
 - `DatePicker` also imports `CalendarPicker`, `calendarHelpers`, `buildLabels` and `Calendar`'s stylesheet from `Calendar`'s folder (ADR-0084); the same applies to any change there.
 - Not yet run: the §9 review as a prioritized list, light/dark across both brands at every size, a phone-width look at the calendar panel, and a screen-reader pass.
 - The related-card preview scales a `Calendar` to half size with a transform; check it is still representative.

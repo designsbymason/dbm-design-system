@@ -28,7 +28,7 @@ import { CalendarPicker } from "../../molecules/Calendar/CalendarPicker";
 import { noClockOnTheServer, readClock, subscribeToNothing } from "../../molecules/Calendar/calendarHelpers";
 import { buildLabels } from "../../molecules/Calendar/calendarLabels";
 import type { CalendarDayInfo, CalendarSize } from "../../molecules/Calendar";
-import { useViewportRoom } from "../Combobox/useViewportRoom";
+import { useViewportRoom } from "../../internal/useViewportRoom";
 import styles from "./DatePicker.module.css";
 import type { DatePickerLabels, DatePickerProps, DatePickerSize } from "./DatePicker.types";
 

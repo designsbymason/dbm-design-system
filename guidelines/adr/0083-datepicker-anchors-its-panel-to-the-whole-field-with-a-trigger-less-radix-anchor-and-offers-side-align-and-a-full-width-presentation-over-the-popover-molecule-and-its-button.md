@@ -1,6 +1,6 @@
 # 0083 — `DatePicker` anchors its panel to the whole field with a trigger-less Radix anchor, and offers `side`, `align` and a full-width presentation, over the `Popover` molecule and its button
 
-**Status:** Accepted · **Date:** 2026-10-17
+**Status:** Accepted · **Date:** 2026-10-17 · **Amended 2026-10-17** — where the shared hook lives; the decision itself is unchanged
 
 ## Context
 [ADR-0082](./0082-datepicker-is-a-single-date-segmented-field-with-a-calendar-popover-and-an-explicit-format-over-a-masked-text-input-a-range-mode-or-a-date-time-field.md)
@@ -25,8 +25,7 @@ field's stylesheet, so it is not the `Popover` molecule's panel.
 **`side` (`"bottom"`, `"top"`) and `align` (`"start"` by default, `"center"`, `"end"`)** place it against the field.
 **`presentation`** is `"anchored"` (default) or `"full-width"`, and takes a breakpoint map like `Combobox`'s: the panel spans the
 visible screen with a small gap at each edge, the calendar centred in it, and opens on whichever side has room for a calendar's
-height once an on-screen keyboard is counted. The room is measured by `Combobox`'s `useViewportRoom`, imported from its folder for now
-(a move to `internal/` touches a Finalized component and waits for the maintainer's go-ahead). It is opt-in; making it the default
+height once an on-screen keyboard is counted. The room is measured by `useViewportRoom`, shared with `Combobox` from `internal/`. *(Amended 2026-10-17: this first said it was imported from `Combobox`'s folder for now, since moving it touched a Finalized component; the maintainer approved the move to `internal/`.)* It is opt-in; making it the default
 below `sm` waits for a real device, as ADR-0081 says.
 
 ## Alternatives considered
