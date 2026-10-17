@@ -330,7 +330,19 @@ export const RightToLeftReadsAndMirrors: Story = {
 export const ForcedColoursKeepTheMarks: Story = {
   name: "Forced colours: a chosen row keeps its marker, and the sort button and header text stay drawn",
   render: () => (
-    <DataTable<Employee> aria-label="Forced" columns={employeeColumns} data={employees.slice(0, 4)} selectionMode="multiple" getRowLabel={(row) => row.name} />
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <DataTable<Employee> aria-label="Forced" columns={employeeColumns} data={employees.slice(0, 4)} selectionMode="multiple" getRowLabel={(row) => row.name} />
+      <DataTable<Employee>
+        aria-label="Forced parts"
+        columns={employeeColumns}
+        data={employees.slice(0, 3)}
+        resizable
+        stickyFirstColumn={2}
+        defaultExpanded={["e1"]}
+        renderExpandedRow={(row) => <EmployeeDetail row={row} />}
+        getRowLabel={(row) => row.name}
+      />
+    </div>
   ),
   play: async () => {
     const emulate = (value: "active" | "none") => send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
@@ -354,6 +366,21 @@ export const ForcedColoursKeepTheMarks: Story = {
       await expect(getComputedStyle(button).color).not.toBe("rgba(0, 0, 0, 0)");
       const arrow = button.querySelector("svg") as SVGElement;
       await expect(getComputedStyle(arrow).opacity).not.toBe("0");
+      // the newer parts keep what separates them: the open row joins its detail (its divider is the page's, not a drawn line), the
+      // resize handle's line is drawn in the heading's own colour, and the last pinned column keeps its divider
+      const parts = body.getByRole("table", { name: "Forced parts" });
+      const openRow = within(parts).getByRole("button", { name: /^Collapse/ }).closest("tr") as HTMLElement;
+      await expect(rgbOf(getComputedStyle(openRow.firstElementChild as Element).borderBlockEndColor)).toBe(canvas);
+      const handle = within(parts).getAllByRole("separator")[0] as HTMLElement;
+      const line = getComputedStyle(handle, "::after");
+      await expect(line.borderInlineEndStyle).toBe("solid");
+      await expect(Number.parseFloat(line.borderInlineEndWidth)).toBeGreaterThan(0);
+      await expect(rgbOf(line.borderInlineEndColor)).toBe(rgbOf(getComputedStyle(handle.closest("th") as Element).color));
+      // the expand column and two data columns are pinned, and the third of them draws the divider
+      const pinned = parts.querySelector("tbody tr:not([hidden]):not([id])")?.children[2] as HTMLElement;
+      await expect(getComputedStyle(pinned).borderInlineEndStyle).toBe("solid");
+      await expect(getComputedStyle(pinned).borderInlineEndWidth).not.toBe("0px");
+      await expect(getComputedStyle(pinned).position).toBe("sticky");
       button.focus();
       await userEvent.keyboard("{Tab}{Shift>}{Tab}{/Shift}");
       await expect(getComputedStyle(button).outlineStyle).toBe("solid");
@@ -420,11 +447,11 @@ export const ChosenRowIsMarkedWithoutMovingAnything: Story = {
 };
 
 export const SortArrowsKeepTheirContrast: Story = {
-  name: "A sort arrow that isn't sorted keeps 3:1 against its header in all four themes",
+  name: "A sort arrow that isn't sorted, and a resize handle's line, keep 3:1 against their header in all four themes",
   render: () => (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-      <DataTable<Employee> aria-label="Brand header" columns={employeeColumns} data={employees.slice(0, 2)} />
-      <DataTable<Employee> aria-label="Neutral header" tone="neutral" columns={employeeColumns} data={employees.slice(0, 2)} />
+      <DataTable<Employee> aria-label="Brand header" resizable columns={employeeColumns} data={employees.slice(0, 2)} />
+      <DataTable<Employee> aria-label="Neutral header" resizable tone="neutral" columns={employeeColumns} data={employees.slice(0, 2)} />
     </div>
   ),
   play: async () => {
@@ -442,6 +469,13 @@ export const SortArrowsKeepTheirContrast: Story = {
           const opacity = Number(style.opacity);
           const blended = fg.map((channel, index) => channel * opacity + (bg[index] as number) * (1 - opacity));
           await expect(contrast(blended, bg), `${theme}, ${name}`).toBeGreaterThanOrEqual(3);
+          // the resize handle's line is a pseudo-element: its own opacity over the header's text colour
+          const handle = within(body.getByRole("table", { name })).getAllByRole("separator")[0] as HTMLElement;
+          const line = getComputedStyle(handle, "::after");
+          const lineColour = channels(line.borderInlineEndColor);
+          const lineOpacity = Number(line.opacity);
+          const lineBlend = lineColour.map((channel, index) => channel * lineOpacity + (bg[index] as number) * (1 - lineOpacity));
+          await expect(contrast(lineBlend, bg), `${theme}, ${name}, resize handle`).toBeGreaterThanOrEqual(3);
         }
       }
     } finally {
@@ -745,5 +779,23 @@ export const SavedViewsRecipeRoundTrips: Story = {
     await userEvent.click(await body.findByRole("option", { name: "View 3" }));
     await waitFor(() => expect(within(table).getByRole("columnheader", { name: /^Name/ })).toHaveAttribute("aria-sort", "ascending"));
     await expect(within(table).queryByRole("columnheader", { name: /^Started/ })).toBeNull();
+  },
+};
+
+export const SelectAllKeepsKeyboardFocus: Story = {
+  name: "Select all, pressed from the keyboard, leaves focus on Clear selection instead of dropping it",
+  render: () => <ServerDemo selectionMode="multiple" />,
+  play: async () => {
+    const table = await body.findByRole("table", { name: "Team, from a server" });
+    await waitFor(() => expect(table.querySelector("tbody")).not.toHaveAttribute("aria-busy"), { timeout: 3000 });
+    const user = userEvent.setup();
+    // choose a row with the keyboard, then Tab to the button that appears
+    (within(table).getAllByRole("checkbox")[1] as HTMLElement).focus();
+    await user.keyboard(" ");
+    const button = await body.findByRole("button", { name: "Select all 137" });
+    button.focus();
+    await user.keyboard("{Enter}");
+    await waitFor(() => expect(body.queryByRole("button", { name: "Select all 137" })).toBeNull());
+    await expect(body.getByRole("button", { name: "Clear selection" })).toHaveFocus();
   },
 };

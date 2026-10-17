@@ -485,8 +485,8 @@ doesn't read the page's direction, so give `DataTable.Pagination` `dir="rtl"` as
   open one keeps the stripes in step. The caret of a closed row points toward the end edge, so it turns round in right-to-left.
 - A sort by several columns says its order: the digit beside a column's arrow is hidden from assistive technology, which hears
   "sort order 2" after the heading, and the live region lists every column in the announcement.
-- An arrow on a column that isn't sorted is drawn at `opacity.80` and keeps 3:1 against its header (brand or neutral) in all four
-  themes, which a real-browser check measures.
+- An arrow on a column that isn't sorted, and the line of a resize handle, are drawn at `opacity.80` and keep 3:1 against their header
+  (brand or neutral) in all four themes, which a real-browser check measures.
 - A cell cut with an ellipsis (a column with a `width`) carries its whole text as its `title`; a screen reader reads the full text
   from the cell anyway.
 
@@ -590,8 +590,7 @@ const columns: DataTableColumn<Employee>[] = [
 <TokenRow token="font-size.xs" usage="the number that says a column's place in a sort by several" />
 <TokenRow token="motion.duration.fast" usage="the fade of a sort arrow when it is reached" />
 <TokenRow token="motion.easing.standard" usage="the easing of that fade" />
-<TokenRow token="opacity.40" usage="the line of a resize handle until it is reached" />
-<TokenRow token="opacity.80" usage="a sort arrow on a column that isn't sorted, until it is reached" />
+<TokenRow token="opacity.80" usage="a sort arrow on a column that isn't sorted, and a resize handle's line, until it is reached" />
 
 ## Related components
 

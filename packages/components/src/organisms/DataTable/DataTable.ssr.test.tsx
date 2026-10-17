@@ -30,6 +30,14 @@ const variants: Array<[string, Partial<DataTableProps<Employee>>]> = [
   ["a long table, windowed", { data: makeEmployees(500), maxHeight: "20rem" }],
   ["a long table, windowed and selecting", { data: makeEmployees(500), maxHeight: "20rem", selectionMode: "multiple", striped: true }],
   ["a hidden column", { hiddenColumns: ["salary"] }],
+  ["an open row", { renderExpandedRow: (row) => <p>Detail of {row.name}</p>, defaultExpanded: ["e2"], striped: true, selectionMode: "multiple" }],
+  ["an open row on a paged table", { renderExpandedRow: (row) => <p>Detail of {row.name}</p>, defaultExpanded: ["e7"], defaultPageSize: 5, defaultPage: 2 }],
+  ["resizable with widths", { resizable: true, columnWidths: { role: 150 }, selectionMode: "multiple", selectionColumnWidth: "4rem", actionsColumnWidth: "6rem", rowActions: () => <button type="button">More</button> }],
+  ["several pinned columns", { stickyFirstColumn: 2, stickyLastColumn: 2, selectionMode: "multiple", rowActions: () => <button type="button">More</button>, stickyHeader: true, maxHeight: "12rem" }],
+  ["a sort by several columns", { defaultSort: [{ columnId: "department", direction: "ascending" }, { columnId: "salary", direction: "descending" }] }],
+  ["all rows of a server table chosen", { sortMode: "manual", totalCount: 137, selectionMode: "multiple", allSelected: true }],
+  ["with the column menu", { children: <DataTable.ColumnMenu />, defaultHiddenColumns: ["started"] }],
+  ["every new feature together", { children: [<DataTable.ColumnMenu key="menu" />, <DataTable.Pagination key="pagination" />], renderExpandedRow: (row) => <p>Detail of {row.name}</p>, defaultExpanded: ["e1"], resizable: true, stickyFirstColumn: 1, selectionMode: "multiple", defaultPageSize: 5 }],
 ];
 
 const markup = (props: Partial<DataTableProps<Employee>>) => (

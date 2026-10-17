@@ -518,6 +518,59 @@ describe("TableToolbar", () => {
     });
   });
 
+  describe("Select all keeps keyboard focus", () => {
+    function Choosing({ withClear = true, children }: { withClear?: boolean; children?: React.ReactNode }) {
+      const [count, setCount] = useState(2);
+      return (
+        <TableToolbar.Selection
+          count={count}
+          totalCount={5}
+          onSelectAll={() => setCount(5)}
+          onClear={withClear ? () => setCount(0) : undefined}
+        >
+          {children}
+        </TableToolbar.Selection>
+      );
+    }
+
+    it("moves focus to Clear selection when the button that was pressed from the keyboard goes away", async () => {
+      keyboardFocus();
+      const user = userEvent.setup();
+      render(<Choosing />);
+      screen.getByRole("button", { name: "Select all 5" }).focus();
+      await user.keyboard("{Enter}");
+      expect(screen.queryByRole("button", { name: "Select all 5" })).toBeNull();
+      expect(screen.getByRole("button", { name: "Clear selection" })).toHaveFocus();
+    });
+
+    it("moves focus to the first bulk action when there is no Clear selection", async () => {
+      keyboardFocus();
+      const user = userEvent.setup();
+      render(
+        <Choosing withClear={false}>
+          <button type="button">Delete</button>
+        </Choosing>,
+      );
+      screen.getByRole("button", { name: "Select all 5" }).focus();
+      await user.keyboard("{Enter}");
+      expect(screen.getByRole("button", { name: "Delete" })).toHaveFocus();
+    });
+
+    it("leaves a mouse press alone, since focus a pointer took needn't be held onto", async () => {
+      const user = userEvent.setup();
+      render(<Choosing />);
+      await user.click(screen.getByRole("button", { name: "Select all 5" }));
+      expect(screen.getByRole("button", { name: "Clear selection" })).not.toHaveFocus();
+    });
+
+    it("does not take focus when select all goes away without having it", () => {
+      keyboardFocus();
+      const { rerender } = render(<TableToolbar.Selection count={2} totalCount={5} onSelectAll={() => {}} onClear={() => {}} />);
+      rerender(<TableToolbar.Selection count={5} totalCount={5} onSelectAll={() => {}} onClear={() => {}} />);
+      expect(screen.getByRole("button", { name: "Clear selection" })).not.toHaveFocus();
+    });
+  });
+
   describe("Selection", () => {
     it("shows the count and the bulk actions, in a named group", () => {
       render(

@@ -13,7 +13,7 @@ only the user declares that. A `/review-component DataTable` pass was run on 202
 - `Table` grew `Table.Row` `selected` and `containerRef`, additive and approved with the plan ([Table.md](Table.md)).
 - New component tokens, `data-table.row-height.{xs…xl}` (`2rem`, `2.5rem`, `2.75rem`, `3.5rem`, `4rem`), each just above the `IconButton` of
   its size. No new semantic token: a chosen row is `bg.brand-subtle` (the `brand` tone's own stripe), its hover `bg.brand-subtle-hover`.
-- No new dependency. Bundle size is 24.53KB JS and 8.10KB CSS, because the bundle holds `Table`, `TableToolbar`, `Pagination`, `Select`, `Checkbox`, `Menu` and
+- No new dependency. Bundle size is 24.62KB JS and 8.10KB CSS, because the bundle holds `Table`, `TableToolbar`, `Pagination`, `Select`, `Checkbox`, `Menu` and
   `Button`; budgets are 26KB and 9KB with the reason beside them in `check-component-bundle-size.mjs` (a `CSS_BUDGET_OVERRIDES_KB` was added).
 - Defaults: `tone` is `brand` (a solid brand header, as a data table's header usually wants), and `DataTable.Pagination` is size `sm`, since the
   footer is secondary to the rows. Text is ordered with one `Intl.Collator("en")`, not the browser's locale, so a server and a browser agree
@@ -104,9 +104,24 @@ Found while building them:
   table's last-row rule needs the detail to be the last child (the hidden row goes *before* it), `aria-controls` on a closed row points at nothing so it is set only while
   open, and the row count can't be kept right across pages, so it is left off.
 
+## Final review pass (2026-10-17)
+Seven findings, all fixed:
+1. **"Select all" dropped keyboard focus** when it went away. Fixed at its source, in `TableToolbar.Selection` ([TableToolbar.md](TableToolbar.md)); a real-browser check
+   presses it from the keyboard in the server demo.
+2. **A resize handle's line is `opacity.80`**, not `opacity.40` (1.9–3.0:1 on the brand and neutral headers, all four themes): the contrast check now measures the
+   handle as well as the sort arrow.
+3. **The server-render and hydration test covers the newer features:** an open row (also paged), resizable with widths and the added columns' widths, several
+   pinned columns, a sort by several columns, every row of a server table chosen, the column menu, and all of them together.
+4. **StrictMode and cleanup:** a table that expands, resizes, pins and holds the column menu works under `<StrictMode>`, and a drag is let go of when the table is
+   removed in the middle of it, when the pointer is let go, and when the gesture is cancelled (the unmount test fails with the cleanup removed).
+5. **Forced colours** is asserted for the newer parts: the open row's joined divider is the page's colour, the resize handle's line is drawn in the heading's own
+   colour, and the last pinned column keeps its divider.
+6. **The expanded-row demo uses the `ghost` `DescriptionList`**, so it isn't a box inside a box.
+7. This file: the open list is current, and the numbers.
+
 ## Verified
-- `eslint`, `tsc` and the Storybook `tsc`: clean. The `unit` project: 8703 passing. The `storybook` project in a real browser: 1817
-  passing (225 files), including twenty-one hidden checks for this component and one for `Checkbox` (one run showed the known `TimePicker` width flake, which passed on a rerun of its folder). `pnpm build`, `pnpm check-component-bundle-size` and
+- `eslint`, `tsc` and the Storybook `tsc`: clean. The `unit` project: 8724 passing. The `storybook` project in a real browser: 1818
+  passing (225 files), including twenty-two hidden checks for this component and one for `Checkbox`. `pnpm build`, `pnpm check-component-bundle-size` and
   `pnpm check-guidelines`: clean.
 - Unit: sort, selection, paging and their pure helpers; the controlled/uncontrolled pairs wired to state; shift ranges; single mode;
   non-selectable rows; manual mode; the live-region announcement; `aria-rowcount` and `aria-rowindex`; `onRowClick` (and a control in the row not
@@ -122,7 +137,7 @@ Found while building them:
 
 ## Open at this point
 Not verified, and none of it should be assumed:
-- **Emerald light** was not looked at on screen (its sort-arrow contrast is measured); Purple light, Purple dark and Emerald dark were.
+- **Emerald light** was looked at on screen for the expandable-rows story only (and its contrast measured everywhere); the other new stories were seen in Purple light, Purple dark and Emerald dark.
 - **Resizing and the headers' tab stops.** Each resizable column adds a tab stop (it is opt-in, and said so on the Docs page); a table with many resizable columns was
   not walked by hand with a screen reader.
 - **Several pinned columns with a spanning cell.** A cell that spans columns in the first pinned columns is not pinned and shifts the others out of their columns;

@@ -69,7 +69,7 @@ export const employeeColumns: DataTableColumn<Employee>[] = [
 /** The detail of an open row: what the row's columns don't show. */
 export function EmployeeDetail({ row }: { row: Employee }) {
   return (
-    <DescriptionList size="sm" columns={{ base: 1, md: 3 }}>
+    <DescriptionList size="sm" variant="ghost" columns={{ base: 1, md: 3 }}>
       <DescriptionList.Item>
         <DescriptionList.Term>Manager</DescriptionList.Term>
         <DescriptionList.Details>{row.department} lead</DescriptionList.Details>

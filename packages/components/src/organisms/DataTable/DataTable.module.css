@@ -202,7 +202,9 @@ tr[data-selected] > .selectCell {
 }
 
 /* A column that can be resized: its heading is a positioned box with room at the end edge for the handle, which is a separator
-   at least the minimum target wide, a line along its end edge drawn as a border (a background would vanish in forced colours). */
+   at least the minimum target wide, a line along its end edge drawn as a border (a background would vanish in forced colours). The
+   line is the only sign that the column can be resized, so at rest it is `opacity.80`, which keeps 3:1 against the header (the
+   dimmer `opacity.40` measured 1.9–3.0:1). */
 .table > thead > tr > .resizableCell {
   padding-inline-end: var(--dbm-space-6);
   position: relative;
@@ -223,7 +225,7 @@ tr[data-selected] > .selectCell {
 .resizeHandle::after {
   border-inline-end: var(--dbm-border-width-2) solid currentcolor;
   content: "";
-  opacity: var(--dbm-opacity-40);
+  opacity: var(--dbm-opacity-80);
   transition: opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
 }
 

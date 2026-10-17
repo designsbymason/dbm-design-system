@@ -467,6 +467,8 @@ const TableToolbarSelection = forwardRef<HTMLDivElement, TableToolbarSelectionPr
     const visible = count > 0;
     const rowRef = useRef<HTMLDivElement | null>(null);
     const focusWasInside = useRef(false);
+    const clearRef = useRef<HTMLButtonElement | null>(null);
+    const selectAllHadFocus = useRef(false);
     const showSelectAll =
       Boolean(onSelectAll) && typeof totalCount === "number" && Number.isFinite(totalCount) && count < totalCount;
 
@@ -493,6 +495,16 @@ const TableToolbarSelection = forwardRef<HTMLDivElement, TableToolbarSelectionPr
         focusNearestOutside(rowRef.current);
       }
     }, [visible]);
+
+    // "Select all N" goes away once everything is chosen. If keyboard focus is on it then, hiding it would drop focus to the top of
+    // the document, so focus moves to the next control in the row: "Clear selection", or the first of the bulk actions.
+    useLayoutEffect(() => {
+      if (showSelectAll || !selectAllHadFocus.current) return;
+      selectAllHadFocus.current = false;
+      const row = rowRef.current;
+      const next = clearRef.current ?? row?.querySelector<HTMLElement>(`.${styles.selectionActions} button:not([disabled]), .${styles.selectionActions} a[href], .${styles.selectionActions} [tabindex]:not([tabindex="-1"])`);
+      next?.focus();
+    }, [showSelectAll]);
 
     return (
       <>
@@ -521,13 +533,24 @@ const TableToolbarSelection = forwardRef<HTMLDivElement, TableToolbarSelectionPr
             {labels.selected(count)}
           </span>
           {showSelectAll && (
-            <Button variant="ghost" size={smallerButton[size]} onClick={onSelectAll}>
+            <Button
+              variant="ghost"
+              size={smallerButton[size]}
+              onClick={onSelectAll}
+              // Only focus from the keyboard counts, as for the row: a mouse press needn't be held onto.
+              onFocus={(event) => {
+                selectAllHadFocus.current = event.target.matches(":focus-visible");
+              }}
+              onBlur={() => {
+                selectAllHadFocus.current = false;
+              }}
+            >
               {labels.selectAll(totalCount as number)}
             </Button>
           )}
           <div className={styles.selectionActions}>{children}</div>
           {onClear && (
-            <Button variant="ghost" size={smallerButton[size]} onClick={onClear}>
+            <Button ref={clearRef} variant="ghost" size={smallerButton[size]} onClick={onClear}>
               {labels.clear}
             </Button>
           )}

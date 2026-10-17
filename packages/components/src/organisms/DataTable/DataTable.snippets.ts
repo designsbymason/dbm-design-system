@@ -162,7 +162,7 @@ export const dataTableSnippets = {
   defaultExpanded={["e2"]}
   isRowExpandable={(row) => row.status === "Active"}
   renderExpandedRow={(row) => (
-    <DescriptionList size="sm">
+    <DescriptionList size="sm" variant="ghost">
       <DescriptionList.Item>
         <DescriptionList.Term>Contact</DescriptionList.Term>
         <DescriptionList.Details>{row.email}</DescriptionList.Details>

@@ -131,3 +131,17 @@ bottom of the scrolling box through its own `style`). Purely additive docs and s
 real browser: the sticky row stays at the box's bottom edge scrolled or not, and keyboard "Clear selection" from there moves focus to the nearest
 control before it (the last row's checkbox), not the top of the document. Parts outside a root use size `md`; both examples say so.
 
+
+## Post-Finalization follow-up (2026-10-17, at explicit direction) — "Select all" hands keyboard focus on when it goes away
+
+`TableToolbar.Selection` hides its "Select all N" button once everything is chosen. Pressed from the keyboard, that dropped focus to the top of the
+document: found in `DataTable`'s final review, with focus on the button, Enter, and `document.activeElement` ending as `<body>`, the very case
+`06-engineering-standards.md` §9 names ("a control that has keyboard focus is never removed"). The row already did this for the whole row going away; the
+button is now covered too: when it disappears and keyboard focus was on it (`:focus-visible`, so a mouse press is left alone, as for the row), focus
+moves to "Clear selection", or, with no `onClear`, to the first of the bulk actions.
+
+**Finalized status is unchanged.** Three-question test (`06-engineering-standards.md` §9): question 1, does it change the rendered or behavioural output of
+anything that existed? Only where focus ends after a keyboard press that used to lose it. Question 2, is it correcting a genuine defect? Yes: the original pass
+would have failed the focus line had it pressed the button from the keyboard, so it stays Finalized. Re-verified with four unit tests (focus lands on Clear
+selection; on the first bulk action when there is none; a mouse press is left alone; nothing moves when the button goes away without having focus), the
+`TableToolbar` suite (107 passing), and a real-browser check on `DataTable`'s server demo (Enter on "Select all 137" leaves focus on "Clear selection").

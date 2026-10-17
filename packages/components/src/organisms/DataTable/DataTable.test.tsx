@@ -1,4 +1,4 @@
-import { act, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
@@ -1210,6 +1210,74 @@ describe("DataTable", () => {
     it("has no accessibility violations with a row open", async () => {
       const { container } = renderExpandable({ defaultExpanded: ["p1"], selectionMode: "multiple" });
       expect(await axe(container)).toHaveNoViolations();
+    });
+  });
+  describe("effects with cleanup", () => {
+    const widthOfCells = (width: number) =>
+      vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+        return { width: this.tagName === "TH" ? width : 0, height: 0, top: 0, left: 0, right: 0, bottom: 0, x: 0, y: 0, toJSON: () => ({}) };
+      });
+
+    it("works under StrictMode with expanding, resizing, pinning and the column menu together", async () => {
+      widthOfCells(200);
+      const onColumnWidthsChange = vi.fn();
+      const user = userEvent.setup();
+      render(
+        <StrictMode>
+          <DataTable<Person>
+            columns={columns}
+            data={people}
+            aria-label="People"
+            getRowLabel={(row) => row.name}
+            resizable
+            stickyFirstColumn={2}
+            renderExpandedRow={(row) => <p>Detail of {row.name}</p>}
+            onColumnWidthsChange={onColumnWidthsChange}
+          >
+            <DataTable.ColumnMenu />
+          </DataTable>
+        </StrictMode>,
+      );
+      expect(screen.getByRole("table").querySelector("thead")).toHaveAttribute("data-pin-start", "3");
+      await user.click(screen.getByRole("button", { name: "Expand Cy" }));
+      expect(screen.getByText("Detail of Cy")).toBeInTheDocument();
+      screen.getByRole("separator", { name: "Resize Name column" }).focus();
+      await user.keyboard("{ArrowRight}");
+      expect(onColumnWidthsChange).toHaveBeenLastCalledWith({ name: 216 });
+      await user.click(screen.getByRole("button", { name: "Columns" }));
+      expect(await screen.findByRole("menu")).toBeInTheDocument();
+    });
+
+    it("lets go of a drag when the table is removed in the middle of it", () => {
+      widthOfCells(200);
+      vi.stubGlobal("PointerEvent", MouseEvent);
+      const onColumnWidthsChange = vi.fn();
+      const { unmount } = render(<DataTable<Person> columns={columns} data={people} aria-label="People" resizable onColumnWidthsChange={onColumnWidthsChange} />);
+      const handle = screen.getByRole("separator", { name: "Resize Name column" });
+      fireEvent.pointerDown(handle, { button: 0, clientX: 100 });
+      window.dispatchEvent(new MouseEvent("pointermove", { clientX: 130 }));
+      expect(onColumnWidthsChange).toHaveBeenCalledTimes(1);
+      unmount();
+      window.dispatchEvent(new MouseEvent("pointermove", { clientX: 160 }));
+      expect(onColumnWidthsChange).toHaveBeenCalledTimes(1);
+      vi.unstubAllGlobals();
+    });
+
+    it("stops following the pointer when it is let go, or the gesture is cancelled", () => {
+      widthOfCells(200);
+      vi.stubGlobal("PointerEvent", MouseEvent);
+      const onColumnWidthsChange = vi.fn();
+      render(<DataTable<Person> columns={columns} data={people} aria-label="People" resizable onColumnWidthsChange={onColumnWidthsChange} />);
+      const handle = screen.getByRole("separator", { name: "Resize Name column" });
+      for (const end of ["pointerup", "pointercancel"]) {
+        fireEvent.pointerDown(handle, { button: 0, clientX: 100 });
+        window.dispatchEvent(new MouseEvent("pointermove", { clientX: 120 }));
+        const calls = onColumnWidthsChange.mock.calls.length;
+        window.dispatchEvent(new MouseEvent(end));
+        window.dispatchEvent(new MouseEvent("pointermove", { clientX: 160 }));
+        expect(onColumnWidthsChange.mock.calls.length).toBe(calls);
+      }
+      vi.unstubAllGlobals();
     });
   });
 });
