@@ -40,7 +40,14 @@ export const dataTableSnippets = {
 
   withToolbar: `${columnsNote}
 {/* query, setQuery and the filtered rows are the app's own state. */}
-<DataTable aria-label="Team" columns={columns} data={filteredRows} selectionMode="multiple" getRowLabel={(row) => row.name}>
+<DataTable
+  aria-label="Team"
+  columns={columns}
+  data={filteredRows}
+  selectionMode="multiple"
+  getRowLabel={(row) => row.name}
+  emptyState="No one matches that search"
+>
   <DataTable.Toolbar aria-label="Team table tools">
     <TableToolbar.Row>
       <TableToolbar.Search>
@@ -80,7 +87,7 @@ export const dataTableSnippets = {
   longTable: `${columnsNote}
 {/* Above 100 rows, an unpaged table with a maxHeight draws only the rows in view; every row is one line of
     a fixed height. aria-rowcount and aria-rowindex tell a screen reader the real size. */}
-<DataTable aria-label="Team" columns={columns} data={thousandsOfRows} maxHeight="24rem" stickyHeader />`,
+<DataTable aria-label="Team" columns={columns} data={thousandsOfRows} maxHeight="24rem" stickyHeader striped />`,
 
   serverSide: `${columnsNote}
 {/* sortMode="manual": the table draws data as given and asks. Answer onSortChange and onPageChange with new rows, and say
@@ -93,7 +100,9 @@ export const dataTableSnippets = {
   sortMode="manual"
   totalCount={137}
   loading={isFetching}
+  loadingRows={pageSize}
   selectionMode="multiple"
+  getRowLabel={(row) => row.name}
   sort={sort}
   onSortChange={setSort}
   page={page}
@@ -128,15 +137,16 @@ export const dataTableSnippets = {
   columns={columns}
   data={[]}
   emptyState={
-    <EmptyState>
+    <EmptyState size="sm">
       <EmptyState.Title>No one on the team yet</EmptyState.Title>
+      <EmptyState.Description>People you add will show here.</EmptyState.Description>
     </EmptyState>
   }
 />`,
 
   sizes: `${columnsNote}
 {/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" — the cell type size, the row height and the controls in it. */}
-<DataTable aria-label="Team" columns={columns} data={rows} size="sm" />`,
+<DataTable aria-label="Team" columns={columns} data={rows} size="sm" selectionMode="multiple" />`,
 
   expandableRows: `${columnsNote}
 {/* renderExpandedRow draws the detail under a row and adds a column of expand buttons (aria-expanded, named for the row). The
@@ -146,8 +156,11 @@ export const dataTableSnippets = {
   aria-label="Team"
   columns={columns}
   data={rows}
+  striped
+  selectionMode="multiple"
   getRowLabel={(row) => row.name}
   defaultExpanded={["e2"]}
+  isRowExpandable={(row) => row.status === "Active"}
   renderExpandedRow={(row) => (
     <DescriptionList size="sm">
       <DescriptionList.Item>
@@ -160,8 +173,8 @@ export const dataTableSnippets = {
 
   density: `{/* A density toggle needs no prop of its own: size sets the type, the padding and the height of a row together, so a
     toggle is a piece of your state handed to it. Keep the choice where the person's other settings live (storage, a profile). */}
-{/* const [density, setDensity] = useState("md"); */}
-<ToggleGroup aria-label="Row density" size="sm" value={density} onValueChange={(next) => next && setDensity(next)}>
+{/* const [density, setDensity] = useState<"sm" | "md" | "lg">("md"); */}
+<ToggleGroup aria-label="Row density" size="sm" value={density} onValueChange={(next) => next && setDensity(next as "sm" | "md" | "lg")}>
   <ToggleGroup.Item value="sm">Compact</ToggleGroup.Item>
   <ToggleGroup.Item value="md">Comfortable</ToggleGroup.Item>
   <ToggleGroup.Item value="lg">Spacious</ToggleGroup.Item>
@@ -192,6 +205,12 @@ export const dataTableSnippets = {
   pageSize={pageSize}
   onPageSizeChange={setPageSize}
 >
+  <DataTable.Toolbar aria-label="Team table tools">
+    <TableToolbar.Row>
+      <Spacer />
+      <DataTable.ColumnMenu />
+    </TableToolbar.Row>
+  </DataTable.Toolbar>
   <DataTable.Pagination />
 </DataTable>`,
 
@@ -200,6 +219,7 @@ export const dataTableSnippets = {
     Home and End for the limits, Enter to reset). A column's width, minWidth and maxWidth are where it begins and where a drag stops;
     columnWidths / onColumnWidthsChange keep the widths (in the URL or storage, say). selectionColumnWidth and actionsColumnWidth
     size the two columns the table adds. */}
+{/* columns: [{ id: "name", header: "Name", accessor: (row) => row.name, width: "12rem", minWidth: "8rem", maxWidth: "24rem" }, …] */}
 <DataTable
   aria-label="Team"
   columns={columns}
@@ -211,15 +231,32 @@ export const dataTableSnippets = {
 />`,
 
   pinnedColumns: `${columnsNote}
-{/* A number pins that many data columns beside the checkbox column (and the actions column at the end), up to four at an
+{/* DotsThreeIcon comes from @dbm-design-system/icons. A number pins that many data columns beside the checkbox column (and the actions column at the end), up to four at an
     edge in all: here the checkbox and the name stay put at the start, and the actions at the end, while the rest scrolls
     sideways. true pins one. */}
-<DataTable aria-label="Team" columns={columns} data={rows} selectionMode="multiple" stickyFirstColumn={2} stickyLastColumn />`,
+<DataTable
+  aria-label="Team"
+  columns={columns}
+  data={rows}
+  selectionMode="multiple"
+  stickyFirstColumn={2}
+  stickyLastColumn
+  rowActions={(row) => (
+    <Menu>
+      <Menu.Trigger asChild>
+        <IconButton icon={DotsThreeIcon} variant="ghost" size="sm" aria-label={\`Actions for \${row.name}\`} />
+      </Menu.Trigger>
+      <Menu.Content align="end">
+        <Menu.Item>Edit</Menu.Item>
+      </Menu.Content>
+    </Menu>
+  )}
+/>`,
 
   tones: `${columnsNote}
 {/* tone: "brand" (default) | "neutral" | "info" | "success" | "warning" | "danger" — the header's solid fill, and the stripe and
     hover tints, as Table's. neutral leaves the header unfilled. */}
-<DataTable aria-label="Team" columns={columns} data={rows} tone="success" striped />`,
+<DataTable aria-label="Team" columns={columns} data={rows} tone="success" striped selectionMode="multiple" defaultSelection={["e2"]} />`,
 
   rightToLeft: `${columnsNote}
 {/* Alignment and pinning are logical, so a page with dir="rtl" mirrors the table. The page size select opens a Radix list that
@@ -248,6 +285,8 @@ export interface DataTablePlaygroundSnippetArgs {
   selectionColumnWidth?: string;
   actionsColumnWidth?: string;
   loading?: boolean;
+  loadingRows?: number;
+  virtualize?: string | boolean;
   maxHeight?: string;
   "aria-label"?: string;
 }
@@ -279,7 +318,10 @@ export function dataTablePlaygroundSnippet(args: DataTablePlaygroundSnippetArgs)
   if (args.selectionColumnWidth) props.push(`selectionColumnWidth="${args.selectionColumnWidth}"`);
   if (args.actionsColumnWidth) props.push(`actionsColumnWidth="${args.actionsColumnWidth}"`);
   if (args.multiSort === false) props.push("multiSort={false}");
+  if (args.virtualize === true || args.virtualize === "true") props.push("virtualize");
+  else if (args.virtualize === false || args.virtualize === "false") props.push("virtualize={false}");
   if (args.loading) props.push("loading");
+  if (args.loading && typeof args.loadingRows === "number" && args.loadingRows !== 5) props.push(`loadingRows={${args.loadingRows}}`);
   return `${columnsNote}
 <DataTable
 ${props.map((prop) => `  ${prop}`).join("\n")}

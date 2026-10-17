@@ -52,7 +52,8 @@ const meta: Meta<Args> = {
     defaultExpanded: { ...noControls, description: "The rows open to begin with.", table: { defaultValue: { summary: "[]" } } },
     onExpandedChange: { ...noControls, description: "Called with the ids a person asked to have open." },
     expandMode: {
-      control: "radio",
+      // Live only where rows can be expanded (the Expandable rows story turns it on), so no control is dead in the others.
+      control: false,
       options: ["multiple", "single"],
       description: "multiple lets any number of rows be open; single closes the open row when another is opened.",
       table: { defaultValue: { summary: "multiple" } },
@@ -84,7 +85,7 @@ const meta: Meta<Args> = {
       description: "Shows placeholder rows in place of the data while it loads.",
       table: { defaultValue: { summary: "false" } },
     },
-    loadingRows: { control: "number", description: "How many placeholder rows a loading table draws.", table: { defaultValue: { summary: "5" } } },
+    loadingRows: { control: "number", if: { arg: "loading", truthy: true }, description: "How many placeholder rows a loading table draws.", table: { defaultValue: { summary: "5" } } },
     emptyState: { ...noControls, description: "What an empty table says: text, or an EmptyState." },
     rowActions: { ...noControls, description: "Draws a trailing column for each row's actions, usually an IconButton that opens a Menu." },
     onRowClick: { ...noControls, description: "Called when a row is pressed or Enter is pressed on it. Makes each row a tab stop; offer the action another way as well." },
@@ -97,8 +98,9 @@ const meta: Meta<Args> = {
     columnWidths: { ...noControls, description: "The widths a person has given columns, in pixels, by column id. Controlled with onColumnWidthsChange." },
     defaultColumnWidths: { ...noControls, description: "The widths to begin with.", table: { defaultValue: { summary: "{}" } } },
     onColumnWidthsChange: { ...noControls, description: "Called with the widths a gesture asks for, on every step of a drag." },
-    selectionColumnWidth: { control: "text", description: "The width of the column of checkboxes (any CSS length)." },
-    actionsColumnWidth: { control: "text", description: "The width of the column of row actions (any CSS length). It is as narrow as its button without one." },
+    selectionColumnWidth: { control: "text", if: { arg: "selectionMode", neq: "none" }, description: "The width of the column of checkboxes (any CSS length)." },
+    // Live only where there is a column of row actions (the Row actions and Pinned columns stories turn it on).
+    actionsColumnWidth: { control: false, description: "The width of the column of row actions (any CSS length). It is as narrow as its button without one." },
     hiddenColumns: { ...noControls, description: "The ids of the columns that are not drawn. Controlled with onHiddenColumnsChange." },
     defaultHiddenColumns: { ...noControls, description: "The columns hidden to begin with." },
     onHiddenColumnsChange: { ...noControls, description: "Called with the ids a person asked to have hidden." },
@@ -234,6 +236,7 @@ export const WithToolbar: Story = {
 
 export const RowActions: Story = {
   parameters: { docs: { source: { code: dataTableSnippets.rowActions } } },
+  argTypes: { actionsColumnWidth: { control: "text" } },
   render: ({ maxHeight, ...args }) => (
     <div style={{ minHeight: "22rem" }}>
       <DataTable<Employee> {...args} maxHeight={maxHeight || undefined} data={employees.slice(0, 6)} rowActions={(row) => <RowMenu row={row} size={args.size} />} />
@@ -318,6 +321,7 @@ export const AllSizes: Story = {
 export const ExpandableRows: Story = {
   name: "Expandable rows",
   parameters: { docs: { source: { code: dataTableSnippets.expandableRows } } },
+  argTypes: { expandMode: { control: "radio" } },
   args: { selectionMode: "multiple", defaultExpanded: ["e2"] },
   render: ({ maxHeight, selectionColumnWidth, actionsColumnWidth, ...args }) => (
     <DataTable<Employee>
@@ -354,6 +358,7 @@ export const ResizableColumns: Story = {
 export const PinnedColumns: Story = {
   name: "Pinned first and last columns",
   parameters: { docs: { source: { code: dataTableSnippets.pinnedColumns } } },
+  argTypes: { actionsColumnWidth: { control: "text" } },
   args: { selectionMode: "multiple", stickyFirstColumn: 2, stickyLastColumn: true },
   render: ({ maxHeight, ...args }) => (
     <div style={{ maxWidth: "32rem" }}>
@@ -379,7 +384,8 @@ export const DensityToggle: Story = {
 export const SavedViews: Story = {
   name: "Saved views (a recipe)",
   parameters: { docs: { source: { code: dataTableSnippets.savedViews } } },
-  argTypes: { sortMode: noControls },
+  // The demo holds the sort, the widths, the hidden columns and the page size, and turns resizing on.
+  argTypes: { sortMode: noControls, resizable: noControls },
   render: ({ maxHeight, selectionColumnWidth, actionsColumnWidth, ...args }) => (
     <div style={{ minHeight: "28rem" }}>
       <SavedViewsDemo {...args} maxHeight={maxHeight || undefined} selectionColumnWidth={selectionColumnWidth || undefined} actionsColumnWidth={actionsColumnWidth || undefined} />

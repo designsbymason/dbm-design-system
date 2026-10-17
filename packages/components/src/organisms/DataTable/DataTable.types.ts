@@ -145,179 +145,10 @@ export interface DataTableProps<TRow>
    */
   children?: ReactNode;
   /**
-   * Gives a row the id its selection is kept by. The default reads the row's `id` and then its position in `data`.
-   * Give it when the rows have no `id` field and the data can be reordered or replaced.
+   * A visible title for the table, drawn as its `<caption>`. Names the table for assistive technology; give this,
+   * an `aria-label` or an `aria-labelledby`.
    */
-  getRowId?: (row: TRow, index: number) => string;
-  /**
-   * Names a row for a screen reader ("Select Ada Lovelace"). Without it a row is "Row 3".
-   */
-  getRowLabel?: (row: TRow, index: number) => string;
-  /** The ordering. Controlled with `onSortChange`. */
-  sort?: DataTableSort;
-  /**
-   * The ordering the table starts with.
-   * @default []
-   */
-  defaultSort?: DataTableSort;
-  /** Called with the ordering a person asked for. A controlled table changes only when `sort` does. */
-  onSortChange?: (sort: DataTableSort) => void;
-  /**
-   * Lets a person sort by several columns: a press with Shift held adds the column to the sort (or turns it round, then takes it
-   * off), where a plain press makes it the only one. The columns then show their order. A list of several in `sort` is honoured
-   * whether or not this is on.
-   * @default true
-   */
-  multiSort?: boolean;
-  /**
-   * `"client"` sorts and pages `data` in the browser; `"manual"` draws `data` as given and leaves the sorting and
-   * paging to the caller, who answers `onSortChange` and `onPageChange` with new rows.
-   * @default 'client'
-   */
-  sortMode?: DataTableSortMode;
-  /**
-   * How many rows can be chosen: `"multiple"` adds a checkbox column with a header checkbox, `"single"` the same
-   * without the header checkbox, and a new choice replaces the old.
-   * @default 'none'
-   */
-  selectionMode?: DataTableSelectionMode;
-  /** The ids of the chosen rows. Controlled with `onSelectionChange`. */
-  selection?: string[];
-  /**
-   * The rows chosen to begin with.
-   * @default []
-   */
-  defaultSelection?: string[];
-  /** Called with the ids a person asked to have chosen. A controlled table changes only when `selection` does. */
-  onSelectionChange?: (selection: string[]) => void;
-  /**
-   * Whether every row of the whole table is chosen, on every page, without their ids being listed: "select all 137" for a table that
-   * holds one page of them (`sortMode="manual"` with a `totalCount`). Every row shows as chosen, the count is the `totalCount`, and
-   * unchecking one goes back to a list of ids (the page's rows but that one). Reset it (`onAllSelectedChange(false)`) when the filter
-   * changes, since "all" meant the rows matching the old one. Controlled with `onAllSelectedChange`.
-   */
-  allSelected?: boolean;
-  /**
-   * Whether every row is chosen to begin with.
-   * @default false
-   */
-  defaultAllSelected?: boolean;
-  /** Called when a person chooses every row of the whole table, or goes back to a list of ids. */
-  onAllSelectedChange?: (allSelected: boolean) => void;
-  /**
-   * Draws the detail of a row under it when it is opened, and adds a column of expand buttons (after the checkboxes) that open and
-   * close it. What it returns fills one cell as wide as the table. Rows of different heights can't be drawn a window at a time,
-   * so a table with this is never windowed, and the table sets no `aria-rowcount` or `aria-rowindex`, since the detail rows make
-   * the number of rows unknowable across pages.
-   */
-  renderExpandedRow?: (row: TRow, context: { index: number }) => ReactNode;
-  /** Says a row has no detail: its expand cell is left empty. Only read with `renderExpandedRow`. */
-  isRowExpandable?: (row: TRow) => boolean;
-  /** The ids of the rows that are open. Controlled with `onExpandedChange`. */
-  expanded?: string[];
-  /**
-   * The rows open to begin with.
-   * @default []
-   */
-  defaultExpanded?: string[];
-  /** Called with the ids a person asked to have open. A controlled table changes only when `expanded` does. */
-  onExpandedChange?: (expanded: string[]) => void;
-  /**
-   * `"multiple"` lets any number of rows be open; `"single"` closes the open row when another is opened.
-   * @default 'multiple'
-   */
-  expandMode?: "multiple" | "single";
-  /** Says a row can't be chosen. Its checkbox is disabled, and the header checkbox leaves it out. */
-  isRowSelectable?: (row: TRow) => boolean;
-  /** The page, from 1. Controlled with `onPageChange`. Setting `pageSize` or adding a `DataTable.Pagination` turns paging on. */
-  page?: number;
-  /**
-   * The page to begin on.
-   * @default 1
-   */
-  defaultPage?: number;
-  /** Called with the page a person asked for. A controlled table changes only when `page` does. */
-  onPageChange?: (page: number) => void;
-  /** Rows a page. Controlled with `onPageSizeChange`. */
-  pageSize?: number;
-  /**
-   * Rows a page to begin with.
-   * @default 10
-   */
-  defaultPageSize?: number;
-  /** Called with the page size a person asked for. */
-  onPageSizeChange?: (pageSize: number) => void;
-  /**
-   * The page sizes a person can choose from in `DataTable.Pagination`.
-   * @default [10, 25, 50, 100]
-   */
-  pageSizeOptions?: number[];
-  /**
-   * How many rows there are in all, for a `manual` table that holds one page of them. Without it the count is
-   * `data.length`.
-   */
-  totalCount?: number;
-  /**
-   * Draws only the rows in view. `"auto"` does so above 100 rows when the table isn't paged and has a
-   * `maxHeight`; `true` and `false` decide it. Needs a `maxHeight` to have anything to scroll within.
-   * @default 'auto'
-   */
-  virtualize?: "auto" | boolean;
-  /**
-   * Shows placeholder rows in place of the data while it loads.
-   * @default false
-   */
-  loading?: boolean;
-  /**
-   * How many placeholder rows a loading table draws.
-   * @default 5
-   */
-  loadingRows?: number;
-  /** What an empty table says: text, or an `EmptyState`. */
-  emptyState?: ReactNode;
-  /**
-   * Draws a trailing column for each row's actions, usually an `IconButton` that opens a `Menu`. Its heading is
-   * read by a screen reader and not drawn.
-   */
-  rowActions?: (row: TRow, index: number) => ReactNode;
-  /**
-   * Called when a row is pressed or Enter is pressed on it. Makes each row a tab stop, so offer the same action
-   * another way as well (a link in the row), and don't rely on this alone. A press on a control inside the row
-   * (a checkbox, a link, a menu button) is that control's, and doesn't reach this.
-   */
-  onRowClick?: (row: TRow, event: MouseEvent<HTMLTableRowElement> | KeyboardEvent<HTMLTableRowElement>) => void;
-  /**
-   * Lets a person resize every column by dragging the end edge of its heading, or by keyboard on the handle (arrow keys, Shift for
-   * larger steps, Home and End for the limits, Enter to reset). A column's own `resizable` turns it off or on for it. Each handle is a
-   * tab stop, so a table with many resizable columns adds that many; turn it on where it is wanted.
-   * @default false
-   */
-  resizable?: boolean;
-  /**
-   * The widths a person has given columns, in pixels, by column id; a column not listed has its `width`, or what its content asks
-   * for. Controlled with `onColumnWidthsChange` (to remember them, say).
-   */
-  columnWidths?: Record<string, number>;
-  /**
-   * The widths to begin with.
-   * @default {}
-   */
-  defaultColumnWidths?: Record<string, number>;
-  /** Called with the widths a gesture asks for, on every step of a drag. A controlled table changes only when `columnWidths` does. */
-  onColumnWidthsChange?: (widths: Record<string, number>) => void;
-  /** The width of the column of checkboxes (any CSS length). */
-  selectionColumnWidth?: CSSProperties["inlineSize"];
-  /** The width of the column of row actions (any CSS length). It is as narrow as its button without one. */
-  actionsColumnWidth?: CSSProperties["inlineSize"];
-  /** The ids of the columns that are not drawn. Controlled with `onHiddenColumnsChange`. */
-  hiddenColumns?: string[];
-  /**
-   * The columns hidden to begin with.
-   * @default []
-   */
-  defaultHiddenColumns?: string[];
-  /** Called with the ids a person asked to have hidden. */
-  onHiddenColumnsChange?: (hidden: string[]) => void;
+  caption?: ReactNode;
   /**
    * The table's frame: `"bordered"` or `"ghost"` (inside a `Card`).
    * @default 'bordered'
@@ -363,6 +194,180 @@ export interface DataTableProps<TRow>
   stickyLastColumn?: boolean | number;
   /** Caps the height of the scroll area (any CSS `max-height`), so a long body scrolls inside it. */
   maxHeight?: CSSProperties["maxHeight"];
+  /**
+   * Gives a row the id its selection is kept by. The default reads the row's `id` and then its position in `data`.
+   * Give it when the rows have no `id` field and the data can be reordered or replaced.
+   */
+  getRowId?: (row: TRow, index: number) => string;
+  /**
+   * Names a row for a screen reader ("Select Ada Lovelace"). Without it a row is "Row 3".
+   */
+  getRowLabel?: (row: TRow, index: number) => string;
+  /**
+   * `"client"` sorts and pages `data` in the browser; `"manual"` draws `data` as given and leaves the sorting and
+   * paging to the caller, who answers `onSortChange` and `onPageChange` with new rows.
+   * @default 'client'
+   */
+  sortMode?: DataTableSortMode;
+  /**
+   * Lets a person sort by several columns: a press with Shift held adds the column to the sort (or turns it round, then takes it
+   * off), where a plain press makes it the only one. The columns then show their order. A list of several in `sort` is honoured
+   * whether or not this is on.
+   * @default true
+   */
+  multiSort?: boolean;
+  /** The ordering. Controlled with `onSortChange`. */
+  sort?: DataTableSort;
+  /**
+   * The ordering the table starts with.
+   * @default []
+   */
+  defaultSort?: DataTableSort;
+  /** Called with the ordering a person asked for. A controlled table changes only when `sort` does. */
+  onSortChange?: (sort: DataTableSort) => void;
+  /** The page, from 1. Controlled with `onPageChange`. Setting `pageSize` or adding a `DataTable.Pagination` turns paging on. */
+  page?: number;
+  /**
+   * The page to begin on.
+   * @default 1
+   */
+  defaultPage?: number;
+  /** Called with the page a person asked for. A controlled table changes only when `page` does. */
+  onPageChange?: (page: number) => void;
+  /** Rows a page. Controlled with `onPageSizeChange`. */
+  pageSize?: number;
+  /**
+   * Rows a page to begin with.
+   * @default 10
+   */
+  defaultPageSize?: number;
+  /** Called with the page size a person asked for. */
+  onPageSizeChange?: (pageSize: number) => void;
+  /**
+   * The page sizes a person can choose from in `DataTable.Pagination`.
+   * @default [10, 25, 50, 100]
+   */
+  pageSizeOptions?: number[];
+  /**
+   * How many rows there are in all, for a `manual` table that holds one page of them. Without it the count is
+   * `data.length`.
+   */
+  totalCount?: number;
+  /**
+   * How many rows can be chosen: `"multiple"` adds a checkbox column with a header checkbox, `"single"` the same
+   * without the header checkbox, and a new choice replaces the old.
+   * @default 'none'
+   */
+  selectionMode?: DataTableSelectionMode;
+  /** Says a row can't be chosen. Its checkbox is disabled, and the header checkbox leaves it out. */
+  isRowSelectable?: (row: TRow) => boolean;
+  /** The ids of the chosen rows. Controlled with `onSelectionChange`. */
+  selection?: string[];
+  /**
+   * The rows chosen to begin with.
+   * @default []
+   */
+  defaultSelection?: string[];
+  /** Called with the ids a person asked to have chosen. A controlled table changes only when `selection` does. */
+  onSelectionChange?: (selection: string[]) => void;
+  /**
+   * Whether every row of the whole table is chosen, on every page, without their ids being listed: "select all 137" for a table that
+   * holds one page of them (`sortMode="manual"` with a `totalCount`). Every row shows as chosen, the count is the `totalCount`, and
+   * unchecking one goes back to a list of ids (the page's rows but that one). Reset it (`onAllSelectedChange(false)`) when the filter
+   * changes, since "all" meant the rows matching the old one. Controlled with `onAllSelectedChange`.
+   */
+  allSelected?: boolean;
+  /**
+   * Whether every row is chosen to begin with.
+   * @default false
+   */
+  defaultAllSelected?: boolean;
+  /** Called when a person chooses every row of the whole table, or goes back to a list of ids. */
+  onAllSelectedChange?: (allSelected: boolean) => void;
+  /**
+   * Draws the detail of a row under it when it is opened, and adds a column of expand buttons (after the checkboxes) that open and
+   * close it. What it returns fills one cell as wide as the table. Rows of different heights can't be drawn a window at a time,
+   * so a table with this is never windowed, and the table sets no `aria-rowcount` or `aria-rowindex`, since the detail rows make
+   * the number of rows unknowable across pages.
+   */
+  renderExpandedRow?: (row: TRow, context: { index: number }) => ReactNode;
+  /** Says a row has no detail: its expand cell is left empty. Only read with `renderExpandedRow`. */
+  isRowExpandable?: (row: TRow) => boolean;
+  /**
+   * `"multiple"` lets any number of rows be open; `"single"` closes the open row when another is opened.
+   * @default 'multiple'
+   */
+  expandMode?: "multiple" | "single";
+  /** The ids of the rows that are open. Controlled with `onExpandedChange`. */
+  expanded?: string[];
+  /**
+   * The rows open to begin with.
+   * @default []
+   */
+  defaultExpanded?: string[];
+  /** Called with the ids a person asked to have open. A controlled table changes only when `expanded` does. */
+  onExpandedChange?: (expanded: string[]) => void;
+  /**
+   * Draws a trailing column for each row's actions, usually an `IconButton` that opens a `Menu`. Its heading is
+   * read by a screen reader and not drawn.
+   */
+  rowActions?: (row: TRow, index: number) => ReactNode;
+  /**
+   * Called when a row is pressed or Enter is pressed on it. Makes each row a tab stop, so offer the same action
+   * another way as well (a link in the row), and don't rely on this alone. A press on a control inside the row
+   * (a checkbox, a link, a menu button) is that control's, and doesn't reach this.
+   */
+  onRowClick?: (row: TRow, event: MouseEvent<HTMLTableRowElement> | KeyboardEvent<HTMLTableRowElement>) => void;
+  /**
+   * Shows placeholder rows in place of the data while it loads.
+   * @default false
+   */
+  loading?: boolean;
+  /**
+   * How many placeholder rows a loading table draws.
+   * @default 5
+   */
+  loadingRows?: number;
+  /** What an empty table says: text, or an `EmptyState`. */
+  emptyState?: ReactNode;
+  /**
+   * Draws only the rows in view. `"auto"` does so above 100 rows when the table isn't paged and has a
+   * `maxHeight`; `true` and `false` decide it. Needs a `maxHeight` to have anything to scroll within.
+   * @default 'auto'
+   */
+  virtualize?: "auto" | boolean;
+  /** The ids of the columns that are not drawn. Controlled with `onHiddenColumnsChange`. */
+  hiddenColumns?: string[];
+  /**
+   * The columns hidden to begin with.
+   * @default []
+   */
+  defaultHiddenColumns?: string[];
+  /** Called with the ids a person asked to have hidden. */
+  onHiddenColumnsChange?: (hidden: string[]) => void;
+  /**
+   * Lets a person resize every column by dragging the end edge of its heading, or by keyboard on the handle (arrow keys, Shift for
+   * larger steps, Home and End for the limits, Enter to reset). A column's own `resizable` turns it off or on for it. Each handle is a
+   * tab stop, so a table with many resizable columns adds that many; turn it on where it is wanted.
+   * @default false
+   */
+  resizable?: boolean;
+  /**
+   * The widths a person has given columns, in pixels, by column id; a column not listed has its `width`, or what its content asks
+   * for. Controlled with `onColumnWidthsChange` (to remember them, say).
+   */
+  columnWidths?: Record<string, number>;
+  /**
+   * The widths to begin with.
+   * @default {}
+   */
+  defaultColumnWidths?: Record<string, number>;
+  /** Called with the widths a gesture asks for, on every step of a drag. A controlled table changes only when `columnWidths` does. */
+  onColumnWidthsChange?: (widths: Record<string, number>) => void;
+  /** The width of the column of checkboxes (any CSS length). */
+  selectionColumnWidth?: CSSProperties["inlineSize"];
+  /** The width of the column of row actions (any CSS length). It is as narrow as its button without one. */
+  actionsColumnWidth?: CSSProperties["inlineSize"];
   /** Text written for the table, replacing the English defaults one by one. */
   labels?: Partial<DataTableLabels>;
   /**
@@ -370,23 +375,18 @@ export interface DataTableProps<TRow>
    * @default String
    */
   formatNumber?: (value: number) => string;
-  /**
-   * A visible title for the table, drawn as its `<caption>`. Names the table for assistive technology; give this,
-   * an `aria-label` or an `aria-labelledby`.
-   */
-  caption?: ReactNode;
   /** Names the table, when there is no visible caption. */
   "aria-label"?: string;
   /** The id of an element that names the table. */
   "aria-labelledby"?: string;
   /** The id of an element that describes the table. */
   "aria-describedby"?: string;
+  /** Standard DOM id, applied to the `<table>` element. */
+  id?: string;
   /** Additional CSS classes, for the box that holds the toolbar, table and pagination. */
   className?: string;
   /** Inline styles for that same box. */
   style?: CSSProperties;
-  /** Standard DOM id, applied to the `<table>` element. */
-  id?: string;
   /** Test identifier, applied to the `<table>` element. */
   "data-testid"?: string;
 }

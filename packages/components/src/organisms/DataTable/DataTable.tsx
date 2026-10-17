@@ -102,7 +102,7 @@ const columnStyle = <TRow,>(column: DataTableColumn<TRow>, resized?: number): CS
 };
 
 const fixedWidth = (width: CSSProperties["inlineSize"] | undefined): CSSProperties | undefined =>
-  width === undefined ? undefined : { inlineSize: width, minInlineSize: width, maxInlineSize: width };
+  width === undefined || width === "" ? undefined : { inlineSize: width, minInlineSize: width, maxInlineSize: width };
 
 function toText(value: unknown): ReactNode {
   if (value === null || value === undefined) return null;
