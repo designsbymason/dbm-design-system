@@ -77,6 +77,9 @@ export const comboboxSnippets = {
   presentation={{ base: "full-width", sm: "anchored" }}
 />`,
 
+  highlightTone: `{/* The match is bold by default; a tone adds colour: "warning" | "highlight" | "success" | "info" | "danger". */}
+<Combobox aria-label="Country" options={countries} highlightTone="highlight" />`,
+
   keywords: `{/* keywords are matched but never shown: "uk" or "britain" finds "United Kingdom". */}
 <Combobox
   aria-label="Country"
@@ -124,6 +127,7 @@ export interface ComboboxPlaygroundSnippetArgs {
   readOnly?: boolean;
   name?: string;
   presentation?: string;
+  highlightTone?: string;
   side?: string;
   align?: string;
   "aria-label"?: string;
@@ -144,6 +148,7 @@ export function comboboxPlaygroundSnippet(args: ComboboxPlaygroundSnippetArgs): 
   if (args.clearable) attributes.push("clearable");
   if (args.loading) attributes.push("loading");
   if (args.error) attributes.push("error");
+  if (args.highlightTone && args.highlightTone !== "none") attributes.push(`highlightTone="${args.highlightTone}"`);
   if (args.presentation && args.presentation !== "anchored") attributes.push(`presentation="${args.presentation}"`);
   if (args.side && args.side !== "bottom") attributes.push(`side="${args.side}"`);
   if (args.align && args.align !== "start") attributes.push(`align="${args.align}"`);

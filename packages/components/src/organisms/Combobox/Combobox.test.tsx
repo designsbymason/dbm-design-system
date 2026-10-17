@@ -17,6 +17,8 @@ const countries: ComboboxOption[] = [
 
 // A page-level run sees the list portaled outside any landmark, which says nothing about the component.
 const noLandmarks = { rules: { region: { enabled: false } } };
+// The stretches of an option's label that are marked as matching what was typed.
+const matched = (row: HTMLElement) => [...row.querySelectorAll('[class*="match"]')].map((node) => node.textContent);
 const field = () => screen.getByRole("combobox") as HTMLInputElement;
 const list = () => screen.queryByRole("listbox");
 const labelsOf = () => screen.getAllByRole("option").map((option) => option.textContent?.replace(/, .*/, ""));
@@ -170,8 +172,7 @@ describe("Combobox", () => {
       const user = userEvent.setup();
       setup();
       await user.type(field(), "ura");
-      const marks = screen.getAllByRole("option").flatMap((option) => [...option.querySelectorAll("mark")]);
-      expect(marks.map((mark) => mark.textContent)).toEqual(["ura"]);
+      expect(matched(screen.getByRole("option"))).toEqual(["ura"]);
     });
 
     it("highlights the first match so Enter chooses it", async () => {
@@ -689,10 +690,10 @@ describe("Combobox", () => {
       render(<Combobox aria-label="Place" options={places} />);
       await user.type(field(), "ne yo");
       const row = screen.getByRole("option", { name: "New York" });
-      expect([...row.querySelectorAll("mark")].map((mark) => mark.textContent)).toEqual(["Ne", "Yo"]);
+      expect(matched(row)).toEqual(["Ne", "Yo"]);
       await user.clear(field());
       await user.type(field(), "new york");
-      expect([...screen.getByRole("option", { name: "New York" }).querySelectorAll("mark")].map((mark) => mark.textContent)).toEqual(["New", "York"]);
+      expect(matched(screen.getByRole("option", { name: "New York" }))).toEqual(["New", "York"]);
     });
 
     it("marks every occurrence of a word in one label", async () => {
@@ -700,7 +701,7 @@ describe("Combobox", () => {
       render(<Combobox aria-label="Place" options={[{ value: "a", label: "Ant and Anne" }]} />);
       await user.type(field(), "an");
       const row = screen.getByRole("option");
-      expect([...row.querySelectorAll("mark")].map((mark) => mark.textContent)).toEqual(["An", "an", "An"]);
+      expect(matched(row)).toEqual(["An", "an", "An"]);
     });
   });
 
@@ -857,7 +858,7 @@ describe("Combobox", () => {
       );
       await user.type(field(), "brit");
       expect(labelsOf()).toEqual(["United Kingdom"]);
-      expect(screen.getByRole("option").querySelectorAll("mark")).toHaveLength(0);
+      expect(matched(screen.getByRole("option"))).toEqual([]);
       expect(screen.getByRole("option")).not.toHaveTextContent("Britain");
       await user.clear(field());
       await user.type(field(), "kingdom uk");
@@ -968,6 +969,33 @@ describe("Combobox", () => {
       await waitFor(() => expect(panel().style.getPropertyValue("--combobox-width")).toBe("344px"));
       unmount();
       expect(remove).toHaveBeenCalled();
+    });
+  });
+  describe("marking the match", () => {
+    it("draws a match in bold with no colour of its own, by default", async () => {
+      const user = userEvent.setup();
+      setup();
+      await user.type(field(), "can");
+      const row = screen.getByRole("option", { name: "Canada" });
+      expect(row.querySelector("b")?.textContent).toBe("Can");
+      expect(row.querySelector("mark")).toBeNull();
+    });
+
+    it("adds Highlight's colours when highlightTone is set", async () => {
+      const user = userEvent.setup();
+      setup({ highlightTone: "success" });
+      await user.type(field(), "can");
+      const row = screen.getByRole("option", { name: "Canada" });
+      expect(row.querySelector("mark")?.textContent).toBe("Can");
+      expect(row.querySelector("mark")?.className).toMatch(/toneSuccess/);
+      expect(row.querySelector("b")).toBeNull();
+    });
+
+    it("marks nothing until something is typed", async () => {
+      const user = userEvent.setup();
+      setup({ defaultValue: "ca", highlightTone: "highlight" });
+      await user.click(field());
+      expect(screen.getByRole("listbox").querySelector("mark, b")).toBeNull();
     });
   });
 });

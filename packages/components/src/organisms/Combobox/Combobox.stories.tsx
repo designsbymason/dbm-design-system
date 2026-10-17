@@ -87,6 +87,13 @@ const meta: Meta<typeof Combobox> = {
       control: false,
       description: "Replaces the No results row with content of your own while no option matches.",
     },
+    highlightTone: {
+      control: "select",
+      options: ["warning", "highlight", "success", "info", "danger"],
+      description:
+        "Adds colour (a background and a text colour) to the matched text in each label, from Highlight's tones. By default the match is only bold.",
+      table: { defaultValue: { summary: "—" } },
+    },
     onCreate: {
       control: false,
       description:
@@ -293,6 +300,16 @@ const playgroundSource = {
 /** Drive every prop live via the Controls panel below. */
 export const Playground: Story = {
   parameters: playgroundSource,
+  // "None" is a choice only here: leaving highlightTone out is what the prop's default does.
+  argTypes: {
+    highlightTone: {
+      control: "select",
+      options: ["none", "warning", "highlight", "success", "info", "danger"],
+      mapping: { none: undefined },
+    },
+  },
+  // The control's "none" key is mapped to undefined above, which the prop's type doesn't name.
+  args: { highlightTone: "none" as never },
 };
 
 export const AllSizes: Story = {
@@ -377,6 +394,18 @@ export const FullWidth: Story = {
   render: (args) => (
     <div style={{ minHeight: "24rem" }}>
       <Combobox {...args} presentation={{ base: "full-width", sm: "anchored" }} />
+    </div>
+  ),
+};
+
+export const HighlightTone: Story = {
+  name: "Coloured matches",
+  parameters: { docs: { source: { code: comboboxSnippets.highlightTone } } },
+  args: { highlightTone: "highlight", defaultOpen: true, "aria-label": "Country" },
+  argTypes: { highlightTone: { control: "select", options: ["warning", "highlight", "success", "info", "danger"] } },
+  render: (args) => (
+    <div style={{ maxWidth: "24rem", minHeight: "20rem" }}>
+      <Combobox {...args} defaultInputValue="un" />
     </div>
   ),
 };

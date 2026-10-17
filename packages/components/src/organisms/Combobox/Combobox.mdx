@@ -26,6 +26,7 @@ export const propOrder = [
   "loading",
   "error",
   "emptyContent",
+  "highlightTone",
   "onCreate",
   "renderOption",
   "clearable",
@@ -165,6 +166,10 @@ import { Combobox } from "@dbm-design-system/components";
 
 <Canvas of={ComboboxStories.FullWidth} />
 
+### Coloured matches
+
+<Canvas of={ComboboxStories.HighlightTone} />
+
 ### Words people also search by
 
 <Canvas of={ComboboxStories.Keywords} />
@@ -253,7 +258,7 @@ import { Combobox } from "@dbm-design-system/components";
   each option is read with its group's name after its own.
 - `presentation="full-width"` measures the part of the page the person can see (the visual viewport), so an on-screen keyboard that covers the bottom of the screen is counted: the list goes above the field when there is little room below, and its height is what is left. `align` has no effect there, and `side` is only its first choice. Pass a map to change with the screen.
 - Typed text matches an option when its label and `keywords` together hold every word of it, in any order, so "york new"
-  finds "New York" and "uk" can find "United Kingdom". Only the label is marked, and every matching stretch of it, not
+  finds "New York" and "uk" can find "United Kingdom". Only the label is marked (in bold, and in colour with `highlightTone`), and every matching stretch of it, not
   only the first.
 - When any option has an icon, the rows without one keep a blank place for it, so the labels stay in line. A row you
   draw yourself with `renderOption` is yours to align.
@@ -282,8 +287,8 @@ import { Combobox } from "@dbm-design-system/components";
   keyboard stays up.
 - Escape closes the list and puts back the label of the last choice. With the list closed it passes through, so a
   `Dialog` around the field still closes.
-- The matched text in a label is marked with `Highlight`; the row is also told apart from its neighbours by its
-  background, so the mark is never the only cue.
+- The matched text in a label is drawn bold, and with `highlightTone` also in `Highlight`'s colours (a `<mark>`). Neither
+  is the only cue to what matched: the list is already narrowed to the options that do.
 - In Windows high contrast, the highlighted row is outlined and the list keeps its border.
 
 </Callout>
@@ -395,6 +400,7 @@ The field itself is an `Input`, which lists its own tokens; the list below is wh
 <TokenRow token="font-size.base" usage="the row text at `md`" />
 <TokenRow token="font-size.md" usage="the row text at `lg`" />
 <TokenRow token="font-size.lg" usage="the row text at `xl`" />
+<TokenRow token="font-weight.bold" usage="the matched text in a label" />
 <TokenRow token="font-weight.regular" usage="a description" />
 <TokenRow token="font-weight.semibold" usage="the chosen option and group headings" />
 <TokenRow token="letter-spacing.wide" usage="the group headings, which are drawn in capitals" />

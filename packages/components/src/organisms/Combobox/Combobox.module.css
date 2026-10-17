@@ -223,8 +223,10 @@
   white-space: nowrap;
 }
 
-/* The matched stretch of a label sits inside a word, so `Highlight`'s own side padding would read as a gap in it. */
+/* The matched stretch of a label: bold, which is what makes it stand out in a row at regular weight. It sits inside
+   a word, so `Highlight`'s own side padding (used when `highlightTone` is set) would read as a gap in it. */
 .optionLabel .match {
+  font-weight: var(--dbm-font-weight-bold);
   padding-inline: 0;
 }
 

@@ -252,6 +252,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
       loading = false,
       error = false,
       emptyContent,
+      highlightTone,
       onCreate,
       renderOption,
       clearable = false,
@@ -697,10 +698,18 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
       let at = 0;
       matches.forEach(([from, to], position) => {
         if (from > at) parts.push(option.label.slice(at, from));
+        const text = option.label.slice(from, to);
+        // Bold by default; a tone adds `Highlight`'s colours as well.
         parts.push(
-          <Highlight key={position} tone="highlight" className={styles.match}>
-            {option.label.slice(from, to)}
-          </Highlight>,
+          highlightTone ? (
+            <Highlight key={position} tone={highlightTone} className={styles.match}>
+              {text}
+            </Highlight>
+          ) : (
+            <b key={position} className={styles.match}>
+              {text}
+            </b>
+          ),
         );
         at = to;
       });

@@ -31,6 +31,7 @@ component Finalized. What follows is what was decided and found while building i
 - Type-ahead by first letter was not added: typing already opens the list and narrows it.
 
 - **The "ResizeObserver loop" warning inside a `Dialog` or `Popover`:** the list's width followed Radix's `--radix-popover-trigger-width`, which is rewritten during layout; a `Dialog`'s entrance scales the field, so the width fed back into the layer's size observer (about 30 warnings per run, against 5 for a `Select`). The field's layout width is now read by the component's own observer and given to the list. No warnings in any Combobox run since.
+- **Match marking:** the matched text in a label is bold by default (`font-weight.bold`, a `<b>`); the optional `highlightTone` prop adds `Highlight`'s colours as well (a `<mark>`). Medium and semibold weights were tried first and were too close to the regular weight to see.
 - **`keywords`:** an option can carry extra words the default filter matches ("UK" for "United Kingdom"); they are never shown or marked.
 - **Two empty messages:** a list with no options and nothing typed shows `labels.typeToSearch`; text that matches nothing shows `noResults` or `emptyContent`.
 - **`presentation="full-width"`:** the list spans the visible screen a gap in from each edge and opens above or below the field, whichever has room once an on-screen keyboard is counted (the visual viewport). Opt-in; [ADR-0081](../adr/0081-combobox-offers-a-full-width-presentation-measured-against-the-visual-viewport-over-a-docked-bottom-sheet.md).

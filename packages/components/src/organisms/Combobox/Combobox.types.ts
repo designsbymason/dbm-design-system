@@ -1,6 +1,7 @@
 import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
 import type { Responsive } from "@dbm-design-system/primitives";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
+import type { HighlightTone } from "../../atoms/Highlight";
 
 export type ComboboxSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type ComboboxSide = "top" | "right" | "bottom" | "left";
@@ -157,6 +158,11 @@ export interface ComboboxProps
    */
   emptyContent?: ReactNode;
   /**
+   * Adds colour to the matched text in each label, from `Highlight`'s tones (a background and a text colour). By
+   * default the match is only bold, which marks it without a second treatment on every row. Leave it out for that.
+   */
+  highlightTone?: HighlightTone;
+  /**
    * Offers a "Create …" row at the end of the list while the typed text names no option, which is how a person adds
    * one. Called with the typed text when the row is chosen. Return the new option to have it chosen (it needn't be in
    * `options` yet, but add it there so it stays), return nothing if you are handling it yourself (the list closes), or
@@ -165,7 +171,7 @@ export interface ComboboxProps
   onCreate?: (text: string) => ComboboxOption | void | Promise<ComboboxOption | void>;
   /**
    * Draws an option's row. Receives the option and whether it is `highlighted` and `selected`. The default row is
-   * the icon, label (with the typed text marked) and description. Rows have a fixed height (a long list is drawn
+   * the icon, label (with the typed text in bold) and description. Rows have a fixed height (a long list is drawn
    * a window at a time), so the content must fit the row.
    */
   renderOption?: (option: ComboboxOption, state: { highlighted: boolean; selected: boolean }) => ReactNode;
