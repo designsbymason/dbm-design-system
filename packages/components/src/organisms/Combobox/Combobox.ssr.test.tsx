@@ -31,7 +31,15 @@ const variants: Array<[string, Partial<ComboboxProps>]> = [
   ["named and required", { name: "pick", required: true }],
   ["loading and in error", { defaultOpen: true, loading: true, error: true }],
   ["right to left", { defaultOpen: true, dir: "rtl" }],
-  ["a custom value", { allowCustomValue: true, defaultValue: "free text" }],
+  ["a custom value", { allowCustomValue: true, defaultValue: "free text", required: true, name: "place" }],
+  ["full width", { defaultOpen: true, presentation: "full-width" }],
+  ["a responsive presentation", { defaultOpen: true, presentation: { base: "full-width", sm: "anchored" } }],
+  ["a Create row", { defaultOpen: true, defaultInputValue: "zz", onCreate: (text) => ({ value: text, label: text }) }],
+  ["coloured matches", { defaultOpen: true, defaultInputValue: "al", highlightTone: "success" }],
+  ["keywords and typed text", { defaultOpen: true, defaultInputValue: "kw", options: [{ value: "k", label: "Key", keywords: ["kw"] }] }],
+  ["a long list, open", { defaultOpen: true, options: Array.from({ length: 300 }, (_, index) => ({ value: `v${index}`, label: `Item ${index}`, group: index < 150 ? "A" : "B" })) }],
+  ["a long list, open on a far choice", { defaultOpen: true, defaultValue: "v250", options: Array.from({ length: 300 }, (_, index) => ({ value: `v${index}`, label: `Item ${index}` })) }],
+  ["nothing to choose from", { defaultOpen: true, options: [] }],
 ];
 
 describe("Combobox on the server and in hydration", () => {

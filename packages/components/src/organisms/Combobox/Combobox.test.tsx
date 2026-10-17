@@ -4,6 +4,8 @@ import { axe } from "jest-axe";
 import { StrictMode, createRef, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PlusIcon } from "@dbm-design-system/icons";
+import { FormField } from "../../molecules/FormField";
+import { Form } from "../Form";
 import { Combobox } from "./Combobox";
 import type { ComboboxOption, ComboboxProps } from "./Combobox.types";
 
@@ -639,7 +641,7 @@ describe("Combobox", () => {
         </StrictMode>,
       );
       await user.type(field(), "uru");
-      await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("1 results available"));
+      await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("1 result available"));
       await user.keyboard("{Enter}");
       expect(onValueChange).toHaveBeenCalledTimes(1);
       expect(field()).toHaveValue("Uruguay");
@@ -823,7 +825,7 @@ describe("Combobox", () => {
       create({ labels: { create: (text) => `Add ${text}` } });
       await user.type(field(), "Cu");
       expect(screen.getByRole("option", { name: "Add Cu" })).toBeInTheDocument();
-      await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("1 results available"));
+      await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("1 result available"));
     });
 
     it("keeps the created option as the value before the owner has added it to options", async () => {
@@ -996,6 +998,148 @@ describe("Combobox", () => {
       setup({ defaultValue: "ca", highlightTone: "highlight" });
       await user.click(field());
       expect(screen.getByRole("listbox").querySelector("mark, b")).toBeNull();
+    });
+  });
+  describe("required, and inside a Form", () => {
+    it("refuses an empty required field with allowCustomValue, and accepts it once there is text", async () => {
+      const user = userEvent.setup();
+      render(
+        <form data-testid="form">
+          <Combobox aria-label="Place" options={countries} allowCustomValue required name="place" />
+        </form>,
+      );
+      const form = screen.getByTestId("form") as HTMLFormElement;
+      expect(field()).toBeRequired();
+      expect(form.checkValidity()).toBe(false);
+      await user.type(field(), "Atlantis");
+      expect(form.checkValidity()).toBe(true);
+      expect(new FormData(form).get("place")).toBe("Atlantis");
+    });
+
+    it("does not put a native required on the visible field of a must-pick field, which has the hidden input for it", () => {
+      render(<Combobox aria-label="Country" options={countries} name="country" required />);
+      expect(field()).not.toHaveAttribute("required");
+      expect(field()).toHaveAttribute("aria-required", "true");
+    });
+
+    const inForm = (props: Partial<ComboboxProps> = {}) =>
+      render(
+        <Form onSubmit={() => undefined}>
+          <FormField name="country" label="Country" helperText="Where it ships" required>
+            {(fieldProps) => <Combobox {...fieldProps} name="country" options={countries} {...props} />}
+          </FormField>
+          <Form.Submit>Send</Form.Submit>
+        </Form>,
+      );
+
+    it("is refused empty by a Form, which shows its message, marks the visible field and focuses it", async () => {
+      const user = userEvent.setup();
+      inForm();
+      await user.click(screen.getByRole("button", { name: "Send" }));
+      const alert = await screen.findByRole("alert");
+      expect(alert).toHaveTextContent("Fill out this field.");
+      expect(field()).toHaveFocus();
+      expect(field()).toHaveAttribute("aria-invalid", "true");
+      expect(field().getAttribute("aria-describedby")).toContain(alert.id);
+    });
+
+    it("is refused empty by a Form with allowCustomValue too", async () => {
+      const user = userEvent.setup();
+      inForm({ allowCustomValue: true });
+      await user.click(screen.getByRole("button", { name: "Send" }));
+      expect(await screen.findByRole("alert")).toHaveTextContent("Fill out this field.");
+      expect(field()).toHaveFocus();
+    });
+
+    it("is named by the FormField's label, and a press on the label focuses the field", async () => {
+      const user = userEvent.setup();
+      inForm();
+      expect(field()).toHaveAccessibleName(/Country/);
+      await user.click(screen.getByText("Country"));
+      expect(field()).toHaveFocus();
+    });
+
+    it("sends the chosen value, not its label, when the Form submits", async () => {
+      const user = userEvent.setup();
+      const onSubmit = vi.fn();
+      render(
+        <Form onSubmit={onSubmit}>
+          <FormField name="country" label="Country" required>
+            {(fieldProps) => <Combobox {...fieldProps} name="country" options={countries} />}
+          </FormField>
+          <Form.Submit>Send</Form.Submit>
+        </Form>,
+      );
+      await user.click(field());
+      await user.click(screen.getByRole("option", { name: "Uruguay" }));
+      await user.click(screen.getByRole("button", { name: "Send" }));
+      await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+      expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({ country: "uy" });
+    });
+  });
+
+  describe("development warnings", () => {
+    it("warns once about a field with no accessible name, and not about one with a name", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const { unmount } = render(<Combobox options={countries} />);
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0]?.[0]).toMatch(/no accessible name/);
+      unmount();
+      warn.mockClear();
+      render(<Combobox aria-label="Country" options={countries} />);
+      render(
+        <>
+          <label htmlFor="named">Place</label>
+          <Combobox id="named" options={countries} />
+        </>,
+      );
+      expect(warn).not.toHaveBeenCalled();
+      warn.mockRestore();
+    });
+
+    it("warns about two options with the same value", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(
+        <Combobox
+          aria-label="Dup"
+          options={[
+            { value: "same", label: "One" },
+            { value: "same", label: "Two" },
+          ]}
+        />,
+      );
+      expect(warn.mock.calls.map((call) => String(call[0]))).toEqual([expect.stringContaining('more than one option has the value "same"')]);
+      warn.mockRestore();
+    });
+
+    it("warns that align does nothing in the full-width presentation", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(<Combobox aria-label="Country" options={countries} presentation="full-width" align="end" />);
+      expect(warn.mock.calls.map((call) => String(call[0]))).toEqual([expect.stringContaining("`align` has no effect")]);
+      warn.mockRestore();
+    });
+  });
+
+  describe("the container", () => {
+    it("draws the list inside the element it is given, not at the end of the page", async () => {
+      const user = userEvent.setup();
+      const host = document.createElement("div");
+      host.setAttribute("data-testid", "host");
+      document.body.append(host);
+      render(<Combobox aria-label="Country" options={countries} container={host} />);
+      await user.click(field());
+      expect(host).toContainElement(screen.getByRole("listbox"));
+      host.remove();
+    });
+  });
+
+  describe("the result count's grammar", () => {
+    it("says 'result' for one and 'results' otherwise", async () => {
+      const user = userEvent.setup();
+      setup();
+      await user.type(field(), "uru");
+      await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("1 result available"));
+      expect(screen.getByRole("status")).not.toHaveTextContent("1 results");
     });
   });
 });

@@ -175,7 +175,10 @@ export interface ComboboxProps
    * a window at a time), so the content must fit the row.
    */
   renderOption?: (option: ComboboxOption, state: { highlighted: boolean; selected: boolean }) => ReactNode;
-  /** Shows a clear button while there is a value or text, which empties both. */
+  /**
+   * Shows a clear button while there is a value or text, which empties both.
+   * @default false
+   */
   clearable?: boolean;
   /** Called when the clear button is pressed, after the value and text have been emptied. */
   onClear?: () => void;
@@ -203,11 +206,20 @@ export interface ComboboxProps
    * @default false
    */
   hasError?: boolean;
-  /** Disables the field: no typing, no list, and the value isn't submitted. */
+  /**
+   * Disables the field: no typing, no list, and the value isn't submitted.
+   * @default false
+   */
   disabled?: boolean;
-  /** Stops the value being changed without disabling the field. It can still be focused and read, and is submitted. */
+  /**
+   * Stops the value being changed without disabling the field. It can still be focused and read, and is submitted.
+   * @default false
+   */
   readOnly?: boolean;
-  /** Requires a choice before the enclosing form can be submitted. */
+  /**
+   * Requires a choice before the enclosing form can be submitted (with `allowCustomValue`, some text).
+   * @default false
+   */
   required?: boolean;
   /** Shown when the field is empty. */
   placeholder?: string;
@@ -240,6 +252,12 @@ export interface ComboboxProps
    * @default 'anchored'
    */
   presentation?: Responsive<ComboboxPresentation>;
+  /**
+   * The element the list is drawn inside, instead of the end of `document.body`. Use it where a host confines its
+   * layers (a `Dialog` or `Popover` given its own container, a shadow root, a Docs page). Must be in the page by
+   * the time the list first opens. Not read again once the list is open.
+   */
+  container?: HTMLElement | null;
   /** Which side of the field the list opens on; it moves to the other side if there is no room. @default 'bottom' */
   side?: ComboboxSide;
   /** Alignment along the chosen `side`. @default 'start' */

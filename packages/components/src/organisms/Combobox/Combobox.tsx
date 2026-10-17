@@ -16,6 +16,16 @@ import { Input } from "../../atoms/Input";
 import { Spinner } from "../../atoms/Spinner";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import styles from "./Combobox.module.css";
+import { defaultFilter, findMatches, fold } from "./Combobox.match";
+import {
+  buildRows,
+  CREATE_VALUE,
+  firstEnabled,
+  isDisabled,
+  lastEnabled,
+  stepEnabled,
+} from "./Combobox.rows";
+import type { Row } from "./Combobox.rows";
 import { useViewportRoom } from "./useViewportRoom";
 import type {
   ComboboxInputChangeReason,
@@ -77,95 +87,16 @@ const buildDefaultLabels = (formatNumber: (value: number) => string): ComboboxLa
   noResults: "No results",
   loading: "Loading…",
   error: "Something went wrong. Try again.",
-  results: (count) => `${formatNumber(count)} results available`,
+  results: (count) => `${formatNumber(count)} ${count === 1 ? "result" : "results"} available`,
   pickAnOption: "Choose one of the options",
   create: (text) => `Create “${text}”`,
   typeToSearch: "Type to search",
 });
 
-/** Lower-cases and drops accents, writing each character on its own so positions map back to the original text. */
-function foldCharacters(text: string): { folded: string; origin: number[] } {
-  let folded = "";
-  const origin: number[] = [];
-  let position = 0;
-  for (const character of text) {
-    const piece = character.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
-    for (let offset = 0; offset < piece.length; offset += 1) origin.push(position);
-    folded += piece;
-    position += character.length;
-  }
-  origin.push(position);
-  return { folded, origin };
-}
-
-const fold = (text: string): string => foldCharacters(text).folded;
-
-/** The words of the typed text, folded: a label matches when it holds every one of them, in any order. */
-const queryWords = (text: string): string[] => fold(text.trim()).split(/\s+/).filter(Boolean);
-
-function defaultFilter(option: ComboboxOption, text: string): boolean {
-  const words = queryWords(text);
-  if (words.length === 0) return true;
-  const haystack = fold([option.textValue ?? option.label, ...(option.keywords ?? [])].join(" "));
-  return words.every((word) => haystack.includes(word));
-}
-
-/**
- * Every stretch of `label` that a word of the typed text matches, ignoring case and accents, as `[from, to]` pairs in
- * order. Stretches that touch or overlap are joined, so "new york" marks "New York" as one.
- */
-function findMatches(label: string, text: string): Array<[number, number]> {
-  const words = queryWords(text);
-  if (words.length === 0) return [];
-  const { folded, origin } = foldCharacters(label);
-  const found: Array<[number, number]> = [];
-  for (const word of words) {
-    for (let at = folded.indexOf(word); at !== -1; at = folded.indexOf(word, at + word.length)) {
-      const from = origin[at];
-      const to = origin[at + word.length];
-      if (from !== undefined && to !== undefined) found.push([from, to]);
-    }
-  }
-  found.sort((a, b) => a[0] - b[0]);
-  const merged: Array<[number, number]> = [];
-  for (const range of found) {
-    const last = merged[merged.length - 1];
-    if (last && range[0] <= last[1]) last[1] = Math.max(last[1], range[1]);
-    else merged.push([range[0], range[1]]);
-  }
-  return merged;
-}
-
-// The value of the "Create …" row. It holds a character no option's value will, so it never collides with one.
-const CREATE_VALUE = "\u0000create";
-
 const ignoreChange = () => undefined;
 
-const isDisabled = (option: ComboboxOption): boolean => Boolean(option.disabled);
-
-type Row =
-  | { kind: "group"; key: string; label: string }
-  | { kind: "option"; key: string; option: ComboboxOption; index: number };
-
-/** Orders the options by group (groups in the order they first appear) and adds a heading row before each group. */
-function buildRows(visible: ComboboxOption[]): { rows: Row[]; flat: ComboboxOption[] } {
-  const groups = new Map<string | undefined, ComboboxOption[]>();
-  for (const option of visible) {
-    const members = groups.get(option.group);
-    if (members) members.push(option);
-    else groups.set(option.group, [option]);
-  }
-  const rows: Row[] = [];
-  const flat: ComboboxOption[] = [];
-  for (const [group, members] of groups) {
-    if (group !== undefined) rows.push({ kind: "group", key: `group:${group}`, label: group });
-    for (const option of members) {
-      rows.push({ kind: "option", key: `option:${option.value}`, option, index: flat.length });
-      flat.push(option);
-    }
-  }
-  return { rows, flat };
-}
+// The default for `options`: one array, so an omitted prop doesn't make the memos below recompute on every render.
+const NO_OPTIONS: ComboboxOption[] = [];
 
 /** A length token such as `2.25rem` in pixels, or `undefined` when it can't be read (a server render). */
 function readLengthToken(name: string): number | undefined {
@@ -176,27 +107,6 @@ function readLengthToken(name: string): number | undefined {
   if (Number.isNaN(value)) return undefined;
   if (raw.endsWith("rem")) return value * Number.parseFloat(root.fontSize);
   return raw.endsWith("px") ? value : undefined;
-}
-
-const firstEnabled = (flat: ComboboxOption[]): number => flat.findIndex((option) => !isDisabled(option));
-
-const lastEnabled = (flat: ComboboxOption[]): number => {
-  for (let index = flat.length - 1; index >= 0; index -= 1) {
-    const option = flat[index];
-    if (option && !isDisabled(option)) return index;
-  }
-  return -1;
-};
-
-/** The next enabled option from `from` in `direction`, wrapping round the ends, or `-1` when none is enabled. */
-function stepEnabled(flat: ComboboxOption[], from: number, direction: 1 | -1): number {
-  const count = flat.length;
-  for (let step = 1; step <= count; step += 1) {
-    const index = (((from + direction * step) % count) + count) % count;
-    const option = flat[index];
-    if (option && !isDisabled(option)) return index;
-  }
-  return -1;
 }
 
 /**
@@ -210,6 +120,10 @@ function stepEnabled(flat: ComboboxOption[], from: number, direction: 1 | -1): n
  * the options: text that matches none is put back to the last choice when the field is left (`allowCustomValue`
  * lets the text itself be the value). The caller owns fetching: pass `filter={false}` and a new `options` array as
  * `onInputValueChange` reports typing.
+ *
+ * Options may carry `keywords` the default filter matches (never shown), a `description`, an `icon`, a `group` and a
+ * reason for being `disabled`. `onCreate` offers a "Create …" row for text that names no option. `presentation`
+ * spans the screen on a phone, and `highlightTone` adds colour to the bold match in each label.
  *
  * `ref` forwards to the native `<input>`. `className` and `style` go on the outermost box; `id`, `data-testid`,
  * `name` and the `aria-*` props go on the input. Inside a `Form`, a visually hidden input carries `name`, `required`
@@ -234,12 +148,18 @@ function stepEnabled(flat: ComboboxOption[], from: number, direction: 1 | -1): n
  *   loading={isFetching}
  *   onInputValueChange={(text, reason) => reason === "input" && search(text)}
  * />
+ *
+ * // Let a person add an item the list doesn't hold; return it so it is chosen
+ * <Combobox aria-label="Label" options={labels} onCreate={(text) => addLabel(text)} />
+ *
+ * // Across the screen below the `sm` breakpoint
+ * <Combobox aria-label="Country" options={countries} presentation={{ base: "full-width", sm: "anchored" }} />
  * ```
  */
 export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
   (
     {
-      options = [],
+      options = NO_OPTIONS,
       value: valueProp,
       defaultValue = "",
       onValueChange,
@@ -274,6 +194,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
       presentation = "anchored",
       side = "bottom",
       align = "start",
+      container,
       dir = "ltr",
       labels: labelOverrides,
       formatNumber = String,
@@ -303,6 +224,31 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
     const hiddenRef = useRef<HTMLInputElement>(null);
     const rootRef = useRef<HTMLDivElement>(null);
     const { message: announcement, announce } = useAnnouncement();
+
+    // Development-only warnings, each once for a mounted field.
+    const warned = useRef(new Set<string>());
+    const warnOnce = useCallback((message: string) => {
+      if (process.env.NODE_ENV === "production" || warned.current.has(message)) return;
+      warned.current.add(message);
+      console.warn(message);
+    }, []);
+    useEffect(() => {
+      if (ariaLabel || ariaLabelledBy || inputRef.current?.labels?.length) return;
+      warnOnce(
+        "Combobox: no accessible name. Pass `aria-label` or `aria-labelledby`, put it in a `FormField`, or point a `<label htmlFor>` at its `id`; without one a screen reader announces an unnamed combobox and an unnamed list.",
+      );
+    }, [ariaLabel, ariaLabelledBy, warnOnce]);
+    useEffect(() => {
+      const seen = new Set<string>();
+      for (const option of options) {
+        if (seen.has(option.value)) {
+          warnOnce(
+            `Combobox: more than one option has the value "${option.value}". A value must be unique: only the first can be chosen, and the rows share a key.`,
+          );
+        }
+        seen.add(option.value);
+      }
+    }, [options, warnOnce]);
 
     // The list is as wide as the field. Radix's own `--radix-popover-trigger-width` is rewritten while the page is
     // being laid out, and a width that follows it feeds back into the layer's size observer (a "ResizeObserver
@@ -357,6 +303,11 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
     // below the field once an on-screen keyboard is counted, which the layer doesn't know about.
     const fullWidth = useResolvedResponsiveValue(presentation, "anchored") === "full-width";
     const room = useViewportRoom(rootRef, fullWidth && open);
+    useEffect(() => {
+      if (fullWidth && align !== "start") {
+        warnOnce("Combobox: `align` has no effect while `presentation` is \"full-width\"; the list spans the screen.");
+      }
+    }, [fullWidth, align, warnOnce]);
     const preferredTop = side === "top";
     const roomOnPreferred = room ? (preferredTop ? room.above : room.below) : 0;
     const roomOnOther = room ? (preferredTop ? room.below : room.above) : 0;
@@ -373,8 +324,12 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
     }, [options, filter, filterText]);
     // The "Create …" row: offered for text that names no option, once the person has typed something.
     const typedText = dirty ? inputValue.trim() : "";
-    const offersCreate =
-      onCreate !== undefined && typedText !== "" && !options.some((option) => fold(option.label) === fold(typedText));
+    const canCreate = onCreate !== undefined;
+    const foldedLabels = useMemo(
+      () => (canCreate ? new Set(options.map((option) => fold(option.label))) : undefined),
+      [options, canCreate],
+    );
+    const offersCreate = foldedLabels !== undefined && typedText !== "" && !foldedLabels.has(fold(typedText));
     const createLabel = offersCreate ? labels.create(typedText) : undefined;
     const { rows, flat } = useMemo(() => {
       const built = buildRows(visible);
@@ -910,13 +865,14 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
               aria-controls={listElement ? listId : undefined}
               aria-autocomplete="list"
               aria-activedescendant={open && activeRendered ? optionDomId(highlighted) : undefined}
-              aria-required={required || undefined}
+              required={allowCustomValue ? required : undefined}
+              aria-required={required && !allowCustomValue ? true : undefined}
             />
             {hiddenControl}
             <VisuallyHidden role="status">{announcement}</VisuallyHidden>
           </div>
         </PopoverPrimitive.Anchor>
-        <PopoverPrimitive.Portal>
+        <PopoverPrimitive.Portal container={container}>
           <PopoverPrimitive.Content
             role="presentation"
             dir={dir}

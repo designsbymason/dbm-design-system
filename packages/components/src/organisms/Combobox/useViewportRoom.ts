@@ -37,19 +37,30 @@ export function useViewportRoom(anchorRef: RefObject<HTMLElement | null>, enable
       };
       setRoom((current) => (sameRoom(current, next) ? current : next));
     };
+    // One measurement a frame however many events arrive: a capturing scroll listener hears every scrolling box on the
+    // page, the list's own included.
+    let pending = 0;
+    const schedule = () => {
+      if (pending) return;
+      pending = requestAnimationFrame(() => {
+        pending = 0;
+        measure();
+      });
+    };
     const first = requestAnimationFrame(measure);
-    visual?.addEventListener("resize", measure);
-    visual?.addEventListener("scroll", measure);
-    window.addEventListener("resize", measure);
-    window.addEventListener("scroll", measure, { capture: true, passive: true });
-    const observer = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(measure);
+    visual?.addEventListener("resize", schedule);
+    visual?.addEventListener("scroll", schedule);
+    window.addEventListener("resize", schedule);
+    window.addEventListener("scroll", schedule, { capture: true, passive: true });
+    const observer = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(schedule);
     observer?.observe(anchor);
     return () => {
       cancelAnimationFrame(first);
-      visual?.removeEventListener("resize", measure);
-      visual?.removeEventListener("scroll", measure);
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("scroll", measure, { capture: true });
+      cancelAnimationFrame(pending);
+      visual?.removeEventListener("resize", schedule);
+      visual?.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      window.removeEventListener("scroll", schedule, { capture: true });
       observer?.disconnect();
     };
   }, [anchorRef, enabled]);

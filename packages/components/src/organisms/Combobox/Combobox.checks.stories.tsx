@@ -474,15 +474,22 @@ export const ArrowsInRightToLeft: Story = {
 };
 
 export const ForcedColours: Story = {
-  name: "In forced colours the highlighted row is outlined and the list keeps its border",
+  name: "In forced colours the highlighted row is outlined, the list keeps its border, and a chosen row is readable",
   render: () => (
     <Page>
       <Combobox aria-label="Country" options={countries} defaultValue="ca" />
     </Page>
   ),
   play: async () => {
+    // A dark scheme as well: forced colours on a dark page is where a row that keeps its authored light fill and is
+    // drawn in the page's light text colour becomes unreadable.
     const emulate = (value: "active" | "none") =>
-      send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
+      send("Emulation.setEmulatedMedia", {
+        features: [
+          { name: "forced-colors", value },
+          { name: "prefers-color-scheme", value: value === "active" ? "dark" : "light" },
+        ],
+      });
     await emulate("active");
     try {
       await new Promise((resolve) => setTimeout(resolve, 300));
@@ -490,12 +497,73 @@ export const ForcedColours: Story = {
       await userEvent.click(field());
       const list = await body().findByRole("listbox");
       await settled(list);
+      // opened on the chosen option: it is both selected and highlighted
+      const chosen = list.querySelector<HTMLElement>("[data-selected][data-highlighted]") as HTMLElement;
+      await expect(chosen).not.toBeNull();
+      await expect(getComputedStyle(chosen).forcedColorAdjust).not.toBe("none");
+      // the browser paints the fill, so the authored light fill of a highlighted row is not what is drawn: the text
+      // (the page's) and the fill it sits on must be told apart
+      const style = getComputedStyle(chosen);
+      await expect(contrast(style.color, style.backgroundColor === "rgba(0, 0, 0, 0)" ? "rgb(0, 0, 0)" : style.backgroundColor)).toBeGreaterThanOrEqual(7);
       await userEvent.keyboard("{ArrowDown}");
       const target = list.querySelector<HTMLElement>("[data-highlighted]") as HTMLElement;
       await waitFor(() => expect(getComputedStyle(target).outlineStyle).toBe("solid"));
       await expect(getComputedStyle(panelOf(list).firstElementChild as HTMLElement).borderTopStyle).toBe("solid");
     } finally {
       await emulate("none");
+    }
+  },
+};
+
+// WCAG relative luminance and contrast of two CSS `rgb()` colours, as the browser reports them.
+const channels = (css: string) => (css.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number) as [number, number, number];
+const luminance = (css: string) => {
+  const [r, g, b] = channels(css).map((value) => {
+    const unit = value / 255;
+    return unit <= 0.03928 ? unit / 12.92 : ((unit + 0.055) / 1.055) ** 2.4;
+  }) as [number, number, number];
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const contrast = (a: string, b: string) => {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
+  return (hi + 0.05) / (lo + 0.05);
+};
+
+export const TextOnTheHighlightedRowMeetsAA: Story = {
+  name: "Text on the highlighted row has at least 4.5:1 against its fill, in every theme",
+  render: () => (
+    <Page>
+      <Combobox
+        aria-label="Plan"
+        defaultValue="a"
+        options={[
+          { value: "a", label: "Alpha", description: "The first letter" },
+          { value: "b", label: "Beta", description: "The second letter" },
+        ]}
+      />
+    </Page>
+  ),
+  play: async () => {
+    const root = document.documentElement;
+    const original = root.dataset.theme;
+    try {
+      await userEvent.click(field());
+      const list = await body().findByRole("listbox");
+      await settled(list);
+      for (const theme of ["purple-light", "purple-dark", "emerald-light", "emerald-dark"]) {
+        root.dataset.theme = theme;
+        await nextFrame();
+        // opened on the chosen option, so the highlighted row is a chosen one (text.brand) with a description
+        const row = list.querySelector<HTMLElement>("[data-selected][data-highlighted]") as HTMLElement;
+        const fill = getComputedStyle(row).backgroundColor;
+        const label = getComputedStyle(row.querySelector("[class*=optionLabel]") as HTMLElement).color;
+        const description = getComputedStyle(row.querySelector("[class*=optionDescription]") as HTMLElement).color;
+        await expect(contrast(label, fill), `${theme}: label on the highlighted row`).toBeGreaterThanOrEqual(4.5);
+        await expect(contrast(description, fill), `${theme}: description on the highlighted row`).toBeGreaterThanOrEqual(4.5);
+      }
+    } finally {
+      if (original === undefined) delete root.dataset.theme;
+      else root.dataset.theme = original;
     }
   },
 };

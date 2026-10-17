@@ -48,6 +48,7 @@ export const propOrder = [
   "enterKeyHint",
   "spellCheck",
   "autoComplete",
+  "container",
   "presentation",
   "side",
   "align",
@@ -118,6 +119,7 @@ import { Combobox } from "@dbm-design-system/components";
     "autoComplete",
     "formatNumber",
     "labels",
+    "container",
     "aria-labelledby",
     "aria-describedby",
     "id",
@@ -252,7 +254,8 @@ import { Combobox } from "@dbm-design-system/components";
 - `autoHighlight` makes Enter choose the first match while typing. Turn it off (it is already off with
   `allowCustomValue`) when Enter should commit exactly what was typed.
 - Inside a `Form`, a hidden input carries `name` and `required` and the chosen value, so the form refuses a field with
-  nothing chosen and focuses the field you can see. A form with only a combobox and no submit button doesn't submit on
+  nothing chosen and focuses the field you can see. With `allowCustomValue` the field itself carries them, so the form
+  refuses an empty one the same way. A form with only a combobox and no submit button doesn't submit on
   Enter, because a browser needs one text-only field for that; give the form a submit button.
 - Once a list holds more than a hundred rows, group headings are drawn as plain rows rather than as grouped regions, and
   each option is read with its group's name after its own.
@@ -326,6 +329,9 @@ import { Combobox } from "@dbm-design-system/components";
 {/* Let a person add an item the list doesn't hold; return it so it is chosen */}
 <Combobox aria-label="Label" options={labels} onCreate={(text) => addLabel(text)} />
 
+{/* Draw the list inside an element of your own, where a host confines its layers */}
+<Combobox aria-label="Country" options={countries} container={panelElement} />
+
 {/* Show a saved choice before its option has loaded */}
 <Combobox aria-label="Assignee" options={people} value={assigneeId} inputValue={assigneeName} />
 
@@ -364,7 +370,8 @@ The field itself is an `Input`, which lists its own tokens; the list below is wh
 <TokenRow token="bg.neutral-subtle" usage="the fill behind the caret or clear button while the pointer is over it" />
 <TokenRow token="border.default" usage="the list's border, and the line above the loading and error notes" />
 <TokenRow token="text.primary" usage="the option text" />
-<TokenRow token="text.tertiary" usage="the description, group headings, the No results row and the notes" />
+<TokenRow token="text.secondary" usage="the description under an option, which stays readable on the highlighted row" />
+<TokenRow token="text.tertiary" usage="group headings, the No results row and the loading and error notes" />
 <TokenRow token="text.brand" usage="the chosen option" />
 <TokenRow token="text.disabled" usage="an option that can't be chosen" />
 <TokenRow token="border-width.1" usage="the list's border" />

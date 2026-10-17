@@ -23,6 +23,17 @@ component Finalized. What follows is what was decided and found while building i
 - **A disabled option's description stayed in the secondary text colour**, so it read as available beside a dimmed label. It follows the disabled colour.
 - **Cheap to get wrong in jsdom:** Enter during an input method's composition, a controlled value that the owner refuses, a late-arriving option for a controlled value (the label appears by itself, since the field shows the label of whatever the value names unless text has been typed).
 
+## Final review pass (2026-10-16)
+Findings from the review, all fixed:
+- **Forced colours:** the chosen row set `forced-color-adjust: none` with `CanvasText`, so a highlighted chosen row kept its light fill under the page's light text colour (measured white text on `rgb(249,249,255)`, about 1.05:1, with a dark scheme). The rule is gone; a check measures the row under forced colours with a dark scheme, and fails if the old rule returns.
+- **`required` with `allowCustomValue`:** the visible field never got the native `required`, so a form accepted it empty. It does now; unit and `Form` tests cover both modes.
+- **Contrast:** the description used `text.tertiary` on the highlighted row's `bg.brand-subtle` (4.48:1 in Purple light, under the floor). It uses `text.secondary` (6.56:1 and above in every theme); the pairing is recorded in `03-token-system-spec.md`, and a check measures label and description on the highlighted row in all four themes (it fails at 4.48 with the old colour).
+- **Development warnings:** a field with no accessible name, two options with one value, and `align` with `presentation="full-width"`.
+- **"1 results available"** now reads "1 result available".
+- **`container`:** the list can be drawn inside an element of the caller's. The other layer props (`collisionBoundary`, `hideWhenDetached`, `sticky`) are deliberately not exposed: the field already sets the collision padding and full-width placement itself, and none has a use that `container` and `side` don't cover.
+- **Performance:** the "Create …" check no longer folds every label on every render, and an omitted `options` no longer makes a new array each render; the viewport measurement is one a frame.
+- **Structure and tests:** the text-matching and row helpers are in `Combobox.match.ts` and `Combobox.rows.ts` with their own tests; server render and hydration cover the newer props and a long open list; `Form` plus `FormField` regression tests (message, focus, `aria-invalid`, `aria-describedby`, submitted value).
+
 ## Added after the first build
 - **Group names in a windowed list:** each option is read with its group's name (an amendment to ADR-0080).
 - **Word matching:** the default filter keeps an option that holds every word of the typed text in any order, and every matching stretch of a label is marked (touching marks are joined).

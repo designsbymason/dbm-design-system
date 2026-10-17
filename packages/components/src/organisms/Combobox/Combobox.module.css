@@ -234,8 +234,10 @@
   color: var(--dbm-text-disabled);
 }
 
+/* `text.secondary`, not `tertiary`: a described row can be the highlighted one, and `text.tertiary` on the
+   highlighted row's `bg.brand-subtle` is 4.48:1 in Purple light, under the 4.5:1 text floor. */
 .optionDescription {
-  color: var(--dbm-text-tertiary);
+  color: var(--dbm-text-secondary);
   font-size: var(--dbm-font-size-xs);
   font-weight: var(--dbm-font-weight-regular);
 }
@@ -289,11 +291,6 @@
   .option[data-highlighted] {
     outline: var(--dbm-border-width-2) solid Highlight;
     outline-offset: calc(-1 * var(--dbm-border-width-2));
-  }
-
-  .option[data-selected] {
-    forced-color-adjust: none;
-    color: CanvasText;
   }
 
   .footer {

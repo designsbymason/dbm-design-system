@@ -3,8 +3,12 @@ import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { FormField } from "../../molecules/FormField";
 import { Combobox } from "./Combobox";
+import type { ComboboxProps } from "./Combobox.types";
 import { comboboxPlaygroundSnippet, comboboxSnippets } from "./Combobox.snippets";
 import { SearchingCombobox, countries, manyOptions, plans } from "./ComboboxStoryKit";
+
+// The Playground-only "None" choice for `highlightTone`: a story key, typed as the prop so it can be an arg.
+const NONE = "none" as unknown as ComboboxProps["highlightTone"];
 
 const meta: Meta<typeof Combobox> = {
   title: "Organisms/Inputs/Combobox",
@@ -191,6 +195,11 @@ const meta: Meta<typeof Combobox> = {
       description: "The browser's own autofill hint. Off by default, since the list is the suggestion.",
       table: { defaultValue: { summary: "off" } },
     },
+    container: {
+      control: false,
+      description:
+        "The element the list is drawn inside, instead of the end of the page. Use it where a host confines its layers (a Dialog or Popover with its own container, a shadow root).",
+    },
     presentation: {
       control: "select",
       options: ["anchored", "full-width"],
@@ -311,7 +320,7 @@ export const Playground: Story = {
     },
   },
   // The control's "none" key is mapped to undefined above, which the prop's type doesn't name.
-  args: { highlightTone: "none" as never },
+  args: { highlightTone: NONE },
 };
 
 export const AllSizes: Story = {
