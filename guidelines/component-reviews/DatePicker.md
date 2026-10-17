@@ -1,8 +1,8 @@
 # DatePicker — review findings
 
-Ninth organism, built 2026-10-17 with the `06-engineering-standards.md` §9 checklist applied as it was written. **Not yet
-Finalized:** the review pass (`/review-component DatePicker`) has been run and its findings fixed (below); only the user declares a
-component Finalized. What follows is what was decided and found while building it.
+Ninth organism, built 2026-10-17 with the `06-engineering-standards.md` §9 checklist applied as it was written. **Finalized
+2026-10-17** by the user, after the review pass (`/review-component DatePicker`) and its fixes (below), with the items under
+"Open at the end of the review" accepted as open. What follows is what was decided and found while building it.
 
 ## Decisions
 - A single date in three segments with a `Calendar` popover, an explicit `format`, and no range or time part: [ADR-0082](../adr/0082-datepicker-is-a-single-date-segmented-field-with-a-calendar-popover-and-an-explicit-format-over-a-masked-text-input-a-range-mode-or-a-date-time-field.md).
