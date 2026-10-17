@@ -1,4 +1,4 @@
-import { UserCircleIcon } from "@dbm-design-system/icons";
+import { BellIcon, BookOpenIcon, UserCircleIcon } from "@dbm-design-system/icons";
 import { useState } from "react";
 import type { MouseEvent, ReactNode, RefObject } from "react";
 import { Button } from "../../atoms/Button";
@@ -43,11 +43,23 @@ export function DemoNavbar({
   menuContainer,
   actions = "button",
   withGroup = false,
+  skipLink = false,
+  extras = false,
+  linksAlign,
   linksLabel,
   ...props
 }: NavbarProps & {
-  /** What the end of the bar holds: one button, or a search field and an account menu. */
-  actions?: "button" | "rich" | "none";
+  /**
+   * What the end of the bar holds: one button, a search field and an account menu, or (`"responsive"`) a button that leaves
+   * the bar below the widest step and comes back at the foot of the menu panel.
+   */
+  actions?: "button" | "rich" | "responsive" | "none";
+  /** Puts a skip link first in the bar. */
+  skipLink?: boolean;
+  /** Gives the links an icon, a count and an external destination, to show those. */
+  extras?: boolean;
+  /** Where the links sit between the brand and the actions. */
+  linksAlign?: "start" | "center" | "end";
   /** Adds a "Resources" group of links after the plain ones: a dropdown in the bar, an expandable group in the panel. */
   withGroup?: boolean;
   /** Names this bar's navigation, for a gallery of several bars where the default name would repeat. */
@@ -56,13 +68,28 @@ export function DemoNavbar({
   const demo = useDemoCurrent("products");
   return (
     <Navbar menuContainer={menuContainer} {...props}>
+      {skipLink && <Navbar.SkipLink href="#main" onClick={preventNavigation} />}
       <Navbar.Brand href="#" onClick={preventNavigation}>
         dbM
       </Navbar.Brand>
-      <Navbar.Links aria-label={linksLabel}>
+      <Navbar.Links aria-label={linksLabel} align={linksAlign}>
         <Navbar.Link {...demo.link("products")}>Products</Navbar.Link>
-        <Navbar.Link {...demo.link("pricing")}>Pricing</Navbar.Link>
-        <Navbar.Link {...demo.link("docs")}>Docs</Navbar.Link>
+        <Navbar.Link {...demo.link("pricing")} badge={extras ? "New" : undefined}>
+          Pricing
+        </Navbar.Link>
+        <Navbar.Link {...demo.link("docs")} icon={extras ? BookOpenIcon : undefined}>
+          Docs
+        </Navbar.Link>
+        {extras && (
+          <>
+            <Navbar.Link {...demo.link("inbox")} icon={BellIcon} badge="3">
+              Inbox
+            </Navbar.Link>
+            <Navbar.Link href="https://example.com" onClick={preventNavigation}>
+              Status
+            </Navbar.Link>
+          </>
+        )}
         <Navbar.Link href="#beta" disabled>
           Beta
         </Navbar.Link>
@@ -78,6 +105,22 @@ export function DemoNavbar({
         <Navbar.Actions>
           <Button size="sm">Sign in</Button>
         </Navbar.Actions>
+      )}
+      {actions === "responsive" && (
+        <Navbar.Actions>
+          <Navbar.Action>
+            <SearchInput aria-label="Search" size="sm" />
+          </Navbar.Action>
+          <Navbar.Action hideBelow="3xl">
+            <Button size="sm">Sign in</Button>
+          </Navbar.Action>
+        </Navbar.Actions>
+      )}
+      {/* a direct child, not inside a fragment: the bar looks for it among its children to draw the panel's footer */}
+      {actions === "responsive" && (
+        <Navbar.PanelActions>
+          <Button>Sign in</Button>
+        </Navbar.PanelActions>
       )}
       {actions === "rich" && (
         <Navbar.Actions>
@@ -130,9 +173,12 @@ export function RouterDemoNavbar({ menuContainer }: { menuContainer?: HTMLElemen
 /** A scrolling box under a sticky bar, to see it stick: the bar names the box with `scrollContainerRef`. */
 export function StickyDemo({
   boxRef,
+  hero = false,
   children,
 }: {
   boxRef: RefObject<HTMLDivElement | null>;
+  /** Puts a tinted hero block behind the bar's starting place, to show a transparent bar over something. */
+  hero?: boolean;
   children: (ref: RefObject<HTMLDivElement | null>) => ReactNode;
 }) {
   return (
@@ -146,6 +192,16 @@ export function StickyDemo({
       }}
     >
       {children(boxRef)}
+      {hero && (
+        <div
+          style={{
+            blockSize: "10rem",
+            marginBlockStart: "calc(-1 * var(--dbm-space-16))",
+            paddingBlockStart: "var(--dbm-space-16)",
+            background: "var(--dbm-bg-brand-subtle)",
+          }}
+        />
+      )}
       <div style={{ padding: "var(--dbm-space-6)", display: "grid", gap: "var(--dbm-space-4)" }}>
         {Array.from({ length: 12 }, (_, index) => (
           <Text key={index}>

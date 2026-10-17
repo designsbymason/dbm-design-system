@@ -9,6 +9,9 @@ import * as NavbarLinksStories from "./NavbarLinks.stories";
 import * as NavbarLinkStories from "./NavbarLink.stories";
 import * as NavbarGroupStories from "./NavbarGroup.stories";
 import * as NavbarActionsStories from "./NavbarActions.stories";
+import * as NavbarActionStories from "./NavbarAction.stories";
+import * as NavbarPanelActionsStories from "./NavbarPanelActions.stories";
+import * as NavbarSkipLinkStories from "./NavbarSkipLink.stories";
 import * as NavbarMenuButtonStories from "./NavbarMenuButton.stories";
 
 export const propOrder = [
@@ -28,6 +31,7 @@ export const propOrder = [
   "sticky",
   "stickyOffset",
   "scrollContainerRef",
+  "hideOnScroll",
   "dir",
   "labels",
   "aria-label",
@@ -48,13 +52,17 @@ export const playgroundOrder = [
   "closeMenuOnNavigate",
   "contained",
   "sticky",
+  "hideOnScroll",
   "dir",
   "onMenuOpenChange",
 ];
 export const brandPropOrder = ["href", "asChild", "children", "aria-label", "id", "className", "style", "data-testid"];
-export const linksPropOrder = ["children", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
-export const linkPropOrder = ["children", "href", "current", "disabled", "asChild", "aria-label", "id", "className", "style", "data-testid"];
+export const linksPropOrder = ["children", "align", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
+export const linkPropOrder = ["children", "href", "icon", "badge", "external", "current", "disabled", "asChild", "aria-label", "id", "className", "style", "data-testid"];
 export const groupPropOrder = ["label", "children", "current", "defaultOpen", "disabled", "align", "aria-label", "id", "className", "style", "data-testid"];
+export const actionPropOrder = ["hideBelow", "children", "id", "className", "style", "data-testid"];
+export const panelActionsPropOrder = ["children", "id", "className", "style", "data-testid"];
+export const skipLinkPropOrder = ["href", "children", "id", "className", "style", "data-testid"];
 export const actionsPropOrder = ["children", "id", "className", "style", "data-testid"];
 export const menuButtonPropOrder = ["icon", "aria-label", "id", "className", "style", "data-testid"];
 
@@ -130,6 +138,29 @@ through to its button. Its children are `Navbar.Link`s.
 
 <PropertiesTable of={NavbarGroupStories} order={groupPropOrder} />
 
+### Navbar.Action properties
+
+One action in the bar's end that can leave the bar below a width (`hideBelow`). Also accepts any other
+native `<div>` attribute beyond what's listed here. A bare child of `Navbar.Actions` stays at every width;
+wrap an action in this only to hide it.
+
+<PropertiesTable of={NavbarActionStories} order={actionPropOrder} />
+
+### Navbar.PanelActions properties
+
+What the menu panel shows at its foot, drawn only there. A direct child of `Navbar` (a part wrapped in a
+fragment or another component isn't noticed, so the panel draws no footer for it). Also accepts any other native
+`<div>` attribute beyond what's listed here.
+
+<PropertiesTable of={NavbarPanelActionsStories} order={panelActionsPropOrder} />
+
+### Navbar.SkipLink properties
+
+A link that jumps past the bar, hidden until it takes keyboard focus. Also accepts any other native `<a>`
+attribute beyond what's listed here (e.g. `onClick`, `title`), passed straight through.
+
+<PropertiesTable of={NavbarSkipLinkStories} order={skipLinkPropOrder} />
+
 ### Navbar.Actions properties
 
 The bar's end. Also accepts any other native `<div>` attribute beyond what's listed here.
@@ -162,6 +193,51 @@ whole bar, the phone panel and a `Navbar.Group` that holds the page included, an
 becomes the current one, and only then: not on a first paint, and not when the menu panel opens on a link already current.
 
 <Canvas of={NavbarStories.CurrentVariants} />
+
+### Actions that move into the menu panel
+
+Only the links leave the bar by themselves. Wrap an action in `Navbar.Action` with `hideBelow` to take it out
+of the bar below a width, and give `Navbar.PanelActions` the same control to bring it back at the foot of the
+menu panel, where a thumb can reach it. This demo hides its button below the widest step.
+
+<Canvas of={NavbarStories.ResponsiveActions} />
+
+### A skip link
+
+`Navbar.SkipLink` is the first thing `Tab` reaches: a link that jumps past the bar to the page's main
+content, out of sight until it takes focus. Put it first in the bar and the bar first on the page, and give
+the main element `tabIndex={-1}` so focus lands in it.
+
+<Canvas of={NavbarStories.SkipLink} />
+
+### Icons, counts and external links
+
+A link takes an `icon` before its text, a `badge` after it (a count is read as part of the link's name) and
+is marked `external` when its `href` starts `http://`, `https://` or `//`: it opens in a new tab with a trailing
+icon and a hidden "(opens in a new tab)".
+
+<Canvas of={NavbarStories.LinkExtras} />
+
+### Where the links sit
+
+`align` on `Navbar.Links` puts them next to the brand (`start`), centred in the room between the brand and the
+actions (`center`) or against the actions (`end`).
+
+<Canvas of={NavbarStories.LinksAlign} />
+
+### Transparent until it sticks
+
+A sticky `ghost` bar has no surface over the top of the page (a hero, say) and takes one, with a shadow,
+once it is stuck, so what scrolls beneath it never shows through the links.
+
+<Canvas of={NavbarStories.GhostOverAHero} />
+
+### Hides on scroll
+
+`hideOnScroll` slides a sticky bar out of view while the reader scrolls down and brings it back on a scroll up
+or near the top, so it costs no room while reading. It stays while anything in it has keyboard focus.
+
+<Canvas of={NavbarStories.HidesOnScroll} />
 
 ### Rounded links
 
@@ -297,7 +373,12 @@ This story is shown at a phone's width when opened on its own; on this page, nar
   links; a wide panel of grouped links, with descriptions or images, is a mega-menu, which is `NavigationMenu`.
 - `menuSide="start"` is the right edge in right-to-left text. Pass `dir` on the bar and it reaches the
   panel too, which is drawn in a portal and would otherwise follow the page.
-- Use `labels` to translate the menu button, the navigation's name and the panel's close button.
+- Use `labels` to translate the menu button, the navigation's name, the panel's close button, the skip link and the external-link cue.
+- Only the links collapse by themselves. A bar with a search field, an account menu and a button can overflow a phone: wrap the ones that
+  should leave in `Navbar.Action hideBelow` and repeat them in `Navbar.PanelActions`.
+- Put a skip link first in the bar and the bar first on the page; the main element needs `tabIndex={-1}`.
+- `hideOnScroll` reads the scroll position from a passive listener, one read per frame, and never hides a bar that has focus; in a scrolling box
+  of your own name it with `scrollContainerRef`.
 
 ## Accessibility
 
@@ -308,6 +389,13 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 - `Navbar.Links` is a `<nav>` with a name (`labels.navigation`, "Main", unless you pass `aria-label`)
   holding a `role="list"` list; each link is a `role="listitem"`, which keeps list semantics under
   Safari with VoiceOver, where a list without markers loses them.
+- `Navbar.SkipLink` is a real link, the first stop of the page when it is first in the bar: out of sight (clipped to a pixel, not `display: none`, so
+  it can take focus) until it has keyboard focus, when it is drawn over the page's top corner with a visible edge and the standard focus ring.
+- `Navbar.PanelActions` puts its children in the menu panel's footer, inside the same modal dialog, so they are in its focus loop and read
+  after the links. A control hidden from the bar by `hideBelow` is `display: none`, so it leaves the tab order and the accessibility tree there.
+- An external link's new tab is announced: a visually hidden "(opens in a new tab)" follows its text, and a count in `badge` is part of the name.
+- `hideOnScroll` never hides a bar that has keyboard focus (focus inside it shows it), and a bar that is hidden still takes focus when `Tab` reaches it,
+  which brings it back.
 - The current page is `aria-current="page"`. A disabled link is `aria-disabled` and stays focusable, with
   its click blocked.
 - Keys: `Tab` and `Shift+Tab` move through the brand, the links, the actions and the menu button in order;
@@ -401,7 +489,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 <TokenRow token="text.on-brand" usage="the current link's text in the solid look" />
 <TokenRow token="bg.brand / bg.brand-hover" usage="the solid look's fill and its hover, and the underline look's line" />
 <TokenRow token="icon.on-brand" usage="the focus ring on the solid look, drawn inside the link where the standard ring would be unreadable" />
-<TokenRow token="border.default" usage="the line under an outlined bar" />
+<TokenRow token="border.default" usage="the line under an outlined bar, and the skip link's edge" />
 <TokenRow token="border.focus" usage="the focus ring on the brand and the links" />
 <TokenRow token="border-width.1" usage="the outlined bar's line" />
 <TokenRow token="border-width.2" usage="the focus ring's width, and the underline look's line thickness" />
@@ -414,6 +502,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 <TokenRow token="font-weight.bold" usage="the brand" />
 <TokenRow token="font-weight.medium" usage="a link" />
 <TokenRow token="icon-button.size.sm / icon-button.size.md / icon-button.size.lg" usage="the bar's height at each size: its menu button's height, plus room, and the panel's link height" />
+<TokenRow token="z-index.fixed" usage="the skip link, drawn over the top corner of the page while it has focus" />
 <TokenRow token="space.px" usage="the marker that tells a sticky bar it is stuck is cancelled by this much" />
 <TokenRow token="space.1" usage="the gap between links; the room above and below a small bar; the focus ring's offset" />
 <TokenRow token="space.2" usage="the gap inside a link and between actions; the room above and below a bar; a link's vertical padding" />

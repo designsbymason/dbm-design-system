@@ -34,6 +34,88 @@ ${navbar('variant="filled"')}`,
     aria-current="page" is set whichever it is. */}
 ${navbar('currentVariant="solid"')}`,
 
+  responsiveActions: `{/* Navbar.Action hideBelow takes an action out of the bar below a width; Navbar.PanelActions is where it comes
+    back, at the foot of the menu panel. PanelActions is drawn only in the panel, and goes directly inside Navbar. */}
+<Navbar>
+  <Navbar.Brand href="/">dbM</Navbar.Brand>
+  <Navbar.Links>
+    <Navbar.Link href="/products" current>
+      Products
+    </Navbar.Link>
+  </Navbar.Links>
+  <Navbar.Actions>
+    <Navbar.Action>
+      <SearchInput aria-label="Search" size="sm" />
+    </Navbar.Action>
+    <Navbar.Action hideBelow="md">
+      <Button size="sm">Sign in</Button>
+    </Navbar.Action>
+  </Navbar.Actions>
+  <Navbar.PanelActions>
+    <Button>Sign in</Button>
+  </Navbar.PanelActions>
+</Navbar>`,
+
+  skipLink: `{/* Put the skip link first in the bar, and the bar first on the page. Its href names the main element's id, which needs
+    tabIndex={-1} to receive focus. */}
+<Navbar>
+  <Navbar.SkipLink href="#main" />
+  <Navbar.Brand href="/">dbM</Navbar.Brand>
+  <Navbar.Links>
+    <Navbar.Link href="/products">Products</Navbar.Link>
+  </Navbar.Links>
+</Navbar>
+<main id="main" tabIndex={-1}>
+  …
+</main>`,
+
+  linkExtras: `{/* icon goes before the text; badge after it, and is part of the link's name ("Inbox 3"); an href starting http(s):// or //
+    is external (a new tab, a trailing icon and a hidden cue), or say it with external. */}
+<Navbar.Links>
+  <Navbar.Link href="/docs" icon={BookOpenIcon}>
+    Docs
+  </Navbar.Link>
+  <Navbar.Link href="/inbox" icon={BellIcon} badge="3">
+    Inbox
+  </Navbar.Link>
+  <Navbar.Link href="https://status.example.com">Status</Navbar.Link>
+</Navbar.Links>`,
+
+  linksAlign: `{/* align: "start" (default, next to the brand) | "center" (in the room between the brand and the actions) | "end" */}
+<Navbar>
+  <Navbar.Brand href="/">dbM</Navbar.Brand>
+  <Navbar.Links align="center">
+    <Navbar.Link href="/products" current>
+      Products
+    </Navbar.Link>
+    <Navbar.Link href="/pricing">Pricing</Navbar.Link>
+  </Navbar.Links>
+  <Navbar.Actions>
+    <Button size="sm">Sign in</Button>
+  </Navbar.Actions>
+</Navbar>`,
+
+  ghostSticky: `{/* A sticky ghost bar is transparent over the page until it is stuck, then takes a surface and a shadow. */}
+<Navbar sticky variant="ghost">
+  <Navbar.Brand href="/">dbM</Navbar.Brand>
+  <Navbar.Links>
+    <Navbar.Link href="/products" current>
+      Products
+    </Navbar.Link>
+  </Navbar.Links>
+</Navbar>`,
+
+  hideOnScroll: `{/* hideOnScroll slides a sticky bar away while the reader scrolls down and brings it back on a scroll up or near the top. It
+    stays while anything in it has focus. In a scrolling box of your own, name it with scrollContainerRef. */}
+<Navbar sticky hideOnScroll>
+  <Navbar.Brand href="/">dbM</Navbar.Brand>
+  <Navbar.Links>
+    <Navbar.Link href="/products" current>
+      Products
+    </Navbar.Link>
+  </Navbar.Links>
+</Navbar>`,
+
   rounded: `{/* rounded makes each link and group button a pill; the bar itself keeps its shape. It is the same prop Button,
     IconButton and Toolbar have. */}
 ${navbar('rounded currentVariant="subtle"')}`,
@@ -137,6 +219,7 @@ export interface NavbarPlaygroundSnippetArgs {
   closeMenuOnNavigate?: boolean;
   contained?: boolean;
   sticky?: boolean;
+  hideOnScroll?: boolean;
   dir?: "ltr" | "rtl";
 }
 
@@ -155,6 +238,7 @@ export function navbarPlaygroundSnippet(args: NavbarPlaygroundSnippetArgs): stri
   if (args.closeMenuOnNavigate === false) attributes.push("closeMenuOnNavigate={false}");
   if (args.contained) attributes.push("contained");
   if (args.sticky) attributes.push("sticky");
+  if (args.hideOnScroll) attributes.push("hideOnScroll");
   if (args.dir === "rtl") attributes.push('dir="rtl"');
   return navbar(attributes.join(" "));
 }

@@ -93,6 +93,12 @@ const meta: Meta<typeof Navbar> = {
       control: false,
       description: "The scrollable container a sticky bar sticks within, if it isn't the page. No effect without sticky.",
     },
+    hideOnScroll: {
+      control: "boolean",
+      description:
+        "Hides a sticky bar while the reader scrolls down, and brings it back on a scroll up or near the top. It stays shown while anything in it has keyboard focus. Needs sticky; without it a development warning says so.",
+      table: { defaultValue: { summary: "false" } },
+    },
     dir: {
       control: "radio",
       options: ["ltr", "rtl"],
@@ -101,7 +107,8 @@ const meta: Meta<typeof Navbar> = {
     },
     labels: {
       control: false,
-      description: "The text the bar supplies itself: menu (the button's name and the panel's title), navigation and close.",
+      description:
+        "The text the bar supplies itself: menu (the button's name and the panel's title), navigation, close, skipLink (the skip link's text) and externalLink (the cue read after an external link).",
     },
     "aria-label": {
       control: "text",

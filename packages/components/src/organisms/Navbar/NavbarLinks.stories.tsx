@@ -8,6 +8,13 @@ const meta: Meta<typeof Navbar.Links> = {
   component: Navbar.Links,
   tags: ["!dev"],
   argTypes: {
+    align: {
+      control: "select",
+      options: ["start", "center", "end"],
+      description:
+        "Where the links sit between the brand and the actions: next to the brand, centred in the room between them, or against the actions. Follows the reading direction; no effect in the menu panel.",
+      table: { defaultValue: { summary: '"start"' } },
+    },
     children: {
       control: false,
       description:

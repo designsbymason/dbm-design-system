@@ -47,6 +47,10 @@ export interface NavbarLabels {
   navigation: string;
   /** The accessible name of the menu panel's close button. @default 'Close' */
   close: string;
+  /** The text of `Navbar.SkipLink` when it is given no children. @default 'Skip to content' */
+  skipLink: string;
+  /** Read out after an external `Navbar.Link`'s text, in place of a visible cue. @default '(opens in a new tab)' */
+  externalLink: string;
 }
 
 export interface NavbarProps extends Omit<ComponentPropsWithoutRef<"header">, "dir" | "children"> {
@@ -115,6 +119,13 @@ export interface NavbarProps extends Omit<ComponentPropsWithoutRef<"header">, "d
    */
   menuContainer?: HTMLElement | null;
   /**
+   * Hides a sticky bar while the reader scrolls down, and brings it back as soon as they scroll up or are near the top, so it
+   * costs no room while reading. It stays shown while anything in it has keyboard focus, so a keyboard user never loses it.
+   * Needs `sticky`; without it a development warning says so and nothing happens.
+   * @default false
+   */
+  hideOnScroll?: boolean;
+  /**
    * Keeps the content to the page's reading width with `Container`, centred, instead of running edge to edge.
    * @default false
    */
@@ -166,6 +177,9 @@ export interface NavbarProps extends Omit<ComponentPropsWithoutRef<"header">, "d
   "data-testid"?: string;
 }
 
+/** Where `Navbar.Links` sits along the bar, between the brand and the actions. `"center"` centres it in the room between them. */
+export type NavbarLinksAlign = "start" | "center" | "end";
+
 export interface NavbarBrandProps extends HTMLAttributes<HTMLElement> {
   /**
    * Where the brand links to, usually the home page. With an `href` the brand is an `<a>`; without one (and without
@@ -195,7 +209,13 @@ export interface NavbarBrandProps extends HTMLAttributes<HTMLElement> {
   "aria-label"?: string;
 }
 
-export interface NavbarLinksProps extends Omit<ComponentPropsWithoutRef<"nav">, "children"> {
+export interface NavbarLinksProps extends Omit<ComponentPropsWithoutRef<"nav">, "children" | "align"> {
+  /**
+   * Where the links sit between the brand and the actions: `"start"` (next to the brand), `"center"` (centred in the room
+   * between them) or `"end"` (against the actions). Follows the reading direction. Has no effect in the menu panel.
+   * @default 'start'
+   */
+  align?: NavbarLinksAlign;
   /**
    * `Navbar.Link` items. The same items are drawn in the bar and, below the `collapseBelow` width, in the menu panel, so
    * give them no `id`: an id would be on the page twice while the menu is open.
@@ -219,10 +239,22 @@ export interface NavbarLinksProps extends Omit<ComponentPropsWithoutRef<"nav">, 
 }
 
 export interface NavbarLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "children"> {
-  /** The link's text, and an icon if it has one. */
+  /** The link's text. With `asChild`, the child's own content instead (and then `icon`, `badge` and `external` are not drawn). */
   children?: ReactNode;
   /** Where the link goes. With `asChild`, put it on the child instead. */
   href?: string;
+  /** An icon before the text, a component reference. It follows the text's colour, so it tracks hover and the current look. */
+  icon?: PhosphorIcon;
+  /**
+   * What to show after the text, such as a count or a dot: a `Badge`, or plain text. It is part of the link's name, so a count
+   * is read with it ("Inbox 3"); give a bare dot its own visually hidden text.
+   */
+  badge?: ReactNode;
+  /**
+   * Marks the link as leading off the site: it opens in a new tab with `rel="noopener noreferrer"`, and gets a trailing
+   * icon and a visually hidden "(opens in a new tab)". Worked out from `href` when left out (a link starting `http(s)://` or `//`).
+   */
+  external?: boolean;
   /**
    * Marks the link as the page the reader is on: `aria-current="page"` and a tinted look. The caller decides which one it
    * is (from the router), so it stays correct on a server-rendered page.
@@ -287,6 +319,67 @@ export interface NavbarGroupProps extends Omit<ComponentPropsWithoutRef<"button"
   /** Standard DOM id. */
   id?: string;
   /** Additional CSS classes, on the group's button. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface NavbarActionProps extends HTMLAttributes<HTMLDivElement> {
+  /**
+   * Hides this action in the bar below this width, a breakpoint step. Pair it with the same control in `Navbar.PanelActions` so
+   * a phone still has it in the menu panel. The switch is the stylesheet's, so a server render is right at first paint.
+   */
+  hideBelow?: Exclude<Breakpoint, "base">;
+  /** The action: a button, a search field, a menu. */
+  children?: ReactNode;
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface NavbarPanelActionsProps extends HTMLAttributes<HTMLDivElement> {
+  /**
+   * What to show at the foot of the menu panel, such as a full-width "Sign in" button. Drawn only in the panel, never in the
+   * bar, so it is where an action hidden from the bar below a width (`Navbar.Action`'s `hideBelow`) reappears on a phone.
+   */
+  children?: ReactNode;
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface NavbarSkipLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "children"> {
+  /**
+   * The id of the page's main content, as a hash link. Give that element `tabIndex={-1}` so focus lands in it.
+   * @default '#main'
+   */
+  href?: string;
+  /** The link's text. Defaults to `labels.skipLink` ("Skip to content"). */
+  children?: ReactNode;
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes for customization. */
   className?: string;
   /** Inline styles, merged onto the component's own internal styles. */
   style?: CSSProperties;

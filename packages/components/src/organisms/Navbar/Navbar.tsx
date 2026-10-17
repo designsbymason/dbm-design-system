@@ -1,5 +1,5 @@
-import { CaretDownIcon, ListIcon } from "@dbm-design-system/icons";
-import { cx, mergeDefined } from "@dbm-design-system/primitives";
+import { ArrowSquareOutIcon, CaretDownIcon, ListIcon } from "@dbm-design-system/icons";
+import { cx, mergeDefined, mergeRefs } from "@dbm-design-system/primitives";
 import { Slot } from "@radix-ui/react-slot";
 import {
   Children,
@@ -11,18 +11,23 @@ import {
   useEffect,
   useId,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import type { MouseEvent } from "react";
+import { createPortal } from "react-dom";
 import { Affix } from "../../atoms/Affix";
 import { Container } from "../../atoms/Container";
 import { Icon } from "../../atoms/Icon";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { IconButton } from "../../atoms/IconButton";
 import { Drawer } from "../Drawer";
 import { Menu } from "../Menu";
 import type { DrawerOpenChangeDetails } from "../Drawer";
 import styles from "./Navbar.module.css";
+import { useHideOnScroll } from "./useHideOnScroll";
 import type {
+  NavbarActionProps,
   NavbarActionsProps,
   NavbarBrandProps,
   NavbarCollapseBelow,
@@ -32,11 +37,30 @@ import type {
   NavbarLinkProps,
   NavbarLinksProps,
   NavbarMenuButtonProps,
+  NavbarPanelActionsProps,
   NavbarProps,
   NavbarSize,
+  NavbarSkipLinkProps,
 } from "./Navbar.types";
 
-const defaultLabels: NavbarLabels = { menu: "Menu", navigation: "Main", close: "Close" };
+const defaultLabels: NavbarLabels = {
+  menu: "Menu",
+  navigation: "Main",
+  close: "Close",
+  skipLink: "Skip to content",
+  externalLink: "(opens in a new tab)",
+};
+
+const EXTERNAL_HREF_PATTERN = /^(https?:)?\/\//i;
+
+const hideBelowClass: Record<NonNullable<NavbarActionProps["hideBelow"]>, string | undefined> = {
+  sm: styles.hideBelowSm,
+  md: styles.hideBelowMd,
+  lg: styles.hideBelowLg,
+  xl: styles.hideBelowXl,
+  "2xl": styles.hideBelow2xl,
+  "3xl": styles.hideBelow3xl,
+};
 
 const collapseClass: Record<NavbarCollapseBelow, string | undefined> = {
   sm: styles.collapseSm,
@@ -81,6 +105,12 @@ interface NavbarContextValue {
   menuSide: NonNullable<NavbarProps["menuSide"]>;
   dir: NonNullable<NavbarProps["dir"]>;
   menuContainer: HTMLElement | null | undefined;
+  /** The menu panel's footer element once it is drawn, where `Navbar.PanelActions` puts its children. */
+  panelFooter: HTMLElement | null;
+  setPanelFooter: (footer: HTMLElement | null) => void;
+  /** Whether a `Navbar.PanelActions` is among the bar's children, so the panel draws a footer for it. */
+  hasPanelActions: boolean;
+  /** The labels, for the parts that supply text of their own. */
   /** Closes the phone menu from inside it (a link chosen). */
   closeMenu: () => void;
 }
@@ -172,6 +202,7 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
       sticky = false,
       stickyOffset = 0,
       scrollContainerRef,
+      hideOnScroll = false,
       dir = "ltr",
       labels,
       className,
@@ -206,16 +237,56 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
       return () => query.removeEventListener("change", handleChange);
     }, [open, collapseBelow, closeMenu]);
 
+    const [panelFooter, setPanelFooter] = useState<HTMLElement | null>(null);
+    const barRef = useRef<HTMLElement | null>(null);
+    const headerRef = useMemo(() => mergeRefs(ref, barRef), [ref]);
+    const awayFromView = useHideOnScroll(sticky && hideOnScroll, barRef, scrollContainerRef);
+    useEffect(() => {
+      if (process.env.NODE_ENV !== "production" && hideOnScroll && !sticky) {
+        console.warn("Navbar: `hideOnScroll` needs `sticky`; without it the bar scrolls away with the page and nothing is hidden.");
+      }
+    }, [hideOnScroll, sticky]);
+
     const parts = Children.toArray(children);
     const hasLinks = parts.some((child) => isValidElement(child) && child.type === NavbarLinks);
     const hasMenuButton = parts.some((child) => isValidElement(child) && child.type === NavbarMenuButton);
+    const hasPanelActions = parts.some((child) => isValidElement(child) && child.type === NavbarPanelActions);
     const showAutomaticMenuButton = hasLinks && !hasMenuButton && collapseBelow !== "never";
 
     const contextValue = useMemo<NavbarContextValue>(
-      () => ({ labels: resolvedLabels, size, closeMenuOnNavigate, currentVariant, rounded, menuSide, menuContainer, dir, closeMenu }),
+      () => ({
+        labels: resolvedLabels,
+        size,
+        closeMenuOnNavigate,
+        currentVariant,
+        rounded,
+        menuSide,
+        menuContainer,
+        panelFooter,
+        setPanelFooter,
+        hasPanelActions,
+        dir,
+        closeMenu,
+      }),
       // `mergeDefined` returns a fresh object each render; its three strings are what the value really depends on.
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      [resolvedLabels.menu, resolvedLabels.navigation, resolvedLabels.close, size, closeMenuOnNavigate, currentVariant, rounded, menuSide, menuContainer, dir, closeMenu],
+      [
+        resolvedLabels.menu,
+        resolvedLabels.navigation,
+        resolvedLabels.close,
+        resolvedLabels.skipLink,
+        resolvedLabels.externalLink,
+        size,
+        closeMenuOnNavigate,
+        currentVariant,
+        rounded,
+        menuSide,
+        menuContainer,
+        panelFooter,
+        hasPanelActions,
+        dir,
+        closeMenu,
+      ],
     );
 
     const content = (
@@ -228,7 +299,7 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
     const header = (
       <header
         {...props}
-        ref={ref}
+        ref={headerRef}
         dir={dir}
         data-variant={variant}
         data-size={size}
@@ -238,6 +309,7 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
           sizeClass[size],
           collapseClass[collapseBelow],
           sticky && styles.sticky,
+          awayFromView && styles.awayFromView,
           className,
         )}
         style={style}
@@ -293,8 +365,8 @@ NavbarBrand.displayName = "Navbar.Brand";
  * width, and, below it, as the body of the menu panel the menu button opens. Its children are drawn in both places.
  */
 const NavbarLinks = forwardRef<HTMLElement, NavbarLinksProps>(
-  ({ children, className, "aria-label": ariaLabel, "aria-labelledby": ariaLabelledBy, ...props }, ref) => {
-    const { labels, menuSide, menuContainer, dir } = useNavbarContext("Navbar.Links");
+  ({ children, className, align = "start", "aria-label": ariaLabel, "aria-labelledby": ariaLabelledBy, ...props }, ref) => {
+    const { labels, menuSide, menuContainer, dir, hasPanelActions, setPanelFooter } = useNavbarContext("Navbar.Links");
     const name = ariaLabelledBy === undefined ? (ariaLabel ?? labels.navigation) : ariaLabel;
 
     return (
@@ -304,6 +376,7 @@ const NavbarLinks = forwardRef<HTMLElement, NavbarLinksProps>(
           ref={ref}
           aria-label={name}
           aria-labelledby={ariaLabelledBy}
+          data-align={align}
           className={cx(styles.links, className)}
         >
           {/* `role="list"` and `role="listitem"` are redundant on paper; Safari with VoiceOver drops list semantics under `list-style: none`. */}
@@ -324,6 +397,7 @@ const NavbarLinks = forwardRef<HTMLElement, NavbarLinksProps>(
               </ul>
             </nav>
           </Drawer.Body>
+          {hasPanelActions && <Drawer.Footer ref={setPanelFooter} align="stretch" />}
         </Drawer.Content>
       </>
     );
@@ -336,8 +410,27 @@ NavbarLinks.displayName = "Navbar.Links";
  * and keeps the link in the tab order, as `Link` does; `asChild` puts the look on a router's link.
  */
 const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
-  ({ current = false, disabled = false, asChild = false, className, onClick, onClickCapture, children, ...props }, ref) => {
-    const { closeMenuOnNavigate, closeMenu, currentVariant, rounded } = useNavbarContext("Navbar.Link");
+  (
+    {
+      current = false,
+      disabled = false,
+      asChild = false,
+      icon,
+      badge,
+      external,
+      href,
+      target,
+      rel,
+      className,
+      onClick,
+      onClickCapture,
+      children,
+      ...props
+    },
+    ref,
+  ) => {
+    const { closeMenuOnNavigate, closeMenu, currentVariant, rounded, labels } = useNavbarContext("Navbar.Link");
+    const isExternal = !asChild && (external ?? EXTERNAL_HREF_PATTERN.test(href ?? ""));
     const inPanel = useContext(NavbarPanelContext);
     const closeGroupMenu = useContext(NavbarMenuContext);
     const inMenu = closeGroupMenu !== null;
@@ -366,6 +459,7 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
     const link = (
       <Component
         {...props}
+        {...(asChild ? {} : { href, target: target ?? (isExternal ? "_blank" : undefined), rel: rel ?? (isExternal ? "noopener noreferrer" : undefined) })}
         ref={ref}
         aria-current={current ? "page" : undefined}
         aria-disabled={disabled || undefined}
@@ -377,9 +471,25 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
           !inMenu && current && styles.current,
           !inMenu && current && currentVariantClass[currentVariant],
           !inMenu && current && grows && styles.currentGrow,
-          disabled && styles.disabled, className)}
+          disabled && styles.disabled,
+          className,
+        )}
       >
-        {children}
+        {asChild ? (
+          children
+        ) : (
+          <>
+            {icon && <Icon icon={icon} size="sm" />}
+            {children}
+            {badge !== undefined && badge !== null && <span className={styles.badge}>{badge}</span>}
+            {isExternal && (
+              <>
+                <Icon icon={ArrowSquareOutIcon} size="xs" />
+                <VisuallyHidden> {labels.externalLink}</VisuallyHidden>
+              </>
+            )}
+          </>
+        )}
       </Component>
     );
 
@@ -485,6 +595,44 @@ const NavbarActions = forwardRef<HTMLDivElement, NavbarActionsProps>(({ classNam
 NavbarActions.displayName = "Navbar.Actions";
 
 /**
+ * One action in the bar's end, a box that can leave the bar below a width (`hideBelow`). Wrapping each action in one is only
+ * needed for that: a bare child of `Navbar.Actions` stays at every width.
+ */
+const NavbarAction = forwardRef<HTMLDivElement, NavbarActionProps>(({ hideBelow, className, ...props }, ref) => (
+  <div {...props} ref={ref} className={cx(styles.action, hideBelow && hideBelowClass[hideBelow], className)} />
+));
+NavbarAction.displayName = "Navbar.Action";
+
+/**
+ * What the menu panel shows at its foot, drawn only there: the place an action hidden from the bar below a width
+ * (`Navbar.Action`'s `hideBelow`) comes back on a phone. Its children are placed into the panel's footer, so it draws nothing
+ * in the bar, nor while the panel is closed.
+ */
+const NavbarPanelActions = forwardRef<HTMLDivElement, NavbarPanelActionsProps>(({ className, ...props }, ref) => {
+  const { panelFooter } = useNavbarContext("Navbar.PanelActions");
+  if (panelFooter === null) return null;
+  return createPortal(<div {...props} ref={ref} className={cx(styles.panelActions, className)} />, panelFooter);
+});
+NavbarPanelActions.displayName = "Navbar.PanelActions";
+
+/**
+ * A link that jumps past the bar to the page's main content, hidden until it takes keyboard focus. Put it first among the bar's
+ * children (and the bar first on the page), so it is the first thing `Tab` reaches. Its `href` names the main element's id, which
+ * needs `tabIndex={-1}` to receive focus.
+ */
+const NavbarSkipLink = forwardRef<HTMLAnchorElement, NavbarSkipLinkProps>(
+  ({ href = "#main", className, children, ...props }, ref) => {
+    const { labels } = useNavbarContext("Navbar.SkipLink");
+    return (
+      <a {...props} ref={ref} href={href} className={cx(styles.skipLink, className)}>
+        {children ?? labels.skipLink}
+      </a>
+    );
+  },
+);
+NavbarSkipLink.displayName = "Navbar.SkipLink";
+
+/**
  * The button that opens the menu panel below the `collapseBelow` width, an `IconButton` that is the panel's `Drawer`
  * trigger. Drawn for you at the bar's end when `Navbar.Links` is present; place one yourself to put it elsewhere or give it
  * another icon.
@@ -515,6 +663,9 @@ type NavbarComponent = typeof NavbarRoot & {
   Link: typeof NavbarLink;
   Group: typeof NavbarGroup;
   Actions: typeof NavbarActions;
+  Action: typeof NavbarAction;
+  PanelActions: typeof NavbarPanelActions;
+  SkipLink: typeof NavbarSkipLink;
   MenuButton: typeof NavbarMenuButton;
 };
 
@@ -524,5 +675,8 @@ export const Navbar: NavbarComponent = Object.assign(NavbarRoot, {
   Link: NavbarLink,
   Group: NavbarGroup,
   Actions: NavbarActions,
+  Action: NavbarAction,
+  PanelActions: NavbarPanelActions,
+  SkipLink: NavbarSkipLink,
   MenuButton: NavbarMenuButton,
 });

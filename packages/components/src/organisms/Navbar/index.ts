@@ -1,5 +1,6 @@
 export { Navbar } from "./Navbar";
 export type {
+  NavbarActionProps,
   NavbarActionsProps,
   NavbarBrandProps,
   NavbarCollapseBelow,
@@ -9,9 +10,12 @@ export type {
   NavbarLabels,
   NavbarLinkProps,
   NavbarLinksProps,
+  NavbarLinksAlign,
   NavbarMenuButtonProps,
   NavbarMenuChangeDetails,
+  NavbarPanelActionsProps,
   NavbarProps,
   NavbarSize,
+  NavbarSkipLinkProps,
   NavbarVariant,
 } from "./Navbar.types";

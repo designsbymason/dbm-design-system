@@ -599,3 +599,229 @@ export const UnderlineGrowsInRightToLeft: Story = {
     expect(px(x!)).toBeGreaterThan(8);
   },
 };
+
+export const ActionsMoveToThePanel: Story = {
+  name: "An action hidden from the bar comes back at the foot of the menu panel, and the others stay",
+  render: () => (
+    <NavbarStage minBlockSize="30rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+          <DemoNavbar actions="responsive" collapseBelow="3xl" menuContainer={menuContainer} />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // in the bar, below the step: the search stays, the button has left (it takes no room and has no name to find)
+    expect(getComputedStyle(canvas.getByRole("searchbox")).display).not.toBe("none");
+    expect(canvas.queryByRole("button", { name: "Sign in" })).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "Menu" }));
+    const panel = await canvas.findByRole("dialog", { name: "Menu" });
+    await waitFor(() => expect(panel.getAnimations().every((animation) => animation.playState === "finished")).toBe(true));
+    const signIn = within(panel).getByRole("button", { name: "Sign in" });
+    const links = within(panel).getByRole("navigation").getBoundingClientRect();
+    const box = signIn.getBoundingClientRect();
+    // at the foot of the panel: after the links, the width of the panel's content, a real target
+    expect(box.top).toBeGreaterThanOrEqual(links.bottom);
+    expect(box.height).toBeGreaterThanOrEqual(24);
+    expect(box.width).toBeGreaterThan(links.width * 0.8);
+    // and nothing of it is left in the bar once the panel has closed
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(canvas.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(canvas.queryByRole("button", { name: "Sign in" })).not.toBeInTheDocument();
+  },
+};
+
+export const SkipLinkAppearsOnFocus: Story = {
+  name: "The skip link is out of sight until it has focus, then clear over the top corner",
+  render: () => (
+    <NavbarStage minBlockSize="16rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+          <DemoNavbar skipLink menuContainer={menuContainer} />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const skip = canvas.getByRole("link", { name: "Skip to content" });
+    // out of sight, but not removed: a pixel, clipped
+    const rest = skip.getBoundingClientRect();
+    expect(rest.width).toBeLessThanOrEqual(2);
+    expect(getComputedStyle(skip).clipPath).not.toBe("none");
+    expect(getComputedStyle(skip).display).not.toBe("none");
+    // a keyboard reaches it first, before the brand
+    await userEvent.tab();
+    await waitFor(() => expect(skip).toHaveFocus());
+    const shown = skip.getBoundingClientRect();
+    expect(getComputedStyle(skip).clipPath).toBe("none");
+    expect(shown.height).toBeGreaterThanOrEqual(24);
+    expect(shown.width).toBeGreaterThan(48);
+    expect(getComputedStyle(skip).outlineStyle).toBe("solid");
+    expect(contrast(getComputedStyle(skip).color, getComputedStyle(skip).backgroundColor)).toBeGreaterThanOrEqual(4.5);
+    // it is the top thing at its own centre, above the bar it sits in
+    const top = document.elementFromPoint(shown.left + shown.width / 2, shown.top + shown.height / 2);
+    expect(top === skip || skip.contains(top)).toBe(true);
+    await userEvent.tab();
+    await waitFor(() => expect(canvas.getByRole("link", { name: "dbM" })).toHaveFocus());
+    expect(skip.getBoundingClientRect().width).toBeLessThanOrEqual(2);
+  },
+};
+
+export const LinkExtrasLayout: Story = {
+  name: "An icon comes before the text, a count after it, an external mark last, and the link stays on one line",
+  render: () => (
+    <NavbarStage minBlockSize="14rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+          <DemoNavbar extras actions="none" collapseBelow="never" menuContainer={menuContainer} />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const nav = within(within(canvasElement).getByRole("navigation", { name: "Main" }));
+    const plain = nav.getByRole("link", { name: "Products" }).getBoundingClientRect();
+    const docs = nav.getByRole("link", { name: "Docs" });
+    const inbox = nav.getByRole("link", { name: /^Inbox\s*3$/ });
+    const status = nav.getByRole("link", { name: /^Status/ });
+    for (const link of [docs, inbox, status]) {
+      // one line, at the height of a plain link
+      expect(Math.abs(link.getBoundingClientRect().height - plain.height)).toBeLessThan(1);
+      expect(link.getBoundingClientRect().height).toBeGreaterThanOrEqual(24);
+    }
+    // icon first, then the text, then the count
+    const icon = inbox.querySelector("svg")!.getBoundingClientRect();
+    const range = document.createRange();
+    range.selectNodeContents(inbox);
+    const badge = inbox.querySelector("span")!.getBoundingClientRect();
+    expect(icon.right).toBeLessThanOrEqual(badge.left);
+    expect(icon.width).toBeGreaterThan(8);
+    // the count is inside the link's hit area
+    const box = inbox.getBoundingClientRect();
+    expect(badge.right).toBeLessThanOrEqual(box.right + 0.5);
+    expect(badge.left).toBeGreaterThanOrEqual(box.left);
+    // the external link opens in a new tab and ends with an icon after its text
+    expect(status).toHaveAttribute("target", "_blank");
+    const mark = status.querySelector("svg")!.getBoundingClientRect();
+    expect(mark.left).toBeGreaterThan(status.getBoundingClientRect().left + 20);
+  },
+};
+
+export const LinksAlignPlacement: Story = {
+  name: "The links sit at the start, the centre of the room between the brand and the actions, or the end",
+  render: () => (
+    <NavbarStage minBlockSize="20rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start", display: "grid", gap: "1rem" }}>
+          {(["start", "center", "end"] as const).map((align) => (
+            <GalleryBar key={align} name={`${align} links`}>
+              <DemoNavbar linksAlign={align} linksLabel={`${align} navigation`} collapseBelow="never" menuContainer={menuContainer} />
+            </GalleryBar>
+          ))}
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const measure = (align: string) => {
+      const bar = within(canvasElement).getByRole("region", { name: `${align} links` });
+      const brand = within(bar).getByRole("link", { name: "dbM" }).getBoundingClientRect();
+      const nav = within(bar).getByRole("navigation").getBoundingClientRect();
+      const action = within(bar).getByRole("button", { name: "Sign in" }).getBoundingClientRect();
+      return { brand, nav, action };
+    };
+    const start = measure("start");
+    const center = measure("center");
+    const end = measure("end");
+    // start: close to the brand, a gap and no more
+    expect(start.nav.left - start.brand.right).toBeLessThan(24);
+    // end: close to the actions
+    expect(end.action.left - end.nav.right).toBeLessThan(24);
+    expect(end.nav.left - end.brand.right).toBeGreaterThan(24);
+    // centre: the middle of the room between the brand and the actions, within a pixel or two
+    const room = (center.brand.right + center.action.left) / 2;
+    expect(Math.abs((center.nav.left + center.nav.right) / 2 - room)).toBeLessThan(2);
+    // and the actions stay at the end whichever it is
+    for (const { action } of [start, center, end]) expect(Math.abs(action.right - start.action.right)).toBeLessThan(1);
+  },
+};
+
+export const GhostBecomesASurface: Story = {
+  name: "A sticky ghost bar is transparent until stuck, then takes a surface and a shadow, and is transparent again at the top",
+  render: function Render() {
+    const boxRef = useRef<HTMLDivElement | null>(null);
+    return (
+      <StickyDemo boxRef={boxRef} hero>
+        {(ref) => <DemoNavbar sticky variant="ghost" scrollContainerRef={ref} />}
+      </StickyDemo>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const header = within(canvasElement).getByRole("banner");
+    const scroller = header.parentElement!;
+    const transparent = (value: string) => value === "rgba(0, 0, 0, 0)" || value === "transparent";
+    expect(transparent(getComputedStyle(header).backgroundColor)).toBe(true);
+    expect(getComputedStyle(header).boxShadow).toBe("none");
+    for (let attempt = 0; attempt < 4 && !header.hasAttribute("data-stuck"); attempt += 1) {
+      scroller.scrollTop = 0;
+      await nextFrame();
+      await nextFrame();
+      scroller.scrollTop = 300;
+      try {
+        await waitFor(() => expect(header).toHaveAttribute("data-stuck"), { timeout: 1200 });
+      } catch {
+        // not reported yet: the next attempt scrolls again, and the assertion below is what fails the test
+      }
+    }
+    await expect(header).toHaveAttribute("data-stuck");
+    await waitFor(() => expect(transparent(getComputedStyle(header).backgroundColor)).toBe(false));
+    expect(getComputedStyle(header).boxShadow).not.toBe("none");
+    scroller.scrollTop = 0;
+    await waitFor(() => expect(header).not.toHaveAttribute("data-stuck"), { timeout: 3000 });
+    await waitFor(() => expect(transparent(getComputedStyle(header).backgroundColor)).toBe(true));
+  },
+};
+
+export const HidesWhileScrollingDown: Story = {
+  name: "A bar that hides on scroll leaves on a scroll down, returns on a scroll up, and stays while it has focus",
+  render: function Render() {
+    const boxRef = useRef<HTMLDivElement | null>(null);
+    return (
+      <StickyDemo boxRef={boxRef}>
+        {(ref) => <DemoNavbar sticky hideOnScroll currentVariant="subtle" scrollContainerRef={ref} />}
+      </StickyDemo>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const header = within(canvasElement).getByRole("banner");
+    const scroller = header.parentElement!;
+    const outside = () => header.getBoundingClientRect().bottom <= scroller.getBoundingClientRect().top + 1;
+    const settle = async () => {
+      await waitFor(() => expect(header.getAnimations().every((animation) => animation.playState === "finished")).toBe(true));
+      await nextFrame();
+    };
+    expect(outside()).toBe(false);
+    // down: it leaves
+    scroller.scrollTop = 120;
+    await waitFor(() => expect(getComputedStyle(header).translate).not.toBe("none"), { timeout: 3000 });
+    await settle();
+    expect(outside()).toBe(true);
+    // up: it returns
+    scroller.scrollTop = 40;
+    await waitFor(() => expect(getComputedStyle(header).translate).toBe("none"), { timeout: 3000 });
+    await settle();
+    expect(outside()).toBe(false);
+    // down again, then a keyboard reaches a link in it: it shows while it has focus
+    scroller.scrollTop = 200;
+    await waitFor(() => expect(getComputedStyle(header).translate).not.toBe("none"), { timeout: 3000 });
+    await settle();
+    expect(outside()).toBe(true);
+    within(header).getByRole("link", { name: "Pricing" }).focus();
+    await waitFor(() => expect(getComputedStyle(header).translate).toBe("none"), { timeout: 3000 });
+    await settle();
+    expect(outside()).toBe(false);
+  },
+};

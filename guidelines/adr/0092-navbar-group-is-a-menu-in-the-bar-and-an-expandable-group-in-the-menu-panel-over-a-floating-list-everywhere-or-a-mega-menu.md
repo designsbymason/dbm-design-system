@@ -20,7 +20,7 @@
 - **Build the mega-menu now.** Rejected: it is `NavigationMenu` (🟡), a different shape with its own keyboard model.
 
 ## Consequences
-- `Navbar` imports `Menu` as well as `Drawer`; its JS grows from about 10KB to 14KB gzipped, so its budgets are 16KB of JS and 8KB of CSS.
+- `Navbar` imports `Menu` as well as `Drawer`; its JS grows from about 10KB to 14KB gzipped, so it has its own budgets in the bundle check (set with headroom, and raised since as the bar grew).
 - A `Navbar.Link` in a group's menu has none of the bar's link styling and takes `Menu`'s item look, so a group's links look like every other menu in an app.
 - A disabled group is a native `disabled` button, so it leaves the tab order, unlike a disabled link, which stays focusable.
 

@@ -1731,6 +1731,7 @@ describe("Playground snippet for Navbar", () => {
     {},
     { variant: "filled", size: "lg" },
     { currentVariant: "underline" },
+    { sticky: true, hideOnScroll: true },
     { rounded: true, currentVariant: "subtle" },
     { currentVariant: "solid", collapseBelow: "never", contained: true },
     { collapseBelow: "3xl", menuSide: "end", closeMenuOnNavigate: false },
@@ -1750,6 +1751,7 @@ describe("Playground snippet for Navbar", () => {
     );
     expect(navbarPlaygroundSnippet({ dir: "rtl" })).toContain('<Navbar dir="rtl">');
     expect(navbarPlaygroundSnippet({ rounded: true })).toContain("<Navbar rounded>");
+    expect(navbarPlaygroundSnippet({ sticky: true, hideOnScroll: true })).toContain("<Navbar sticky hideOnScroll>");
     expect(navbarPlaygroundSnippet({ rounded: false })).toMatch(/^<Navbar>\n/);
     expect(navbarPlaygroundSnippet({ currentVariant: "underline" })).toMatch(/^<Navbar>\n/);
     expect(navbarPlaygroundSnippet({ currentVariant: "solid" })).toContain('<Navbar currentVariant="solid">');

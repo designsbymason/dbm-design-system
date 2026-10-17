@@ -1,8 +1,9 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { HouseIcon } from "@dbm-design-system/icons";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Button } from "../../atoms/Button";
 import { Navbar } from "./Navbar";
 import styles from "./Navbar.module.css";
@@ -706,5 +707,274 @@ describe("Navbar's underline growing in", () => {
     expect(trigger).not.toHaveClass(styles.currentGrow!);
     await user.click(screen.getByRole("button", { name: "go" }));
     expect(trigger).toHaveClass(styles.currentGrow!);
+  });
+});
+
+describe("Navbar.Action and Navbar.PanelActions", () => {
+  function Actions(props: Partial<React.ComponentProps<typeof Navbar>> = {}) {
+    return (
+      <Navbar {...props}>
+        <Navbar.Links>
+          <Navbar.Link href="/a">A</Navbar.Link>
+        </Navbar.Links>
+        <Navbar.Actions>
+          <Navbar.Action hideBelow="md" data-testid="signin">
+            <Button size="sm">Sign in</Button>
+          </Navbar.Action>
+          <Navbar.Action data-testid="always">
+            <Button size="sm">Search</Button>
+          </Navbar.Action>
+        </Navbar.Actions>
+        <Navbar.PanelActions data-testid="panel-actions">
+          <Button>Sign in (panel)</Button>
+        </Navbar.PanelActions>
+      </Navbar>
+    );
+  }
+
+  it("hides an action below its width by class, and leaves the others alone", () => {
+    render(<Actions />);
+    expect(screen.getByTestId("signin")).toHaveClass(styles.hideBelowMd!);
+    expect(screen.getByTestId("always")).not.toHaveClass(styles.hideBelowMd!);
+  });
+
+  it("forwards a ref and standard props on an action", () => {
+    const ref = createRef<HTMLDivElement>();
+    render(
+      <Navbar>
+        <Navbar.Actions>
+          <Navbar.Action ref={ref} id="one" className="mine" data-testid="one">
+            x
+          </Navbar.Action>
+        </Navbar.Actions>
+      </Navbar>,
+    );
+    expect(ref.current).toBe(screen.getByTestId("one"));
+    expect(ref.current).toHaveAttribute("id", "one");
+    expect(ref.current).toHaveClass("mine", styles.action!);
+  });
+
+  it("draws nothing for the panel's actions in the bar or while the panel is closed", () => {
+    render(<Actions />);
+    expect(screen.queryByText("Sign in (panel)")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("panel-actions")).not.toBeInTheDocument();
+  });
+
+  it("draws them in the panel's footer once it is open", async () => {
+    const user = userEvent.setup();
+    render(<Actions />);
+    await user.click(screen.getByRole("button", { name: "Menu" }));
+    const panel = await screen.findByRole("dialog");
+    const actions = await within(panel).findByTestId("panel-actions");
+    expect(within(actions).getByRole("button", { name: "Sign in (panel)" })).toBeInTheDocument();
+    expect(actions).toHaveClass(styles.panelActions!);
+    // in the panel's footer, after the links
+    const links = within(panel).getByRole("navigation");
+    expect(links.compareDocumentPosition(actions) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("draws no footer when there are no panel actions", async () => {
+    const user = userEvent.setup();
+    render(<Basic />);
+    await user.click(screen.getByRole("button", { name: "Menu" }));
+    const panel = await screen.findByRole("dialog");
+    expect(panel.querySelector('[data-testid="panel-actions"]')).toBeNull();
+    expect(within(panel).queryAllByRole("button")).toHaveLength(1); // only the close button
+  });
+
+  it("has no axe violations with the panel open", async () => {
+    const user = userEvent.setup();
+    render(<Actions />);
+    await user.click(screen.getByRole("button", { name: "Menu" }));
+    expect(await axe(await screen.findByRole("dialog"))).toHaveNoViolations();
+  });
+});
+
+describe("Navbar.SkipLink", () => {
+  it("is the first link, names itself, and points at main by default", async () => {
+    const user = userEvent.setup();
+    render(
+      <Navbar collapseBelow="never">
+        <Navbar.SkipLink />
+        <Navbar.Brand href="/">dbM</Navbar.Brand>
+      </Navbar>,
+    );
+    const skip = screen.getByRole("link", { name: "Skip to content" });
+    expect(skip).toHaveAttribute("href", "#main");
+    expect(skip).toHaveClass(styles.skipLink!);
+    await user.tab();
+    expect(skip).toHaveFocus();
+  });
+
+  it("takes its own href and text, and the label from labels", () => {
+    const { rerender } = render(
+      <Navbar labels={{ skipLink: "Jump" }}>
+        <Navbar.SkipLink />
+      </Navbar>,
+    );
+    expect(screen.getByRole("link", { name: "Jump" })).toBeInTheDocument();
+    rerender(
+      <Navbar>
+        <Navbar.SkipLink href="#content" data-testid="skip">
+          Go to the content
+        </Navbar.SkipLink>
+      </Navbar>,
+    );
+    expect(screen.getByRole("link", { name: "Go to the content" })).toHaveAttribute("href", "#content");
+  });
+});
+
+describe("Navbar.Link icon, badge and external", () => {
+  it("draws an icon before the text and a badge after it, in the link's name", () => {
+    render(
+      <Navbar collapseBelow="never">
+        <Navbar.Links>
+          <Navbar.Link href="/inbox" icon={HouseIcon} badge="3">
+            Inbox
+          </Navbar.Link>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    const link = screen.getByRole("link", { name: "Inbox 3" });
+    expect(link.querySelector("svg")).not.toBeNull();
+    expect(link.querySelector(`.${styles.badge}`)).toHaveTextContent("3");
+    expect(link.firstElementChild?.tagName.toLowerCase()).toBe("svg");
+  });
+
+  it("marks an external href: new tab, rel, a trailing icon and a hidden cue", () => {
+    render(
+      <Navbar collapseBelow="never">
+        <Navbar.Links>
+          <Navbar.Link href="https://example.com/docs">Docs</Navbar.Link>
+          <Navbar.Link href="/local">Local</Navbar.Link>
+          <Navbar.Link href="https://example.com" external={false}>
+            Forced
+          </Navbar.Link>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    // (the cue is read after the text, as one name; the space is its own leading one)
+    const external = screen.getByRole("link", { name: /^Docs\s*\(opens in a new tab\)$/ });
+    expect(external).toHaveAttribute("target", "_blank");
+    expect(external).toHaveAttribute("rel", "noopener noreferrer");
+    expect(screen.getByRole("link", { name: "Local" })).not.toHaveAttribute("target");
+    expect(screen.getByRole("link", { name: "Forced" })).not.toHaveAttribute("target");
+  });
+
+  it("takes the cue's wording from labels, and draws none of it for asChild", () => {
+    render(
+      <Navbar collapseBelow="never" labels={{ externalLink: "(nouvel onglet)" }}>
+        <Navbar.Links>
+          <Navbar.Link href="https://example.com">Docs</Navbar.Link>
+          <Navbar.Link asChild icon={HouseIcon} badge="9">
+            <a href="https://example.com/x">Child</a>
+          </Navbar.Link>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    expect(screen.getByRole("link", { name: /^Docs\s*\(nouvel onglet\)$/ })).toBeInTheDocument();
+    const child = screen.getByRole("link", { name: "Child" });
+    expect(child.querySelector("svg")).toBeNull();
+    expect(child).not.toHaveAttribute("target");
+  });
+
+  it("draws the same content for a link in a group's menu", async () => {
+    const user = userEvent.setup();
+    render(
+      <Navbar collapseBelow="never">
+        <Navbar.Links>
+          <Navbar.Group label="More">
+            <Navbar.Link href="https://example.com" icon={HouseIcon} badge="2">
+              Docs
+            </Navbar.Link>
+          </Navbar.Group>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    await user.click(screen.getByRole("button", { name: "More" }));
+    const item = await screen.findByRole("menuitem", { name: "Docs 2 (opens in a new tab)" });
+    expect(item).toHaveAttribute("target", "_blank");
+  });
+});
+
+describe("Navbar.Links align", () => {
+  it.each(["start", "center", "end"] as const)("puts align=%s on the navigation", (align) => {
+    render(
+      <Navbar collapseBelow="never">
+        <Navbar.Links align={align}>
+          <Navbar.Link href="/a">A</Navbar.Link>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    expect(screen.getByRole("navigation")).toHaveAttribute("data-align", align);
+  });
+
+  it("is start by default, and a same-named attribute can't replace it", () => {
+    render(
+      <Navbar collapseBelow="never">
+        <Navbar.Links {...({ "data-align": "end" } as object)}>
+          <Navbar.Link href="/a">A</Navbar.Link>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    expect(screen.getByRole("navigation")).toHaveAttribute("data-align", "start");
+  });
+});
+
+describe("Navbar hideOnScroll", () => {
+  function scrollTo(y: number) {
+    Object.defineProperty(window, "scrollY", { value: y, configurable: true });
+    window.dispatchEvent(new Event("scroll"));
+  }
+
+  beforeEach(() => {
+    vi.stubGlobal("IntersectionObserver", class { observe() {} unobserve() {} disconnect() {} takeRecords() { return []; } });
+    // a frame that comes after the handler returns, as a real one does (calling it inline would run the read before the
+    // hook has noted that one is pending)
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback: FrameRequestCallback) => {
+      queueMicrotask(() => callback(0));
+      return 1;
+    });
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ height: 60, width: 0, top: 0, left: 0, right: 0, bottom: 60, x: 0, y: 0, toJSON() {} } as DOMRect);
+    Object.defineProperty(window, "scrollY", { value: 0, configurable: true });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("slides away on a scroll down past the bar, returns on a scroll up, and stays shown near the top", async () => {
+    render(<Basic sticky hideOnScroll />);
+    const bar = screen.getByRole("banner");
+    expect(bar).not.toHaveClass(styles.awayFromView!);
+    await act(async () => scrollTo(30));
+    expect(bar).not.toHaveClass(styles.awayFromView!);
+    await act(async () => scrollTo(300));
+    expect(bar).toHaveClass(styles.awayFromView!);
+    await act(async () => scrollTo(250));
+    expect(bar).not.toHaveClass(styles.awayFromView!);
+    await act(async () => scrollTo(400));
+    expect(bar).toHaveClass(styles.awayFromView!);
+    await act(async () => scrollTo(20));
+    expect(bar).not.toHaveClass(styles.awayFromView!);
+  });
+
+  it("does nothing without hideOnScroll, and warns when it is set without sticky", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const { rerender } = render(<Basic sticky />);
+    await act(async () => scrollTo(300));
+    expect(screen.getByRole("banner")).not.toHaveClass(styles.awayFromView!);
+    expect(warn).not.toHaveBeenCalled();
+    rerender(<Basic hideOnScroll />);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("hideOnScroll"));
+    await act(async () => scrollTo(500));
+    expect(screen.getByRole("banner")).not.toHaveClass(styles.awayFromView!);
+  });
+
+  it("stops listening when it unmounts", async () => {
+    const remove = vi.spyOn(window, "removeEventListener");
+    const { unmount } = render(<Basic sticky hideOnScroll />);
+    unmount();
+    expect(remove).toHaveBeenCalledWith("scroll", expect.any(Function));
   });
 });

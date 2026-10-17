@@ -37,6 +37,29 @@
   background-color: var(--dbm-bg-neutral-subtle);
 }
 
+/* A sticky `ghost` bar is transparent over the page (a hero, say) until it is stuck, then takes a surface and a shadow, so what
+   scrolls beneath it never shows through the links. */
+.ghost.sticky {
+  background-color: transparent;
+  transition:
+    background-color var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
+    translate var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+.ghost.sticky[data-stuck] {
+  background-color: var(--dbm-bg-surface);
+}
+
+/* `hideOnScroll`: the bar slides out of view while the reader scrolls down. It stays while anything in it has keyboard focus, so
+   a keyboard user is never left with the control that has focus off screen. `translate`, not `transform`, as for other pulls. */
+.sticky {
+  transition: translate var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+.awayFromView:not(:focus-within) {
+  translate: 0 -100%;
+}
+
 /* --- Layout --- */
 
 /* The bar is as tall as an `IconButton` of its own step plus room above and below, so the tallest thing it holds never
@@ -82,6 +105,126 @@ a.brand:focus-visible,
   outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
   outline-offset: var(--dbm-space-1);
   border-radius: var(--dbm-radius-sm);
+}
+
+/* An action that leaves the bar below a width (`Navbar.Action`'s `hideBelow`). Media queries can't read a custom property, so each
+   width is the literal value of the matching breakpoint token, as the collapse steps below are. */
+.action {
+  display: flex;
+  align-items: center;
+}
+
+.hideBelowSm,
+.hideBelowMd,
+.hideBelowLg,
+.hideBelowXl,
+.hideBelow2xl,
+.hideBelow3xl {
+  display: none;
+}
+
+@media (min-width: 40rem) {
+  .hideBelowSm {
+    display: flex;
+  }
+}
+
+@media (min-width: 48rem) {
+  .hideBelowMd {
+    display: flex;
+  }
+}
+
+@media (min-width: 64rem) {
+  .hideBelowLg {
+    display: flex;
+  }
+}
+
+@media (min-width: 80rem) {
+  .hideBelowXl {
+    display: flex;
+  }
+}
+
+@media (min-width: 96rem) {
+  .hideBelow2xl {
+    display: flex;
+  }
+}
+
+@media (min-width: 120rem) {
+  .hideBelow3xl {
+    display: flex;
+  }
+}
+
+/* What the menu panel shows at its foot: a column of full-width actions. */
+.panelActions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--dbm-space-3);
+  inline-size: 100%;
+}
+
+/* The skip link: out of sight until it takes keyboard focus, then drawn over the top corner of the page, above the bar. */
+.skipLink {
+  position: absolute;
+  inline-size: var(--dbm-space-px);
+  block-size: var(--dbm-space-px);
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skipLink:focus-visible {
+  position: fixed;
+  inset-block-start: var(--dbm-space-2);
+  inset-inline-start: var(--dbm-space-4);
+  z-index: var(--dbm-z-index-fixed);
+  inline-size: auto;
+  block-size: auto;
+  overflow: visible;
+  clip-path: none;
+  padding-block: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-4);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  background-color: var(--dbm-bg-surface);
+  color: var(--dbm-text-primary);
+  font-size: var(--dbm-font-size-sm);
+  font-weight: var(--dbm-font-weight-medium);
+  text-decoration: none;
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+  box-shadow: var(--dbm-shadow-light-md);
+}
+
+[data-theme$="-dark"] .skipLink:focus-visible {
+  box-shadow: var(--dbm-shadow-dark-md);
+}
+
+/* A count or dot after a link's text. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Where the links sit between the brand and the actions. The actions' own push to the end is cancelled when the links take the
+   free space, so the free space is the links' margins and not shared with the actions'. In the menu panel the links aren't in this
+   row at all. */
+.links[data-align="center"] {
+  margin-inline: auto;
+}
+
+.links[data-align="end"] {
+  margin-inline-start: auto;
+}
+
+.links[data-align="center"] ~ .actions,
+.links[data-align="end"] ~ .actions {
+  margin-inline-start: 0;
 }
 
 .actions {
@@ -453,7 +596,9 @@ a.brand:focus-visible,
 
 @media (prefers-reduced-motion: reduce) {
   .link,
-  .caret {
+  .caret,
+  .sticky,
+  .ghost.sticky {
     transition: none;
   }
 

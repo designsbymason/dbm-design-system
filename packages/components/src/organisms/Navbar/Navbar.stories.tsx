@@ -18,6 +18,7 @@ interface PlaygroundArgs {
   closeMenuOnNavigate: boolean;
   contained: boolean;
   sticky: boolean;
+  hideOnScroll: boolean;
   dir: "ltr" | "rtl";
   onMenuOpenChange: (open: boolean) => void;
 }
@@ -37,6 +38,7 @@ const noControls = {
   closeMenuOnNavigate: { control: false },
   contained: { control: false },
   sticky: { control: false },
+  hideOnScroll: { control: false },
   dir: { control: false },
   onMenuOpenChange: { control: false },
 } as const;
@@ -112,6 +114,12 @@ const meta: Meta<PlaygroundArgs> = {
         "Keeps the bar at the top of the page as it scrolls, with a shadow while stuck. The Playground's frame doesn't scroll, so see the Sticky story.",
       table: { defaultValue: { summary: "false" } },
     },
+    hideOnScroll: {
+      control: "boolean",
+      description:
+        "Hides a sticky bar while the reader scrolls down and brings it back on a scroll up. Needs sticky. The Playground's frame doesn't scroll, so see the Hides on scroll story.",
+      table: { defaultValue: { summary: "false" } },
+    },
     dir: {
       control: "radio",
       options: ["ltr", "rtl"],
@@ -133,6 +141,7 @@ const meta: Meta<PlaygroundArgs> = {
     closeMenuOnNavigate: true,
     contained: false,
     sticky: false,
+    hideOnScroll: false,
     dir: "ltr",
     onMenuOpenChange: fn(),
   },
@@ -383,6 +392,107 @@ export const Sticky: Story = {
     const boxRef = useRef<HTMLDivElement | null>(null);
     return (
       <StickyDemo boxRef={boxRef}>{(ref) => <DemoNavbar sticky scrollContainerRef={ref} />}</StickyDemo>
+    );
+  },
+};
+
+export const ResponsiveActions: Story = {
+  name: "Actions that move into the menu panel",
+  parameters: { docs: { source: { code: navbarSnippets.responsiveActions } } },
+  argTypes: { ...noControls },
+  render: () => (
+    // `3xl` is the widest step, so the button leaves the bar and shows in the panel on any window narrower than 1920px.
+    <NavbarStage minBlockSize="28rem">
+      {(menuContainer) => (
+        <Top>
+          <DemoNavbar actions="responsive" collapseBelow="3xl" menuContainer={menuContainer} />
+        </Top>
+      )}
+    </NavbarStage>
+  ),
+};
+
+export const SkipLink: Story = {
+  name: "A skip link",
+  parameters: { docs: { source: { code: navbarSnippets.skipLink } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <NavbarStage minBlockSize="16rem">
+      {(menuContainer) => (
+        <Top>
+          <p style={{ margin: "var(--dbm-space-3)", fontSize: "var(--dbm-font-size-sm)" }}>
+            Click here, then press Tab: the skip link is the first thing reached, and appears over the top corner.
+          </p>
+          <DemoNavbar skipLink menuContainer={menuContainer} />
+        </Top>
+      )}
+    </NavbarStage>
+  ),
+};
+
+export const LinkExtras: Story = {
+  name: "Icons, counts and external links",
+  parameters: { docs: { source: { code: navbarSnippets.linkExtras } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <NavbarStage minBlockSize="14rem">
+      {(menuContainer) => (
+        <Top>
+          <DemoNavbar extras actions="none" collapseBelow="never" menuContainer={menuContainer} />
+        </Top>
+      )}
+    </NavbarStage>
+  ),
+};
+
+export const LinksAlign: Story = {
+  name: "Where the links sit",
+  parameters: { docs: { source: { code: navbarSnippets.linksAlign } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <NavbarStage minBlockSize="16rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", display: "grid", gap: "var(--dbm-space-4)", alignSelf: "start" }}>
+          {(["start", "center", "end"] as const).map((align) => (
+            <GalleryBar key={align} name={`${align} links`}>
+              <DemoNavbar
+                linksAlign={align}
+                linksLabel={`${align} navigation`}
+                collapseBelow="never"
+                menuContainer={menuContainer}
+              />
+            </GalleryBar>
+          ))}
+        </div>
+      )}
+    </NavbarStage>
+  ),
+};
+
+export const GhostOverAHero: Story = {
+  name: "Transparent until it sticks",
+  parameters: { docs: { source: { code: navbarSnippets.ghostSticky } } },
+  argTypes: { ...noControls },
+  render: function Render() {
+    const boxRef = useRef<HTMLDivElement | null>(null);
+    return (
+      <StickyDemo boxRef={boxRef} hero>
+        {(ref) => <DemoNavbar sticky variant="ghost" scrollContainerRef={ref} />}
+      </StickyDemo>
+    );
+  },
+};
+
+export const HidesOnScroll: Story = {
+  name: "Hides on scroll",
+  parameters: { docs: { source: { code: navbarSnippets.hideOnScroll } } },
+  argTypes: { ...noControls },
+  render: function Render() {
+    const boxRef = useRef<HTMLDivElement | null>(null);
+    return (
+      <StickyDemo boxRef={boxRef}>
+        {(ref) => <DemoNavbar sticky hideOnScroll scrollContainerRef={ref} />}
+      </StickyDemo>
     );
   },
 };

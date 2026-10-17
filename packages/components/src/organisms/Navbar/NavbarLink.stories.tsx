@@ -10,6 +10,21 @@ const meta: Meta<typeof Navbar.Link> = {
   argTypes: {
     children: { control: "text", description: "The link's text, and an icon if it has one." },
     href: { control: "text", description: "Where the link goes. With asChild, put it on the child instead." },
+    icon: {
+      control: false,
+      description: "An icon before the text, a component reference. It follows the text's colour, so it tracks hover and the current look.",
+    },
+    badge: {
+      control: "text",
+      description:
+        "What to show after the text, such as a count or a dot. It is part of the link's name, so a count is read with it; give a bare dot its own visually hidden text.",
+    },
+    external: {
+      control: "boolean",
+      description:
+        "Marks the link as leading off the site: a new tab with rel noopener noreferrer, a trailing icon and a hidden cue. Worked out from href when left out (http(s):// or //).",
+      table: { defaultValue: { summary: "from href" } },
+    },
     current: {
       control: "boolean",
       description: "Marks the link as the page the reader is on: aria-current=\"page\" and a tinted look. The caller decides which one it is.",
