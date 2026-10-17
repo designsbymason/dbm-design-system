@@ -9,6 +9,7 @@ import type {
   RefObject,
 } from "react";
 import type { DrawerOpenChangeDetails, DrawerSide } from "../Drawer";
+import type { MenuAlign } from "../Menu";
 
 /** The bar's height step: its block size is the height of an `IconButton` of the same step plus a little room. */
 export type NavbarSize = "sm" | "md" | "lg";
@@ -232,6 +233,49 @@ export interface NavbarLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEle
   "data-testid"?: string;
   /** Names the link when its content is only an icon. */
   "aria-label"?: string;
+}
+
+export interface NavbarGroupProps extends Omit<ComponentPropsWithoutRef<"button">, "children" | "type"> {
+  /** The group's name, shown on its button. */
+  label: ReactNode;
+  /** The group's `Navbar.Link`s. In the bar they are the items of a floating menu; in the phone panel they are listed under the button. */
+  children?: ReactNode;
+  /**
+   * Gives the button the tinted look of the current page, for a group that holds it. The caller decides, from the router.
+   * Also opens the group in the phone panel, unless `defaultOpen` says otherwise.
+   * @default false
+   */
+  current?: boolean;
+  /**
+   * Whether the group starts expanded in the phone panel. Has no effect in the bar, where the group is a menu that opens on
+   * a press.
+   * @default current
+   */
+  defaultOpen?: boolean;
+  /**
+   * Makes the group's button inert, as a native `disabled` does: it leaves the tab order.
+   * @default false
+   */
+  disabled?: boolean;
+  /**
+   * How the floating menu lines up with its button in the bar: `"start"`, `"center"` or `"end"` (logical, so `start` is the
+   * right edge in right-to-left text).
+   * @default 'start'
+   */
+  align?: MenuAlign;
+  /** Names the button when `label` alone doesn't say it. */
+  "aria-label"?: string;
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes, on the group's button. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
 }
 
 export interface NavbarActionsProps extends HTMLAttributes<HTMLDivElement> {

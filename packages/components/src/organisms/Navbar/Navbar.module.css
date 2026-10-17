@@ -162,6 +162,58 @@ a.brand:focus-visible,
   background-color: var(--dbm-bg-brand-subtle-hover);
 }
 
+/* A `Navbar.Group`'s button: a button drawn as a link (no border, background or font of its own), with a caret that turns while
+   the group is open. */
+.groupTrigger {
+  appearance: none;
+  border: 0;
+  background-color: transparent;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.groupTrigger:hover {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+.groupTrigger:disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+.groupTrigger:disabled:hover {
+  background-color: transparent;
+}
+
+.caret {
+  transition: transform var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.groupTrigger[aria-expanded="true"] .caret {
+  transform: rotate(180deg);
+}
+
+/* In the menu panel a group is a button with its links indented beneath it. `.list` is a flex box, which would override the
+   `hidden` attribute, so a collapsed group says so itself. */
+.groupItem {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.groupList {
+  flex-direction: column;
+  align-items: stretch;
+  padding-inline-start: var(--dbm-space-4);
+}
+
+.groupList[hidden] {
+  display: none;
+}
+
+.groupItem > .groupTrigger {
+  justify-content: space-between;
+}
+
 /* Mirrors `Link`'s disabled treatment (`aria-disabled` plus a click guard, since `<a>` has no native `disabled`). */
 .disabled,
 .disabled:hover {
@@ -292,7 +344,8 @@ a.brand:focus-visible,
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .link {
+  .link,
+  .caret {
     transition: none;
   }
 }

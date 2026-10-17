@@ -52,6 +52,19 @@ ${links}
   </Navbar.Actions>`,
 )}`,
 
+  group: `{/* A Navbar.Group is a dropdown in the bar (a Menu of its links) and an expandable group in the phone panel. current
+    marks a group that holds the current page; it also starts the group expanded in the panel. */}
+<Navbar>
+  <Navbar.Links>
+    <Navbar.Link href="/products">Products</Navbar.Link>
+    <Navbar.Group label="Resources">
+      <Navbar.Link href="/blog">Blog</Navbar.Link>
+      <Navbar.Link href="/guides">Guides</Navbar.Link>
+      <Navbar.Link href="/changelog">Changelog</Navbar.Link>
+    </Navbar.Group>
+  </Navbar.Links>
+</Navbar>`,
+
   contained: `{/* contained keeps the content to the page's reading width, centred; the bar itself still spans the page. */}
 ${navbar("contained")}`,
 

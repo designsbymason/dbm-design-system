@@ -1,4 +1,4 @@
-import { ListIcon } from "@dbm-design-system/icons";
+import { CaretDownIcon, ListIcon } from "@dbm-design-system/icons";
 import { cx, mergeDefined } from "@dbm-design-system/primitives";
 import { Slot } from "@radix-ui/react-slot";
 import {
@@ -9,20 +9,24 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useId,
   useMemo,
   useState,
 } from "react";
 import type { MouseEvent } from "react";
 import { Affix } from "../../atoms/Affix";
 import { Container } from "../../atoms/Container";
+import { Icon } from "../../atoms/Icon";
 import { IconButton } from "../../atoms/IconButton";
 import { Drawer } from "../Drawer";
+import { Menu } from "../Menu";
 import type { DrawerOpenChangeDetails } from "../Drawer";
 import styles from "./Navbar.module.css";
 import type {
   NavbarActionsProps,
   NavbarBrandProps,
   NavbarCollapseBelow,
+  NavbarGroupProps,
   NavbarLabels,
   NavbarLinkProps,
   NavbarLinksProps,
@@ -76,6 +80,9 @@ const NavbarContext = createContext<NavbarContextValue | null>(null);
 
 /** True for the links drawn in the menu panel, which close it when chosen. */
 const NavbarPanelContext = createContext(false);
+
+/** True inside the floating list a `Navbar.Group` opens in the bar, where its links are menu items and not list items. */
+const NavbarMenuContext = createContext(false);
 
 function useNavbarContext(part: string): NavbarContextValue {
   const context = useContext(NavbarContext);
@@ -301,6 +308,7 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
   ({ current = false, disabled = false, asChild = false, className, onClick, onClickCapture, children, ...props }, ref) => {
     const { closeMenuOnNavigate, closeMenu } = useNavbarContext("Navbar.Link");
     const inPanel = useContext(NavbarPanelContext);
+    const inMenu = useContext(NavbarMenuContext);
     const Component = asChild ? Slot : "a";
 
     // Capture-phase, so it runs before a slotted child's own `onClick` (a router's navigation), as `Link`'s does.
@@ -314,32 +322,110 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
     };
 
     // A link chosen in the menu panel closes it. `preventDefault` doesn't stop that: a router's link calls it to navigate
-    // without a page load, which is exactly the link that should close the panel. A disabled link never gets here.
+    // without a page load, which is exactly the link that should close the panel. Only a link does it, though: a button
+    // drawn with this look (a dropdown's trigger, an `asChild` button) leaves the panel open. A disabled link never gets here.
     const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
       onClick?.(event);
-      if (inPanel && closeMenuOnNavigate) closeMenu();
+      if (inPanel && closeMenuOnNavigate && (event.currentTarget as HTMLElement).matches("a[href]")) closeMenu();
     };
+
+    const link = (
+      <Component
+        {...props}
+        ref={ref}
+        aria-current={current ? "page" : undefined}
+        aria-disabled={disabled || undefined}
+        onClick={handleClick}
+        onClickCapture={handleClickCapture}
+        className={cx(!inMenu && styles.link, !inMenu && current && styles.current, disabled && styles.disabled, className)}
+      >
+        {children}
+      </Component>
+    );
+
+    // In a group's floating list the link is a menu item (arrow keys, typeahead, closing on choice) and not a list item.
+    if (inMenu) {
+      return (
+        <Menu.Item asChild disabled={disabled}>
+          {link}
+        </Menu.Item>
+      );
+    }
 
     return (
       // `role="listitem"` is redundant on paper; see `Navbar.Links`.
       // eslint-disable-next-line jsx-a11y/no-redundant-roles
       <li role="listitem" className={styles.item}>
-        <Component
-          {...props}
-          ref={ref}
-          aria-current={current ? "page" : undefined}
-          aria-disabled={disabled || undefined}
-          onClick={handleClick}
-          onClickCapture={handleClickCapture}
-          className={cx(styles.link, current && styles.current, disabled && styles.disabled, className)}
-        >
-          {children}
-        </Component>
+        {link}
       </li>
     );
   },
 );
 NavbarLink.displayName = "Navbar.Link";
+
+/**
+ * A link that opens more links. In the bar it is a button that opens a floating `Menu` of its `Navbar.Link`s (arrow keys,
+ * typeahead, `Escape`); in the menu panel on a phone, where a floating list is awkward, it is an expandable group, a button
+ * with `aria-expanded` that shows its links indented beneath it. Give it a `label` and `Navbar.Link` children; it is
+ * not for a wide panel of grouped links, which is `NavigationMenu`.
+ */
+const NavbarGroup = forwardRef<HTMLButtonElement, NavbarGroupProps>(
+  ({ label, current = false, disabled = false, defaultOpen, align = "start", className, children, ...props }, ref) => {
+    const { dir } = useNavbarContext("Navbar.Group");
+    const inPanel = useContext(NavbarPanelContext);
+    const [open, setOpen] = useState(defaultOpen ?? current);
+    const regionId = useId();
+    const trigger = (
+      <>
+        {label}
+        <Icon icon={CaretDownIcon} size="xs" className={styles.caret} />
+      </>
+    );
+    const triggerClass = cx(styles.link, styles.groupTrigger, current && styles.current, className);
+
+    if (inPanel) {
+      return (
+        // `role="listitem"` is redundant on paper; see `Navbar.Links`.
+        // eslint-disable-next-line jsx-a11y/no-redundant-roles
+        <li role="listitem" className={cx(styles.item, styles.groupItem)}>
+          <button
+            {...props}
+            ref={ref}
+            type="button"
+            disabled={disabled}
+            aria-expanded={open}
+            aria-controls={regionId}
+            className={triggerClass}
+            onClick={() => setOpen((previous) => !previous)}
+          >
+            {trigger}
+          </button>
+          {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}
+          <ul role="list" id={regionId} hidden={!open} className={cx(styles.list, styles.groupList)}>
+            {children}
+          </ul>
+        </li>
+      );
+    }
+
+    return (
+      // eslint-disable-next-line jsx-a11y/no-redundant-roles
+      <li role="listitem" className={styles.item}>
+        <Menu dir={dir}>
+          <Menu.Trigger asChild disabled={disabled}>
+            <button {...props} ref={ref} type="button" disabled={disabled} className={triggerClass}>
+              {trigger}
+            </button>
+          </Menu.Trigger>
+          <Menu.Content align={align}>
+            <NavbarMenuContext.Provider value>{children}</NavbarMenuContext.Provider>
+          </Menu.Content>
+        </Menu>
+      </li>
+    );
+  },
+);
+NavbarGroup.displayName = "Navbar.Group";
 
 /** The bar's end: whatever belongs to the whole app, pushed to the far edge. */
 const NavbarActions = forwardRef<HTMLDivElement, NavbarActionsProps>(({ className, ...props }, ref) => (
@@ -376,6 +462,7 @@ type NavbarComponent = typeof NavbarRoot & {
   Brand: typeof NavbarBrand;
   Links: typeof NavbarLinks;
   Link: typeof NavbarLink;
+  Group: typeof NavbarGroup;
   Actions: typeof NavbarActions;
   MenuButton: typeof NavbarMenuButton;
 };
@@ -384,6 +471,7 @@ export const Navbar: NavbarComponent = Object.assign(NavbarRoot, {
   Brand: NavbarBrand,
   Links: NavbarLinks,
   Link: NavbarLink,
+  Group: NavbarGroup,
   Actions: NavbarActions,
   MenuButton: NavbarMenuButton,
 });

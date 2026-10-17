@@ -302,3 +302,87 @@ export const PanelFromAWideWindow: Story = {
     await waitFor(() => expect(button).toHaveFocus());
   },
 };
+
+export const GroupMenuInTheBar: Story = {
+  name: "A group in the bar opens a menu above a sticky bar, and its items are pressable targets",
+  render: () => (
+    <NavbarStage minBlockSize="24rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+          <DemoNavbar sticky withGroup actions="none" collapseBelow="never" menuContainer={menuContainer} />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole("button", { name: "Resources" });
+    const box = trigger.getBoundingClientRect();
+    expect(box.height).toBeGreaterThanOrEqual(24);
+    // it is drawn like the links beside it: the same height and text colour
+    const sibling = canvas.getByRole("link", { name: "Docs" });
+    expect(Math.abs(box.height - sibling.getBoundingClientRect().height)).toBeLessThan(1);
+    expect(getComputedStyle(trigger).color).toBe(getComputedStyle(sibling).color);
+    expect(getComputedStyle(trigger).borderTopWidth).toBe("0px");
+    await userEvent.click(trigger);
+    const menu = await within(document.body).findByRole("menu");
+    const items = within(menu).getAllByRole("menuitem");
+    expect(items.map((item) => item.textContent)).toEqual(["Blog", "Guides", "Changelog"]);
+    await waitFor(() => expect(menu.getAnimations().every((animation) => animation.playState === "finished")).toBe(true));
+    for (const item of items) {
+      const rect = item.getBoundingClientRect();
+      expect(rect.height).toBeGreaterThanOrEqual(24);
+      // the menu is the top thing at each item's centre, above the sticky bar it opened from
+      const top = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      expect(top === item || item.contains(top)).toBe(true);
+    }
+    // the caret turns while it is open
+    expect(getComputedStyle(trigger.querySelector("svg")!).transform).not.toBe("none");
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(trigger).toHaveFocus());
+  },
+};
+
+export const GroupInThePanel: Story = {
+  name: "A group in the menu panel expands in place, indented, and leaves the panel open",
+  render: () => (
+    <NavbarStage minBlockSize="30rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+          <DemoNavbar withGroup collapseBelow="3xl" menuContainer={menuContainer} />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const menuButton = canvas.getByRole("button", { name: "Menu" });
+    await userEvent.click(menuButton);
+    const panel = await canvas.findByRole("dialog", { name: "Menu" });
+    await waitFor(() => expect(panel.getAnimations().every((animation) => animation.playState === "finished")).toBe(true));
+    const toggle = within(panel).getByRole("button", { name: "Resources" });
+    const nested = document.getElementById(toggle.getAttribute("aria-controls")!)!;
+    // collapsed: the links take no room and can't be reached
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(getComputedStyle(nested).display).toBe("none");
+    const before = panel.getBoundingClientRect();
+    await userEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(getComputedStyle(nested).display).not.toBe("none");
+    const links = within(nested).getAllByRole("link");
+    expect(links.map((link) => link.textContent)).toEqual(["Blog", "Guides", "Changelog"]);
+    for (const link of links) expect(link.getBoundingClientRect().height).toBeGreaterThanOrEqual(24);
+    // indented beneath the button, inside the panel, and the panel kept its size and stayed open
+    const toggleBox = toggle.getBoundingClientRect();
+    const first = links[0]!.getBoundingClientRect();
+    expect(first.left).toBeGreaterThan(toggleBox.left + 8);
+    expect(first.top).toBeGreaterThanOrEqual(toggleBox.bottom - 1);
+    expect(panel.getBoundingClientRect().width).toBe(before.width);
+    expect(canvas.getByRole("dialog")).toBe(panel);
+    // a link in it closes the panel, as the plain ones do
+    links[1]!.addEventListener("click", (event) => event.preventDefault(), { once: true });
+    await userEvent.click(links[1]!);
+    await waitFor(() => expect(canvas.queryByRole("dialog")).not.toBeInTheDocument());
+    await waitFor(() => expect(menuButton).toHaveFocus());
+  },
+};

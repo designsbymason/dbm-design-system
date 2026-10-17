@@ -14,11 +14,14 @@ export { DrawerStage as NavbarStage, DrawerViewModeContext as NavbarViewModeCont
 export function DemoNavbar({
   menuContainer,
   actions = "button",
+  withGroup = false,
   linksLabel,
   ...props
 }: NavbarProps & {
   /** What the end of the bar holds: one button, or a search field and an account menu. */
   actions?: "button" | "rich" | "none";
+  /** Adds a "Resources" group of links after the plain ones: a dropdown in the bar, an expandable group in the panel. */
+  withGroup?: boolean;
   /** Names this bar's navigation, for a gallery of several bars where the default name would repeat. */
   linksLabel?: string;
 }) {
@@ -34,6 +37,13 @@ export function DemoNavbar({
         <Navbar.Link href="#beta" disabled>
           Beta
         </Navbar.Link>
+        {withGroup && (
+          <Navbar.Group label="Resources">
+            <Navbar.Link href="#blog">Blog</Navbar.Link>
+            <Navbar.Link href="#guides">Guides</Navbar.Link>
+            <Navbar.Link href="#changelog">Changelog</Navbar.Link>
+          </Navbar.Group>
+        )}
       </Navbar.Links>
       {actions === "button" && (
         <Navbar.Actions>

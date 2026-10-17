@@ -201,6 +201,37 @@ export const WithActions: Story = {
   ),
 };
 
+export const WithGroup: Story = {
+  name: "Links that open more links",
+  parameters: { docs: { source: { code: navbarSnippets.group } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <NavbarStage minBlockSize="22rem">
+      {(menuContainer) => (
+        <Top>
+          <DemoNavbar withGroup actions="none" collapseBelow="never" menuContainer={menuContainer} />
+        </Top>
+      )}
+    </NavbarStage>
+  ),
+};
+
+export const GroupInThePanel: Story = {
+  name: "A group in the menu panel",
+  parameters: { docs: { source: { code: navbarSnippets.group } } },
+  argTypes: { ...noControls },
+  render: () => (
+    // Collapsed below the widest step, so the menu button shows on any window narrower than 1920px.
+    <NavbarStage minBlockSize="26rem">
+      {(menuContainer) => (
+        <Top>
+          <DemoNavbar withGroup collapseBelow="3xl" menuContainer={menuContainer} />
+        </Top>
+      )}
+    </NavbarStage>
+  ),
+};
+
 export const Contained: Story = {
   name: "Contained",
   parameters: { docs: { source: { code: navbarSnippets.contained } } },

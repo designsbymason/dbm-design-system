@@ -362,3 +362,166 @@ describe("Navbar", () => {
     });
   });
 });
+
+function WithGroup(props: Partial<React.ComponentProps<typeof Navbar>> & { groupCurrent?: boolean; groupDisabled?: boolean } = {}) {
+  const { groupCurrent, groupDisabled, ...root } = props;
+  return (
+    <Navbar {...root}>
+      <Navbar.Links>
+        <Navbar.Link href="/products">Products</Navbar.Link>
+        <Navbar.Group label="Resources" current={groupCurrent} disabled={groupDisabled}>
+          <Navbar.Link href="/blog" current={groupCurrent}>
+            Blog
+          </Navbar.Link>
+          <Navbar.Link href="/guides">Guides</Navbar.Link>
+          <Navbar.Link href="/archive" disabled>
+            Archive
+          </Navbar.Link>
+        </Navbar.Group>
+      </Navbar.Links>
+    </Navbar>
+  );
+}
+
+describe("Navbar in the menu panel", () => {
+  it("leaves the panel open when a button drawn with the link look is pressed, and closes it for a link", async () => {
+    const user = userEvent.setup();
+    const onPress = vi.fn();
+    render(
+      <Navbar>
+        <Navbar.Links>
+          <Navbar.Link asChild>
+            <button type="button" onClick={onPress}>
+              Action
+            </button>
+          </Navbar.Link>
+          <Navbar.Link href="/a">Page</Navbar.Link>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    await user.click(screen.getByRole("button", { name: "Menu" }));
+    const panel = await screen.findByRole("dialog");
+    await user.click(within(panel).getByRole("button", { name: "Action" }));
+    expect(onPress).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    await user.click(within(panel).getByRole("link", { name: "Page" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+});
+
+describe("Navbar.Group in the bar", () => {
+  it("opens a menu of its links from a button, with the current one marked", async () => {
+    const user = userEvent.setup();
+    render(<WithGroup collapseBelow="never" groupCurrent />);
+    const trigger = screen.getByRole("button", { name: "Resources" });
+    expect(trigger).toHaveAttribute("aria-haspopup", "menu");
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    await user.click(trigger);
+    const menu = await screen.findByRole("menu");
+    const items = within(menu).getAllByRole("menuitem");
+    expect(items.map((item) => item.textContent)).toEqual(["Blog", "Guides", "Archive"]);
+    expect(items[0]).toHaveAttribute("href", "/blog");
+    expect(items[0]).toHaveAttribute("aria-current", "page");
+    expect(items[2]).toHaveAttribute("aria-disabled", "true");
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("opens with the arrow key, moves through the items, and closes with Escape and focus back on the button", async () => {
+    const user = userEvent.setup();
+    render(<WithGroup collapseBelow="never" />);
+    const trigger = screen.getByRole("button", { name: "Resources" });
+    trigger.focus();
+    await user.keyboard("{ArrowDown}");
+    const menu = await screen.findByRole("menu");
+    await waitFor(() => expect(within(menu).getByRole("menuitem", { name: "Blog" })).toHaveFocus());
+    await user.keyboard("{ArrowDown}");
+    expect(within(menu).getByRole("menuitem", { name: "Guides" })).toHaveFocus();
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
+    expect(trigger).toHaveFocus();
+  });
+
+  it("draws the group as a list item holding the button, and a disabled group takes no focus", async () => {
+    const user = userEvent.setup();
+    render(<WithGroup collapseBelow="never" groupDisabled />);
+    const trigger = screen.getByRole("button", { name: "Resources" });
+    expect(trigger).toBeDisabled();
+    expect(trigger.closest("li")).toHaveAttribute("role", "listitem");
+    await user.click(trigger);
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+  });
+
+  it("forwards the button's ref, id, class and test id, and keeps its own type", () => {
+    const ref = createRef<HTMLButtonElement>();
+    render(
+      <Navbar collapseBelow="never">
+        <Navbar.Links>
+          <Navbar.Group ref={ref} label="More" id="more" className="mine" data-testid="group" {...({ type: "submit" } as object)}>
+            <Navbar.Link href="/a">A</Navbar.Link>
+          </Navbar.Group>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    const button = screen.getByTestId("group");
+    expect(ref.current).toBe(button);
+    expect(button).toHaveAttribute("id", "more");
+    expect(button).toHaveClass("mine");
+    expect(button).toHaveAttribute("type", "button");
+  });
+
+  it("has no axe violations closed or open", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<WithGroup collapseBelow="never" />);
+    expect(await axe(container)).toHaveNoViolations();
+    await user.click(screen.getByRole("button", { name: "Resources" }));
+    const menu = await screen.findByRole("menu");
+    expect(await axe(menu)).toHaveNoViolations();
+  });
+});
+
+describe("Navbar.Group in the menu panel", () => {
+  it("is an expandable group: collapsed, it hides its links, and the button toggles them without closing the panel", async () => {
+    const user = userEvent.setup();
+    render(<WithGroup />);
+    await user.click(screen.getByRole("button", { name: "Menu" }));
+    const panel = await screen.findByRole("dialog");
+    const toggle = within(panel).getByRole("button", { name: "Resources" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(within(panel).queryByRole("link", { name: "Blog" })).not.toBeInTheDocument();
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(toggle).toHaveAttribute("aria-controls", within(panel).getByRole("link", { name: "Blog" }).closest("ul")!.id);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("starts expanded when it holds the current page, or with defaultOpen, and a chosen link closes the panel", async () => {
+    const user = userEvent.setup();
+    render(<WithGroup groupCurrent />);
+    await user.click(screen.getByRole("button", { name: "Menu" }));
+    const panel = await screen.findByRole("dialog");
+    expect(within(panel).getByRole("button", { name: "Resources" })).toHaveAttribute("aria-expanded", "true");
+    await user.click(within(panel).getByRole("link", { name: "Guides" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+
+  it("keeps its own link-in-a-list structure and has no axe violations with the group open", async () => {
+    const user = userEvent.setup();
+    render(
+      <Navbar defaultMenuOpen>
+        <Navbar.Links>
+          <Navbar.Group label="Resources" defaultOpen>
+            <Navbar.Link href="/blog">Blog</Navbar.Link>
+          </Navbar.Group>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    const panel = screen.getByRole("dialog");
+    const nested = within(panel).getByRole("link", { name: "Blog" }).closest("ul")!;
+    expect(nested).toHaveAttribute("role", "list");
+    expect(within(panel).getAllByRole("list")).toHaveLength(2);
+    expect(await axe(panel)).toHaveNoViolations();
+    await user.keyboard("{Escape}");
+  });
+});

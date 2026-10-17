@@ -145,6 +145,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0089](./0089-table-pins-a-number-of-columns-by-measuring-the-header-over-fixed-offsets-or-a-sticky-column-per-part.md) | `Table` pins a number of columns by measuring the header, over fixed offsets or a sticky column per part | Accepted |
 | [0090](./0090-datatable-opens-a-rows-detail-in-a-row-of-its-own-under-it-with-an-expand-column-and-no-windowing-over-a-nested-table-or-a-side-panel.md) | `DataTable` opens a row's detail in a row of its own under it, with an expand column and no windowing, over a nested table or a side panel | Accepted |
 | [0091](./0091-navbar-collapses-by-a-css-breakpoint-and-draws-its-links-in-the-bar-and-in-the-menu-panel-over-measuring-its-width-or-writing-two-lists.md) | `Navbar` collapses by a CSS breakpoint and draws its links in the bar and in the menu panel, over measuring its width or writing two lists | Accepted |
+| [0092](./0092-navbar-group-is-a-menu-in-the-bar-and-an-expandable-group-in-the-menu-panel-over-a-floating-list-everywhere-or-a-mega-menu.md) | `Navbar.Group` is a menu in the bar and an expandable group in the menu panel, over a floating list everywhere or a mega-menu | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 

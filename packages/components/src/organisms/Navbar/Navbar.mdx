@@ -7,6 +7,7 @@ import * as NavbarRootStories from "./NavbarRoot.stories";
 import * as NavbarBrandStories from "./NavbarBrand.stories";
 import * as NavbarLinksStories from "./NavbarLinks.stories";
 import * as NavbarLinkStories from "./NavbarLink.stories";
+import * as NavbarGroupStories from "./NavbarGroup.stories";
 import * as NavbarActionsStories from "./NavbarActions.stories";
 import * as NavbarMenuButtonStories from "./NavbarMenuButton.stories";
 
@@ -49,6 +50,7 @@ export const playgroundOrder = [
 export const brandPropOrder = ["href", "asChild", "children", "aria-label", "id", "className", "style", "data-testid"];
 export const linksPropOrder = ["children", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
 export const linkPropOrder = ["children", "href", "current", "disabled", "asChild", "aria-label", "id", "className", "style", "data-testid"];
+export const groupPropOrder = ["label", "children", "current", "defaultOpen", "disabled", "align", "aria-label", "id", "className", "style", "data-testid"];
 export const actionsPropOrder = ["children", "id", "className", "style", "data-testid"];
 export const menuButtonPropOrder = ["icon", "aria-label", "id", "className", "style", "data-testid"];
 
@@ -116,6 +118,14 @@ attribute beyond what's listed here, goes on the `<a>`.
 
 <PropertiesTable of={NavbarLinkStories} order={linkPropOrder} />
 
+### Navbar.Group properties
+
+A link that opens more links: a dropdown in the bar, an expandable group in the menu panel. Also accepts any
+other native `<button>` attribute beyond what's listed here (e.g. `onFocus`, `title`), passed straight
+through to its button. Its children are `Navbar.Link`s.
+
+<PropertiesTable of={NavbarGroupStories} order={groupPropOrder} />
+
 ### Navbar.Actions properties
 
 The bar's end. Also accepts any other native `<div>` attribute beyond what's listed here.
@@ -152,6 +162,21 @@ Whatever belongs to the whole app goes in `Navbar.Actions`. An account menu is a
 an `IconButton`; it opens above the bar, even a sticky one.
 
 <Canvas of={NavbarStories.WithActions} />
+
+### Links that open more links
+
+A `Navbar.Group` is a button in the bar that opens a floating `Menu` of its links, with the arrow keys,
+typeahead and `Escape` a menu has. It sits in the list with the other links and is drawn like them.
+
+<Canvas of={NavbarStories.WithGroup} />
+
+### A group in the menu panel
+
+On a phone a floating list is awkward, so the same group is an expandable one: its button is
+`aria-expanded` and shows the links indented beneath it, without closing the panel. A group that holds the
+current page (`current`) starts expanded. Choosing one of its links closes the panel, as the plain links do.
+
+<Canvas of={NavbarStories.GroupInThePanel} />
 
 ### Contained
 
@@ -246,8 +271,8 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 - Links are ordinary tab stops, in reading order: brand, links, actions, then the menu button.
 - The collapse follows the window width, so a narrow window on a desktop gets the same menu a phone does.
   If the panel is open when the window grows past the step, it closes.
-- A dropdown in the navigation is a `Menu` whose trigger is a `Navbar.Link` drawn on a button (a recipe below); a wide panel of
-  grouped links is a mega-menu, which is `NavigationMenu`.
+- A link that opens more links is a `Navbar.Group`: a `Menu` in the bar and an expandable group in the panel. Keep a group to a handful of
+  links; a wide panel of grouped links, with descriptions or images, is a mega-menu, which is `NavigationMenu`.
 - `menuSide="start"` is the right edge in right-to-left text. Pass `dir` on the bar and it reaches the
   panel too, which is drawn in a portal and would otherwise follow the page.
 - Use `labels` to translate the menu button, the navigation's name and the panel's close button.
@@ -266,6 +291,10 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 - Keys: `Tab` and `Shift+Tab` move through the brand, the links, the actions and the menu button in order;
   there are no arrow-key shortcuts, because this is a navigation and not a toolbar. `Enter` follows a
   link.
+- A `Navbar.Group` in the bar is a button with `aria-haspopup="menu"` and `aria-expanded` that opens a menu: `Enter`, `Space` and
+  `ArrowDown` open it, the arrow keys and typeahead move through the links, `Escape` closes it and focus returns to the button. In the
+  menu panel it is a disclosure button with `aria-expanded` and `aria-controls` pointing at its list of links, which are out of the tab
+  order and the accessibility tree while it is collapsed.
 - The menu button is an `IconButton` named "Menu" with `aria-expanded` and `aria-haspopup="dialog"`. The
   panel is a modal dialog named "Menu" with focus held inside; `Escape`, the scrim and the close button
   close it, and focus returns to the menu button.
@@ -308,24 +337,19 @@ This story is shown at a phone's width when opened on its own; on this page, nar
   <RouterLink to="/products">Products</RouterLink>
 </Navbar.Link>
 
-{/* A dropdown in the navigation: a Menu whose trigger is a Navbar.Link drawn on a button */}
+{/* A dropdown in the bar, an expandable group in the phone panel */}
 <Navbar.Links>
-  <Menu>
-    <Menu.Trigger asChild>
-      <Navbar.Link asChild>
-        <button type="button">Resources</button>
-      </Navbar.Link>
-    </Menu.Trigger>
-    <Menu.Content>
-      <Menu.Item asChild>
-        <a href="/blog">Blog</a>
-      </Menu.Item>
-      <Menu.Item asChild>
-        <a href="/guides">Guides</a>
-      </Menu.Item>
-    </Menu.Content>
-  </Menu>
+  <Navbar.Link href="/products">Products</Navbar.Link>
+  <Navbar.Group label="Resources" current={onResources}>
+    <Navbar.Link href="/blog" current={path === "/blog"}>Blog</Navbar.Link>
+    <Navbar.Link href="/guides" current={path === "/guides"}>Guides</Navbar.Link>
+  </Navbar.Group>
 </Navbar.Links>
+
+{/* A button drawn as a link: it leaves the phone panel open, where a link closes it */}
+<Navbar.Link asChild>
+  <button type="button" onClick={openSearch}>Search</button>
+</Navbar.Link>
 
 {/* A skip link, before the bar: it jumps to the page's main landmark */}
 <a href="#main" className="skip-link">Skip to content</a>

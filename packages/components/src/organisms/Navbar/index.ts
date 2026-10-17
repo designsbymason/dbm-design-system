@@ -4,6 +4,7 @@ export type {
   NavbarBrandProps,
   NavbarCollapseBelow,
   NavbarDirection,
+  NavbarGroupProps,
   NavbarLabels,
   NavbarLinkProps,
   NavbarLinksProps,
