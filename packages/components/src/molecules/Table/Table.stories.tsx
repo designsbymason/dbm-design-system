@@ -23,8 +23,8 @@ interface PlaygroundArgs {
   striped: boolean;
   hoverable: boolean;
   stickyHeader: boolean;
-  stickyFirstColumn: boolean;
-  stickyLastColumn: boolean;
+  stickyFirstColumn: boolean | number;
+  stickyLastColumn: boolean | number;
   maxHeight: string;
   "aria-label": string;
   "aria-labelledby": string;
@@ -201,14 +201,16 @@ const meta: Meta<PlaygroundArgs> = {
     },
     stickyFirstColumn: {
       control: "boolean",
+      options: [false, true, 2, 3, 4],
       description:
-        "Pins the first column to the start edge of the table's own scroll area while the rest scrolls sideways beneath it, so a row's label stays in view in a wide table. Only has a visible effect when the table is wider than its space; needs no maxHeight.",
+        "Pins the first column to the start edge of the table's own scroll area while the rest scrolls sideways beneath it, so a row's label stays in view in a wide table. A number pins that many columns (up to 4), each against the one before it: their widths are measured from the header row. Only has a visible effect when the table is wider than its space; needs no maxHeight. A cell that spans several columns isn't pinned and moves the cells after it out of their columns. The Playground's switch is true (one column); pass a number in code.",
       table: { defaultValue: { summary: "false" } },
     },
     stickyLastColumn: {
       control: "boolean",
+      options: [false, true, 2, 3, 4],
       description:
-        "Pins the last column to the end edge of the table's own scroll area while the rest scrolls sideways beneath it — the mirror of stickyFirstColumn, for a trailing column (an actions column, a running total) that should stay in view. Can be combined with stickyFirstColumn; needs no maxHeight.",
+        "Pins the last column to the end edge of the table's own scroll area while the rest scrolls sideways beneath it — the mirror of stickyFirstColumn, for a trailing column (an actions column, a running total) that should stay in view. A number pins that many columns (up to 4), as stickyFirstColumn does. Can be combined with stickyFirstColumn; needs no maxHeight.",
       table: { defaultValue: { summary: "false" } },
     },
     maxHeight: {

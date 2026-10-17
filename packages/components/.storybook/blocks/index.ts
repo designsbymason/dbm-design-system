@@ -2,6 +2,8 @@ export { Callout } from "./Callout";
 export type { CalloutTone } from "./Callout";
 export { ComponentHeader } from "./ComponentHeader";
 export type { ComponentTier } from "./ComponentHeader";
+export { FieldsTable } from "./FieldsTable";
+export type { FieldRow } from "./FieldsTable";
 export { PlaygroundCanvas } from "./PlaygroundCanvas";
 export { PlaygroundControls } from "./PlaygroundControls";
 export { PropertiesTable } from "./PropertiesTable";

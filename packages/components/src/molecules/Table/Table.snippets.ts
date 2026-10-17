@@ -290,7 +290,7 @@ export interface TablePlaygroundSnippetArgs {
   hoverable?: boolean;
   stickyHeader?: boolean;
   stickyFirstColumn?: boolean | number;
-  stickyLastColumn?: boolean;
+  stickyLastColumn?: boolean | number;
   maxHeight?: string;
 }
 
@@ -306,8 +306,10 @@ export function tablePlaygroundSnippet(args: TablePlaygroundSnippetArgs): string
   if (args.striped) attributes.push("striped");
   if (args.hoverable) attributes.push("hoverable");
   if (args.stickyHeader) attributes.push("stickyHeader");
-  if (args.stickyFirstColumn) attributes.push("stickyFirstColumn");
-  if (args.stickyLastColumn) attributes.push("stickyLastColumn");
+  for (const [name, value] of [["stickyFirstColumn", args.stickyFirstColumn], ["stickyLastColumn", args.stickyLastColumn]] as const) {
+    if (typeof value === "number" && value > 1) attributes.push(`${name}={${value}}`);
+    else if (value) attributes.push(name);
+  }
   if (args.maxHeight) attributes.push(`maxHeight="${args.maxHeight}"`);
   return invoiceTable({ attributes: attributes.join(" ") });
 }

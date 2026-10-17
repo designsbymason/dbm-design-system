@@ -251,7 +251,8 @@ inside it.
 - Set `maxHeight` whenever you use `stickyHeader` — a header can only stay pinned inside a scroll area that has a
   height to scroll.
 - Use `stickyFirstColumn` on a wide table whose first column identifies the row (an ID, a name), so the label stays in
-  view while the reader scrolls sideways.
+  view while the reader scrolls sideways. Give it a number to pin more than one (`stickyFirstColumn={2}` keeps an ID and
+  a name in view together), up to four.
 - Use `stickyLastColumn` when the trailing column should stay in view too — an actions column, a running total. It
   combines with `stickyFirstColumn` to pin both edges.
 - Show a skeleton while data is on its way with `<Table.Body loading>`, so the table keeps its shape and doesn't jump
@@ -368,6 +369,11 @@ inside it.
   {/* … */}
 </Table>
 <Table stickyFirstColumn stickyLastColumn>
+  {/* … */}
+</Table>
+
+{/* A number pins that many columns at an edge (up to 4), each against the one before it */}
+<Table stickyFirstColumn={2} stickyLastColumn={2}>
   {/* … */}
 </Table>
 

@@ -181,6 +181,8 @@ export interface DataTablePlaygroundSnippetArgs {
   striped?: boolean;
   hoverable?: boolean;
   stickyHeader?: boolean;
+  stickyFirstColumn?: boolean | number;
+  stickyLastColumn?: boolean | number;
   selectionMode?: string;
   sortMode?: string;
   multiSort?: boolean;
@@ -207,6 +209,10 @@ export function dataTablePlaygroundSnippet(args: DataTablePlaygroundSnippetArgs)
   if (args.striped) props.push("striped");
   if (args.hoverable === false) props.push("hoverable={false}");
   if (args.stickyHeader) props.push("stickyHeader");
+  for (const [name, value] of [["stickyFirstColumn", args.stickyFirstColumn], ["stickyLastColumn", args.stickyLastColumn]] as const) {
+    if (typeof value === "number" && value > 1) props.push(`${name}={${value}}`);
+    else if (value) props.push(name);
+  }
   if (args.maxHeight) props.push(`maxHeight="${args.maxHeight}"`);
   if (args.selectionMode && args.selectionMode !== "none") props.push(`selectionMode="${args.selectionMode}"`);
   if (args.sortMode === "manual") props.push('sortMode="manual"');

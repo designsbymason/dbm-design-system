@@ -1,5 +1,5 @@
 import { Canvas, Meta } from "@storybook/addon-docs/blocks";
-import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Callout, ComponentHeader, FieldsTable, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
 import { Pagination } from "../../molecules/Pagination";
 import { Table } from "../../molecules/Table";
 import { TableToolbar } from "../../molecules/TableToolbar";
@@ -76,6 +76,24 @@ export const propOrder = [
   "data-testid",
 ];
 
+export const columnFields = [
+  { name: "id", required: true, description: "A name no other column has. Sorting, hiding, resizing and the sort announcement refer to it." },
+  { name: "header", required: true, description: "The column's heading: text, or anything that names it. A heading that isn't text needs a `headerLabel`." },
+  { name: "headerLabel", description: "The words that name the column in announcements and a screen reader's list of columns when `header` isn't text." },
+  { name: "accessor", description: "Reads the column's value from a row: what the cell shows without a `cell`, and what it is sorted by without a `compare`." },
+  { name: "cell", description: "Draws the cell from the row. Without it the cell shows the `accessor`'s value as text." },
+  { name: "sortable", description: "Lets a person sort by it. Needs an `accessor` or a `compare`.", defaultValue: "false" },
+  { name: "compare", description: "Orders two whole rows, smallest first, for a value that isn't a number, a date or text. It is flipped for a descending sort." },
+  { name: "align", options: ["start", "center", "end"], description: "Where the cell's content sits, in logical terms.", defaultValue: "start" },
+  { name: "numeric", description: "Marks the column as numbers: end-aligned with tabular figures.", defaultValue: "false" },
+  { name: "width", description: "A length. A column with a `width` cuts a long cell with an ellipsis (its whole text is the cell's `title`) instead of widening." },
+  { name: "minWidth", description: "The narrowest the column gets (a length). A drag on a resizable column stops here too (a number is pixels; `px` and `rem` are understood)." },
+  { name: "maxWidth", description: "The widest the column gets (a length), and the widest a drag makes a resizable column." },
+  { name: "resizable", options: ["true", "false"], description: "Turns resizing on or off for this column. Follows the table's `resizable` when left out." },
+  { name: "rowHeader", description: "Draws the cells as row headers (`<th scope=\"row\">`), so a screen reader reads a row's name on entering it. Use it on the one column that names each row.", defaultValue: "false" },
+  { name: "wrap", description: "Lets the text wrap. A table with any wrapping column is never drawn a window at a time.", defaultValue: "false" },
+];
+
 export const toolbarPropOrder = ["children", "size", "aria-label", "aria-labelledby", "aria-describedby", "id", "className", "style", "data-testid"];
 
 export const selectionPropOrder = ["children", "onSelectAll", "size", "announce", "labels", "formatNumber", "id", "className", "style", "data-testid"];
@@ -108,14 +126,15 @@ export const paginationPropOrder = [
 
 <ComponentHeader title="DataTable" tier="Organism" />
 
-A table of data you give it as `columns` and `data`, with the behaviour an app needs around the rows: sorting by a column,
-choosing rows, paging, a long list drawn a window at a time, a loading state, an empty state and a menu of actions per row. It
+A table of data you give it as `columns` and `data`, with the behaviour an app needs around the rows: sorting by one
+column or several, choosing rows (including every row of every page), paging, a long list drawn a window at a time, a loading
+state, an empty state, a menu of actions per row, a menu to show and hide columns, and columns that can be resized and pinned. It
 draws a real `Table`, so it is a native `<table>` in its own scroll frame, and it composes `TableToolbar`, `Pagination`,
 `Checkbox`, `Select` and `Menu` rather than redrawing them.
 
 It holds the state of the interaction and nothing else. Your data stays yours: it sorts and pages the rows you pass in the
 browser, or, with `sortMode="manual"`, draws the rows you pass and asks you for new ones. Every piece of state (the sort, the
-choice, the page, the page size, the hidden columns) is controlled with a value and a change callback, or uncontrolled with a
+choice, the page, the page size, the hidden columns, the column widths) is controlled with a value and a change callback, or uncontrolled with a
 default.
 
 ### Import
@@ -124,7 +143,7 @@ default.
 import { DataTable } from "@dbm-design-system/components";
 ```
 
-Its parts are `DataTable.Toolbar`, `DataTable.Selection` and `DataTable.Pagination`, placed as direct children. `useDataTable()`
+Its parts are `DataTable.Toolbar`, `DataTable.Selection`, `DataTable.ColumnMenu` and `DataTable.Pagination`, placed as direct children (the toolbar and the menu above the table, the pagination below it). `useDataTable()`
 reads and changes the table's state from your own parts inside it.
 
 ## Playground
@@ -190,22 +209,9 @@ technology expects them; `className` and `style` go on the box that holds the to
 
 <PropertiesTable of={DataTableStories} order={propOrder} />
 
-A column is an object, not a component:
+A column is an object, not a component, so its fields have a table of their own, in the same style:
 
-| Field | What it does |
-|---|---|
-| `id` (required) | A name no other column has. Sorting, hiding and the sort announcement refer to it. |
-| `header` (required) | The column's heading. A heading that isn't text needs a `headerLabel`. |
-| `accessor` | Reads the column's value from a row: what the cell shows without a `cell`, and what it is sorted by without a `compare`. |
-| `cell` | Draws the cell from the row. |
-| `sortable` | Lets a person sort by it. Needs an `accessor` or a `compare`. |
-| `compare` | Orders two whole rows, smallest first, for a value that isn't a number, a date or text. |
-| `align`, `numeric` | Where the content sits, and end-aligned tabular figures. |
-| `width`, `minWidth`, `maxWidth` | A length. A column with a `width` cuts a long cell with an ellipsis (its whole text is the cell's `title`) instead of widening; a drag on a resizable column stops at `minWidth` and `maxWidth`. |
-| `resizable` | Turns resizing on or off for this column; follows the table's `resizable`. |
-| `rowHeader` | Draws the cells as row headers, so a screen reader reads a row's name on entering it. |
-| `wrap` | Lets the text wrap. A table with any wrapping column is never drawn a window at a time. |
-| `headerLabel` | The words that name the column when `header` isn't text. |
+<FieldsTable rows={columnFields} />
 
 ### DataTable.Toolbar properties
 
@@ -392,6 +398,12 @@ doesn't read the page's direction, so give `DataTable.Pagination` `dir="rtl"` as
 - Put the bulk actions that are safe first and the destructive one last, and name each for what it does.
 - For a server, show `loading` during the request and keep the old rows' count in `totalCount`, so the footer doesn't jump.
 - A table inside a `Card` uses `variant="ghost"`.
+- Put `DataTable.ColumnMenu` in the toolbar's last row, after a `Spacer`, with the same `size` as the toolbar's other controls.
+- Turn `resizable` on only where people will use it: each handle is a tab stop. Keep the widths with `onColumnWidthsChange`, and
+  give a column a `minWidth` that keeps its heading readable.
+- Pin the column that names each row (`stickyFirstColumn`), and with a selection the checkbox stays beside it; pin as few as
+  fit, since pinned columns take room from the scrolling ones.
+- For a server's "select all", reset `allSelected` when the filter changes, and send `allSelected` with the filter, not a list.
 - Pair the toolbar's `Summary` with the footer's range so the two agree about how many rows there are.
 
 ## Accessibility
@@ -456,6 +468,40 @@ const columns: DataTableColumn<Employee>[] = [
     </DataTable.Selection>
   </DataTable.Toolbar>
   <DataTable.Pagination />
+</DataTable>
+
+{/* Sort by several columns with Shift; show and hide columns; resize; pin the name beside its checkbox */}
+<DataTable
+  aria-label="Team"
+  columns={columns}
+  data={employees}
+  selectionMode="multiple"
+  getRowLabel={(row) => row.name}
+  resizable
+  stickyFirstColumn={1}
+  onColumnWidthsChange={saveWidths}
+>
+  <DataTable.Toolbar aria-label="Team table tools">
+    <TableToolbar.Row>
+      <Spacer />
+      <DataTable.ColumnMenu />
+    </TableToolbar.Row>
+  </DataTable.Toolbar>
+</DataTable>
+
+{/* A server's page of rows: "Select all 137" chooses every row of every page (allSelected) */}
+<DataTable
+  aria-label="Team"
+  columns={columns}
+  data={pageOfRows}
+  sortMode="manual"
+  totalCount={137}
+  selectionMode="multiple"
+  onAllSelectedChange={setAllSelected}
+>
+  <DataTable.Toolbar aria-label="Team table tools">
+    <DataTable.Selection />
+  </DataTable.Toolbar>
 </DataTable>
 
 {/* Words the table writes are a labels object; numbers go through formatNumber */}

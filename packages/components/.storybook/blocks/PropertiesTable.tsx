@@ -39,7 +39,7 @@ const NAME_COLUMN_CHARACTERS = 17;
  * component's. Wrapping every name instead lets the table's auto layout shrink the whole column and wrap
  * names that fit, so the break is offered to the long one alone.
  */
-function propName(name: string): { content: ReactNode; className: string } {
+export function propName(name: string): { content: ReactNode; className: string } {
   if (name.length <= NAME_COLUMN_CHARACTERS) return { content: name, className: "" };
   return {
     className: "dbm-proptable-name-wraps",
@@ -53,7 +53,7 @@ function propName(name: string): { content: ReactNode; className: string } {
 }
 
 /** Splits `` `code` `` spans out of a plain-text JSDoc description into `<code>`. */
-function renderInline(text: string): ReactNode {
+export function renderInline(text: string): ReactNode {
   return text.split(/(`[^`]+`)/g).map((part, i) =>
     part.startsWith("`") && part.endsWith("`") ? (
       <code key={i}>{part.slice(1, -1)}</code>
