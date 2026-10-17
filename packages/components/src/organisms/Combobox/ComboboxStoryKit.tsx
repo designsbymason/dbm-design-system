@@ -19,8 +19,8 @@ export const countries: ComboboxOption[] = [
   { value: "no", label: "Norway" },
   { value: "es", label: "Spain" },
   { value: "se", label: "Sweden" },
-  { value: "gb", label: "United Kingdom" },
-  { value: "us", label: "United States" },
+  { value: "gb", label: "United Kingdom", keywords: ["UK", "Britain"] },
+  { value: "us", label: "United States", keywords: ["USA", "America"] },
   { value: "uy", label: "Uruguay" },
 ];
 

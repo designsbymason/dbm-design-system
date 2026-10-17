@@ -134,6 +134,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0078](./0078-combobox-takes-its-options-as-data-over-option-parts-mounted-as-children.md) | `Combobox` takes its options as an `options` array, over `Combobox.Option` parts mounted as children | Accepted |
 | [0079](./0079-combobox-must-pick-by-default-keeps-the-chosen-value-apart-from-the-typed-text-and-submits-through-a-hidden-validated-input.md) | `Combobox` must be picked from by default, keeps the chosen value apart from the typed text, and submits through a hidden validated input, over submitting the text | Accepted |
 | [0080](./0080-long-option-lists-are-drawn-a-window-at-a-time-by-a-hand-rolled-hook-with-fixed-row-heights-from-tokens-over-a-virtualization-dependency-or-measured-rows.md) | Long option lists are drawn a window at a time by a hand-rolled hook with fixed row heights from tokens, over a virtualization dependency or measured rows | Accepted |
+| [0081](./0081-combobox-offers-a-full-width-presentation-measured-against-the-visual-viewport-over-a-docked-bottom-sheet.md) | `Combobox` offers a full-width presentation measured against the visual viewport, over a docked bottom sheet | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 

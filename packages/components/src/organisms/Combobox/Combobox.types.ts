@@ -1,9 +1,12 @@
 import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type { Responsive } from "@dbm-design-system/primitives";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 
 export type ComboboxSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type ComboboxSide = "top" | "right" | "bottom" | "left";
 export type ComboboxAlign = "start" | "center" | "end";
+/** How the list is drawn: under the field and as wide as it, or across the whole visible screen. */
+export type ComboboxPresentation = "anchored" | "full-width";
 
 /** Why the text in a `Combobox` changed, as `onInputValueChange` reports it. */
 export type ComboboxInputChangeReason =
@@ -36,6 +39,11 @@ export interface ComboboxOption {
    * shown as the row's `title` and read as its description.
    */
   disabled?: boolean | string;
+  /**
+   * Extra words the default filter matches besides the label: synonyms, ids and codes people also search by ("UK" for
+   * "United Kingdom"). Never shown, and not marked in the label. A `filter` of your own decides for itself.
+   */
+  keywords?: string[];
   /** The heading this option is listed under. Options with the same `group` are drawn together, in the order the groups first appear. */
   group?: string;
 }
@@ -68,6 +76,12 @@ export interface ComboboxLabels {
    * @default (text) => `Create “${text}”`
    */
   create: (text: string) => string;
+  /**
+   * The row shown, and nothing else announced, when the list has no options at all and nothing has been typed: the
+   * state of a field that waits for a search. Text that then matches nothing shows `noResults`.
+   * @default "Type to search"
+   */
+  typeToSearch: string;
 }
 
 export interface ComboboxProps
@@ -117,7 +131,7 @@ export interface ComboboxProps
   allowCustomValue?: boolean;
   /**
    * How the options are narrowed by the typed text. A function decides for one option; `false` shows `options`
-   * as given, for a caller that filters or fetches on its own. The default matches when `textValue ?? label` holds every word of the typed text, in any order,
+   * as given, for a caller that filters or fetches on its own. The default matches when `textValue ?? label` and `keywords` together hold every word of the typed text, in any order,
    * ignoring case and accents. The list is not narrowed while the field shows a chosen option's label unedited.
    */
   filter?: ((option: ComboboxOption, text: string) => boolean) | false;
@@ -138,8 +152,8 @@ export interface ComboboxProps
    */
   error?: boolean;
   /**
-   * Replaces the "No results" row with content of your own (a hint, a link). Shown while no option matches and
-   * `loading` is `false`.
+   * Replaces the "No results" row with content of your own (a hint, a link). Shown while the typed text matches no
+   * option and `loading` is `false`. A list with no options at all and nothing typed shows `labels.typeToSearch`.
    */
   emptyContent?: ReactNode;
   /**
@@ -211,6 +225,15 @@ export interface ComboboxProps
    * @default 'off'
    */
   autoComplete?: string;
+  /**
+   * How the list is drawn. `anchored` puts it under the field, as wide as the field. `full-width` spans the visible
+   * screen (the visual viewport, so an on-screen keyboard is counted) with a small gap at each edge, and opens above
+   * or below the field, whichever has room: a long list is easier to read and tap on a phone. Takes a map to change
+   * with the screen: `{ base: "full-width", sm: "anchored" }` is full width below the `sm` breakpoint. `align` has no
+   * effect in `full-width`, and `side` is only its first choice.
+   * @default 'anchored'
+   */
+  presentation?: Responsive<ComboboxPresentation>;
   /** Which side of the field the list opens on; it moves to the other side if there is no room. @default 'bottom' */
   side?: ComboboxSide;
   /** Alignment along the chosen `side`. @default 'start' */

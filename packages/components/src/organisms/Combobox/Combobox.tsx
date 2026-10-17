@@ -4,17 +4,19 @@ import {
   mergeDefined,
   mergeRefs,
   useAnnouncement,
+  useResolvedResponsiveValue,
   useWindowedList,
 } from "@dbm-design-system/primitives";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { forwardRef, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import type { ChangeEvent, FocusEvent, KeyboardEvent, MouseEvent, ReactNode } from "react";
+import type { ChangeEvent, CSSProperties, FocusEvent, KeyboardEvent, MouseEvent, ReactNode } from "react";
 import { Highlight } from "../../atoms/Highlight";
 import { Icon } from "../../atoms/Icon";
 import { Input } from "../../atoms/Input";
 import { Spinner } from "../../atoms/Spinner";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import styles from "./Combobox.module.css";
+import { useViewportRoom } from "./useViewportRoom";
 import type {
   ComboboxInputChangeReason,
   ComboboxLabels,
@@ -30,6 +32,11 @@ const WINDOW_THRESHOLD = 100;
 const PAGE_STEP = 10;
 // The gap between the field and its list, in pixels (Radix takes a number, as `Popover`'s `sideOffset` does).
 const SIDE_OFFSET = 4;
+// The gap kept between a full-width list and the edges of the screen, in pixels (also the layer's collision padding).
+const EDGE_GAP = SIDE_OFFSET * 2;
+// A full-width list opens on the side that has at least this much room (pixels) before the other side is tried: about
+// five rows. A behaviour threshold, not a design value.
+const MIN_ROOM = 160;
 
 const sizeClass: Record<ComboboxSize, string | undefined> = {
   xs: styles.sizeXs,
@@ -73,6 +80,7 @@ const buildDefaultLabels = (formatNumber: (value: number) => string): ComboboxLa
   results: (count) => `${formatNumber(count)} results available`,
   pickAnOption: "Choose one of the options",
   create: (text) => `Create “${text}”`,
+  typeToSearch: "Type to search",
 });
 
 /** Lower-cases and drops accents, writing each character on its own so positions map back to the original text. */
@@ -98,7 +106,7 @@ const queryWords = (text: string): string[] => fold(text.trim()).split(/\s+/).fi
 function defaultFilter(option: ComboboxOption, text: string): boolean {
   const words = queryWords(text);
   if (words.length === 0) return true;
-  const haystack = fold(option.textValue ?? option.label);
+  const haystack = fold([option.textValue ?? option.label, ...(option.keywords ?? [])].join(" "));
   return words.every((word) => haystack.includes(word));
 }
 
@@ -262,6 +270,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
       name,
       form,
       autoComplete = "off",
+      presentation = "anchored",
       side = "bottom",
       align = "start",
       dir = "ltr",
@@ -293,6 +302,21 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
     const hiddenRef = useRef<HTMLInputElement>(null);
     const rootRef = useRef<HTMLDivElement>(null);
     const { message: announcement, announce } = useAnnouncement();
+
+    // The list is as wide as the field. Radix's own `--radix-popover-trigger-width` is rewritten while the page is
+    // being laid out, and a width that follows it feeds back into the layer's size observer (a "ResizeObserver
+    // loop" warning inside a `Dialog`, whose entrance scales the field), so the field's layout width is read here.
+    const [anchorWidth, setAnchorWidth] = useState<number | undefined>();
+    useEffect(() => {
+      const element = rootRef.current;
+      if (!element || typeof ResizeObserver === "undefined") return undefined;
+      const observer = new ResizeObserver((entries) => {
+        const entry = entries[entries.length - 1];
+        setAnchorWidth(entry?.borderBoxSize?.[0]?.inlineSize ?? element.offsetWidth);
+      });
+      observer.observe(element);
+      return () => observer.disconnect();
+    }, []);
 
     // The chosen value.
     const isValueControlled = valueProp !== undefined;
@@ -327,6 +351,17 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
       },
       [interactive, isOpenControlled, open, onOpenChange],
     );
+
+    // A full-width list (a phone, usually) spans the visible screen, and goes on whichever side has room above or
+    // below the field once an on-screen keyboard is counted, which the layer doesn't know about.
+    const fullWidth = useResolvedResponsiveValue(presentation, "anchored") === "full-width";
+    const room = useViewportRoom(rootRef, fullWidth && open);
+    const preferredTop = side === "top";
+    const roomOnPreferred = room ? (preferredTop ? room.above : room.below) : 0;
+    const roomOnOther = room ? (preferredTop ? room.below : room.above) : 0;
+    const wideSide: "top" | "bottom" =
+      room && roomOnPreferred < MIN_ROOM && roomOnOther > roomOnPreferred ? (preferredTop ? "bottom" : "top") : preferredTop ? "top" : "bottom";
+    const wideRoom = room ? (wideSide === "top" ? room.above : room.below) - SIDE_OFFSET - EDGE_GAP : undefined;
 
     // The options on show and the rows that draw them.
     const filterText = dirty ? inputValue : "";
@@ -732,9 +767,12 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
 
     const renderRows = (): ReactNode => {
       if (flat.length === 0) {
+        // Nothing to choose from and nothing typed is an invitation; text that matches nothing is "no results".
+        const invitation = filterText.trim() === "" && options.length === 0;
+        const message = loading ? labels.loading : invitation ? labels.typeToSearch : (emptyContent ?? labels.noResults);
         return (
           <div role="option" aria-selected="false" aria-disabled="true" className={cx(styles.option, styles.status)}>
-            {loading ? labels.loading : (emptyContent ?? labels.noResults)}
+            {message}
           </div>
         );
       }
@@ -763,6 +801,15 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
       flush();
       return sections;
     };
+
+    const listWidth = fullWidth && room ? room.width - 2 * EDGE_GAP : anchorWidth;
+    const contentStyle: CSSProperties | undefined =
+      listWidth === undefined
+        ? undefined
+        : ({
+            "--combobox-width": `${listWidth}px`,
+            ...(fullWidth && wideRoom !== undefined ? { "--combobox-room": `${Math.max(wideRoom, 0)}px` } : {}),
+          } as CSSProperties);
 
     const windowStyle =
       windowed && rowSizes
@@ -864,11 +911,11 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
           <PopoverPrimitive.Content
             role="presentation"
             dir={dir}
-            side={side}
+            side={fullWidth ? wideSide : side}
             align={align}
             sideOffset={SIDE_OFFSET}
-            collisionPadding={SIDE_OFFSET * 2}
-            className={cx(styles.content, sizeClass[size])}
+            collisionPadding={EDGE_GAP}
+            className={cx(styles.content, sizeClass[size], fullWidth && styles.fullWidth)}
             // Focus stays in the field: nothing here takes it, and a press on the list isn't the field losing it.
             onOpenAutoFocus={(event) => event.preventDefault()}
             onCloseAutoFocus={(event) => event.preventDefault()}
@@ -879,6 +926,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
               const target = event.target;
               if (target instanceof Node && rootRef.current?.contains(target)) event.preventDefault();
             }}
+            style={contentStyle}
             onMouseDown={(event) => event.preventDefault()}
           >
             <div

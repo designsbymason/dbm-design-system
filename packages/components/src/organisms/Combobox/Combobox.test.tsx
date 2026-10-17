@@ -2,7 +2,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { StrictMode, createRef, useState } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { PlusIcon } from "@dbm-design-system/icons";
 import { Combobox } from "./Combobox";
 import type { ComboboxOption, ComboboxProps } from "./Combobox.types";
@@ -841,6 +841,133 @@ describe("Combobox", () => {
       create();
       await user.type(field(), "Atlantis");
       expect(await axe(document.body, noLandmarks)).toHaveNoViolations();
+    });
+  });
+  describe("keywords and the empty states", () => {
+    it("matches words the option holds besides its label, without showing or marking them", async () => {
+      const user = userEvent.setup();
+      render(
+        <Combobox
+          aria-label="Country"
+          options={[
+            { value: "gb", label: "United Kingdom", keywords: ["UK", "Britain"] },
+            { value: "us", label: "United States", keywords: ["USA"] },
+          ]}
+        />,
+      );
+      await user.type(field(), "brit");
+      expect(labelsOf()).toEqual(["United Kingdom"]);
+      expect(screen.getByRole("option").querySelectorAll("mark")).toHaveLength(0);
+      expect(screen.getByRole("option")).not.toHaveTextContent("Britain");
+      await user.clear(field());
+      await user.type(field(), "kingdom uk");
+      expect(labelsOf()).toEqual(["United Kingdom"]);
+    });
+
+    it("ignores keywords when a filter of your own decides", async () => {
+      const user = userEvent.setup();
+      render(
+        <Combobox
+          aria-label="Country"
+          filter={(option, text) => option.label.toLowerCase().includes(text.toLowerCase())}
+          options={[{ value: "gb", label: "United Kingdom", keywords: ["UK"] }]}
+        />,
+      );
+      await user.type(field(), "uk");
+      expect(screen.getByRole("option", { name: "No results" })).toBeInTheDocument();
+    });
+
+    it("invites a search when there are no options and nothing typed, and says no results once text matches nothing", async () => {
+      const user = userEvent.setup();
+      render(<Combobox aria-label="Search" options={[]} />);
+      await user.click(field());
+      expect(screen.getByRole("option", { name: "Type to search" })).toHaveAttribute("aria-disabled", "true");
+      await user.type(field(), "zz");
+      expect(screen.getByRole("option", { name: "No results" })).toBeInTheDocument();
+      expect(screen.queryByRole("option", { name: "Type to search" })).toBeNull();
+    });
+
+    it("still says no results for text that matches nothing among options, and for an empty filter result", async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(<Combobox aria-label="Country" options={countries} filter={() => false} />);
+      await user.click(field());
+      expect(screen.getByRole("option", { name: "No results" })).toBeInTheDocument();
+      rerender(<Combobox aria-label="Country" options={countries} filter={() => false} emptyContent="Nothing here" />);
+      expect(screen.getByRole("option", { name: "Nothing here" })).toBeInTheDocument();
+    });
+
+    it("words the invitation with labels.typeToSearch, and shows loading instead of it while loading", async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(<Combobox aria-label="Search" options={[]} labels={{ typeToSearch: "Start typing" }} />);
+      await user.click(field());
+      expect(screen.getByRole("option", { name: "Start typing" })).toBeInTheDocument();
+      rerender(<Combobox aria-label="Search" options={[]} labels={{ typeToSearch: "Start typing" }} loading />);
+      expect(screen.getByRole("option", { name: "Loading…" })).toBeInTheDocument();
+    });
+  });
+  describe("the full-width presentation", () => {
+    // jsdom lays nothing out and has no visual viewport, so both are given by hand.
+    const stubScreen = ({ top, bottom, width = 360, height = 640 }: { top: number; bottom: number; width?: number; height?: number }) => {
+      vi.stubGlobal("visualViewport", { width, height, offsetTop: 0, addEventListener: vi.fn(), removeEventListener: vi.fn() });
+      vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+        () => ({ top, bottom, left: 0, right: width, width, height: bottom - top, x: 0, y: top, toJSON: () => ({}) }) as DOMRect,
+      );
+    };
+    afterEach(() => {
+      vi.unstubAllGlobals();
+      vi.restoreAllMocks();
+    });
+    const panel = () => screen.getByRole("listbox").parentElement as HTMLElement;
+
+    it("sets the list's width from the visible screen, less a gap at each edge", async () => {
+      stubScreen({ top: 100, bottom: 140 });
+      render(<Combobox aria-label="Country" options={countries} presentation="full-width" defaultOpen />);
+      await waitFor(() => expect(panel().style.getPropertyValue("--combobox-width")).toBe("344px"));
+      expect(panel().className).toMatch(/fullWidth/);
+    });
+
+    it("counts the keyboard: the room below is what the visual viewport leaves", async () => {
+      stubScreen({ top: 100, bottom: 140, height: 640 });
+      const { unmount } = render(<Combobox aria-label="Country" options={countries} presentation="full-width" defaultOpen />);
+      // 640 - 140 below, less the gap beside the field and the edge
+      await waitFor(() => expect(panel().style.getPropertyValue("--combobox-room")).toBe("488px"));
+      unmount();
+      vi.unstubAllGlobals();
+      vi.restoreAllMocks();
+      stubScreen({ top: 100, bottom: 140, height: 300 });
+      render(<Combobox aria-label="Country" options={countries} presentation="full-width" defaultOpen />);
+      // 160 below is no more than the minimum, so it stays below with 148px; with less it would go above
+      await waitFor(() => expect(panel().style.getPropertyValue("--combobox-room")).toBe("148px"));
+    });
+
+    it("opens above the field when there is little room below and more above", async () => {
+      stubScreen({ top: 450, bottom: 490, height: 560 });
+      render(<Combobox aria-label="Country" options={countries} presentation="full-width" defaultOpen />);
+      await waitFor(() => expect(panel().style.getPropertyValue("--combobox-room")).toBe(`${450 - 4 - 8}px`));
+      expect(panel().closest("[data-side]")?.getAttribute("data-side") ?? panel().getAttribute("data-side")).toBe("top");
+    });
+
+    it("keeps to the side it was asked for while that has room", async () => {
+      stubScreen({ top: 450, bottom: 490, height: 900 });
+      render(<Combobox aria-label="Country" options={countries} presentation="full-width" side="top" defaultOpen />);
+      await waitFor(() => expect(panel().style.getPropertyValue("--combobox-room")).toBe(`${450 - 4 - 8}px`));
+    });
+
+    it("measures nothing, and sets no room, in the anchored presentation", () => {
+      stubScreen({ top: 100, bottom: 140 });
+      render(<Combobox aria-label="Country" options={countries} defaultOpen />);
+      expect(panel().style.getPropertyValue("--combobox-room")).toBe("");
+      expect(panel().className).not.toMatch(/fullWidth/);
+    });
+
+    it("stops listening when it closes or unmounts", async () => {
+      const remove = vi.fn();
+      stubScreen({ top: 100, bottom: 140 });
+      vi.stubGlobal("visualViewport", { width: 360, height: 640, offsetTop: 0, addEventListener: vi.fn(), removeEventListener: remove });
+      const { unmount } = render(<Combobox aria-label="Country" options={countries} presentation="full-width" defaultOpen />);
+      await waitFor(() => expect(panel().style.getPropertyValue("--combobox-width")).toBe("344px"));
+      unmount();
+      expect(remove).toHaveBeenCalled();
     });
   });
 });

@@ -183,6 +183,13 @@ const meta: Meta<typeof Combobox> = {
       description: "The browser's own autofill hint. Off by default, since the list is the suggestion.",
       table: { defaultValue: { summary: "off" } },
     },
+    presentation: {
+      control: "select",
+      options: ["anchored", "full-width"],
+      description:
+        "How the list is drawn: anchored (under the field, as wide as it) or full-width (across the visible screen, above or below the field, whichever has room once an on-screen keyboard is counted). Takes a map to change with the screen, such as { base: full-width, sm: anchored }.",
+      table: { defaultValue: { summary: "anchored" } },
+    },
     side: {
       control: "select",
       options: ["top", "right", "bottom", "left"],
@@ -256,6 +263,7 @@ const meta: Meta<typeof Combobox> = {
     readOnly: false,
     required: false,
     name: "",
+    presentation: "anchored",
     side: "bottom",
     align: "start",
     dir: "ltr",
@@ -355,6 +363,28 @@ export const Async: Story = {
       <SearchingCombobox {...args} />
     </div>
   ),
+};
+
+export const FullWidth: Story = {
+  name: "Full width on a phone",
+  parameters: {
+    docs: { source: { code: comboboxSnippets.fullWidth } },
+    // Pinned to a phone width in the Storybook UI; on a Docs page it sits in the wide page like any other story.
+  },
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  // The story sets the presentation as a map, which no select can express.
+  argTypes: { presentation: { control: false } },
+  render: (args) => (
+    <div style={{ minHeight: "24rem" }}>
+      <Combobox {...args} presentation={{ base: "full-width", sm: "anchored" }} />
+    </div>
+  ),
+};
+
+export const Keywords: Story = {
+  name: "Words people also search by",
+  parameters: { docs: { source: { code: comboboxSnippets.keywords } } },
+  args: { "aria-label": "Country", placeholder: "Try UK or America" },
 };
 
 export const Create: Story = {

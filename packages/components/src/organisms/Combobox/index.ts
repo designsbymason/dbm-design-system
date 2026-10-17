@@ -4,6 +4,7 @@ export type {
   ComboboxInputChangeReason,
   ComboboxLabels,
   ComboboxOption,
+  ComboboxPresentation,
   ComboboxProps,
   ComboboxSide,
   ComboboxSize,

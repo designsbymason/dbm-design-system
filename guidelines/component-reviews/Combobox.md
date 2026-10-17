@@ -30,15 +30,20 @@ component Finalized. What follows is what was decided and found while building i
 - **`onCreate`:** a "Create …" row at the end of the list while the text names no option; the owner returns the new option (or a promise of it) to have it chosen. The row is highlighted only when nothing else matches.
 - Type-ahead by first letter was not added: typing already opens the list and narrows it.
 
+- **The "ResizeObserver loop" warning inside a `Dialog` or `Popover`:** the list's width followed Radix's `--radix-popover-trigger-width`, which is rewritten during layout; a `Dialog`'s entrance scales the field, so the width fed back into the layer's size observer (about 30 warnings per run, against 5 for a `Select`). The field's layout width is now read by the component's own observer and given to the list. No warnings in any Combobox run since.
+- **`keywords`:** an option can carry extra words the default filter matches ("UK" for "United Kingdom"); they are never shown or marked.
+- **Two empty messages:** a list with no options and nothing typed shows `labels.typeToSearch`; text that matches nothing shows `noResults` or `emptyContent`.
+- **`presentation="full-width"`:** the list spans the visible screen a gap in from each edge and opens above or below the field, whichever has room once an on-screen keyboard is counted (the visual viewport). Opt-in; [ADR-0081](../adr/0081-combobox-offers-a-full-width-presentation-measured-against-the-visual-viewport-over-a-docked-bottom-sheet.md).
+
 ## Verified
 - Unit tests (jsdom): structure and naming, pointer and keyboard choosing, filtering, announcements, controlled and uncontrolled value, text and open state, states, forms and validity, axe, StrictMode, server render and hydration in eight variants, and the windowing hook.
 - Real-browser checks (Chromium): placement and width, a real mouse choosing inside a `Dialog` and a `Popover`, Escape closing the list before the dialog, text inserted all at once, the keyboard end to end with one tab stop, a list of 2,000 options (rows drawn, scroll height, wrap to the last option in view, the chosen option far down in view), a phone width, field height against `Input` at every size, 24px buttons, right to left, forced colours, form refusal and focus, page scroll, controlled open state.
 - Light and dark in the Purple brand, and dark in the Emerald brand, looked at directly; Emerald light was not.
 
 ## Open (known, not yet decided)
+- The full-width presentation's keyboard handling is covered by a mocked visual viewport and by real-browser checks of width, edges and side; it has not been tried with a real on-screen keyboard. Making it the default below `sm` waits for that.
 - The full §9 review pass, including the feature-completeness pass, has not been run.
-- Real-browser runs inside a `Dialog` or `Popover` print a "ResizeObserver loop" warning from the browser; a `Select` inside a `Dialog` prints it too, so it is not specific to this component, and no check fails on it.
-- Matching is by words (every word of the typed text, in any order), and `filter` replaces it whole; there is no per-option `keywords` list yet, only `textValue`.
+- Matching is by words (every word of the typed text, in any order), and `filter` replaces it whole.
 - `onCreate` needs the owner to add the new option to `options`; until they do the created option is kept only as the value's label. There is no built-in way to mark a created option as unsaved.
 - Escape with the list closed passes through, so there is no "press again to clear"; the clear button does that.
 - No type-ahead by first letter and no multi-select: `MultiSelect` builds on this later.

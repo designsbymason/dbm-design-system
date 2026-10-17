@@ -360,6 +360,54 @@ export const ListFitsTheScreen: Story = {
   },
 };
 
+export const FullWidthOnAPhone: Story = {
+  name: "A full-width list spans the screen a gap in from each edge, above or below the field",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => (
+    <div style={{ padding: "var(--dbm-space-4)", minHeight: "40rem" }}>
+      <Combobox aria-label="Item" options={manyOptions} presentation={{ base: "full-width", sm: "anchored" }} />
+    </div>
+  ),
+  play: async () => {
+    await expect(window.innerWidth).toBeLessThan(500);
+    await userEvent.click(field());
+    const list = (await body().findByRole("listbox")) as HTMLElement;
+    await settled(list);
+    await waitFor(() => {
+      const box = (list.parentElement as HTMLElement).getBoundingClientRect();
+      expect(Math.abs(box.left - 8)).toBeLessThan(1.5);
+      expect(Math.abs(window.innerWidth - box.right - 8)).toBeLessThan(1.5);
+    });
+    const box = (list.parentElement as HTMLElement).getBoundingClientRect();
+    await expect(box.bottom).toBeLessThanOrEqual(window.innerHeight + 0.5);
+    await expect(list.scrollHeight).toBeGreaterThan(list.clientHeight);
+    // a press on a row still chooses it
+    await realClick(await option("Item 3"));
+    await waitFor(() => expect(field()).toHaveValue("Item 3"));
+  },
+};
+
+export const FullWidthOpensAboveNearTheBottom: Story = {
+  name: "A full-width list opens above a field that is near the bottom of the screen",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => (
+    <div style={{ padding: "var(--dbm-space-4)", paddingTop: "calc(100vh - 6rem)", minHeight: "100vh" }}>
+      <Combobox aria-label="Item" options={manyOptions} presentation="full-width" />
+    </div>
+  ),
+  play: async () => {
+    await userEvent.click(field());
+    const list = (await body().findByRole("listbox")) as HTMLElement;
+    await settled(list);
+    const anchor = (field().closest("[dir]") as HTMLElement).getBoundingClientRect();
+    await waitFor(() => {
+      const box = (list.parentElement as HTMLElement).getBoundingClientRect();
+      expect(box.bottom).toBeLessThanOrEqual(anchor.top + 1);
+      expect(box.top).toBeGreaterThanOrEqual(-0.5);
+    });
+  },
+};
+
 export const FieldMatchesInput: Story = {
   name: "The field is as tall as an Input at every size, with or without its buttons",
   render: () => (

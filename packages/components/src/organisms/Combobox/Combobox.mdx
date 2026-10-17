@@ -47,6 +47,7 @@ export const propOrder = [
   "enterKeyHint",
   "spellCheck",
   "autoComplete",
+  "presentation",
   "side",
   "align",
   "dir",
@@ -160,6 +161,14 @@ import { Combobox } from "@dbm-design-system/components";
 
 <Canvas of={ComboboxStories.Async} />
 
+### Full width on a phone
+
+<Canvas of={ComboboxStories.FullWidth} />
+
+### Words people also search by
+
+<Canvas of={ComboboxStories.Keywords} />
+
 ### Creating new options
 
 <Canvas of={ComboboxStories.Create} />
@@ -204,9 +213,10 @@ import { Combobox } from "@dbm-design-system/components";
 - Use it to choose one item from a list long enough that scanning it is slow: a country, a person, a project.
 - Give it a name with `aria-label` or a `FormField`, so the field and its list both say what is being chosen.
 - Pass `filter={false}` and fetch the options yourself when the list lives on a server, and show `loading` while you wait.
-- Give each option a short, distinct `label`; put the detail in `description` and the id people also search by in `textValue`.
+- Give each option a short, distinct `label`; put the detail in `description`, and the words people also search by (synonyms, codes) in `keywords`.
 - Say why an option can't be chosen with `disabled="reason"`, rather than leaving it dimmed and unexplained.
 - Use `allowCustomValue` when the list is only a suggestion and any text is acceptable.
+- Use `presentation={{ base: "full-width", sm: "anchored" }}` in a form people fill in on a phone: the list spans the screen and sits on the side with room, rather than squeezing under a narrow field.
 - Use `onCreate` when a person may add an item the list doesn't hold yet (a label, a company); return the new option so it is chosen.
 
 </Callout>
@@ -241,8 +251,10 @@ import { Combobox } from "@dbm-design-system/components";
   Enter, because a browser needs one text-only field for that; give the form a submit button.
 - Once a list holds more than a hundred rows, group headings are drawn as plain rows rather than as grouped regions, and
   each option is read with its group's name after its own.
-- Typed text matches an option when the label holds every word of it, in any order, so "york new" finds "New York".
-  Every matching stretch of a label is marked, not only the first.
+- `presentation="full-width"` measures the part of the page the person can see (the visual viewport), so an on-screen keyboard that covers the bottom of the screen is counted: the list goes above the field when there is little room below, and its height is what is left. `align` has no effect there, and `side` is only its first choice. Pass a map to change with the screen.
+- Typed text matches an option when its label and `keywords` together hold every word of it, in any order, so "york new"
+  finds "New York" and "uk" can find "United Kingdom". Only the label is marked, and every matching stretch of it, not
+  only the first.
 - When any option has an icon, the rows without one keep a blank place for it, so the labels stay in line. A row you
   draw yourself with `renderOption` is yours to align.
 - `onCreate` adds a last row, "Create …", while the typed text names no option. It is highlighted only when nothing
@@ -260,7 +272,7 @@ import { Combobox } from "@dbm-design-system/components";
   an `option` with `aria-selected`; one that can't be chosen has `aria-disabled`, and its reason is read after its name.
   Groups are `group`s named by their heading; in a list long enough to be windowed, each option is read with its group's name instead.
 - The "Create …" row is an option like any other, reached with the arrow keys; while its promise is out it is `aria-disabled`, and a rejection is announced.
-- "No results" and "Loading…" are rows in the list that can't be chosen, so a list is never empty to assistive technology.
+- "No results", "Type to search" (a list with no options and nothing typed yet) and "Loading…" are rows in the list that can't be chosen, so a list is never empty to assistive technology.
   A loading list is `aria-busy`.
 - The number of matches is announced in a status region that was already in the page, only as the person types and the
   count changes, never when the list merely opens. An error is announced when it appears.

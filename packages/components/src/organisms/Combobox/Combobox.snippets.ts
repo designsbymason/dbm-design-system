@@ -70,6 +70,22 @@ export const comboboxSnippets = {
   customValue: `{/* The typed text is the value when it isn't an option; Enter or leaving the field commits it. */}
 <Combobox aria-label="Destination" options={countries} allowCustomValue />`,
 
+  fullWidth: `{/* Across the visible screen below the sm breakpoint, above or below the field, whichever has room. */}
+<Combobox
+  aria-label="Country"
+  options={countries}
+  presentation={{ base: "full-width", sm: "anchored" }}
+/>`,
+
+  keywords: `{/* keywords are matched but never shown: "uk" or "britain" finds "United Kingdom". */}
+<Combobox
+  aria-label="Country"
+  options={[
+    { value: "gb", label: "United Kingdom", keywords: ["UK", "Britain"] },
+    { value: "us", label: "United States", keywords: ["USA", "America"] },
+  ]}
+/>`,
+
   clearable: `<Combobox aria-label="Country" options={countries} defaultValue="ca" clearable />`,
 
   states: `{/* loading: shows a spinner and a "Loading…" row; error: a note under the options. */}
@@ -107,6 +123,7 @@ export interface ComboboxPlaygroundSnippetArgs {
   disabled?: boolean;
   readOnly?: boolean;
   name?: string;
+  presentation?: string;
   side?: string;
   align?: string;
   "aria-label"?: string;
@@ -127,6 +144,7 @@ export function comboboxPlaygroundSnippet(args: ComboboxPlaygroundSnippetArgs): 
   if (args.clearable) attributes.push("clearable");
   if (args.loading) attributes.push("loading");
   if (args.error) attributes.push("error");
+  if (args.presentation && args.presentation !== "anchored") attributes.push(`presentation="${args.presentation}"`);
   if (args.side && args.side !== "bottom") attributes.push(`side="${args.side}"`);
   if (args.align && args.align !== "start") attributes.push(`align="${args.align}"`);
   if (args.required) attributes.push("required");
