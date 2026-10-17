@@ -194,6 +194,43 @@ a.brand:focus-visible,
   background-color: var(--dbm-bg-brand);
 }
 
+/* The line grows in when a link becomes the current one (`currentGrow`, set only on that change, so not on a first paint or a
+   panel that opens on a link already current): from the link's start edge in the bar, from its top in the panel. The origin has
+   no logical keyword, so right-to-left names the other side. Off under reduced motion, where the line is simply there. */
+@keyframes underlineGrow {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes underlineGrowBlock {
+  from {
+    transform: scaleY(0);
+  }
+
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.currentUnderline.currentGrow::after {
+  transform-origin: left;
+  animation: underlineGrow var(--dbm-motion-duration-base) var(--dbm-motion-easing-emphasized) both;
+}
+
+.currentUnderline.currentGrow:dir(rtl)::after {
+  transform-origin: right;
+}
+
+.panelList .currentUnderline.currentGrow::after {
+  transform-origin: top;
+  animation-name: underlineGrowBlock;
+}
+
 .panelList .currentUnderline::after {
   inset-inline: 0 auto;
   inset-block: var(--dbm-space-2);
@@ -418,5 +455,9 @@ a.brand:focus-visible,
   .link,
   .caret {
     transition: none;
+  }
+
+  .currentUnderline.currentGrow::after {
+    animation: none;
   }
 }

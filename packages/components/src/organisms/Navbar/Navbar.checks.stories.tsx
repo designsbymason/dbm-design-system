@@ -531,3 +531,71 @@ export const RoundedLinks: Story = {
     expect(getComputedStyle(link).outlineStyle).toBe("solid");
   },
 };
+
+export const UnderlineGrowsIn: Story = {
+  name: "The underline grows in from the start edge when a link becomes current, and not on load or under reduced motion",
+  render: () => (
+    <NavbarStage minBlockSize="16rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+          <DemoNavbar currentVariant="underline" collapseBelow="never" menuContainer={menuContainer} />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // (a finished animation that fills forwards stays listed, so "growing" is one still running)
+    const growing = (link: HTMLElement) =>
+      link
+        .getAnimations({ subtree: true })
+        .filter((animation) => (animation.effect as KeyframeEffect).pseudoElement === "::after" && animation.playState === "running");
+    const products = canvas.getByRole("link", { name: "Products" });
+    const pricing = canvas.getByRole("link", { name: "Pricing" });
+    // nothing is animating on load, and the line is at full size
+    expect(growing(products)).toHaveLength(0);
+    expect(getComputedStyle(products, "::after").transform).toBe("none");
+    // choosing another link grows its line, from the left edge
+    await userEvent.click(pricing);
+    await waitFor(() => expect(growing(pricing).length).toBeGreaterThan(0));
+    expect(getComputedStyle(pricing, "::after").transformOrigin.split(" ")[0]).toBe("0px");
+    await waitFor(() => expect(growing(pricing)).toHaveLength(0), { timeout: 3000 });
+    // it ends at full size, and the link that lost the mark has no line
+    expect(getComputedStyle(pricing, "::after").content).not.toBe("none");
+    expect(getComputedStyle(products, "::after").content).toBe("none");
+    // under reduced motion the line is simply there
+    const emulate = (value: "reduce" | "no-preference") =>
+      send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value }] });
+    await emulate("reduce");
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      await userEvent.click(products);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      await expect(growing(products)).toHaveLength(0);
+      await expect(getComputedStyle(products, "::after").content).not.toBe("none");
+    } finally {
+      await emulate("no-preference");
+    }
+  },
+};
+
+export const UnderlineGrowsInRightToLeft: Story = {
+  name: "In right-to-left text the underline grows from the right edge",
+  render: () => (
+    <NavbarStage minBlockSize="16rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+          <DemoNavbar dir="rtl" currentVariant="underline" collapseBelow="never" menuContainer={menuContainer} />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const pricing = within(canvasElement).getByRole("link", { name: "Pricing" });
+    await userEvent.click(pricing);
+    await waitFor(() => expect(pricing.getAnimations({ subtree: true }).length).toBeGreaterThan(0));
+    const [x] = getComputedStyle(pricing, "::after").transformOrigin.split(" ");
+    // the origin is the line's right edge: its full width
+    expect(px(x!)).toBeGreaterThan(8);
+  },
+};

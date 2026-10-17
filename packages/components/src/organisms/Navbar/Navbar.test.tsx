@@ -629,3 +629,82 @@ describe("Navbar rounded", () => {
     expect(screen.getByRole("banner")).not.toHaveClass(styles.rounded!);
   });
 });
+
+describe("Navbar's underline growing in", () => {
+  function Switching() {
+    const [path, setPath] = useState("products");
+    return (
+      <Navbar collapseBelow="never">
+        <Navbar.Links>
+          {["products", "pricing", "docs"].map((id) => (
+            <Navbar.Link key={id} href={`#${id}`} current={path === id} onClick={() => setPath(id)}>
+              {id}
+            </Navbar.Link>
+          ))}
+        </Navbar.Links>
+        <Navbar.Actions>
+          <button type="button">rerender</button>
+        </Navbar.Actions>
+      </Navbar>
+    );
+  }
+
+  it("does not grow a link that was current when it was drawn", () => {
+    render(<Switching />);
+    expect(screen.getByRole("link", { name: "products" })).not.toHaveClass(styles.currentGrow!);
+  });
+
+  it("grows the link that becomes current, and only that one, and not the one that stopped being it", async () => {
+    const user = userEvent.setup();
+    render(<Switching />);
+    await user.click(screen.getByRole("link", { name: "pricing" }));
+    expect(screen.getByRole("link", { name: "pricing" })).toHaveClass(styles.currentGrow!);
+    expect(screen.getByRole("link", { name: "products" })).not.toHaveClass(styles.currentGrow!);
+    expect(screen.getByRole("link", { name: "docs" })).not.toHaveClass(styles.currentGrow!);
+  });
+
+  it("keeps the class through other updates and drops it when the link stops being current", async () => {
+    const user = userEvent.setup();
+    render(<Switching />);
+    await user.click(screen.getByRole("link", { name: "pricing" }));
+    await user.click(screen.getByRole("button", { name: "rerender" }));
+    expect(screen.getByRole("link", { name: "pricing" })).toHaveClass(styles.currentGrow!);
+    await user.click(screen.getByRole("link", { name: "docs" }));
+    expect(screen.getByRole("link", { name: "pricing" })).not.toHaveClass(styles.currentGrow!);
+    expect(screen.getByRole("link", { name: "docs" })).toHaveClass(styles.currentGrow!);
+  });
+
+  it("does not grow the current link in a menu panel that opens on it", async () => {
+    const user = userEvent.setup();
+    render(<Basic />);
+    await user.click(screen.getByRole("button", { name: "Menu" }));
+    const panel = await screen.findByRole("dialog");
+    expect(within(panel).getByRole("link", { name: "Products" })).not.toHaveClass(styles.currentGrow!);
+  });
+
+  it("grows a group's button when it becomes the one that holds the current page", async () => {
+    const user = userEvent.setup();
+    function Grouped() {
+      const [inside, setInside] = useState(false);
+      return (
+        <Navbar collapseBelow="never">
+          <Navbar.Links>
+            <Navbar.Group label="Resources" current={inside}>
+              <Navbar.Link href="#blog">Blog</Navbar.Link>
+            </Navbar.Group>
+          </Navbar.Links>
+          <Navbar.Actions>
+            <button type="button" onClick={() => setInside(true)}>
+              go
+            </button>
+          </Navbar.Actions>
+        </Navbar>
+      );
+    }
+    render(<Grouped />);
+    const trigger = screen.getByRole("button", { name: "Resources" });
+    expect(trigger).not.toHaveClass(styles.currentGrow!);
+    await user.click(screen.getByRole("button", { name: "go" }));
+    expect(trigger).toHaveClass(styles.currentGrow!);
+  });
+});

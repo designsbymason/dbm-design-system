@@ -158,7 +158,8 @@ for a bar that sits over a hero or a coloured page.
 `currentVariant` chooses how the current link is marked: `underline` (the default) is a brand line under the link
 (a bar at the start edge in the phone panel), `subtle` a tinted pill, and `solid` a brand fill. It is one look for the
 whole bar, the phone panel and a `Navbar.Group` that holds the page included, and can't be set per link.
-`aria-current="page"` is set whichever it is, and a link is never told apart by colour alone.
+`aria-current="page"` is set whichever it is, and a link is never told apart by colour alone. The underline grows in when a link
+becomes the current one, and only then: not on a first paint, and not when the menu panel opens on a link already current.
 
 <Canvas of={NavbarStories.CurrentVariants} />
 
@@ -323,7 +324,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
   accessibility tree; the panel's copy is what a screen reader finds.
 - Every control is at least 24 by 24 pixels. The focus ring is the standard two-pixel outline in
   `border.focus`.
-- The only motion is a short colour fade on hover, removed under `prefers-reduced-motion`. In
+- The motion is a short colour fade on hover, and the underline growing in when a link becomes the current one (from the link's start edge in the bar, from its top in the menu panel), both removed under `prefers-reduced-motion`, where the line is simply there. In
   forced-colours mode a filled or stuck bar and the current link get a one-pixel outline, since a fill or
   shadow alone would vanish.
 - `subtle` uses `text.brand` on `bg.brand-subtle`, the pairing `Tabs` uses; `solid` uses `text.on-brand` on `bg.brand`, the pairing
@@ -421,7 +422,9 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 <TokenRow token="space.6" usage="a link's smallest height, which keeps it a 24 pixel target" />
 <TokenRow token="opacity.40" usage="a disabled link" />
 <TokenRow token="motion.duration.fast" usage="a link's colour change" />
+<TokenRow token="motion.duration.base" usage="the underline growing in when a link becomes the current one" />
 <TokenRow token="motion.easing.standard" usage="a link's colour change" />
+<TokenRow token="motion.easing.emphasized" usage="the underline growing in" />
 
 ## Related components
 

@@ -97,6 +97,22 @@ const NavbarPanelContext = createContext(false);
  */
 const NavbarMenuContext = createContext<(() => void) | null>(null);
 
+/**
+ * Whether a link has become the current one since it was drawn, and still is: true from the render in which `current` turns
+ * on until it turns off, so a marker that grows in plays once, isn't cut short by an unrelated re-render, and doesn't play
+ * for a link that was already current when it mounted (a first paint, or the menu panel opening). The previous value is held in
+ * state and compared while rendering, the pattern React gives for state derived from a prop.
+ */
+function useBecameCurrent(current: boolean): boolean {
+  const [previous, setPrevious] = useState(current);
+  const [became, setBecame] = useState(false);
+  if (previous !== current) {
+    setPrevious(current);
+    setBecame(current);
+  }
+  return became;
+}
+
 function useNavbarContext(part: string): NavbarContextValue {
   const context = useContext(NavbarContext);
   if (context === null) {
@@ -325,6 +341,7 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
     const inPanel = useContext(NavbarPanelContext);
     const closeGroupMenu = useContext(NavbarMenuContext);
     const inMenu = closeGroupMenu !== null;
+    const grows = useBecameCurrent(current);
     const Component = asChild ? Slot : "a";
 
     // Capture-phase, so it runs before a slotted child's own `onClick` (a router's navigation), as `Link`'s does.
@@ -359,6 +376,7 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
           !inMenu && rounded && styles.rounded,
           !inMenu && current && styles.current,
           !inMenu && current && currentVariantClass[currentVariant],
+          !inMenu && current && grows && styles.currentGrow,
           disabled && styles.disabled, className)}
       >
         {children}
@@ -397,6 +415,7 @@ const NavbarGroup = forwardRef<HTMLButtonElement, NavbarGroupProps>(
     const inPanel = useContext(NavbarPanelContext);
     const [open, setOpen] = useState(defaultOpen ?? current);
     const [menuOpen, setMenuOpen] = useState(false);
+    const grows = useBecameCurrent(current);
     const closeGroupMenu = useCallback(() => setMenuOpen(false), []);
     const regionId = useId();
     const trigger = (
@@ -411,6 +430,7 @@ const NavbarGroup = forwardRef<HTMLButtonElement, NavbarGroupProps>(
       rounded && styles.rounded,
       current && styles.current,
       current && currentVariantClass[currentVariant],
+      current && grows && styles.currentGrow,
       className,
     );
 
