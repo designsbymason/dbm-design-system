@@ -490,3 +490,44 @@ export const CurrentLinkInThePanelAndForcedColours: Story = {
     }
   },
 };
+
+export const RoundedLinks: Story = {
+  name: "Rounded links are pills, including their focus ring, and the bar keeps its shape",
+  render: () => (
+    <NavbarStage minBlockSize="18rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start", display: "grid", gap: "1rem" }}>
+          <GalleryBar name="rounded bar">
+            <DemoNavbar rounded currentVariant="subtle" withGroup linksLabel="Rounded" collapseBelow="never" menuContainer={menuContainer} />
+          </GalleryBar>
+          <GalleryBar name="square bar">
+            <DemoNavbar currentVariant="subtle" linksLabel="Square" collapseBelow="never" menuContainer={menuContainer} />
+          </GalleryBar>
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const rounded = within(within(canvasElement).getByRole("region", { name: "rounded bar" }));
+    const square = within(within(canvasElement).getByRole("region", { name: "square bar" }));
+    // a pill: the radius is at least half the height, so the ends are semicircles (the token is a huge number, not half)
+    // (the brand is not one of the links: it keeps its own shape)
+    const navigation = within(rounded.getByRole("navigation", { name: "Rounded" }));
+    for (const control of [...navigation.getAllByRole("link"), navigation.getByRole("button", { name: "Resources" })]) {
+      expect(px(getComputedStyle(control).borderTopLeftRadius)).toBeGreaterThanOrEqual(control.getBoundingClientRect().height / 2);
+    }
+    // not rounded: a link keeps its own corners
+    const plain = square.getByRole("link", { name: "Pricing" });
+    expect(px(getComputedStyle(plain).borderTopLeftRadius)).toBeLessThan(plain.getBoundingClientRect().height / 2);
+    // the bar itself isn't a pill either way
+    const bar = canvasElement.querySelector("header")!;
+    expect(px(getComputedStyle(bar).borderTopLeftRadius)).toBeLessThan(bar.getBoundingClientRect().height / 2);
+    // and the keyboard focus ring follows the shape: a pill, not the square-cornered ring a link otherwise gets
+    const link = navigation.getByRole("link", { name: "Pricing" });
+    link.focus();
+    await userEvent.keyboard("{Shift>}{/Shift}");
+    await waitFor(() => expect(link).toHaveFocus());
+    expect(px(getComputedStyle(link).borderTopLeftRadius)).toBeGreaterThanOrEqual(link.getBoundingClientRect().height / 2);
+    expect(getComputedStyle(link).outlineStyle).toBe("solid");
+  },
+};

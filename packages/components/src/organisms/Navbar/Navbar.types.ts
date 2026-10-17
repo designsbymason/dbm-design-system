@@ -68,6 +68,12 @@ export interface NavbarProps extends Omit<ComponentPropsWithoutRef<"header">, "d
    */
   currentVariant?: NavbarCurrentVariant;
   /**
+   * Fully rounded links: each link and group button is a pill, with the current link's tint or fill following the shape. The
+   * same prop, with the same name and meaning, as `Button`, `IconButton` and `Toolbar`. It is the links that round, not the bar.
+   * @default false
+   */
+  rounded?: boolean;
+  /**
    * The bar's height, on a three-step scale. Each step is as tall as an `IconButton` of the same step plus room above and
    * below, so a button in the bar never touches its edges.
    * @default 'md'

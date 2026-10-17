@@ -25,6 +25,12 @@ const meta: Meta<typeof Navbar> = {
         "How the current page's link is marked: a tinted pill, a brand line under it (a bar at the start edge in the phone panel), or a brand fill. One look for the whole bar, not overridable per link; aria-current is set whichever it is.",
       table: { defaultValue: { summary: '"underline"' } },
     },
+    rounded: {
+      control: "boolean",
+      description:
+        "Fully rounded links: each link and group button is a pill, with the current link's tint or fill following the shape. The links round, not the bar.",
+      table: { defaultValue: { summary: "false" } },
+    },
     size: {
       control: "select",
       options: ["sm", "md", "lg"],

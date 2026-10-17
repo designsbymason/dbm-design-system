@@ -152,6 +152,13 @@ a.brand:focus-visible,
   border-radius: var(--dbm-radius-sm);
 }
 
+/* `rounded`: a pill for each link and group button. Declared after the focus rule above (same specificity, so source order
+   decides) so the ring is round too, the arrangement `Button`'s `rounded` uses. */
+.rounded,
+.rounded:focus-visible {
+  border-radius: var(--dbm-radius-full);
+}
+
 .current,
 .current:hover {
   background-color: var(--dbm-bg-brand-subtle);

@@ -15,6 +15,7 @@ export const propOrder = [
   "children",
   "variant",
   "currentVariant",
+  "rounded",
   "size",
   "collapseBelow",
   "menuOpen",
@@ -40,6 +41,7 @@ export const propOrder = [
 export const playgroundOrder = [
   "variant",
   "currentVariant",
+  "rounded",
   "size",
   "collapseBelow",
   "menuSide",
@@ -159,6 +161,14 @@ whole bar, the phone panel and a `Navbar.Group` that holds the page included, an
 `aria-current="page"` is set whichever it is, and a link is never told apart by colour alone.
 
 <Canvas of={NavbarStories.CurrentVariants} />
+
+### Rounded links
+
+`rounded` makes each link and group button a pill, as it does on `Button`, `IconButton` and `Toolbar`. It is the
+links that round (and the focus ring and the current link's tint or fill with them); the bar keeps its shape.
+It reads best with `subtle` or `solid`, since an underline has no shape to round.
+
+<Canvas of={NavbarStories.Rounded} />
 
 ### Sizes
 
@@ -395,7 +405,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 <TokenRow token="border-width.1" usage="the outlined bar's line" />
 <TokenRow token="border-width.2" usage="the focus ring's width, and the underline look's line thickness" />
 <TokenRow token="radius.md" usage="a link's corners" />
-<TokenRow token="radius.full" usage="the underline look's line" />
+<TokenRow token="radius.full" usage="the underline look's line, and a link's pill shape when rounded" />
 <TokenRow token="radius.sm" usage="the focus ring's corners, on the brand and the links" />
 <TokenRow token="shadow.light.md / shadow.dark.md" usage="a sticky bar's elevation while it is stuck" />
 <TokenRow token="font-family.primary" usage="the bar's typography" />

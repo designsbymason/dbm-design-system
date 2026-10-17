@@ -606,3 +606,26 @@ describe("Navbar currentVariant", () => {
     expect(screen.getByRole("button", { name: "More" })).not.toHaveClass(styles.currentSolid!);
   });
 });
+
+describe("Navbar rounded", () => {
+  it("is off by default, and rounds every link and a group's button when set", () => {
+    const { rerender } = render(<WithGroup collapseBelow="never" />);
+    expect(screen.getByRole("link", { name: "Products" })).not.toHaveClass(styles.rounded!);
+    rerender(<WithGroup collapseBelow="never" rounded />);
+    expect(screen.getByRole("link", { name: "Products" })).toHaveClass(styles.rounded!);
+    expect(screen.getByRole("button", { name: "Resources" })).toHaveClass(styles.rounded!);
+  });
+
+  it("rounds the menu panel's copy of the links, though the panel is outside the bar", async () => {
+    const user = userEvent.setup();
+    render(<Basic rounded />);
+    await user.click(screen.getByRole("button", { name: "Menu" }));
+    const panel = await screen.findByRole("dialog");
+    expect(within(panel).getByRole("link", { name: "Pricing" })).toHaveClass(styles.rounded!);
+  });
+
+  it("rounds the links and not the bar", () => {
+    render(<Basic rounded />);
+    expect(screen.getByRole("banner")).not.toHaveClass(styles.rounded!);
+  });
+});

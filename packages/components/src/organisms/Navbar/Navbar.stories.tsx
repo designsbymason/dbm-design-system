@@ -11,6 +11,7 @@ import { DemoNavbar, GalleryBar, NavbarStage, RouterDemoNavbar, NavbarViewModeCo
 interface PlaygroundArgs {
   variant: NavbarVariant;
   currentVariant: NavbarCurrentVariant;
+  rounded: boolean;
   size: NavbarSize;
   collapseBelow: NavbarCollapseBelow;
   menuSide: "start" | "end" | "top" | "bottom";
@@ -29,6 +30,7 @@ const playgroundSource = {
 const noControls = {
   variant: { control: false },
   currentVariant: { control: false },
+  rounded: { control: false },
   size: { control: false },
   collapseBelow: { control: false },
   menuSide: { control: false },
@@ -68,6 +70,12 @@ const meta: Meta<PlaygroundArgs> = {
       description:
         "How the current page's link is marked: a tinted pill, a brand line under it, or a brand fill. aria-current is set whichever it is, and the look is the same in the phone panel.",
       table: { defaultValue: { summary: '"underline"' } },
+    },
+    rounded: {
+      control: "boolean",
+      description:
+        "Fully rounded links: each link and group button is a pill, with the current link's tint or fill following the shape. The links round, not the bar.",
+      table: { defaultValue: { summary: "false" } },
     },
     size: {
       control: "select",
@@ -118,6 +126,7 @@ const meta: Meta<PlaygroundArgs> = {
   args: {
     variant: "outlined",
     currentVariant: "underline",
+    rounded: false,
     size: "md",
     collapseBelow: "md",
     menuSide: "start",
@@ -184,6 +193,32 @@ export const CurrentVariants: Story = {
               <DemoNavbar
                 currentVariant={currentVariant}
                 linksLabel={`${currentVariant} navigation`}
+                menuContainer={menuContainer}
+                collapseBelow={args.collapseBelow}
+              />
+            </GalleryBar>
+          ))}
+        </div>
+      )}
+    </NavbarStage>
+  ),
+};
+
+export const Rounded: Story = {
+  name: "Rounded links",
+  parameters: { docs: { source: { code: navbarSnippets.rounded } } },
+  argTypes: { ...noControls },
+  render: (args) => (
+    <NavbarStage minBlockSize="16rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", display: "grid", gap: "var(--dbm-space-4)", alignSelf: "start" }}>
+          {(["subtle", "solid"] as const).map((currentVariant) => (
+            <GalleryBar key={currentVariant} name={`rounded ${currentVariant} bar`}>
+              <DemoNavbar
+                rounded
+                currentVariant={currentVariant}
+                withGroup
+                linksLabel={`rounded ${currentVariant} navigation`}
                 menuContainer={menuContainer}
                 collapseBelow={args.collapseBelow}
               />

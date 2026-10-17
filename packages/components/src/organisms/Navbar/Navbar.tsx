@@ -77,6 +77,7 @@ interface NavbarContextValue {
   size: NavbarSize;
   closeMenuOnNavigate: boolean;
   currentVariant: NavbarCurrentVariant;
+  rounded: boolean;
   menuSide: NonNullable<NavbarProps["menuSide"]>;
   dir: NonNullable<NavbarProps["dir"]>;
   menuContainer: HTMLElement | null | undefined;
@@ -142,6 +143,7 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
       children,
       variant = "outlined",
       currentVariant = "underline",
+      rounded = false,
       size = "md",
       collapseBelow = "md",
       menuOpen,
@@ -194,10 +196,10 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
     const showAutomaticMenuButton = hasLinks && !hasMenuButton && collapseBelow !== "never";
 
     const contextValue = useMemo<NavbarContextValue>(
-      () => ({ labels: resolvedLabels, size, closeMenuOnNavigate, currentVariant, menuSide, menuContainer, dir, closeMenu }),
+      () => ({ labels: resolvedLabels, size, closeMenuOnNavigate, currentVariant, rounded, menuSide, menuContainer, dir, closeMenu }),
       // `mergeDefined` returns a fresh object each render; its three strings are what the value really depends on.
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      [resolvedLabels.menu, resolvedLabels.navigation, resolvedLabels.close, size, closeMenuOnNavigate, currentVariant, menuSide, menuContainer, dir, closeMenu],
+      [resolvedLabels.menu, resolvedLabels.navigation, resolvedLabels.close, size, closeMenuOnNavigate, currentVariant, rounded, menuSide, menuContainer, dir, closeMenu],
     );
 
     const content = (
@@ -319,7 +321,7 @@ NavbarLinks.displayName = "Navbar.Links";
  */
 const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
   ({ current = false, disabled = false, asChild = false, className, onClick, onClickCapture, children, ...props }, ref) => {
-    const { closeMenuOnNavigate, closeMenu, currentVariant } = useNavbarContext("Navbar.Link");
+    const { closeMenuOnNavigate, closeMenu, currentVariant, rounded } = useNavbarContext("Navbar.Link");
     const inPanel = useContext(NavbarPanelContext);
     const closeGroupMenu = useContext(NavbarMenuContext);
     const inMenu = closeGroupMenu !== null;
@@ -354,6 +356,7 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
         onClickCapture={handleClickCapture}
         className={cx(
           !inMenu && styles.link,
+          !inMenu && rounded && styles.rounded,
           !inMenu && current && styles.current,
           !inMenu && current && currentVariantClass[currentVariant],
           disabled && styles.disabled, className)}
@@ -390,7 +393,7 @@ NavbarLink.displayName = "Navbar.Link";
  */
 const NavbarGroup = forwardRef<HTMLButtonElement, NavbarGroupProps>(
   ({ label, current = false, disabled = false, defaultOpen, align = "start", className, children, ...props }, ref) => {
-    const { dir, currentVariant } = useNavbarContext("Navbar.Group");
+    const { dir, currentVariant, rounded } = useNavbarContext("Navbar.Group");
     const inPanel = useContext(NavbarPanelContext);
     const [open, setOpen] = useState(defaultOpen ?? current);
     const [menuOpen, setMenuOpen] = useState(false);
@@ -405,6 +408,7 @@ const NavbarGroup = forwardRef<HTMLButtonElement, NavbarGroupProps>(
     const triggerClass = cx(
       styles.link,
       styles.groupTrigger,
+      rounded && styles.rounded,
       current && styles.current,
       current && currentVariantClass[currentVariant],
       className,

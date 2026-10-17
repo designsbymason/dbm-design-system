@@ -34,6 +34,10 @@ ${navbar('variant="filled"')}`,
     aria-current="page" is set whichever it is. */}
 ${navbar('currentVariant="solid"')}`,
 
+  rounded: `{/* rounded makes each link and group button a pill; the bar itself keeps its shape. It is the same prop Button,
+    IconButton and Toolbar have. */}
+${navbar('rounded currentVariant="subtle"')}`,
+
   sizes: `{/* size: "sm" | "md" (default) | "lg". The bar is as tall as an IconButton of the same step plus room. */}
 ${navbar('size="lg"')}`,
 
@@ -126,6 +130,7 @@ ${navbar('dir="rtl" labels={{ menu: "القائمة", navigation: "الرئيس�
 export interface NavbarPlaygroundSnippetArgs {
   variant?: NavbarVariant;
   currentVariant?: NavbarCurrentVariant;
+  rounded?: boolean;
   size?: NavbarSize;
   collapseBelow?: NavbarCollapseBelow;
   menuSide?: "start" | "end" | "top" | "bottom";
@@ -143,6 +148,7 @@ export function navbarPlaygroundSnippet(args: NavbarPlaygroundSnippetArgs): stri
   const attributes: string[] = [];
   if (args.variant && args.variant !== "outlined") attributes.push(`variant="${args.variant}"`);
   if (args.currentVariant && args.currentVariant !== "underline") attributes.push(`currentVariant="${args.currentVariant}"`);
+  if (args.rounded) attributes.push("rounded");
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.collapseBelow && args.collapseBelow !== "md") attributes.push(`collapseBelow="${args.collapseBelow}"`);
   if (args.menuSide && args.menuSide !== "start") attributes.push(`menuSide="${args.menuSide}"`);
