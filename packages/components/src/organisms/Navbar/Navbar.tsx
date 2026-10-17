@@ -89,8 +89,12 @@ const NavbarContext = createContext<NavbarContextValue | null>(null);
 /** True for the links drawn in the menu panel, which close it when chosen. */
 const NavbarPanelContext = createContext(false);
 
-/** True inside the floating list a `Navbar.Group` opens in the bar, where its links are menu items and not list items. */
-const NavbarMenuContext = createContext(false);
+/**
+ * Set inside the floating list a `Navbar.Group` opens in the bar, where its links are menu items and not list items; the value
+ * closes that list. `Menu` closes itself when an item is chosen, but not when the item's own click handler called
+ * `preventDefault` (the way a router's link does), so a link closes it by hand then.
+ */
+const NavbarMenuContext = createContext<(() => void) | null>(null);
 
 function useNavbarContext(part: string): NavbarContextValue {
   const context = useContext(NavbarContext);
@@ -121,7 +125,7 @@ function useNavbarContext(part: string): NavbarContextValue {
  * @example
  * ```tsx
  * <Navbar sticky>
- *   <Navbar.Brand href="/">Acme</Navbar.Brand>
+ *   <Navbar.Brand href="/">dbM</Navbar.Brand>
  *   <Navbar.Links>
  *     <Navbar.Link href="/products" current>Products</Navbar.Link>
  *     <Navbar.Link href="/pricing">Pricing</Navbar.Link>
@@ -137,7 +141,7 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
     {
       children,
       variant = "outlined",
-      currentVariant = "subtle",
+      currentVariant = "underline",
       size = "md",
       collapseBelow = "md",
       menuOpen,
@@ -317,7 +321,8 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
   ({ current = false, disabled = false, asChild = false, className, onClick, onClickCapture, children, ...props }, ref) => {
     const { closeMenuOnNavigate, closeMenu, currentVariant } = useNavbarContext("Navbar.Link");
     const inPanel = useContext(NavbarPanelContext);
-    const inMenu = useContext(NavbarMenuContext);
+    const closeGroupMenu = useContext(NavbarMenuContext);
+    const inMenu = closeGroupMenu !== null;
     const Component = asChild ? Slot : "a";
 
     // Capture-phase, so it runs before a slotted child's own `onClick` (a router's navigation), as `Link`'s does.
@@ -336,6 +341,7 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
     const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
       onClick?.(event);
       if (inPanel && closeMenuOnNavigate && (event.currentTarget as HTMLElement).matches("a[href]")) closeMenu();
+      if (closeGroupMenu && event.defaultPrevented) closeGroupMenu();
     };
 
     const link = (
@@ -387,6 +393,8 @@ const NavbarGroup = forwardRef<HTMLButtonElement, NavbarGroupProps>(
     const { dir, currentVariant } = useNavbarContext("Navbar.Group");
     const inPanel = useContext(NavbarPanelContext);
     const [open, setOpen] = useState(defaultOpen ?? current);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const closeGroupMenu = useCallback(() => setMenuOpen(false), []);
     const regionId = useId();
     const trigger = (
       <>
@@ -430,14 +438,14 @@ const NavbarGroup = forwardRef<HTMLButtonElement, NavbarGroupProps>(
     return (
       // eslint-disable-next-line jsx-a11y/no-redundant-roles
       <li role="listitem" className={styles.item}>
-        <Menu dir={dir}>
+        <Menu dir={dir} open={menuOpen} onOpenChange={setMenuOpen}>
           <Menu.Trigger asChild disabled={disabled}>
             <button {...props} ref={ref} type="button" disabled={disabled} className={triggerClass}>
               {trigger}
             </button>
           </Menu.Trigger>
           <Menu.Content align={align}>
-            <NavbarMenuContext.Provider value>{children}</NavbarMenuContext.Provider>
+            <NavbarMenuContext.Provider value={closeGroupMenu}>{children}</NavbarMenuContext.Provider>
           </Menu.Content>
         </Menu>
       </li>

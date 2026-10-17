@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Navbar } from "./Navbar";
+import { preventNavigation } from "./NavbarStoryKit";
 
 // Docs-only — see NavbarRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Navbar.Links> = {
@@ -34,7 +35,7 @@ type Story = StoryObj<typeof Navbar.Links>;
 
 export const Default: Story = {
   render: (args) => (
-    <Navbar collapseBelow="never">
+    <Navbar collapseBelow="never" onClick={preventNavigation}>
       <Navbar.Links {...args}>
         <Navbar.Link href="#a" current>
           Products

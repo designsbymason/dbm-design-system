@@ -76,7 +76,7 @@ export const WideLayout: Story = {
     const links = within(nav).getAllByRole("link");
     expect(links.map((link) => link.textContent)).toEqual(["Products", "Pricing", "Docs", "Beta"]);
     // the zones read in order: brand, links, actions, left to right
-    const brand = canvas.getByRole("link", { name: "Acme" }).getBoundingClientRect();
+    const brand = canvas.getByRole("link", { name: "dbM" }).getBoundingClientRect();
     const first = links[0]!.getBoundingClientRect();
     const action = canvas.getByRole("button", { name: "Sign in" }).getBoundingClientRect();
     expect(brand.right).toBeLessThanOrEqual(first.left);
@@ -160,7 +160,13 @@ export const ColoursAreReadable: Story = {
         <div style={{ inlineSize: "100%", alignSelf: "start", display: "grid", gap: "1rem" }}>
           {(["outlined", "filled", "ghost"] as const).map((variant) => (
             <GalleryBar key={variant} name={`${variant} bar`}>
-              <DemoNavbar variant={variant} linksLabel={`${variant} navigation`} collapseBelow="never" menuContainer={menuContainer} />
+              <DemoNavbar
+                variant={variant}
+                currentVariant="subtle"
+                linksLabel={`${variant} navigation`}
+                collapseBelow="never"
+                menuContainer={menuContainer}
+              />
             </GalleryBar>
           ))}
         </div>
@@ -193,7 +199,7 @@ export const RightToLeftOrder: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const brand = canvas.getByRole("link", { name: "Acme" }).getBoundingClientRect();
+    const brand = canvas.getByRole("link", { name: "dbM" }).getBoundingClientRect();
     const links = within(canvas.getByRole("navigation", { name: "Main" })).getAllByRole("link");
     const action = canvas.getByRole("button", { name: "Sign in" }).getBoundingClientRect();
     expect(brand.left).toBeGreaterThan(links[0]!.getBoundingClientRect().right);
@@ -206,7 +212,11 @@ export const StickyAndForcedColours: Story = {
   name: "A sticky bar stays at the top, takes a shadow when stuck, and an outline in forced colours",
   render: function Render() {
     const boxRef = useRef<HTMLDivElement | null>(null);
-    return <StickyDemo boxRef={boxRef}>{(ref) => <DemoNavbar sticky scrollContainerRef={ref} />}</StickyDemo>;
+    return (
+      <StickyDemo boxRef={boxRef}>
+        {(ref) => <DemoNavbar sticky currentVariant="subtle" scrollContainerRef={ref} />}
+      </StickyDemo>
+    );
   },
   play: async ({ canvasElement }) => {
     const header = within(canvasElement).getByRole("banner");
@@ -393,7 +403,7 @@ export const CurrentLinkLooks: Story = {
     <NavbarStage minBlockSize="18rem">
       {(menuContainer) => (
         <div style={{ inlineSize: "100%", alignSelf: "start", display: "grid", gap: "1rem" }}>
-          {(["subtle", "underline", "solid"] as const).map((currentVariant) => (
+          {(["underline", "subtle", "solid"] as const).map((currentVariant) => (
             <GalleryBar key={currentVariant} name={`${currentVariant} bar`}>
               <DemoNavbar
                 currentVariant={currentVariant}

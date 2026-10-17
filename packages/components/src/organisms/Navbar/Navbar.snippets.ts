@@ -7,7 +7,7 @@
 
 import type { NavbarCollapseBelow, NavbarCurrentVariant, NavbarSize, NavbarVariant } from "./Navbar.types";
 
-const brand = `  <Navbar.Brand href="/">Acme</Navbar.Brand>`;
+const brand = `  <Navbar.Brand href="/">dbM</Navbar.Brand>`;
 
 const links = `  <Navbar.Links>
     <Navbar.Link href="/products" current>
@@ -30,9 +30,9 @@ export const navbarSnippets = {
   variants: `{/* variant: "outlined" (default) | "filled" | "ghost" */}
 ${navbar('variant="filled"')}`,
 
-  currentVariants: `{/* currentVariant: "subtle" (default) | "underline" | "solid". One look for the whole bar, the phone panel included;
+  currentVariants: `{/* currentVariant: "underline" (default) | "subtle" | "solid". One look for the whole bar, the phone panel included;
     aria-current="page" is set whichever it is. */}
-${navbar('currentVariant="underline"')}`,
+${navbar('currentVariant="solid"')}`,
 
   sizes: `{/* size: "sm" | "md" (default) | "lg". The bar is as tall as an IconButton of the same step plus room. */}
 ${navbar('size="lg"')}`,
@@ -100,7 +100,7 @@ ${navbar("sticky")}`,
   routerLinks: `{/* asChild puts the look on your router's link: put its component where the <a> is (here a plain anchor). */}
 <Navbar>
   <Navbar.Brand asChild>
-    <a href="/">Acme</a>
+    <a href="/">dbM</a>
   </Navbar.Brand>
   <Navbar.Links>
     <Navbar.Link asChild current>
@@ -142,7 +142,7 @@ export interface NavbarPlaygroundSnippetArgs {
 export function navbarPlaygroundSnippet(args: NavbarPlaygroundSnippetArgs): string {
   const attributes: string[] = [];
   if (args.variant && args.variant !== "outlined") attributes.push(`variant="${args.variant}"`);
-  if (args.currentVariant && args.currentVariant !== "subtle") attributes.push(`currentVariant="${args.currentVariant}"`);
+  if (args.currentVariant && args.currentVariant !== "underline") attributes.push(`currentVariant="${args.currentVariant}"`);
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.collapseBelow && args.collapseBelow !== "md") attributes.push(`collapseBelow="${args.collapseBelow}"`);
   if (args.menuSide && args.menuSide !== "start") attributes.push(`menuSide="${args.menuSide}"`);

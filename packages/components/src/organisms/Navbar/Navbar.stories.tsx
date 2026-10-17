@@ -2,10 +2,9 @@ import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { Navbar } from "./Navbar";
 import { navbarPlaygroundSnippet, navbarSnippets } from "./Navbar.snippets";
 import type { NavbarCollapseBelow, NavbarCurrentVariant, NavbarSize, NavbarVariant } from "./Navbar.types";
-import { DemoNavbar, GalleryBar, NavbarStage, NavbarViewModeContext, StickyDemo } from "./NavbarStoryKit";
+import { DemoNavbar, GalleryBar, NavbarStage, RouterDemoNavbar, NavbarViewModeContext, StickyDemo } from "./NavbarStoryKit";
 
 // Combines Navbar's root-level args in one Playground. Each sub-part gets its own Properties table from a hidden,
 // docs-only stories file (guidelines/adr/0013).
@@ -65,10 +64,10 @@ const meta: Meta<PlaygroundArgs> = {
     },
     currentVariant: {
       control: "select",
-      options: ["subtle", "underline", "solid"],
+      options: ["underline", "subtle", "solid"],
       description:
         "How the current page's link is marked: a tinted pill, a brand line under it, or a brand fill. aria-current is set whichever it is, and the look is the same in the phone panel.",
-      table: { defaultValue: { summary: '"subtle"' } },
+      table: { defaultValue: { summary: '"underline"' } },
     },
     size: {
       control: "select",
@@ -118,7 +117,7 @@ const meta: Meta<PlaygroundArgs> = {
   },
   args: {
     variant: "outlined",
-    currentVariant: "subtle",
+    currentVariant: "underline",
     size: "md",
     collapseBelow: "md",
     menuSide: "start",
@@ -180,7 +179,7 @@ export const CurrentVariants: Story = {
     <NavbarStage minBlockSize="16rem">
       {(menuContainer) => (
         <div style={{ inlineSize: "100%", display: "grid", gap: "var(--dbm-space-4)", alignSelf: "start" }}>
-          {(["subtle", "underline", "solid"] as const).map((currentVariant) => (
+          {(["underline", "subtle", "solid"] as const).map((currentVariant) => (
             <GalleryBar key={currentVariant} name={`${currentVariant} current link`}>
               <DemoNavbar
                 currentVariant={currentVariant}
@@ -266,6 +265,29 @@ export const GroupInThePanel: Story = {
   ),
 };
 
+/** Hidden twin of "Links that open more links": choosing a link in the group marks the group as holding the current page. */
+export const GroupCurrentInteraction: Story = {
+  ...WithGroup,
+  name: "Links that open more links — interaction test",
+  tags: ["!dev"],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const address = window.location.href;
+    await userEvent.click(canvas.getByRole("button", { name: "Resources" }));
+    const item = await within(document.body).findByRole("menuitem", { name: "Guides" });
+    await userEvent.click(item);
+    await waitFor(() => expect(within(document.body).queryByRole("menu")).not.toBeInTheDocument());
+    expect(window.location.href).toBe(address);
+    // the group now holds the current page, and the plain link is no longer it
+    expect(canvas.getByRole("link", { name: "Products" })).not.toHaveAttribute("aria-current");
+    await userEvent.click(canvas.getByRole("button", { name: "Resources" }));
+    expect(await within(document.body).findByRole("menuitem", { name: "Guides" })).toHaveAttribute("aria-current", "page");
+    await userEvent.keyboard("{Escape}");
+    // end with the menu gone: an accessibility check run mid-exit sees the page still hidden behind it
+    await waitFor(() => expect(within(document.body).queryByRole("menu")).not.toBeInTheDocument());
+  },
+};
+
 export const Contained: Story = {
   name: "Contained",
   parameters: { docs: { source: { code: navbarSnippets.contained } } },
@@ -345,6 +367,28 @@ export const CurrentPage: Story = {
   ),
 };
 
+/** Hidden twin of "Current page and a disabled link": a link chosen takes the current mark and the page stays where it is. */
+export const CurrentPageInteraction: Story = {
+  ...CurrentPage,
+  name: "Current page and a disabled link — interaction test",
+  tags: ["!dev"],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const address = window.location.href;
+    expect(canvas.getByRole("link", { name: "Products" })).toHaveAttribute("aria-current", "page");
+    await userEvent.click(canvas.getByRole("link", { name: "Pricing" }));
+    expect(canvas.getByRole("link", { name: "Pricing" })).toHaveAttribute("aria-current", "page");
+    expect(canvas.getByRole("link", { name: "Products" })).not.toHaveAttribute("aria-current");
+    // a demo link goes nowhere: the address is what it was, and a disabled link can't take the mark
+    expect(window.location.href).toBe(address);
+    await userEvent.click(canvas.getByRole("link", { name: "Beta" }));
+    expect(canvas.getByRole("link", { name: "Pricing" })).toHaveAttribute("aria-current", "page");
+    expect(canvas.getByRole("link", { name: "Beta" })).not.toHaveAttribute("aria-current");
+    await userEvent.click(canvas.getByRole("link", { name: "dbM" }));
+    expect(window.location.href).toBe(address);
+  },
+};
+
 export const RouterLinks: Story = {
   name: "With a router's links",
   parameters: { docs: { source: { code: navbarSnippets.routerLinks } } },
@@ -354,19 +398,7 @@ export const RouterLinks: Story = {
       {(menuContainer) => (
         <Top>
           {/* A plain anchor stands in for the router's link, which takes the look the same way. */}
-          <Navbar menuContainer={menuContainer}>
-            <Navbar.Brand asChild>
-              <a href="#home">Acme</a>
-            </Navbar.Brand>
-            <Navbar.Links>
-              <Navbar.Link asChild current>
-                <a href="#products">Products</a>
-              </Navbar.Link>
-              <Navbar.Link asChild>
-                <a href="#pricing">Pricing</a>
-              </Navbar.Link>
-            </Navbar.Links>
-          </Navbar>
+          <RouterDemoNavbar menuContainer={menuContainer} />
         </Top>
       )}
     </NavbarStage>
@@ -459,7 +491,8 @@ export const OnAPhoneInteraction: Story = {
     // Stand in for a router: handle the navigation without a page load (a hash change would reload the test page).
     link.addEventListener("click", (event) => event.preventDefault(), { once: true });
     await userEvent.click(link);
-    await waitFor(() => expect(stage.queryByRole("dialog")).not.toBeInTheDocument());
-    await waitFor(() => expect(button).toHaveFocus());
+    // the panel's exit takes a moment, longer when the run is busy
+    await waitFor(() => expect(stage.queryByRole("dialog")).not.toBeInTheDocument(), { timeout: 3000 });
+    await waitFor(() => expect(button).toHaveFocus(), { timeout: 3000 });
   },
 };

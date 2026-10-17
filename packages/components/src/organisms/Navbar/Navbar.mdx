@@ -153,8 +153,8 @@ for a bar that sits over a hero or a coloured page.
 
 ### Marking the current page
 
-`currentVariant` chooses how the current link is marked: `subtle` is a tinted pill, `underline` a brand line
-under the link (a bar at the start edge in the phone panel), and `solid` a brand fill. It is one look for the
+`currentVariant` chooses how the current link is marked: `underline` (the default) is a brand line under the link
+(a bar at the start edge in the phone panel), `subtle` a tinted pill, and `solid` a brand fill. It is one look for the
 whole bar, the phone panel and a `Navbar.Group` that holds the page included, and can't be set per link.
 `aria-current="page"` is set whichever it is, and a link is never told apart by colour alone.
 
@@ -326,7 +326,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 
 ```tsx
 <Navbar sticky>
-  <Navbar.Brand href="/">Acme</Navbar.Brand>
+  <Navbar.Brand href="/">dbM</Navbar.Brand>
   <Navbar.Links>
     <Navbar.Link href="/products" current>
       Products
@@ -374,7 +374,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 </Navbar>
 
 {/* A native <header> attribute, passed straight through */}
-<Navbar aria-label="Site header" title="Acme">
+<Navbar aria-label="Site header" title="dbM">
   …
 </Navbar>
 ```

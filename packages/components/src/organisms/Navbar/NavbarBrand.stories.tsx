@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Navbar } from "./Navbar";
+import { preventNavigation } from "./NavbarStoryKit";
 
 // Docs-only — see NavbarRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).
 const meta: Meta<typeof Navbar.Brand> = {
@@ -27,7 +28,7 @@ const meta: Meta<typeof Navbar.Brand> = {
         "Test identifier for automated testing (e.g. Testing Library's getByTestId, Playwright/Cypress selectors). Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
     },
   },
-  args: { href: "#", children: "Acme" },
+  args: { href: "#", children: "dbM" },
 };
 
 export default meta;
@@ -36,7 +37,7 @@ type Story = StoryObj<typeof Navbar.Brand>;
 
 export const Default: Story = {
   render: (args) => (
-    <Navbar>
+    <Navbar onClick={preventNavigation}>
       <Navbar.Brand {...args} />
     </Navbar>
   ),

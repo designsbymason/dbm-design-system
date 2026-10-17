@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Navbar } from "./Navbar";
+import { preventNavigation } from "./NavbarStoryKit";
 
 // Docs-only (guidelines/adr/0013). This resolves the root component's own argTypes for the main Properties table.
 const meta: Meta<typeof Navbar> = {
@@ -19,10 +20,10 @@ const meta: Meta<typeof Navbar> = {
     },
     currentVariant: {
       control: "select",
-      options: ["subtle", "underline", "solid"],
+      options: ["underline", "subtle", "solid"],
       description:
         "How the current page's link is marked: a tinted pill, a brand line under it (a bar at the start edge in the phone panel), or a brand fill. One look for the whole bar, not overridable per link; aria-current is set whichever it is.",
-      table: { defaultValue: { summary: '"subtle"' } },
+      table: { defaultValue: { summary: '"underline"' } },
     },
     size: {
       control: "select",
@@ -125,8 +126,8 @@ type Story = StoryObj<typeof Navbar>;
 
 export const Default: Story = {
   render: (args) => (
-    <Navbar {...args}>
-      <Navbar.Brand href="#">Acme</Navbar.Brand>
+    <Navbar {...args} onClick={preventNavigation}>
+      <Navbar.Brand href="#">dbM</Navbar.Brand>
     </Navbar>
   ),
 };

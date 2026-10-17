@@ -1748,8 +1748,9 @@ describe("Playground snippet for Navbar", () => {
       "<Navbar closeMenuOnNavigate={false} sticky>",
     );
     expect(navbarPlaygroundSnippet({ dir: "rtl" })).toContain('<Navbar dir="rtl">');
-    expect(navbarPlaygroundSnippet({ currentVariant: "subtle" })).toMatch(/^<Navbar>\n/);
+    expect(navbarPlaygroundSnippet({ currentVariant: "underline" })).toMatch(/^<Navbar>\n/);
     expect(navbarPlaygroundSnippet({ currentVariant: "solid" })).toContain('<Navbar currentVariant="solid">');
+    expect(navbarPlaygroundSnippet({ currentVariant: "subtle" })).toContain('<Navbar currentVariant="subtle">');
   });
 });
 

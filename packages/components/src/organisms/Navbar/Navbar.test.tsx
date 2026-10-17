@@ -469,6 +469,30 @@ describe("Navbar.Group in the bar", () => {
     expect(button).toHaveAttribute("type", "button");
   });
 
+  it("closes its menu on a link a router handles with preventDefault, which Menu alone would leave open", async () => {
+    const user = userEvent.setup();
+    const navigate = vi.fn((event: { preventDefault: () => void }) => event.preventDefault());
+    render(
+      <Navbar collapseBelow="never">
+        <Navbar.Links>
+          <Navbar.Group label="Resources">
+            <Navbar.Link asChild>
+              <a href="/blog" onClick={navigate}>
+                Blog
+              </a>
+            </Navbar.Link>
+          </Navbar.Group>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    const trigger = screen.getByRole("button", { name: "Resources" });
+    await user.click(trigger);
+    await user.click(await screen.findByRole("menuitem", { name: "Blog" }));
+    expect(navigate).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
+    await waitFor(() => expect(trigger).toHaveFocus());
+  });
+
   it("has no axe violations closed or open", async () => {
     const user = userEvent.setup();
     const { container } = render(<WithGroup collapseBelow="never" />);
@@ -529,8 +553,14 @@ describe("Navbar.Group in the menu panel", () => {
 describe("Navbar currentVariant", () => {
   const currentLink = () => screen.getByRole("link", { name: "Products", ...inline });
 
-  it("marks the current link with the tint by default, and adds nothing for the other looks' classes", () => {
+  it("marks the current link with the underline by default, and adds nothing for the other looks' classes", () => {
     render(<Basic />);
+    expect(currentLink()).toHaveClass(styles.current!, styles.currentUnderline!);
+    expect(currentLink()).not.toHaveClass(styles.currentSolid!);
+  });
+
+  it("marks it with the tint alone for subtle", () => {
+    render(<Basic currentVariant="subtle" />);
     expect(currentLink()).toHaveClass(styles.current!);
     expect(currentLink()).not.toHaveClass(styles.currentUnderline!);
     expect(currentLink()).not.toHaveClass(styles.currentSolid!);
