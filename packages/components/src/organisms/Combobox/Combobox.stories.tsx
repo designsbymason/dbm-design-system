@@ -71,7 +71,8 @@ const meta: Meta<typeof Combobox> = {
       control: false,
       description:
         "Highlights the first match as the person types, so Enter chooses it. On by default, and off with allowCustomValue, where Enter commits what was typed.",
-      table: { defaultValue: { summary: "true (false with allowCustomValue)" } },
+      // Two values (one with allowCustomValue), so the cell shows "—" and the description says which.
+      table: { defaultValue: { summary: "—" } },
     },
     loading: {
       control: "boolean",
@@ -217,8 +218,9 @@ const meta: Meta<typeof Combobox> = {
     },
     formatNumber: {
       control: false,
-      description: "How the number in the default results announcement is written, for a language or region whose numerals differ.",
-      table: { defaultValue: { summary: "(n) => String(n)" } },
+      description:
+        "How the number in the default results announcement is written, for a language or region whose numerals differ. Plain String when left out.",
+      table: { defaultValue: { summary: "—" } },
     },
     labels: {
       control: false,
