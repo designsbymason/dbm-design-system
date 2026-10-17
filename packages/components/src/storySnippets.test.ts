@@ -63,6 +63,7 @@ import { paginationPlaygroundSnippet } from "./molecules/Pagination/Pagination.s
 import { passwordInputPlaygroundSnippet } from "./molecules/PasswordInput/PasswordInput.snippets";
 import { popoverPlaygroundSnippet } from "./molecules/Popover/Popover.snippets";
 import { alertDialogPlaygroundSnippet } from "./organisms/AlertDialog/AlertDialog.snippets";
+import { dataTablePlaygroundSnippet } from "./organisms/DataTable/DataTable.snippets";
 import { dialogPlaygroundSnippet } from "./organisms/Dialog/Dialog.snippets";
 import { drawerPlaygroundSnippet } from "./organisms/Drawer/Drawer.snippets";
 import { formPlaygroundSnippet } from "./organisms/Form/Form.snippets";
@@ -343,6 +344,26 @@ describe("Playground snippets, built from the live controls", () => {
     expect(tablePlaygroundSnippet({ striped: true, maxHeight: "16rem" })).toMatch(
       /^<Table striped maxHeight="16rem" aria-label="Recent invoices">\n/,
     );
+  });
+});
+
+describe("Playground snippet for DataTable", () => {
+  const dataTableArgs = [
+    {},
+    { variant: "ghost", tone: "brand", size: "sm", striped: true, hoverable: false },
+    { stickyHeader: true, maxHeight: "16rem", selectionMode: "multiple" },
+    { sortMode: "manual", loading: true, "aria-label": 'Team "A" & B' },
+  ] as const;
+
+  it.each(dataTableArgs)("DataTable %j is a real snippet", (args) => {
+    expect(problemsIn(dataTablePlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("DataTable writes only what differs from the defaults", () => {
+    expect(dataTablePlaygroundSnippet({ variant: "bordered", tone: "neutral", size: "md", selectionMode: "none" })).not.toMatch(
+      /variant=|tone=|size=|selectionMode=/,
+    );
+    expect(dataTablePlaygroundSnippet({ selectionMode: "single", striped: true })).toMatch(/\n {2}striped\n {2}selectionMode="single"\n/);
   });
 });
 

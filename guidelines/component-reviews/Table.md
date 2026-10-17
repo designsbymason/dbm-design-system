@@ -439,3 +439,22 @@ both consumers, are in `ScrollArea.md`'s own "`useIsScrollable` extracted to `pr
 side of. Re-confirmed here too: `eslint`, both `tsc` passes, the `unit` project (package-wide 4699 passing, identical to before), the
 real-browser `storybook` project (875 passing, identical to before), `tsup` build, and the bundle-size check — `Table` now measures
 2.34KB JS (down from the 2.57KB Finalized baseline, a genuine size improvement from deduplication, not a regression) — all clean.
+
+## Post-Finalization follow-up (2026-10-17, at explicit direction) — `Table.Row` `selected` and `Table` `containerRef`
+
+`DataTable` ([ADR-0085](../adr/0085-datatable-takes-columns-and-data-and-holds-the-interaction-state-with-toolbar-selection-and-pagination-parts-over-composed-table-rows-or-a-headless-hook.md))
+is the consumer the "No speculative seams" note above was waiting for, and it needed two things from `Table`, approved with its plan:
+
+- **`Table.Row` `selected`** (default `false`): draws the row as chosen, with `bg.brand-subtle` replacing a stripe or a hover tint
+  (`tr.rowSelected:nth-child(n)`, declared after both, with a deeper hover step). Purely visual: it sets `data-selected` and no ARIA state,
+  since `aria-selected` isn't allowed on a plain table row, and the attribute is written after the spread so a stray one can't
+  contradict the prop. The pinned columns read `--row-tint`, so they match the row.
+- **`Table` `containerRef`**: a ref to the scroll container, which a windowed list reads for its scroll position and size. `ref` still
+  reaches the `<table>`.
+
+**Finalized status is unchanged.** Three-question test (`06-engineering-standards.md` §9), question 1: does it change the rendered or
+behavioural output of anything that already existed at finalization time? No: both are new, optional props, and a table that
+doesn't pass them renders the same DOM and styles. Each got the scoped mini-pass of a new prop: JSDoc, a Properties-table row on
+the Docs page (`Table.Row` has its own order list now), `argTypes` descriptions, and unit tests (the class and `data-selected`, a stray
+`data-selected` not winning, `containerRef` and `ref` landing on different elements). The `Table` suite (377 tests) and the real-browser
+`Table` stories pass, and the contrast pairing (`text.primary` on `bg.brand-subtle`) is the one the `brand` tone already uses.

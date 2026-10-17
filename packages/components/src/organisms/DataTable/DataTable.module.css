@@ -1,0 +1,189 @@
+/* The box that holds the toolbar, the table and the pagination, one above the other. */
+.root {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--dbm-font-family-primary);
+  gap: var(--dbm-space-3);
+  min-inline-size: 0;
+}
+
+/* Each size step names the row height it draws, read by the fixed-row rules and the spacers below. */
+.sizeXs {
+  --data-table-row-height: var(--dbm-data-table-row-height-xs);
+}
+
+.sizeSm {
+  --data-table-row-height: var(--dbm-data-table-row-height-sm);
+}
+
+.sizeMd {
+  --data-table-row-height: var(--dbm-data-table-row-height-md);
+}
+
+.sizeLg {
+  --data-table-row-height: var(--dbm-data-table-row-height-lg);
+}
+
+.sizeXl {
+  --data-table-row-height: var(--dbm-data-table-row-height-xl);
+}
+
+.table {
+  /* Intentionally empty of rules: the size classes above and the fixed-row rules below attach to it. */
+  min-inline-size: 0;
+}
+
+/* Fixed-height rows: every row is exactly the token's height, whatever it holds, so a long table can be drawn a window
+   at a time without measuring. A cell is one line. The padding that gave `Table` its row height is replaced by the
+   height itself, and a cell with a `width` is cut with an ellipsis instead of widening its column. Declared with a
+   longer selector than `Table`'s own `.size*` classes, so it wins their tie. */
+.fixedRows > thead > tr > *,
+.fixedRows > tbody > tr > * {
+  block-size: var(--data-table-row-height);
+  padding-block: 0;
+  white-space: nowrap;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The column of checkboxes: as wide as a checkbox and its padding, never stretched, with the box centred. */
+.selectCell {
+  inline-size: var(--dbm-space-12);
+  max-inline-size: var(--dbm-space-12);
+}
+
+.selectBox {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+}
+
+/* A checkbox is drawn smaller than the minimum target (12px at the smallest size), so its hit area is extended, invisibly,
+   to a square of the minimum size centred on it. The insets are measured from the button's own box. */
+.selectBox > button {
+  position: relative;
+}
+
+.selectBox > button::after {
+  content: "";
+  inset: calc((100% - var(--dbm-space-6)) / 2);
+  position: absolute;
+}
+
+/* The column of row actions: only as wide as its button, at the end edge. */
+.actionsCell {
+  inline-size: 1%;
+  text-align: end;
+  white-space: nowrap;
+}
+
+/* A header cell's sort button. It fills the heading's text and carries the direction icon; its box is at least the
+   minimum target size. The ring is drawn inside the control (a header cell clips what is outside it, and the scroll
+   frame around the table does too). */
+.sortButton {
+  align-items: center;
+  appearance: none;
+  background: none;
+  border: none;
+  border-radius: var(--dbm-radius-sm);
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  gap: var(--dbm-space-1);
+  margin: 0;
+  min-block-size: var(--dbm-space-6);
+  min-inline-size: var(--dbm-space-6);
+  padding: 0;
+  text-align: start;
+}
+
+.sortButton:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+/* On a solid tone's header the focus colour is unreadable against the fill, so the ring takes the text's own colour,
+   which is chosen to contrast with it. */
+.sortButtonTinted:focus-visible {
+  outline-color: currentcolor;
+}
+
+.sortLabel {
+  min-inline-size: 0;
+}
+
+.sortIcon {
+  flex-shrink: 0;
+  transition: opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+/* The arrows of a column that isn't sorted stay quieter until the pointer or the keyboard is on the button. */
+.sortIconIdle {
+  opacity: var(--dbm-opacity-60);
+}
+
+.sortButton:hover .sortIconIdle,
+.sortButton:focus-visible .sortIconIdle {
+  opacity: 1;
+}
+
+/* A row that does something when pressed. */
+.rowClickable {
+  cursor: pointer;
+}
+
+.rowClickable:focus-visible {
+  border-radius: var(--dbm-radius-sm);
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+/* Stand-ins for the rows a long table doesn't draw. Their height is a count of rows times the row's token height, so
+   the scrollbar is true and nothing is measured. They take no pointer, so a row hover rule never lights one. */
+.spacerRow {
+  pointer-events: none;
+}
+
+.fixedRows > tbody > .spacerRow > td {
+  block-size: calc(var(--data-table-spacer-rows) * var(--data-table-row-height));
+  border: none;
+  padding: 0;
+}
+
+/* The footer: the range and the page size at the start, the page controls at the end, wrapping on a narrow screen. */
+.pagination {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-3) var(--dbm-space-4);
+  justify-content: space-between;
+}
+
+.paginationMeta {
+  align-items: center;
+  color: var(--dbm-text-secondary);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: var(--dbm-font-size-sm);
+  gap: var(--dbm-space-3) var(--dbm-space-4);
+}
+
+/* Reserves the widest the summary gets (set inline in digits), so the controls beside it do not move as it changes. */
+.summary {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+
+.pageSize {
+  align-items: center;
+  display: inline-flex;
+  gap: var(--dbm-space-2);
+}
+
+.pageSizeSelect {
+  min-inline-size: var(--dbm-space-20);
+}

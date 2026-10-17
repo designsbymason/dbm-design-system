@@ -67,7 +67,14 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 //   month, year and week grids, the footer, the markers) plus `Popover` (1.4KB) and its own segment entry, validation and
 //   `commitOn` code, 14.37KB measured. The calendar is the larger part and is the reason a date field is a date field.
 //   With its own anchored panel, presets, reasons, bounds relative to today and the month grid (ADR-0083, ADR-0084): 15.39KB, and 15.85KB with the announcement, `container` and the review fixes.
-const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DatePicker: 18, TimeRangePicker: 12, Toolbar: 12 };
+//   DataTable (2026-10-17): a table that draws with `Table` (2.38KB), `TableToolbar` (6.40KB), `Pagination` (5.10KB), `Select`,
+//   `Checkbox` and the windowing hook, plus its own sort, selection, paging and announcement code, 17.08KB measured. The parts it
+//   composes are most of it, and an app that wants a table with a toolbar and paging would pay for them either way (ADR-0085).
+const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DataTable: 20, DatePicker: 18, TimeRangePicker: 12, Toolbar: 12 };
+
+// The same for CSS. `DataTable`'s bundle holds the stylesheets of the `Table`, `TableToolbar`, `Pagination`, `Select`,
+// `Checkbox` and `Menu` parts it draws with (6.30KB measured against 3.45KB for `TableToolbar`, the largest of them), plus its own.
+const CSS_BUDGET_OVERRIDES_KB = { DataTable: 8 };
 
 // Words only an opt-in extra's code contains, and the component whose bundle must not contain them: `CodeBlock`
 // ships Python, Go and Java as separate exports an app registers (ADR-0027). If a change makes the component
@@ -177,10 +184,9 @@ async function main() {
     if (jsGzipKb > jsBudgetKb) {
       failures.push(`${name}: JS ${formatKb(jsGzipKb)} exceeds per-component budget ${formatKb(jsBudgetKb)}.`);
     }
-    if (cssGzipKb > PER_COMPONENT_CSS_BUDGET_KB) {
-      failures.push(
-        `${name}: CSS ${formatKb(cssGzipKb)} exceeds per-component budget ${formatKb(PER_COMPONENT_CSS_BUDGET_KB)}.`,
-      );
+    const cssBudgetKb = CSS_BUDGET_OVERRIDES_KB[name] ?? PER_COMPONENT_CSS_BUDGET_KB;
+    if (cssGzipKb > cssBudgetKb) {
+      failures.push(`${name}: CSS ${formatKb(cssGzipKb)} exceeds per-component budget ${formatKb(cssBudgetKb)}.`);
     }
   }
 

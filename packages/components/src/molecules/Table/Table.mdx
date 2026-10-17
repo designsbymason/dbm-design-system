@@ -32,11 +32,13 @@ export const rootPropOrder = [
   "aria-labelledby",
   "aria-describedby",
   "containerClassName",
+  "containerRef",
   "id",
   "className",
   "style",
   "data-testid",
 ];
+export const rowPropOrder = ["children", "selected", "id", "className", "style", "data-testid"];
 export const captionPropOrder = ["children", "id", "className", "style", "data-testid"];
 export const groupPropOrder = ["children", "id", "className", "style", "data-testid"];
 export const bodyPropOrder = ["children", "loading", "loadingRows", "loadingLabel", "id", "className", "style", "data-testid"];
@@ -73,7 +75,7 @@ import { Table } from "@dbm-design-system/components";
 <Canvas of={TableStories.Playground} />
 
 </div>
-<PlaygroundControls of={TableStories.Playground} order={rootPropOrder} exclude={["containerClassName", "id", "className", "style", "data-testid", "aria-label", "aria-labelledby", "aria-describedby"]} />
+<PlaygroundControls of={TableStories.Playground} order={rootPropOrder} exclude={["containerClassName", "containerRef", "id", "className", "style", "data-testid", "aria-label", "aria-labelledby", "aria-describedby"]} />
 
 ## Properties
 
@@ -118,7 +120,7 @@ listed here (e.g. `onClick`, `title`) — passed straight through.
 A row, rendered as a native `<tr>`. Also accepts any other native `<tr>` attribute beyond what's listed here (e.g.
 `onClick`, `onMouseEnter`) — passed straight through.
 
-<PropertiesTable of={TableRowStories} order={groupPropOrder} />
+<PropertiesTable of={TableRowStories} order={rowPropOrder} />
 
 ### Table.HeaderCell properties
 

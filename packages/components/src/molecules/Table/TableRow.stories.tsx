@@ -15,6 +15,12 @@ const meta: Meta<typeof Table.Row> = {
       description:
         "One or more Table.Cells and/or Table.HeaderCells.",
     },
+    selected: {
+      control: false,
+      description:
+        "Draws the row as chosen, with the brand's subtle fill (over a stripe or a hover). Purely visual: it sets data-selected and no ARIA state, since aria-selected isn't allowed on a plain table row, so whatever makes the row choosable (a checkbox in a cell) must carry the state itself.",
+      table: { defaultValue: { summary: "false" } },
+    },
     id: {
       control: false,
       description:

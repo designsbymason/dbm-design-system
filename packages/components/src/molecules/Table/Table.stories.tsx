@@ -1,6 +1,6 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
-import type { CSSProperties } from "react";
+import type { CSSProperties, Ref } from "react";
 import { Badge } from "../../atoms/Badge";
 import type { BadgeTone } from "../../atoms/Badge";
 import { Heading } from "../../atoms/Heading";
@@ -30,6 +30,7 @@ interface PlaygroundArgs {
   "aria-labelledby": string;
   "aria-describedby": string;
   containerClassName: string;
+  containerRef: Ref<HTMLDivElement>;
   id: string;
   className: string;
   style: CSSProperties;
@@ -150,6 +151,7 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
   "aria-labelledby": { control: false },
   "aria-describedby": { control: false },
   containerClassName: { control: false },
+  containerRef: { control: false },
   id: { control: false },
   className: { control: false },
   style: { control: false },
@@ -236,6 +238,11 @@ const meta: Meta<PlaygroundArgs> = {
       control: false,
       description:
         "Additional CSS classes for the table's own scroll container — the <div> wrapping the <table>. className targets the <table> element itself; use this for anything that needs to affect the scrolling frame instead.",
+    },
+    containerRef: {
+      control: false,
+      description:
+        "A ref to the table's own scroll container (the <div> that containerClassName and maxHeight target). ref reaches the <table>; use this to read or drive the scroll position, as a windowed list of rows does.",
     },
     id: {
       control: false,

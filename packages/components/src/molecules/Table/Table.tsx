@@ -138,6 +138,7 @@ const TableRoot = forwardRef<HTMLTableElement, TableProps>((tableProps, ref) => 
     stickyLastColumn = false,
     maxHeight,
     containerClassName,
+    containerRef: containerRefProp,
     className,
     style,
     id,
@@ -207,7 +208,7 @@ const TableRoot = forwardRef<HTMLTableElement, TableProps>((tableProps, ref) => 
   return (
     <div
       {...regionProps}
-      ref={containerRef}
+      ref={mergeRefs(containerRef, containerRefProp)}
       className={cx(
         styles.container,
         variant === "ghost" ? styles.containerGhost : styles.containerBordered,
@@ -320,8 +321,16 @@ const TableFooter = forwardRef<HTMLTableSectionElement, TableFooterProps>(({ cla
 });
 TableFooter.displayName = "Table.Footer";
 
-/** A row (`<tr>`) of `Table.HeaderCell`s and/or `Table.Cell`s. */
-const TableRow = forwardRef<HTMLTableRowElement, TableRowProps>((props, ref) => <tr {...props} ref={ref} />);
+/** A row (`<tr>`) of `Table.HeaderCell`s and/or `Table.Cell`s. `selected` draws it as chosen. */
+const TableRow = forwardRef<HTMLTableRowElement, TableRowProps>(({ selected = false, className, ...props }, ref) => (
+  <tr
+    {...props}
+    // After the spread: the state is computed from `selected`, so a stray `data-selected` can't contradict it.
+    data-selected={selected ? "" : undefined}
+    ref={ref}
+    className={cx(selected && styles.rowSelected, className)}
+  />
+));
 TableRow.displayName = "Table.Row";
 
 /**

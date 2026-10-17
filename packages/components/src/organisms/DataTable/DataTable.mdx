@@ -1,0 +1,459 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Pagination } from "../../molecules/Pagination";
+import { Table } from "../../molecules/Table";
+import { TableToolbar } from "../../molecules/TableToolbar";
+import { SearchInput } from "../../molecules/SearchInput";
+import { Menu } from "../Menu";
+import { Button } from "../../atoms/Button";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import * as DataTableStories from "./DataTable.stories";
+import * as ToolbarStories from "./DataTableToolbar.stories";
+import * as SelectionStories from "./DataTableSelection.stories";
+import * as PaginationStories from "./DataTablePagination.stories";
+
+export const propOrder = [
+  "columns",
+  "data",
+  "children",
+  "getRowId",
+  "getRowLabel",
+  "sort",
+  "defaultSort",
+  "onSortChange",
+  "sortMode",
+  "selectionMode",
+  "selection",
+  "defaultSelection",
+  "onSelectionChange",
+  "isRowSelectable",
+  "page",
+  "defaultPage",
+  "onPageChange",
+  "pageSize",
+  "defaultPageSize",
+  "onPageSizeChange",
+  "pageSizeOptions",
+  "totalCount",
+  "virtualize",
+  "loading",
+  "loadingRows",
+  "emptyState",
+  "rowActions",
+  "onRowClick",
+  "hiddenColumns",
+  "defaultHiddenColumns",
+  "onHiddenColumnsChange",
+  "variant",
+  "tone",
+  "size",
+  "striped",
+  "hoverable",
+  "stickyHeader",
+  "stickyFirstColumn",
+  "stickyLastColumn",
+  "maxHeight",
+  "labels",
+  "formatNumber",
+  "caption",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+export const toolbarPropOrder = ["children", "size", "aria-label", "aria-labelledby", "aria-describedby", "id", "className", "style", "data-testid"];
+
+export const selectionPropOrder = ["children", "onSelectAll", "size", "announce", "labels", "formatNumber", "id", "className", "style", "data-testid"];
+
+export const paginationPropOrder = [
+  "showSummary",
+  "showPageSize",
+  "size",
+  "variant",
+  "siblingCount",
+  "boundaryCount",
+  "compact",
+  "showFirstLast",
+  "showJump",
+  "labels",
+  "paginationLabels",
+  "formatNumber",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+
+<Meta of={DataTableStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="DataTable" tier="Organism" />
+
+A table of data you give it as `columns` and `data`, with the behaviour an app needs around the rows: sorting by a column,
+choosing rows, paging, a long list drawn a window at a time, a loading state, an empty state and a menu of actions per row. It
+draws a real `Table`, so it is a native `<table>` in its own scroll frame, and it composes `TableToolbar`, `Pagination`,
+`Checkbox`, `Select` and `Menu` rather than redrawing them.
+
+It holds the state of the interaction and nothing else. Your data stays yours: it sorts and pages the rows you pass in the
+browser, or, with `sortMode="manual"`, draws the rows you pass and asks you for new ones. Every piece of state (the sort, the
+choice, the page, the page size, the hidden columns) is controlled with a value and a change callback, or uncontrolled with a
+default.
+
+### Import
+
+```tsx
+import { DataTable } from "@dbm-design-system/components";
+```
+
+Its parts are `DataTable.Toolbar`, `DataTable.Selection` and `DataTable.Pagination`, placed as direct children. `useDataTable()`
+reads and changes the table's state from your own parts inside it.
+
+## Playground
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={DataTableStories.Playground} />
+
+</div>
+<PlaygroundControls
+  of={DataTableStories.Playground}
+  exclude={[
+    "columns",
+    "data",
+    "children",
+    "getRowId",
+    "getRowLabel",
+    "sort",
+    "defaultSort",
+    "onSortChange",
+    "selection",
+    "defaultSelection",
+    "onSelectionChange",
+    "isRowSelectable",
+    "page",
+    "defaultPage",
+    "onPageChange",
+    "pageSize",
+    "defaultPageSize",
+    "onPageSizeChange",
+    "pageSizeOptions",
+    "totalCount",
+    "emptyState",
+    "rowActions",
+    "onRowClick",
+    "hiddenColumns",
+    "defaultHiddenColumns",
+    "onHiddenColumnsChange",
+    "labels",
+    "formatNumber",
+    "caption",
+    "aria-labelledby",
+    "aria-describedby",
+    "id",
+    "className",
+    "style",
+    "data-testid",
+  ]}
+  order={propOrder}
+/>
+
+## Properties
+
+`DataTable` also accepts any other native `<table>` attribute beyond what's listed here (e.g. `onFocus`, `title`) — passed
+straight through to the table element. `ref`, `id`, `data-testid` and the `aria-*` props reach the `<table>`, where assistive
+technology expects them; `className` and `style` go on the box that holds the toolbar, the table and the pagination.
+
+<PropertiesTable of={DataTableStories} order={propOrder} />
+
+A column is an object, not a component:
+
+| Field | What it does |
+|---|---|
+| `id` (required) | A name no other column has. Sorting, hiding and the sort announcement refer to it. |
+| `header` (required) | The column's heading. A heading that isn't text needs a `headerLabel`. |
+| `accessor` | Reads the column's value from a row: what the cell shows without a `cell`, and what it is sorted by without a `compare`. |
+| `cell` | Draws the cell from the row. |
+| `sortable` | Lets a person sort by it. Needs an `accessor` or a `compare`. |
+| `compare` | Orders two whole rows, smallest first, for a value that isn't a number, a date or text. |
+| `align`, `numeric` | Where the content sits, and end-aligned tabular figures. |
+| `width`, `minWidth` | A length. A column with a `width` cuts a long cell with an ellipsis instead of widening. |
+| `rowHeader` | Draws the cells as row headers, so a screen reader reads a row's name on entering it. |
+| `wrap` | Lets the text wrap. A table with any wrapping column is never drawn a window at a time. |
+| `headerLabel` | The words that name the column when `header` isn't text. |
+
+### DataTable.Toolbar properties
+
+A `TableToolbar` drawn above the table; it takes its parts (`TableToolbar.Row`, `.Search`, `.Filter`, `.ActiveFilters`,
+`.Summary`) and `DataTable.Selection`.
+
+<PropertiesTable of={ToolbarStories} order={toolbarPropOrder} />
+
+### DataTable.Selection properties
+
+The bulk-action row of the toolbar, read from the table's own selection: it says how many rows are chosen, offers **Clear
+selection** and **Select all N**, and holds your bulk actions.
+
+<PropertiesTable of={SelectionStories} order={selectionPropOrder} />
+
+### DataTable.Pagination properties
+
+The footer: the page controls, "1–10 of 47" and a page size select, read from the table's own page. Its presence turns paging
+on. It takes `Pagination`'s presentation props; the page, the page count and the change handler come from the table.
+
+<PropertiesTable of={PaginationStories} order={paginationPropOrder} />
+
+## Variants
+
+### Sorting
+
+A sortable column's heading is a button that cycles ascending, descending and none. The sorted column carries `aria-sort`, and
+a live region says "Sorted by Salary, descending". Rows that tie keep their order, and an empty value goes last in either
+direction. Sorting happens before paging, so it orders the whole set.
+
+<Canvas of={DataTableStories.Sorting} />
+
+### Selection
+
+`selectionMode="multiple"` adds a column of checkboxes and a header checkbox that is checked, mixed or clear for the rows on the
+page; a shift-click chooses a range. `"single"` replaces the choice. The chosen ids are kept across sorting and pages, and
+`isRowSelectable` says which rows can't be chosen. A chosen row is also drawn with a fill, but the checkbox is what carries the
+state.
+
+<Canvas of={DataTableStories.Selection} />
+
+### Pagination
+
+`DataTable.Pagination` turns paging on. Changing the page size goes back to the first page. A page that is past the end is held
+to the last one.
+
+<Canvas of={DataTableStories.Pagination} />
+
+### With a toolbar and paging
+
+The toolbar goes above the table and the pagination below it, wherever they are among the children. Here the app holds the search
+text and the filtered rows; the table holds the selection, the sort and the page.
+
+<Canvas of={DataTableStories.WithToolbar} />
+
+### Row actions
+
+`rowActions` draws a trailing column, usually an `IconButton` that opens a `Menu`. Its heading is read by a screen reader and not
+drawn.
+
+<Canvas of={DataTableStories.RowActions} />
+
+### A long table, drawn a window at a time
+
+Above 100 rows, an unpaged table with a `maxHeight` draws only the rows in view, so five thousand rows cost about what fifty do.
+Every row is one line of a fixed height from a token, `aria-rowcount` and `aria-rowindex` tell a screen reader the real size, and
+a cell with a `width` is cut with an ellipsis. `virtualize` decides it by hand.
+
+<Canvas of={DataTableStories.LongTable} />
+
+### Sorting and paging on a server
+
+With `sortMode="manual"` the table draws `data` as given and reports `onSortChange` and `onPageChange`; you answer with new rows
+and say how many there are in all with `totalCount`. `loading` draws placeholder rows while you wait.
+
+<Canvas of={DataTableStories.ServerSide} />
+
+### Column visibility
+
+`hiddenColumns` and `onHiddenColumnsChange` choose which columns are drawn. The menu is your own; `useDataTable()` reads and sets
+the same list from inside the table.
+
+<Canvas of={DataTableStories.ColumnVisibility} />
+
+### Loading and empty
+
+A loading table shows placeholder rows and is `aria-busy`. An empty one says `emptyState`, or "No results".
+
+<Canvas of={DataTableStories.LoadingAndEmpty} />
+
+### All sizes
+
+`size` sets the type, the padding and the fixed height of a row (`data-table.row-height.*`) together.
+
+<Canvas of={DataTableStories.AllSizes} />
+
+### Pinned first and last columns
+
+`stickyFirstColumn` and `stickyLastColumn` are `Table`'s: they pin the first and last column. With a selection, the checkbox column
+is the first, so it is the one that stays; the actions column is the last.
+
+<Canvas of={DataTableStories.PinnedColumns} />
+
+### Right to left
+
+Alignment and pinning are logical, so a page with `dir="rtl"` mirrors the table.
+
+<Canvas of={DataTableStories.RightToLeft} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Name the table with a `caption`, an `aria-label` or an `aria-labelledby`; a dev-mode warning fires if it has none.
+- Give each row an `id` (or `getRowId`) that is stable, so the choice survives a reload of the data.
+- Give the column that names each row `rowHeader`, and `getRowLabel` the same words, so a row's checkbox says whose it is.
+- Make the `accessor` of a sortable column return a number, a date or text; use `compare` for anything else.
+- Hold the sort, the page and the choice yourself (controlled) when they belong in the URL or on a server.
+- Use `sortMode="manual"` with `totalCount` when the rows don't fit in the browser.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use it for a handful of static rows with nothing to do: that is `Table`.
+- Don't make `onRowClick` the only way to reach what a row opens: it adds a tab stop per row and is not announced as a link. Put a
+  link in the row too.
+- Don't pass a new `columns` array on every render of a large table: it sorts again each time. Define it once, or `useMemo` it.
+- Don't put a long, wrapping paragraph in a cell of a table you want to be windowed: a row there is one line.
+- Don't use `virtualize` with pagination: pages already bound the rows drawn.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Right-align numbers (`numeric`) so figures line up, and put a unit in the heading rather than in every cell.
+- Keep the default sort in `defaultSort` (or the controlled `sort`) so the first view is the order you mean.
+- Put the bulk actions that are safe first and the destructive one last, and name each for what it does.
+- For a server, show `loading` during the request and keep the old rows' count in `totalCount`, so the footer doesn't jump.
+- A table inside a `Card` uses `variant="ghost"`.
+- Pair the toolbar's `Summary` with the footer's range so the two agree about how many rows there are.
+
+## Accessibility
+
+<Callout tone="info" title="A native table with real buttons and checkboxes in it">
+
+- It is a `<table>` with `scope="col"` headers and, for a `rowHeader` column, `scope="row"` headers. It is not a `grid`: there is
+  no cell-by-cell arrow-key model to learn, and every control in it is an ordinary tab stop in reading order.
+- A sortable heading is a `<button>` whose name is the heading's own text. The sorted column carries `aria-sort`; the other
+  columns carry none. Sorting is announced ("Sorted by Name, ascending") in a live region that is in the page before it speaks.
+- Row checkboxes are named for the row ("Select Ada Lovelace"), and the header checkbox is "Select all rows" and exposes the mixed
+  state. A chosen row sets `data-selected` and no `aria-selected`, which a plain table row doesn't support.
+- A paged or windowed table sets `aria-rowcount` and each row's `aria-rowindex` across the whole set, so a screen reader hears the
+  real size and position. The page controls announce the page and the footer's size select announces the new count.
+- `onRowClick` makes each row a tab stop, activated by Enter or Space on the row itself; a press on a control inside the row is
+  that control's.
+- Every interactive target is at least 24 × 24px at every size (the sort button, the checkbox, the row menu's button).
+- The sort button's focus ring is drawn inside it, since a header cell and the scroll frame clip what is outside. On a solid
+  tone's header it takes the text's colour.
+- A chosen row's fill is `bg.brand-subtle` with `text.primary` over it (the same pairing a `brand` tone uses); forced colours
+  drops the fill, and the checked checkbox carries the state.
+
+</Callout>
+
+## Code examples
+
+```tsx
+const columns: DataTableColumn<Employee>[] = [
+  { id: "name", header: "Name", accessor: (row) => row.name, sortable: true, rowHeader: true },
+  { id: "salary", header: "Salary", accessor: (row) => row.salary, cell: (row) => money(row.salary), sortable: true, numeric: true },
+];
+
+<DataTable
+  aria-label="Team"
+  columns={columns}
+  data={employees}
+  selectionMode="multiple"
+  getRowLabel={(row) => row.name}
+  onSelectionChange={setChosen}
+>
+  <DataTable.Toolbar aria-label="Team table tools">
+    <TableToolbar.Row>
+      <TableToolbar.Search>
+        <SearchInput aria-label="Search the team" onSearch={setQuery} />
+      </TableToolbar.Search>
+    </TableToolbar.Row>
+    <DataTable.Selection>
+      <Toolbar aria-label="Bulk actions" variant="secondary">
+        <Toolbar.Button>Delete</Toolbar.Button>
+      </Toolbar>
+    </DataTable.Selection>
+  </DataTable.Toolbar>
+  <DataTable.Pagination />
+</DataTable>
+
+{/* Words the table writes are a labels object; numbers go through formatNumber */}
+<DataTable aria-label="Équipe" columns={columns} data={employees} labels={{ selectAll: "Tout sélectionner", empty: "Aucun résultat" }} />
+
+{/* Native props reach the table element */}
+<DataTable aria-label="Team" columns={columns} data={employees} onFocus={() => trackFocus("team")} title="Team members" />
+```
+
+## Design tokens used
+
+<TokenRow token="data-table.row-height.xs" usage="the fixed height of every row at size xs" />
+<TokenRow token="data-table.row-height.sm" usage="the fixed height of every row at size sm" />
+<TokenRow token="data-table.row-height.md" usage="the fixed height of every row at size md" />
+<TokenRow token="data-table.row-height.lg" usage="the fixed height of every row at size lg" />
+<TokenRow token="data-table.row-height.xl" usage="the fixed height of every row at size xl" />
+<TokenRow token="space.1" usage="the gap between a sort heading and its arrow" />
+<TokenRow token="space.2" usage="the gap between the page size select and its neighbours" />
+<TokenRow token="space.3" usage="the gap between the toolbar, the table and the footer, and between footer items" />
+<TokenRow token="space.4" usage="the horizontal gap between footer items" />
+<TokenRow token="space.6" usage="the 24px minimum size of the sort button" />
+<TokenRow token="space.12" usage="the width of the column of checkboxes" />
+<TokenRow token="space.20" usage="the least width of the page size select" />
+<TokenRow token="radius.sm" usage="the corners of the sort button's and a pressable row's focus ring" />
+<TokenRow token="border-width.2" usage="the width of the focus rings" />
+<TokenRow token="border.focus" usage="the colour of the focus rings" />
+<TokenRow token="text.secondary" usage="the footer's range" />
+<TokenRow token="font-family.primary" usage="the type of the toolbar, table and footer" />
+<TokenRow token="font-size.sm" usage="the footer's range and page size label" />
+<TokenRow token="motion.duration.fast" usage="the fade of a sort arrow when it is reached" />
+<TokenRow token="motion.easing.standard" usage="the easing of that fade" />
+<TokenRow token="opacity.60" usage="a sort arrow on a column that isn't sorted, until it is reached" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Table"
+  description="The plain table DataTable draws, for data with nothing to do"
+  href="/?path=/docs/molecules-data-display-table--docs"
+>
+  <Table aria-label="Related" size="xs">
+    <Table.Body>
+      <Table.Row>
+        <Table.Cell>Ada</Table.Cell>
+      </Table.Row>
+    </Table.Body>
+  </Table>
+</RelatedCard>
+<RelatedCard
+  name="TableToolbar"
+  description="The bar above the table: search, filters, count and bulk actions"
+  href="/?path=/docs/molecules-data-display-tabletoolbar--docs"
+>
+  <SearchInput aria-label="Related search" size="sm" />
+</RelatedCard>
+<RelatedCard
+  name="Pagination"
+  description="The page controls DataTable.Pagination draws"
+  href="/?path=/docs/molecules-data-display-pagination--docs"
+>
+  <Pagination pageCount={5} defaultValue={2} size="sm" aria-label="Related pages" />
+</RelatedCard>
+<RelatedCard
+  name="Menu"
+  description="What a row's actions open"
+  href="/?path=/docs/organisms-navigation-menu--docs"
+>
+  <Menu>
+    <Menu.Trigger asChild>
+      <Button variant="secondary" size="sm">Actions</Button>
+    </Menu.Trigger>
+    <Menu.Content>
+      <Menu.Item>Edit</Menu.Item>
+    </Menu.Content>
+  </Menu>
+</RelatedCard>
+</div>

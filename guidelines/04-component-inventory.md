@@ -97,7 +97,7 @@ Presenting information/content.
 | Tag / Chip | atom | 🟢 | Removable variant for filters |
 | Avatar | atom | 🟢 | Image/initials fallback, status dot |
 | AvatarGroup | molecule | 🟡 | Avatars overlapped into a stack, the ones past `max` collapsing into a "+N" tile. Sets `size`, `shape` and `colorful` once for every avatar through an internal context, the mechanism `ButtonGroup` uses ([ADR-0025](adr/0025-buttongroup-shares-settings-through-a-context-read-by-button-and-iconbutton.md)). Review: [AvatarGroup.md](component-reviews/AvatarGroup.md) |
-| DataTable | organism | 🟢 | Sort, select rows, pagination integration — this is the enterprise-critical component |
+| DataTable | organism | 🟢 | A table of data given as `columns` and `data`, drawing a `Table` with sorting, row selection, paging, a long table drawn a window at a time, loading and empty states, row actions and hidden columns; the enterprise-critical component. Holds the sort, choice, page, page size and hidden columns (each controlled or uncontrolled), and sorts and pages in the browser or leaves both to the caller with `sortMode="manual"` ([ADR-0085](adr/0085-datatable-takes-columns-and-data-and-holds-the-interaction-state-with-toolbar-selection-and-pagination-parts-over-composed-table-rows-or-a-headless-hook.md)). Parts: `DataTable.Toolbar`, `.Selection`, `.Pagination`, and `useDataTable()` for your own. Rows are one line of a fixed height from tokens, and an unpaged table with a `maxHeight` is drawn a window at a time ([ADR-0086](adr/0086-datatable-draws-fixed-height-rows-from-tokens-a-window-at-a-time-only-when-unpaged-over-measured-rows-or-windowing-inside-pages.md)). A native table, not a `grid`. Review: [DataTable.md](component-reviews/DataTable.md) |
 | Table (simple) | molecule | 🟢 | A lighter-weight, non-interactive tabular display, compound (`Table.Header`/`Body`/`Footer`/`Row`/`HeaderCell`/`Cell`/`Caption`). Owns an overflow-aware scroll container and puts native props on the table element ([ADR-0019](adr/0019-table-owns-an-overflow-aware-scroll-container-and-puts-native-props-on-the-table-element.md)); `DataTable` builds on it. Review: [Table.md](component-reviews/Table.md) |
 | Pagination | molecule | 🟢 | A `<nav>` of previous, page numbers and next around a window of pages that keeps a constant width; every control is a `Button`. Listed under Navigation too; it lives here because it is data-bound. Review: [Pagination.md](component-reviews/Pagination.md) |
 | Stat / KPI | molecule | 🟡 | Ships as `Stat`, per the `Tag / Chip` precedent (the first name in the row). Compound (`Stat.Icon`/`Label`/`Value`/`Trend`/`Description`) with `ghost`/`outlined`/`filled` variants and colour `tone`s. Review: [Stat.md](component-reviews/Stat.md) |
@@ -258,7 +258,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 
 ### Organism-tier build order
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast`, `Form`, `Combobox` and `DatePicker` are built and Finalized, and the rest are not started.
+Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast`, `Form`, `Combobox` and `DatePicker` are built and Finalized, `DataTable` is built and awaiting Finalization, and the rest are not started.
 
 **🟢 core**
 1. Dialog — foundation for every modal (Radix Dialog, `Backdrop`, `CloseButton`, `ScrollArea`); built, review in [Dialog.md](component-reviews/Dialog.md)
@@ -269,7 +269,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a ti
 7. Form — context and validation over `FormField` and `FieldGroup`; built and Finalized, review in [Form.md](component-reviews/Form.md)
 8. Combobox — `MultiSelect` and `CommandPalette` build on it (`TagsInput` is standalone; a suggestions list from this is a later, additive layer); built and Finalized, review in [Combobox.md](component-reviews/Combobox.md)
 9. Calendar (molecule, prerequisite; built Finalized), then DatePicker — a field and a `Calendar` popover ([ADR-0082](adr/0082-datepicker-is-a-single-date-segmented-field-with-a-calendar-popover-and-an-explicit-format-over-a-masked-text-input-a-range-mode-or-a-date-time-field.md)); built and Finalized, review in [DatePicker.md](component-reviews/DatePicker.md)
-10. DataTable — needs `Table`, `Pagination`, `TableToolbar`, Menu and virtualization
+10. DataTable — needs `Table`, `Pagination`, `TableToolbar`, Menu and virtualization; built, review in [DataTable.md](component-reviews/DataTable.md), awaiting Finalization
 11. Navbar / TopNav, 12. Sidebar / SideNav — use Menu and Drawer
 13. FileUpload / Dropzone
 

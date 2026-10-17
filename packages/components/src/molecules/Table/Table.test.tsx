@@ -1240,4 +1240,54 @@ describe("Table", () => {
       expect(await axe(container)).toHaveNoViolations();
     });
   });
+  describe("selected rows and the container ref", () => {
+    it("draws a selected row with its class and data-selected, and none otherwise", () => {
+      render(
+        <Table aria-label="Rows">
+          <Table.Body>
+            <Table.Row selected data-testid="chosen">
+              <Table.Cell>A</Table.Cell>
+            </Table.Row>
+            <Table.Row data-testid="plain">
+              <Table.Cell>B</Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table>,
+      );
+      expect(screen.getByTestId("chosen")).toHaveAttribute("data-selected", "");
+      expect(screen.getByTestId("chosen")).toHaveClass(styles.rowSelected as string);
+      expect(screen.getByTestId("plain")).not.toHaveAttribute("data-selected");
+      expect(screen.getByTestId("plain")).not.toHaveAttribute("aria-selected");
+    });
+
+    it("keeps a stray data-selected from contradicting the selected prop", () => {
+      render(
+        <Table aria-label="Rows">
+          <Table.Body>
+            <Table.Row data-selected="" data-testid="row">
+              <Table.Cell>A</Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table>,
+      );
+      expect(screen.getByTestId("row")).not.toHaveAttribute("data-selected");
+    });
+
+    it("hands the scroll container to containerRef, apart from ref on the table", () => {
+      const containerRef = createRef<HTMLDivElement>();
+      const ref = createRef<HTMLTableElement>();
+      render(
+        <Table aria-label="Rows" containerRef={containerRef} ref={ref}>
+          <Table.Body>
+            <Table.Row>
+              <Table.Cell>A</Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table>,
+      );
+      expect(ref.current?.tagName).toBe("TABLE");
+      expect(containerRef.current?.tagName).toBe("DIV");
+      expect(containerRef.current?.contains(ref.current)).toBe(true);
+    });
+  });
 });

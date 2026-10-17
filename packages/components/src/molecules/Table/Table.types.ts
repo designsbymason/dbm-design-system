@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, CSSProperties, ReactNode, Ref } from "react";
 
 /**
  * Cell padding and typography, on the standard 5-step scale
@@ -137,6 +137,12 @@ export interface TableProps
    * scrolling frame instead (its width, its border, a constrained height).
    */
   containerClassName?: string;
+  /**
+   * A ref to the table's own scroll container (the `<div>` that `containerClassName` and `maxHeight`
+   * target). `ref` reaches the `<table>`; use this to read or drive the scroll position, as a windowed
+   * list of rows (`DataTable`) does.
+   */
+  containerRef?: Ref<HTMLDivElement>;
   /** Additional CSS classes for the `<table>` element itself. */
   className?: string;
   /** Inline styles for the `<table>` element itself, merged onto the component's own internal styles. */
@@ -247,6 +253,13 @@ export interface TableFooterProps extends Omit<ComponentPropsWithoutRef<"tfoot">
 export interface TableRowProps extends Omit<ComponentPropsWithoutRef<"tr">, "children" | "className" | "style" | "id" | "align"> {
   /** One or more `Table.Cell`s and/or `Table.HeaderCell`s. */
   children: ReactNode;
+  /**
+   * Draws the row as chosen, with the brand's subtle fill (over a stripe or a hover). Purely visual:
+   * it sets `data-selected` and no ARIA state, since `aria-selected` isn't allowed on a plain table
+   * row, so whatever makes the row choosable (a checkbox in a cell) must carry the state itself.
+   * @default false
+   */
+  selected?: boolean;
   /** Additional CSS classes for customization. */
   className?: string;
   /** Inline styles, merged onto the component's own internal styles. */
