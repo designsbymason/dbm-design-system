@@ -22,6 +22,8 @@ Optional files, each present only when it applies:
 
 - `ComponentName.checks.stories.tsx` — hidden real-browser checks, when they outgrow the stories file (`07-storybook-and-documentation-standards.md` §4).
 - `ComponentName.docs.test.ts` — a guard that the Docs page's "Design tokens used" table matches the stylesheet (`06-engineering-standards.md` §9).
+- `ComponentName.ssr.test.tsx` — a server render and hydration check, for a component that creates a DOM node or a portal of its own (`06-engineering-standards.md` §9).
+- Helper modules split out of a large component, named for what they hold (`useDatePickerValue.ts`, `DatePickerPanel.tsx`, `Combobox.match.ts`), each with its own test where it has logic of its own (`06-engineering-standards.md` §1).
 - `ComponentPart.stories.tsx` — for each sub-part of a compound component, a hidden docs-only file that documents the sub-part's props on the parent's Docs page ([ADR-0013](adr/0013-compound-sub-part-properties-documented-via-hidden-docs-only-stories-file.md)).
 - `*Context.ts` — a context shared by a component and its sub-parts, or read by atoms (§3, "A molecule that configures the atoms inside it").
 - `*Store.ts` — state held outside React for a component with an app-wide, imperative surface (`Toast`'s queue), read with `useSyncExternalStore`; one per provider, no module-level state (§3).
