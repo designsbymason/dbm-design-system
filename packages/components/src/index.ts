@@ -101,6 +101,7 @@ export * from "./organisms/Dialog";
 export * from "./organisms/Drawer";
 export * from "./organisms/Form";
 export * from "./organisms/Menu";
+export * from "./organisms/Navbar";
 export * from "./organisms/Toast";
 
 // What a consumer is meant to use from `@dbm-design-system/primitives`, re-exported so that installing only this package

@@ -66,6 +66,7 @@ import { alertDialogPlaygroundSnippet } from "./organisms/AlertDialog/AlertDialo
 import { dataTablePlaygroundSnippet } from "./organisms/DataTable/DataTable.snippets";
 import { dialogPlaygroundSnippet } from "./organisms/Dialog/Dialog.snippets";
 import { drawerPlaygroundSnippet } from "./organisms/Drawer/Drawer.snippets";
+import { navbarPlaygroundSnippet } from "./organisms/Navbar/Navbar.snippets";
 import { formPlaygroundSnippet } from "./organisms/Form/Form.snippets";
 import { toastPlaygroundSnippet } from "./organisms/Toast/Toast.snippets";
 import { radioGroupPlaygroundSnippet } from "./molecules/RadioGroup/RadioGroup.snippets";
@@ -1722,6 +1723,30 @@ describe("Playground snippet for AlertDialog", () => {
     expect(alertDialogPlaygroundSnippet({ scrimOpacity: 80, scrimBlur: true })).toContain(
       "<AlertDialog.Content scrimOpacity={80} scrimBlur>",
     );
+  });
+});
+
+describe("Playground snippet for Navbar", () => {
+  const navbarArgs = [
+    {},
+    { variant: "filled", size: "lg" },
+    { collapseBelow: "never", contained: true },
+    { collapseBelow: "3xl", menuSide: "end", closeMenuOnNavigate: false },
+    { sticky: true, dir: "rtl", variant: "ghost", size: "sm" },
+  ] as const;
+
+  it.each(navbarArgs)("Navbar %j is a real snippet", (args) => {
+    expect(problemsIn(navbarPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("Navbar writes only what differs from the defaults", () => {
+    const plain = navbarPlaygroundSnippet({ variant: "outlined", size: "md", collapseBelow: "md", menuSide: "start", dir: "ltr" });
+    expect(plain).toMatch(/^<Navbar>\n/);
+    expect(navbarPlaygroundSnippet({ variant: "filled", size: "lg" })).toMatch(/^<Navbar variant="filled" size="lg">\n/);
+    expect(navbarPlaygroundSnippet({ closeMenuOnNavigate: false, sticky: true })).toContain(
+      "<Navbar closeMenuOnNavigate={false} sticky>",
+    );
+    expect(navbarPlaygroundSnippet({ dir: "rtl" })).toContain('<Navbar dir="rtl">');
   });
 });
 

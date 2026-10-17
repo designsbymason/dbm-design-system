@@ -113,7 +113,7 @@ Wayfinding and app structure.
 
 | Component | Tier | Priority | Notes |
 |---|---|---|---|
-| Navbar / TopNav | organism | 🟢 | App header shell |
+| Navbar | organism | 🟢 | The application header: a named banner with the brand, the primary links and app-wide actions, compound (`Navbar.Brand`/`Links`/`Link`/`Actions`/`MenuButton`). Below a `collapseBelow` width the links move into a `Drawer` behind a menu button, a stylesheet's switch, with the same `Navbar.Link` items drawn in the bar and in the panel ([ADR-0091](adr/0091-navbar-collapses-by-a-css-breakpoint-and-draws-its-links-in-the-bar-and-in-the-menu-panel-over-measuring-its-width-or-writing-two-lists.md)); `sticky`, `contained`, `current`, and `asChild` for a router's links. Ships as `Navbar`; "TopNav" is a search term. A dropdown in the navigation is a `Menu` (a Docs recipe); wide panels are `NavigationMenu`. Review: [Navbar.md](component-reviews/Navbar.md) |
 | Sidebar / SideNav | organism | 🟢 | Collapsible, nested items — enterprise-critical |
 | Tabs | molecule | 🟢 | Wraps Radix Tabs, compound (`Tabs.List`/`Trigger`/`Content`), with four variants; a list that outgrows its container scrolls and keeps the selected tab in view. Review: [Tabs.md](component-reviews/Tabs.md) |
 | EditorTabs | organism | ⚪ | Data-driven, closable/reorderable/addable tab strip (open files, records, or user-created views) — wraps `Tabs` for the underlying keyboard/ARIA mechanics; distinct from `Tabs`' fixed, author-defined set. Named as a gap in `Tabs`' own review ([Tabs.md](component-reviews/Tabs.md)) |
@@ -121,7 +121,7 @@ Wayfinding and app structure.
 | Menu (dropdown) | organism | 🟢 | A floating list of actions opened from a trigger, compound (`Menu.Trigger`/`Content`/`Item`/`CheckboxItem`/`RadioGroup`/`RadioItem`/`Label`/`Group`/`Separator`/`Sub`/`SubTrigger`/`SubContent`) over Radix DropdownMenu, pinned on the Radix release train and modal by default ([ADR-0064](adr/0064-menu-wraps-radix-dropdown-menu-on-the-pinned-release-train-holds-its-own-open-state-is-modal-by-default-and-opens-on-arrowup.md)). Items take an icon, a description, trailing content, a shortcut hint and a `danger` tone, can return a promise (a spinner and a menu that waits), say why they are disabled, and `asChild` makes a link one ([ADR-0066](adr/0066-menu-items-take-a-promise-a-close-on-select-setting-a-reason-for-being-disabled-and-a-description-and-a-menu-reports-when-it-has-closed.md)). Ships as `Menu`, per the `Tag / Chip` precedent; "Dropdown" is a search term. Its item styles are the ones `ContextMenu` and `Menubar` import ([ADR-0065](adr/0065-menu-draws-its-item-parts-in-its-own-stylesheet-for-contextmenu-and-menubar-to-import-and-aligns-indicators-with-has.md)). Review: [Menu.md](component-reviews/Menu.md) |
 | Menubar | organism | ⚪ | A desktop-style horizontal bar of menus (File, Edit, View) with arrow-key movement between them, over Radix `Menubar`; reuses `Menu`'s items |
 | Stepper | organism | 🟡 | Multi-step flow indicator (wizards, onboarding) |
-| NavigationMenu | organism | 🟡 | The site-header navigation pattern with panels of grouped links that open under their item (a mega menu), over Radix `NavigationMenu`. Distinct from `Navbar`, which is the header shell, and `Menu`, which is a list of actions. Decide at `Navbar` whether `Navbar` alone covers the need |
+| NavigationMenu | organism | 🟡 | The site-header navigation pattern with panels of grouped links that open under their item (a mega menu), over Radix `NavigationMenu`. Distinct from `Navbar`, which is the header shell (and alone covers a bar of links with a `Menu` dropdown), and `Menu`, which is a list of actions |
 | CommandPalette | organism | 🟡 | ⌘K-style search/action launcher — high agent/power-user value |
 | Pagination | molecule | 🟢 | A `<nav>` of previous, page numbers and next around a window of pages that keeps a constant width; every control is a `Button`. Listed under Navigation too; it lives here because it is data-bound. Review: [Pagination.md](component-reviews/Pagination.md) |
 | BackToTop | atom | ⚪ | Floating scroll-to-top button, appears past a scroll threshold — wraps IconButton |
@@ -258,7 +258,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 
 ### Organism-tier build order
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast`, `Form`, `Combobox`, `DatePicker` and `DataTable` are built and Finalized, and the rest are not started.
+Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast`, `Form`, `Combobox`, `DatePicker` and `DataTable` are built and Finalized, `Navbar` is built and awaiting its review, and the rest are not started.
 
 **🟢 core**
 1. Dialog — foundation for every modal (Radix Dialog, `Backdrop`, `CloseButton`, `ScrollArea`); built, review in [Dialog.md](component-reviews/Dialog.md)
@@ -270,11 +270,11 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a ti
 8. Combobox — `MultiSelect` and `CommandPalette` build on it (`TagsInput` is standalone; a suggestions list from this is a later, additive layer); built and Finalized, review in [Combobox.md](component-reviews/Combobox.md)
 9. Calendar (molecule, prerequisite; built Finalized), then DatePicker — a field and a `Calendar` popover ([ADR-0082](adr/0082-datepicker-is-a-single-date-segmented-field-with-a-calendar-popover-and-an-explicit-format-over-a-masked-text-input-a-range-mode-or-a-date-time-field.md)); built and Finalized, review in [DatePicker.md](component-reviews/DatePicker.md)
 10. DataTable — needs `Table`, `Pagination`, `TableToolbar`, Menu and virtualization; built and Finalized, review in [DataTable.md](component-reviews/DataTable.md)
-11. Navbar / TopNav, 12. Sidebar / SideNav — use Menu and Drawer
+11. Navbar (built, review in [Navbar.md](component-reviews/Navbar.md)), 12. Sidebar / SideNav — use Menu and Drawer
 13. FileUpload / Dropzone
 
 **🟡 v1.5**
-14. ContextMenu (on Menu), 15. MultiSelect (on Combobox), 16. DateRangePicker (on Calendar and DatePicker), 17. CommandPalette (Dialog plus Combobox-style search), 18. NavigationMenu (decide at `Navbar` whether it is needed), 19. Stepper, 20. Timeline, 21. Tree / TreeView
+14. ContextMenu (on Menu), 15. MultiSelect (on Combobox), 16. DateRangePicker (on Calendar and DatePicker), 17. CommandPalette (Dialog plus Combobox-style search), 18. NavigationMenu (`Navbar` covers a bar of links; this is for mega-menu panels), 19. Stepper, 20. Timeline, 21. Tree / TreeView
 
 **⚪ deferred**
 22. Menubar (after Menu), 23. EditorTabs (wraps `Tabs`; reordering needs the drag-and-drop decision), 24. Carousel, 25. ImageViewer / Lightbox (Dialog, optionally Carousel), 26. ColorPicker (Popover plus Slider), 27. Tour (Popover-style cards and a spotlight)

@@ -1,0 +1,298 @@
+.root {
+  box-sizing: border-box;
+  inline-size: 100%;
+  font-family: var(--dbm-font-family-primary);
+  color: var(--dbm-text-primary);
+}
+
+/* --- Variants: how the bar itself is drawn --- */
+
+.outlined {
+  background-color: var(--dbm-bg-surface);
+  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+.ghost {
+  background-color: transparent;
+}
+
+/* `sticky`: a surface behind the bar so what scrolls beneath it doesn't show through (a filled bar sets its own, below), and a
+   shadow while it is stuck (`Affix` puts `data-stuck` on this element). `Affix` puts a 1px marker in front of a sticky element
+   to tell when it is stuck, which would leave a hairline of page above the bar; pulling the bar up by the marker's height
+   cancels it. Shadows aren't a reactive semantic token, so the light/dark pair is swapped per theme, as `Card` and `Toolbar` do. */
+.sticky {
+  background-color: var(--dbm-bg-surface);
+  margin-block-start: calc(var(--dbm-space-px) * -1);
+}
+
+.sticky[data-stuck] {
+  box-shadow: var(--dbm-shadow-light-md);
+}
+
+[data-theme$="-dark"] .sticky[data-stuck] {
+  box-shadow: var(--dbm-shadow-dark-md);
+}
+
+.filled {
+  background-color: var(--dbm-bg-neutral-subtle);
+}
+
+/* --- Layout --- */
+
+/* The bar is as tall as an `IconButton` of its own step plus room above and below, so the tallest thing it holds never
+   touches its edges. */
+.inner {
+  --navbar-button-size: var(--dbm-icon-button-size-md);
+  --navbar-room: var(--dbm-space-2);
+
+  display: flex;
+  align-items: center;
+  gap: var(--dbm-space-4);
+  min-block-size: calc(var(--navbar-button-size) + 2 * var(--navbar-room));
+}
+
+/* Inside `Container` the padding is the container's; without it the bar pads its own ends. */
+.plainInner {
+  padding-inline: var(--dbm-space-4);
+}
+
+.sizeSm .inner {
+  --navbar-button-size: var(--dbm-icon-button-size-sm);
+  --navbar-room: var(--dbm-space-1);
+}
+
+.sizeLg .inner {
+  --navbar-button-size: var(--dbm-icon-button-size-lg);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: var(--dbm-space-2);
+  min-block-size: var(--dbm-space-6);
+  color: var(--dbm-text-primary);
+  font-weight: var(--dbm-font-weight-bold);
+  text-decoration: none;
+  border-radius: var(--dbm-radius-sm);
+}
+
+a.brand:focus-visible,
+.brand:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+  border-radius: var(--dbm-radius-sm);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--dbm-space-2);
+  margin-inline-start: auto;
+}
+
+/* The menu button sits at the end, after the actions if there are any, and takes the free space itself if there are none. */
+.menuButton {
+  margin-inline-start: auto;
+}
+
+.actions + .menuButton {
+  margin-inline-start: 0;
+}
+
+/* --- The primary links --- */
+
+.links {
+  min-inline-size: 0;
+}
+
+.list {
+  display: flex;
+  align-items: center;
+  gap: var(--dbm-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dbm-space-2);
+  min-block-size: var(--dbm-space-6);
+  padding-block: var(--dbm-space-2);
+  padding-inline: var(--dbm-space-3);
+  border-radius: var(--dbm-radius-md);
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-sm);
+  font-weight: var(--dbm-font-weight-medium);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.sizeLg .link {
+  font-size: var(--dbm-font-size-base);
+}
+
+.link:hover {
+  background-color: var(--dbm-bg-brand-subtle);
+  color: var(--dbm-text-primary);
+}
+
+.link:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: var(--dbm-space-1);
+  border-radius: var(--dbm-radius-sm);
+}
+
+.current,
+.current:hover {
+  background-color: var(--dbm-bg-brand-subtle);
+  color: var(--dbm-text-brand);
+}
+
+.current:hover {
+  background-color: var(--dbm-bg-brand-subtle-hover);
+}
+
+/* Mirrors `Link`'s disabled treatment (`aria-disabled` plus a click guard, since `<a>` has no native `disabled`). */
+.disabled,
+.disabled:hover {
+  background-color: transparent;
+  color: var(--dbm-text-secondary);
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+/* --- The menu panel --- */
+
+.panelNav {
+  display: block;
+}
+
+.panelList {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.panelList .link {
+  inline-size: 100%;
+  min-block-size: var(--dbm-icon-button-size-md);
+  font-size: var(--dbm-font-size-base);
+  white-space: normal;
+}
+
+/* --- Collapsing: one class per step, set on the root ---
+   Below the step the links are out of the bar (and out of the accessibility tree) and the menu button shows; at and above it
+   the reverse. Media queries can't read a custom property, so each width is the literal value of the matching breakpoint
+   token (sm 640px, md 768px, lg 1024px, xl 1280px, 2xl 1536px, 3xl 1920px, in rem), as `Drawer` and `Stack` write them. */
+.collapseSm .links,
+.collapseMd .links,
+.collapseLg .links,
+.collapseXl .links,
+.collapse2xl .links,
+.collapse3xl .links {
+  display: none;
+}
+
+.collapseNever .menuButton {
+  display: none;
+}
+
+@media (min-width: 40rem) {
+  .collapseSm .links {
+    display: block;
+  }
+
+  .collapseSm .menuButton {
+    display: none;
+  }
+}
+
+@media (min-width: 48rem) {
+  .collapseMd .links {
+    display: block;
+  }
+
+  .collapseMd .menuButton {
+    display: none;
+  }
+}
+
+@media (min-width: 64rem) {
+  .collapseLg .links {
+    display: block;
+  }
+
+  .collapseLg .menuButton {
+    display: none;
+  }
+}
+
+@media (min-width: 80rem) {
+  .collapseXl .links {
+    display: block;
+  }
+
+  .collapseXl .menuButton {
+    display: none;
+  }
+}
+
+@media (min-width: 96rem) {
+  .collapse2xl .links {
+    display: block;
+  }
+
+  .collapse2xl .menuButton {
+    display: none;
+  }
+}
+
+@media (min-width: 120rem) {
+  .collapse3xl .links {
+    display: block;
+  }
+
+  .collapse3xl .menuButton {
+    display: none;
+  }
+}
+
+/* --- Forced colours (Windows high contrast) ---
+   Forced colours replaces every background colour with the page's, so a bar told apart from the page by fill or shadow
+   alone (a filled bar, a stuck one) gets a one-pixel outline instead, drawn inside the box so nothing moves; the outlined
+   bar's line is a border, which forced colours keeps. The current link is told apart by fill alone, so it gets one too. */
+@media (forced-colors: active) {
+  .sticky[data-stuck] {
+    outline: var(--dbm-border-width-1) solid CanvasText;
+  }
+
+  .filled {
+    outline: var(--dbm-border-width-1) solid CanvasText;
+    outline-offset: calc(-1 * var(--dbm-border-width-1));
+  }
+
+  .current {
+    outline: var(--dbm-border-width-1) solid Highlight;
+    outline-offset: calc(-1 * var(--dbm-border-width-1));
+  }
+
+  .current:focus-visible {
+    outline-offset: var(--dbm-space-1);
+    outline-width: var(--dbm-border-width-2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link {
+    transition: none;
+  }
+}

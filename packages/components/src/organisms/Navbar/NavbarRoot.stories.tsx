@@ -1,0 +1,125 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Navbar } from "./Navbar";
+
+// Docs-only (guidelines/adr/0013). This resolves the root component's own argTypes for the main Properties table.
+const meta: Meta<typeof Navbar> = {
+  title: "Organisms/Navigation/Navbar/Root",
+  component: Navbar,
+  tags: ["!dev"],
+  argTypes: {
+    children: {
+      control: false,
+      description: "Navbar.Brand, Navbar.Links, Navbar.Actions and optionally Navbar.MenuButton, in reading order.",
+    },
+    variant: {
+      control: "select",
+      options: ["outlined", "filled", "ghost"],
+      description: "How the bar itself is drawn: a surface with a line under it, a tinted surface, or nothing of its own.",
+      table: { defaultValue: { summary: '"outlined"' } },
+    },
+    size: {
+      control: "select",
+      options: ["sm", "md", "lg"],
+      description: "The bar's height: as tall as an IconButton of the same step plus room above and below.",
+      table: { defaultValue: { summary: '"md"' } },
+    },
+    collapseBelow: {
+      control: "select",
+      options: ["sm", "md", "lg", "xl", "2xl", "3xl", "never"],
+      description:
+        "The width below which Navbar.Links leaves the bar and is offered in a menu behind a button. Decided by the stylesheet, so a server-rendered page is right at first paint.",
+      table: { defaultValue: { summary: '"md"' } },
+    },
+    menuOpen: {
+      control: "boolean",
+      description: "The controlled open state of the menu panel. Omit (with defaultMenuOpen) to let the bar manage it.",
+    },
+    defaultMenuOpen: {
+      control: "boolean",
+      description: "The initial open state of the menu panel for uncontrolled usage — ignored once menuOpen is provided.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    onMenuOpenChange: {
+      control: false,
+      description:
+        "Called with the new open state of the menu panel, and { reason }: trigger, escape, outside, close-button or close (a link chosen).",
+    },
+    menuSide: {
+      control: "select",
+      options: ["start", "end", "top", "bottom"],
+      description: "Which edge the menu panel slides in from. start and end are logical and swap in right-to-left.",
+      table: { defaultValue: { summary: '"start"' } },
+    },
+    menuContainer: {
+      control: false,
+      description: "The element the menu panel is drawn into instead of the end of document.body (a shadow root, or a frame).",
+    },
+    closeMenuOnNavigate: {
+      control: "boolean",
+      description: "Closes the menu panel when a link in it is chosen.",
+      table: { defaultValue: { summary: "true" } },
+    },
+    contained: {
+      control: "boolean",
+      description: "Keeps the content to the page's reading width with Container, centred, instead of edge to edge.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    sticky: {
+      control: "boolean",
+      description: "Keeps the bar at the top of the page as it scrolls, with a surface behind it and a shadow while stuck.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    stickyOffset: {
+      control: "select",
+      options: [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32],
+      description: "How far from the top a sticky bar sticks, from the spacing scale. No effect without sticky.",
+      table: { defaultValue: { summary: "0" } },
+    },
+    scrollContainerRef: {
+      control: false,
+      description: "The scrollable container a sticky bar sticks within, if it isn't the page. No effect without sticky.",
+    },
+    dir: {
+      control: "radio",
+      options: ["ltr", "rtl"],
+      description: "The reading direction, passed to the bar and the menu panel. Not read from the page.",
+      table: { defaultValue: { summary: '"ltr"' } },
+    },
+    labels: {
+      control: false,
+      description: "The text the bar supplies itself: menu (the button's name and the panel's title), navigation and close.",
+    },
+    "aria-label": {
+      control: "text",
+      description: "Names the banner landmark, for a page with more than one header.",
+    },
+    "aria-labelledby": {
+      control: "text",
+      description: "The id of a visible element that names the banner landmark, in place of aria-label.",
+    },
+    "aria-describedby": {
+      control: "text",
+      description: "The id of a description for the bar.",
+    },
+    id: { control: "text", description: "Standard DOM id." },
+    className: { control: false, description: "Additional CSS classes, on the <header> element." },
+    style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
+    "data-testid": {
+      control: false,
+      description:
+        "Test identifier for automated testing (e.g. Testing Library's getByTestId, Playwright/Cypress selectors). Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
+    },
+  },
+};
+
+export default meta;
+
+type Story = StoryObj<typeof Navbar>;
+
+export const Default: Story = {
+  render: (args) => (
+    <Navbar {...args}>
+      <Navbar.Brand href="#">Acme</Navbar.Brand>
+    </Navbar>
+  ),
+};

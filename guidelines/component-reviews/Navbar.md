@@ -1,0 +1,30 @@
+# Navbar — review findings
+
+Eleventh organism, built 2026-10-17 with the `06-engineering-standards.md` §9 checklist applied as it was written. **Not Finalized:** the build is complete and checked, and the review pass is the maintainer's to declare.
+
+## Decisions
+- Collapses by a CSS breakpoint and draws its links in the bar and in the menu panel, with plain tab order: [ADR-0091](../adr/0091-navbar-collapses-by-a-css-breakpoint-and-draws-its-links-in-the-bar-and-in-the-menu-panel-over-measuring-its-width-or-writing-two-lists.md).
+- Compound: `Navbar` (a `<header>`), `Navbar.Brand`, `Navbar.Links` (a named `<nav>` holding a `role="list"` list), `Navbar.Link`, `Navbar.Actions`, `Navbar.MenuButton`. The phone panel is `Drawer`, the button an `IconButton`, `sticky` is `Affix` (the same `sticky`/`stickyOffset`/`scrollContainerRef` as `Toolbar` and `Alert`), `contained` is `Container`.
+- `variant` (`outlined`, `filled`, `ghost`), not `surface`: `05` §2 reserves `surface` for a group of controls whose `variant` already names the controls' look, and a bar's links aren't `Button`s.
+- **No new token.** The bar's height is the `icon-button.size.*` token of its step plus `space.1` or `space.2` above and below, so `03`'s order of preference (an existing scale first) holds. The current link's colours (`text.brand` on `bg.brand-subtle`) are the pairing `Tabs` uses.
+- `Navbar.Link` draws its own `<a>` (and `Slot` for `asChild`) rather than composing the `Link` atom: `Link`'s look is a text link in flowing prose, and overriding its colour, underline and shape from outside would depend on stylesheet order. It reproduces `Link`'s disabled handling (`aria-disabled`, a capture-phase click guard, stays focusable).
+- `NavigationMenu` stays a separate 🟡 component for mega-menu panels. A dropdown in the navigation is a `Menu` whose trigger is a `Navbar.Link` drawn on a button (a Docs recipe), so `Navbar` alone covers v1, which is the decision `04` left open for this component.
+- Not built, additive later: a brand-coloured `tone`, collapse by measured width, hide-on-scroll-down.
+
+## What was found while building it
+- **A router's link never closed the panel.** The first version skipped closing when the click's default was prevented, and a client-side router prevents it to navigate without a page load, which is exactly the link that most needs to close the panel. Found by writing the story's interaction test with a link that prevents its click; it now closes whatever the click's default.
+- **A link in a hidden bar has no accessible name in jsdom or in a browser.** jsdom applies the stylesheet but matches no media query, so below the step the bar's links are `display: none` and a name query finds nothing; the unit tests read them with `hidden: true` and the attribute, and tests that need them on show use `collapseBelow="never"`.
+- **The brand was an 18px target** (found by the 24px check at every size); it has a `min-block-size` of `space.6`.
+- **Several bars in one gallery are several banner landmarks,** which axe rejects. A gallery draws each bar in a named `<section>`, which makes its `<header>` an ordinary region (the Docs page says the same for a page with more than one).
+- **A story that clicks a `#hash` link closes the test page** in the browser runner; the interaction test stands in for a router by preventing the click.
+
+## Checks run
+- 28 unit tests (landmarks and names, the current page, `labels` with `undefined`, ref and standard props, computed attributes winning over same-named props, the menu button and its absence, the panel opening named and modal with the same links, closing on a chosen link including one a router prevents, `closeMenuOnNavigate` off, a disabled link neither running its click nor closing the panel, a disabled link staying in the tab order, an `asChild` link, controlled and default state, closing when the page grows past the step, `sticky`, `contained`, a clear error outside a `Navbar`, `StrictMode`, nesting, and jest-axe closed, with the panel open and with router-style links) and 13 server-render and hydration checks (`Navbar.ssr.test.tsx`: six variants each rendered without `window` or `document` and hydrated with no recoverable error).
+- 8 real-browser checks (`Navbar.checks.stories.tsx`): the wide layout and its order, the bar's height against its token at each size, every target 24px or more in the bar and the panel, link contrast of 4.5:1 or more on each variant's surface, right-to-left order, a sticky bar at the top of its box with a shadow while stuck and an outline in emulated forced colours (the current link too), an account menu opening above a sticky bar and returning focus, and the panel's links, edge and Escape; plus a phone-width interaction test (`On a phone — interaction test`) of the button, the panel and a chosen link. Four of them failed on the first run (the brand's height, the test's own units, a hidden element's name, and the stage's edge), which is how they were known to bite.
+- 7 sub-part stories for the Properties tables (ADR-0013), a Docs-token test, the Playground snippet guard, the snippets typechecked against the real components with a planted bad prop, `pnpm lint`, the build, `check-guidelines` and the bundle-size check (JS 12KB and CSS 7KB budgets, since the bundle holds `Drawer`).
+- Looked at in Purple light, Emerald dark and at a phone's width.
+
+## Open at review
+- A window resized across the collapse step hides the focused link with the rest of the bar's links (the same as any responsive layout); the panel's own focus handling covers the open case. Not asserted, since a story can't resize the window.
+- Link contrast is asserted in Purple light only; Emerald and dark mode were looked at, not measured.
+- A real finger on the panel's swipe-to-dismiss is `Drawer`'s open item, not repeated here.
