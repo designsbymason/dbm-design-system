@@ -72,6 +72,7 @@ export const selectionPropOrder = ["children", "onSelectAll", "size", "announce"
 export const paginationPropOrder = [
   "showSummary",
   "showPageSize",
+  "dir",
   "size",
   "variant",
   "siblingCount",
@@ -221,8 +222,9 @@ direction. Sorting happens before paging, so it orders the whole set.
 
 `selectionMode="multiple"` adds a column of checkboxes and a header checkbox that is checked, mixed or clear for the rows on the
 page; a shift-click chooses a range. `"single"` replaces the choice. The chosen ids are kept across sorting and pages, and
-`isRowSelectable` says which rows can't be chosen. A chosen row is also drawn with a fill, but the checkbox is what carries the
-state.
+`isRowSelectable` says which rows can't be chosen. A chosen row has three marks, since a fill alone is quiet: the checked
+checkbox, a marker on the start edge of its checkbox cell (in `border.brand`, held transparent in every row so choosing one moves
+nothing), and a fill one step stronger than the `brand` tone's stripe, so a chosen row isn't mistaken for a striped one.
 
 <Canvas of={DataTableStories.Selection} />
 
@@ -288,9 +290,19 @@ is the first, so it is the one that stays; the actions column is the last.
 
 <Canvas of={DataTableStories.PinnedColumns} />
 
+### Tones
+
+`tone` is `Table`'s, with `brand` as the default: a header in the brand's solid colour, with the stripes and the hover tinted to
+match. `neutral` leaves the header and the caption unfilled, and `info`, `success`, `warning` and `danger` are fixed status
+colours.
+
+<Canvas of={DataTableStories.Tones} />
+
 ### Right to left
 
-Alignment and pinning are logical, so a page with `dir="rtl"` mirrors the table.
+Alignment and pinning are logical, so a page with `dir="rtl"` mirrors the table. The page size select opens a Radix list that
+doesn't read the page's direction, so give `DataTable.Pagination` `dir="rtl"` as well; the range's numbers are isolated, so
+"1–10 of 47" reads in order.
 
 <Canvas of={DataTableStories.RightToLeft} />
 
@@ -302,7 +314,9 @@ Alignment and pinning are logical, so a page with `dir="rtl"` mirrors the table.
 - Name the table with a `caption`, an `aria-label` or an `aria-labelledby`; a dev-mode warning fires if it has none.
 - Give each row an `id` (or `getRowId`) that is stable, so the choice survives a reload of the data.
 - Give the column that names each row `rowHeader`, and `getRowLabel` the same words, so a row's checkbox says whose it is.
-- Make the `accessor` of a sortable column return a number, a date or text; use `compare` for anything else.
+- Make the `accessor` of a sortable column return a number, a date or text; use `compare` for anything else, including text
+  that must be ordered by another language's rules: the default orders text in English, whatever the visitor's browser language, so
+  a server and a browser agree.
 - Hold the sort, the page and the choice yourself (controlled) when they belong in the URL or on a server.
 - Use `sortMode="manual"` with `totalCount` when the rows don't fit in the browser.
 
@@ -313,6 +327,7 @@ Alignment and pinning are logical, so a page with `dir="rtl"` mirrors the table.
 - Don't make `onRowClick` the only way to reach what a row opens: it adds a tab stop per row and is not announced as a link. Put a
   link in the row too.
 - Don't pass a new `columns` array on every render of a large table: it sorts again each time. Define it once, or `useMemo` it.
+  (A `getRowId` or `isRowSelectable` written inline is fine: they don't sort again.)
 - Don't put a long, wrapping paragraph in a cell of a table you want to be windowed: a row there is one line.
 - Don't use `virtualize` with pagination: pages already bound the rows drawn.
 
@@ -345,8 +360,13 @@ Alignment and pinning are logical, so a page with `dir="rtl"` mirrors the table.
 - Every interactive target is at least 24 × 24px at every size (the sort button, the checkbox, the row menu's button).
 - The sort button's focus ring is drawn inside it, since a header cell and the scroll frame clip what is outside. On a solid
   tone's header it takes the text's colour.
-- A chosen row's fill is `bg.brand-subtle` with `text.primary` over it (the same pairing a `brand` tone uses); forced colours
-  drops the fill, and the checked checkbox carries the state.
+- A chosen row's fill is `bg.brand-subtle-hover` with `text.primary` over it, and it is quiet (1.14:1 against the surface in Purple
+  light), so it is never the only mark: the checked checkbox and a 4px marker in `border.brand` on the edge of its checkbox cell
+  say it too. Forced colours drops the fill and draws the marker in the system's highlight colour.
+- An arrow on a column that isn't sorted is drawn at `opacity.80` and keeps 3:1 against its header (brand or neutral) in all four
+  themes, which a real-browser check measures.
+- A cell cut with an ellipsis (a column with a `width`) carries its whole text as its `title`; a screen reader reads the full text
+  from the cell anyway.
 
 </Callout>
 
@@ -405,12 +425,14 @@ const columns: DataTableColumn<Employee>[] = [
 <TokenRow token="radius.sm" usage="the corners of the sort button's and a pressable row's focus ring" />
 <TokenRow token="border-width.2" usage="the width of the focus rings" />
 <TokenRow token="border.focus" usage="the colour of the focus rings" />
+<TokenRow token="border.brand" usage="the marker on the start edge of a chosen row's checkbox cell" />
+<TokenRow token="border-width.4" usage="the width of that marker, held (transparent) for every row so choosing one moves nothing" />
 <TokenRow token="text.secondary" usage="the footer's range" />
 <TokenRow token="font-family.primary" usage="the type of the toolbar, table and footer" />
 <TokenRow token="font-size.sm" usage="the footer's range and page size label" />
 <TokenRow token="motion.duration.fast" usage="the fade of a sort arrow when it is reached" />
 <TokenRow token="motion.easing.standard" usage="the easing of that fade" />
-<TokenRow token="opacity.60" usage="a sort arrow on a column that isn't sorted, until it is reached" />
+<TokenRow token="opacity.80" usage="a sort arrow on a column that isn't sorted, until it is reached" />
 
 ## Related components
 

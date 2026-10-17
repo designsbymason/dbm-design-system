@@ -236,18 +236,15 @@
   background-color: var(--row-tint);
 }
 
-/* A chosen row (`Table.Row selected`): the brand's subtle fill, replacing a stripe or a hover tint. `:nth-child(n)`
-   gives the selector the same specificity as the stripe rule it has to beat, and it is declared after both stripes
-   and hovers; the hover step is one shade deeper so the row still answers the pointer. The pinned columns read
-   `--row-tint`, so they match. Forced colours drops the fill, so the checkbox that makes the row choosable carries
-   the state there. */
+/* A chosen row (`Table.Row selected`): the brand's subtle fill, one step stronger than the `brand` tone's stripe (`bg.brand-subtle`)
+   so a chosen row isn't mistaken for a striped one, replacing a stripe or a hover tint. `:nth-child(n)` gives the selector the
+   same specificity as the stripe rule it has to beat, and it is declared after both stripes and hovers; the pointer doesn't change
+   it, being already the strongest step. The pinned columns read `--row-tint`, so they match. The fill is quiet on its own (1.14:1
+   against the surface in Purple light), so whatever makes the row choosable must carry the state too: `DataTable` adds a marker
+   on the edge of the checkbox column and the checkbox itself, and forced colours drops the fill altogether. */
 tr.rowSelected:nth-child(n) {
-  --row-tint: var(--dbm-bg-brand-subtle);
-  background-color: var(--row-tint);
-}
-
-tr.rowSelected:nth-child(n):not(.statusRow):hover {
   --row-tint: var(--dbm-bg-brand-subtle-hover);
+  background-color: var(--row-tint);
 }
 
 /* Tone definitions — each non-neutral tone only *defines* its four colours as

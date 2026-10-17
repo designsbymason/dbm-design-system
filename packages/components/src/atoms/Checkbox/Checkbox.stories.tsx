@@ -400,3 +400,41 @@ export const SpaceKeyInteraction: Story = {
     await expect(args.onCheckedChange).toHaveBeenCalledWith(true);
   },
 };
+
+// A box drawn smaller than the 24 × 24px minimum target (12, 16 and 20px at xs, sm and md) has an invisible hit area of that size, so
+// a press near it still lands on it. `getBoundingClientRect` can't see a pseudo-element, so points 11px either side of the centre are
+// pressed with `elementFromPoint`; and the hit area must not take a press meant for the next box in a stack.
+export const HitAreaInteraction: Story = {
+  name: "Hit area — interaction test",
+  tags: ["!dev"],
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-2)", alignItems: "flex-start" }}>
+      {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
+        <Checkbox key={size} size={size} aria-label={`Size ${size}`} />
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const boxes = within(canvasElement).getAllByRole("checkbox");
+    for (const box of boxes) {
+      const rect = box.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      for (const [dx, dy] of [[-11, 0], [11, 0]] as const) {
+        await expect(document.elementFromPoint(x + dx, y + dy)).toBe(box);
+      }
+      // vertically, stacked 8px apart: the point inside this box's own 24px square is this box, not its neighbour
+      await expect(document.elementFromPoint(x, y)).toBe(box);
+    }
+    // an xs box and its neighbour's centre: each answers at its own centre, so one hit area doesn't cover another box
+    const [first, second] = boxes as [HTMLElement, HTMLElement];
+    const centre = (element: HTMLElement) => {
+      const rect = element.getBoundingClientRect();
+      return [rect.left + rect.width / 2, rect.top + rect.height / 2] as const;
+    };
+    await expect(document.elementFromPoint(...centre(first))).toBe(first);
+    await expect(document.elementFromPoint(...centre(second))).toBe(second);
+    // and the box is measured as it was: a larger hit area changed nothing visible
+    await expect(Math.round(first.getBoundingClientRect().width)).toBe(12);
+  },
+};

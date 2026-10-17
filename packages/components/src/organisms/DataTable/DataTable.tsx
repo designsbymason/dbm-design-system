@@ -148,7 +148,7 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
     defaultHiddenColumns = NO_IDS,
     onHiddenColumnsChange,
     variant,
-    tone,
+    tone = "brand",
     size = "md",
     striped,
     hoverable = true,
@@ -195,20 +195,25 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
     hasPagination || [pageSizeProp, defaultPageSizeProp, pageProp, defaultPageProp, totalCount].some((value) => value !== undefined);
 
   const visibleColumns = useMemo(() => columns.filter((column) => !hiddenColumns.includes(column.id)), [columns, hiddenColumns]);
-  const entries = useMemo<Entry<TRow>[]>(() => data.map((row, index) => ({ row, index, id: getRowId(row, index) })), [data, getRowId]);
-
-  const ordered = useMemo(() => {
-    if (manual) return entries;
+  // The order is worked out from the rows alone, so a `getRowId` or `isRowSelectable` written inline in the caller's JSX (a new
+  // function each render) doesn't sort the rows again; only new `data`, a new `sort` or new `columns` do.
+  const orderedRows = useMemo(() => {
+    const indexed = data.map((row, index) => ({ row, index }));
+    if (manual) return indexed;
     return sortRows(
-      entries,
+      indexed,
       sort,
       columns.map((column) => ({
         id: column.id,
-        accessor: column.accessor ? (entry: Entry<TRow>) => column.accessor?.(entry.row) : undefined,
-        compare: column.compare ? (a: Entry<TRow>, b: Entry<TRow>) => column.compare?.(a.row, b.row) ?? 0 : undefined,
+        accessor: column.accessor ? (entry: { row: TRow }) => column.accessor?.(entry.row) : undefined,
+        compare: column.compare ? (a: { row: TRow }, b: { row: TRow }) => column.compare?.(a.row, b.row) ?? 0 : undefined,
       })),
     );
-  }, [entries, sort, columns, manual]);
+  }, [data, sort, columns, manual]);
+  const ordered = useMemo<Entry<TRow>[]>(
+    () => orderedRows.map(({ row, index }) => ({ row, index, id: getRowId(row, index) })),
+    [orderedRows, getRowId],
+  );
 
   const total = manual && totalCount !== undefined ? totalCount : ordered.length;
   const pageCount = paginated ? pageCountOf(total, pageSize) : 1;
@@ -266,11 +271,11 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
 
   const selectAllRows = useMemo(() => {
     if (manual) return undefined;
-    return () => setSelection(entries.filter((entry) => selectable(entry.row)).map((entry) => entry.id));
-  }, [manual, entries, selectable, setSelection]);
+    return () => setSelection(ordered.filter((entry) => selectable(entry.row)).map((entry) => entry.id));
+  }, [manual, ordered, selectable, setSelection]);
   const selectableCount = useMemo(
-    () => (manual ? totalCount : entries.filter((entry) => selectable(entry.row)).length),
-    [manual, totalCount, entries, selectable],
+    () => (manual ? totalCount : ordered.filter((entry) => selectable(entry.row)).length),
+    [manual, totalCount, ordered, selectable],
   );
 
   const state: DataTableState = {
@@ -333,23 +338,28 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
     }
   };
 
+  const warnedDuplicate = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (process.env.NODE_ENV === "production") return;
     const seen = new Set<string>();
-    for (const entry of entries) {
+    for (const entry of ordered) {
       if (seen.has(entry.id)) {
-        console.warn(
-          `DataTable: two rows have the id "${entry.id}", so their selection can't be told apart. Give \`getRowId\` an id that no other row has.`,
-        );
+        // Once for each id, however often the rows are drawn again.
+        if (warnedDuplicate.current !== entry.id) {
+          warnedDuplicate.current = entry.id;
+          console.warn(
+            `DataTable: two rows have the id "${entry.id}", so their selection can't be told apart. Give \`getRowId\` an id that no other row has.`,
+          );
+        }
         break;
       }
       seen.add(entry.id);
     }
-  }, [entries]);
+  }, [ordered]);
   useEffect(() => {
     if (process.env.NODE_ENV === "production") return;
     for (const column of columns) {
-      if (column.sortable && !column.accessor && !column.compare) {
+      if (!manual && column.sortable && !column.accessor && !column.compare) {
         console.warn(`DataTable: column "${column.id}" is \`sortable\` but has no \`accessor\` or \`compare\`, so there is nothing to sort by.`);
       }
       if (typeof column.header !== "string" && typeof column.header !== "number" && !column.headerLabel) {
@@ -362,7 +372,7 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
     if (virtualize === true && hasWrap) {
       console.warn("DataTable: `virtualize` needs rows of one height, so it is ignored while a column has `wrap`.");
     }
-  }, [columns, caption, ariaLabel, ariaLabelledBy, virtualize, hasWrap]);
+  }, [columns, caption, ariaLabel, ariaLabelledBy, virtualize, hasWrap, manual]);
 
   const renderHeaderCell = (column: DataTableColumn<TRow>) => {
     const direction = directionOf(sort, column.id);
@@ -378,7 +388,7 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
         {column.sortable ? (
           <button
             type="button"
-            className={cx(styles.sortButton, tone && tone !== "neutral" && styles.sortButtonTinted)}
+            className={cx(styles.sortButton, tone !== "neutral" && styles.sortButtonTinted)}
             onClick={() => pressHeader(column)}
           >
             <span className={styles.sortLabel}>{column.header}</span>
@@ -435,6 +445,8 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
             numeric: column.numeric,
             style: columnStyle(column),
             className: cx(column.width !== undefined && styles.truncate),
+            // A cell cut with an ellipsis says its whole text on hover, for a column that has a width and plain text in it.
+            title: column.width !== undefined && (typeof content === "string" || typeof content === "number") ? String(content) : undefined,
           };
           return column.rowHeader ? (
             <Table.HeaderCell key={column.id} scope="row" {...common}>
@@ -539,4 +551,27 @@ DataTableRoot.Toolbar = DataTableToolbar;
 DataTableRoot.Selection = DataTableSelection;
 DataTableRoot.Pagination = DataTablePagination;
 
+/**
+ * A table of data given as `columns` and `data`, with sorting, row selection, paging, a long table drawn a window at a time,
+ * loading and empty states, row actions and hidden columns. It draws a `Table` (a native `<table>` in its own scroll frame),
+ * and holds the sort, the choice, the page, the page size and the hidden columns, each controlled (`value` + `onValueChange`) or
+ * uncontrolled (`defaultValue`). It sorts and pages `data` in the browser, or with `sortMode="manual"` draws the rows it is given
+ * and asks for new ones. `DataTable.Toolbar`, `DataTable.Selection` and `DataTable.Pagination` are placed as direct children, and
+ * `useDataTable()` reads and changes the state from your own parts.
+ *
+ * `ref`, `id`, `data-testid` and the `aria-*` props reach the `<table>`; `className` and `style` go on the box around the toolbar,
+ * the table and the pagination. Define `columns` once (or `useMemo` it): a new array each render sorts the rows again.
+ *
+ * @example
+ * ```tsx
+ * const columns: DataTableColumn<Employee>[] = [
+ *   { id: "name", header: "Name", accessor: (row) => row.name, sortable: true, rowHeader: true },
+ *   { id: "salary", header: "Salary", accessor: (row) => row.salary, sortable: true, numeric: true },
+ * ];
+ *
+ * <DataTable aria-label="Team" columns={columns} data={employees} selectionMode="multiple" getRowLabel={(row) => row.name}>
+ *   <DataTable.Pagination />
+ * </DataTable>
+ * ```
+ */
 export const DataTable = DataTableRoot;

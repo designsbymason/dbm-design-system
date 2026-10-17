@@ -245,3 +245,184 @@ export const SelectedRowIsDrawnAndSurvivesASort: Story = {
     await expect(still[0]?.closest("tr")).toHaveAttribute("data-selected");
   },
 };
+
+/** The opaque colour a CSS colour resolves to, as 0–255 channels. */
+function channels(value: string): [number, number, number] {
+  const probe = document.createElement("div");
+  probe.style.color = value;
+  document.body.append(probe);
+  const [r = 0, g = 0, b = 0] = getComputedStyle(probe).color.match(/[\d.]+/g)?.map(Number) ?? [];
+  probe.remove();
+  return [r, g, b];
+}
+const luminance = ([r, g, b]: number[]) => {
+  const part = (channel: number) => {
+    const value = channel / 255;
+    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * part(r as number) + 0.7152 * part(g as number) + 0.0722 * part(b as number);
+};
+const contrast = (a: number[], b: number[]) => {
+  const [x, y] = [luminance(a), luminance(b)];
+  return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+};
+const themes = ["purple-light", "purple-dark", "emerald-light", "emerald-dark"] as const;
+
+export const RightToLeftReadsAndMirrors: Story = {
+  name: "Right to left: the range reads in order, the columns mirror and the select follows the page",
+  render: () => (
+    <div dir="rtl">
+      <DataTable<Employee> aria-label="Mirrored" columns={employeeColumns} data={employees} defaultPageSize={5} selectionMode="multiple">
+        <DataTable.Pagination dir="rtl" compact="never" />
+      </DataTable>
+    </div>
+  ),
+  play: async () => {
+    const table = body.getByRole("table", { name: "Mirrored" });
+    const headers = [...table.querySelectorAll<HTMLElement>("thead th")];
+    // the checkbox column is first in reading order, so it is the rightmost
+    await expect(headers[0]?.getBoundingClientRect().left).toBeGreaterThan(headers[1]?.getBoundingClientRect().left as number);
+    // a number's end is the left edge in right-to-left, and the figures sit there
+    const money = [...table.querySelectorAll<HTMLElement>("tbody td")].find((cell) => cell.textContent?.startsWith("$")) as HTMLElement;
+    const text = document.createRange();
+    text.selectNodeContents(money);
+    const cell = money.getBoundingClientRect();
+    await expect(text.getBoundingClientRect().left - cell.left).toBeLessThan(cell.right - text.getBoundingClientRect().right);
+    // "1–5 of 24": each number is isolated, so the first one is the rightmost of the range's numbers
+    const range = [...document.querySelectorAll<HTMLElement>("span")].find((span) => span.textContent?.replace(/[⁨⁩]/g, "") === "1–5 of 24") as HTMLElement;
+    const node = range.firstChild as Text;
+    const at = (needle: string) => {
+      const index = (node.textContent as string).lastIndexOf(needle);
+      const part = document.createRange();
+      part.setStart(node, index);
+      part.setEnd(node, index + needle.length);
+      return part.getBoundingClientRect();
+    };
+    await expect(at("1").left).toBeGreaterThan(at("24").left);
+    await expect(body.getByRole("combobox", { name: "Rows per page" })).toHaveAttribute("dir", "rtl");
+  },
+};
+
+export const ForcedColoursKeepTheMarks: Story = {
+  name: "Forced colours: a chosen row keeps its marker, and the sort button and header text stay drawn",
+  render: () => (
+    <DataTable<Employee> aria-label="Forced" columns={employeeColumns} data={employees.slice(0, 4)} selectionMode="multiple" getRowLabel={(row) => row.name} />
+  ),
+  play: async () => {
+    const emulate = (value: "active" | "none") => send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
+    await emulate("active");
+    try {
+      await waitFor(() => expect(window.matchMedia("(forced-colors: active)").matches).toBe(true));
+      // Resolved once, outside `waitFor`: building a probe element inside its callback changes the document, which re-runs the callback.
+      const canvas = channelsCss("Canvas");
+      const highlight = channelsCss("Highlight");
+      const table = body.getByRole("table", { name: "Forced" });
+      const first = within(table).getByRole("checkbox", { name: "Select Ada Lovelace 1" });
+      const cell = first.closest("td") as HTMLElement;
+      const other = within(table).getByRole("checkbox", { name: "Select Bo Silva 2" }).closest("td") as HTMLElement;
+      await expect(rgbOf(getComputedStyle(cell).borderInlineStartColor)).toBe(canvas);
+      await userEvent.click(first);
+      await waitFor(() => expect(rgbOf(getComputedStyle(cell).borderInlineStartColor)).toBe(highlight));
+      await expect(rgbOf(getComputedStyle(other).borderInlineStartColor)).toBe(canvas);
+      await expect(getComputedStyle(cell).borderInlineStartWidth).toBe(getComputedStyle(other).borderInlineStartWidth);
+      // the sort button's text and arrow are still drawn in a colour of the mode's, not the page's
+      const button = within(table).getByRole("button", { name: "Name" });
+      await expect(getComputedStyle(button).color).not.toBe("rgba(0, 0, 0, 0)");
+      const arrow = button.querySelector("svg") as SVGElement;
+      await expect(getComputedStyle(arrow).opacity).not.toBe("0");
+      button.focus();
+      await userEvent.keyboard("{Tab}{Shift>}{Tab}{/Shift}");
+      await expect(getComputedStyle(button).outlineStyle).toBe("solid");
+    } finally {
+      await emulate("none");
+    }
+  },
+};
+
+/** What a colour resolves to, as its red, green and blue channels written the way the browser writes a computed colour. */
+function channelsCss(value: string): string {
+  const [r, g, b] = channels(value);
+  return `${r},${g},${b}`;
+}
+/** A computed `rgb(…)` or `rgba(…)` as the same three channels, so a system colour's own alpha doesn't count. */
+const rgbOf = (computed: string): string => (computed.match(/[\d.]+/g) ?? []).slice(0, 3).join(",");
+
+export const OnAPhone: Story = {
+  name: "On a phone: the table scrolls inside its frame, the page doesn't, and the footer wraps",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => <TeamDemo size="sm" />,
+  play: async () => {
+    // fails loudly if the viewport didn't apply
+    await expect(window.innerWidth).toBeLessThan(640);
+    const table = body.getByRole("table", { name: "Team" });
+    const frame = table.parentElement as HTMLElement;
+    await expect(frame.scrollWidth).toBeGreaterThan(frame.clientWidth);
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+    const footer = body.getByRole("navigation").parentElement as HTMLElement;
+    for (const child of footer.querySelectorAll<HTMLElement>("*")) {
+      await expect(child.getBoundingClientRect().right).toBeLessThanOrEqual(window.innerWidth + 1);
+    }
+    // the range and the controls stack instead of squeezing: the page controls sit under the range
+    const range = footer.firstElementChild as HTMLElement;
+    await expect(body.getByRole("navigation").getBoundingClientRect().top).toBeGreaterThanOrEqual(range.getBoundingClientRect().bottom - 1);
+  },
+};
+
+export const ChosenRowIsMarkedWithoutMovingAnything: Story = {
+  name: "A chosen row's marker takes no room, and its fill differs from a brand stripe",
+  render: () => (
+    <DataTable<Employee> aria-label="Marked" columns={employeeColumns} data={employees.slice(0, 6)} selectionMode="multiple" striped getRowLabel={(row) => row.name} />
+  ),
+  play: async () => {
+    const table = body.getByRole("table", { name: "Marked" });
+    const rows = [...table.querySelectorAll<HTMLElement>("tbody tr")];
+    // the checkbox column and the first two columns after it: where the marker would push them if it took room
+    const boxes = (row: HTMLElement) => [...row.children].slice(0, 3).map((child) => child.getBoundingClientRect().left);
+    const widthOfSelectCell = () => (rows[0] as HTMLElement).firstElementChild?.getBoundingClientRect().width;
+    const before = boxes(rows[0] as HTMLElement);
+    const selectWidth = widthOfSelectCell();
+    await userEvent.click(within(rows[0] as HTMLElement).getByRole("checkbox"));
+    await waitFor(() => expect(getComputedStyle(rows[0] as HTMLElement).backgroundColor).not.toBe("rgba(0, 0, 0, 0)"));
+    await expect(boxes(rows[0] as HTMLElement)).toEqual(before);
+    await expect(widthOfSelectCell()).toBe(selectWidth);
+    const marker = getComputedStyle((rows[0] as HTMLElement).firstElementChild as HTMLElement);
+    await expect(marker.borderInlineStartWidth).not.toBe("0px");
+    await expect(rgbOf(marker.borderInlineStartColor)).toBe(channelsCss("var(--dbm-border-brand)"));
+    // striped rows are `bg.brand-subtle`; a chosen one is one step further, so the two are told apart
+    await expect(getComputedStyle(rows[0] as HTMLElement).backgroundColor).not.toBe(getComputedStyle(rows[1] as HTMLElement).backgroundColor);
+    const unchosen = (rows[2] as HTMLElement).firstElementChild as HTMLElement;
+    await expect(getComputedStyle(unchosen).borderInlineStartColor).toBe("rgba(0, 0, 0, 0)");
+  },
+};
+
+export const SortArrowsKeepTheirContrast: Story = {
+  name: "A sort arrow that isn't sorted keeps 3:1 against its header in all four themes",
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <DataTable<Employee> aria-label="Brand header" columns={employeeColumns} data={employees.slice(0, 2)} />
+      <DataTable<Employee> aria-label="Neutral header" tone="neutral" columns={employeeColumns} data={employees.slice(0, 2)} />
+    </div>
+  ),
+  play: async () => {
+    const root = document.documentElement;
+    const original = root.getAttribute("data-theme");
+    try {
+      for (const theme of themes) {
+        root.setAttribute("data-theme", theme);
+        await nextFrame();
+        for (const [name, headerFill] of [["Brand header", "var(--dbm-bg-brand)"], ["Neutral header", "var(--dbm-bg-surface)"]] as const) {
+          const arrow = within(body.getByRole("table", { name })).getAllByRole("button")[0]?.querySelector("svg") as SVGElement;
+          const style = getComputedStyle(arrow);
+          const fg = channels(style.color);
+          const bg = channels(headerFill);
+          const opacity = Number(style.opacity);
+          const blended = fg.map((channel, index) => channel * opacity + (bg[index] as number) * (1 - opacity));
+          await expect(contrast(blended, bg), `${theme}, ${name}`).toBeGreaterThanOrEqual(3);
+        }
+      }
+    } finally {
+      if (original === null) root.removeAttribute("data-theme");
+      else root.setAttribute("data-theme", original);
+    }
+  },
+};

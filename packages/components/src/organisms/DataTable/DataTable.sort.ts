@@ -9,13 +9,19 @@ export interface SortableColumn<TRow> {
 
 const isEmpty = (value: unknown): boolean => value === null || value === undefined || value === "" || (typeof value === "number" && Number.isNaN(value));
 
+// One collator for every text comparison. Its locale is fixed, not the browser's, so a server and a browser order the same
+// rows the same way (ADR-0021: nothing defaults to the visitor's locale), and it is made once because a comparison through
+// `localeCompare` with options builds its own each time, about thirteen times slower over 20,000 rows. A column that must order
+// by another language's rules gives its own `compare`.
+const collator = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
+
 /** Orders two values of any common kind: numbers and dates by size, booleans false first, text by natural order. */
 export function compareValues(a: unknown, b: unknown): number {
   if (typeof a === "number" && typeof b === "number") return a - b;
   if (typeof a === "bigint" && typeof b === "bigint") return a < b ? -1 : a > b ? 1 : 0;
   if (a instanceof Date && b instanceof Date) return a.getTime() - b.getTime();
   if (typeof a === "boolean" && typeof b === "boolean") return Number(a) - Number(b);
-  return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" });
+  return collator.compare(String(a), String(b));
 }
 
 /** The next direction when a column's header is pressed: none, then ascending, then descending, then none again. */

@@ -9,11 +9,21 @@
   flex-shrink: 0;
   justify-content: center;
   padding: 0;
+  position: relative;
   transition:
     background-color var(--dbm-motion-duration-fast)
       var(--dbm-motion-easing-standard),
     border-color var(--dbm-motion-duration-fast)
       var(--dbm-motion-easing-standard);
+}
+
+/* The hit area is at least the minimum target size (24 × 24px, WCAG 2.5.8) at every size: a box drawn smaller than that (12, 16 and
+   20px at xs, sm and md) gets an invisible square of the minimum size centred on it. The insets are measured from the box's own
+   padding edge, and `min()` keeps a box that is already big enough (lg, xl) as it was. */
+.root::after {
+  content: "";
+  inset: min(0px, calc((100% - var(--dbm-space-6)) / 2));
+  position: absolute;
 }
 
 .root:hover:not(:disabled):not(.error) {

@@ -49,28 +49,35 @@
   text-overflow: ellipsis;
 }
 
-/* The column of checkboxes: as wide as a checkbox and its padding, never stretched, with the box centred. */
+/* The column of checkboxes: as wide as a checkbox and its padding, never stretched, with the box centred. Its start edge holds a
+   marker the width of the chosen-row border, transparent until the row is chosen, so choosing a row moves nothing. A chosen
+   row's fill is quiet (1.14:1 in Purple light), so the marker, in `border.brand`, and the checked checkbox carry the state. */
 .selectCell {
+  border-inline-start: var(--dbm-border-width-4) solid transparent;
   inline-size: var(--dbm-space-12);
   max-inline-size: var(--dbm-space-12);
+}
+
+tr[data-selected] > .selectCell {
+  border-inline-start-color: var(--dbm-border-brand);
+}
+
+/* Forced colours draws a transparent border as a solid line, so the unchosen marker is the page's colour and the chosen one the
+   system's highlight (the one colour the mode keeps). */
+@media (forced-colors: active) {
+  .selectCell {
+    border-inline-start-color: Canvas;
+  }
+
+  tr[data-selected] > .selectCell {
+    border-inline-start-color: Highlight;
+  }
 }
 
 .selectBox {
   align-items: center;
   display: flex;
   justify-content: center;
-}
-
-/* A checkbox is drawn smaller than the minimum target (12px at the smallest size), so its hit area is extended, invisibly,
-   to a square of the minimum size centred on it. The insets are measured from the button's own box. */
-.selectBox > button {
-  position: relative;
-}
-
-.selectBox > button::after {
-  content: "";
-  inset: calc((100% - var(--dbm-space-6)) / 2);
-  position: absolute;
 }
 
 /* The column of row actions: only as wide as its button, at the end edge. */
@@ -123,7 +130,7 @@
 
 /* The arrows of a column that isn't sorted stay quieter until the pointer or the keyboard is on the button. */
 .sortIconIdle {
-  opacity: var(--dbm-opacity-60);
+  opacity: var(--dbm-opacity-80);
 }
 
 .sortButton:hover .sortIconIdle,

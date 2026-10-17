@@ -34,3 +34,21 @@ and `storybook` browser-mode (408/408) projects, `tsup` build, `check-component-
 ## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
 
 Same review as the molecules' and the first seven atoms' (standard: `07-storybook-and-documentation-standards.md` §4.2). Findings: all six generated snippets spelled out defaults and empty placeholders (`hasError={false}`, `required={false}`, `name=""`, `value=""`, `aria-label=""`) and a no-op `onCheckedChange`; "Custom check/indeterminate icons" printed the icons as `$$typeof` garbage; and "Select-all / indeterminate pattern" showed every checkbox as `checked={false}` **and** `defaultChecked={false}` — contradictory, and no state. Every story now sets `parameters.docs.source.code` to a hand-written snippet from the new `Checkbox.snippets.ts`; the select-all one shows the real `useState` (as a comment) and the real `.map`. The Playground builds its snippet from the live controls, including the icon controls. The snippets and Playground combinations were typechecked against the real types. **Finalized status unchanged** — story-file and docs-only, no component code, props, or tokens touched.
+
+## Post-Finalization follow-up (2026-10-17, at explicit direction) — an invisible hit area of at least 24 × 24px
+
+`DataTable`'s review found that a `Checkbox` at `xs`, `sm` and `md` is drawn 12, 16 and 20px, under the 24 × 24px minimum target that
+`06-engineering-standards.md` §9 asks for at every size, and `DataTable` had patched it inside its own stylesheet. The rule asks for the
+fix at the atom, so it is made here: `.root` is `position: relative` and carries an `::after` whose insets are
+`min(0px, calc((100% − space.6) / 2))`, an invisible square of the minimum size centred on the box (a box already that big, `lg` and
+`xl`, gets none).
+
+**Finalized status is unchanged.** Three-question test (`06-engineering-standards.md` §9): question 1, does it change the rendered or
+behavioural output of anything that existed? Nothing visible, and the box, its states and its tokens are as they were; what changed is
+where a press lands. Question 2, is it correcting a genuine defect? Yes: a target under the minimum at three of five sizes failed a
+requirement that already stood, so the original pass would have failed this line had it measured it. It stays Finalized.
+Re-verified: a hidden real-browser check (`HitAreaInteraction`) presses points 11px either side of every size's centre and
+asserts each answers, that each box still answers at its own centre in a stack (a hit area doesn't cover the next box), and that the xs box is
+still 12px; the `Checkbox` and `CheckboxGroup` suites pass. The new token (`space.6`) has its row in the Docs page. Known cost: in a
+stack closer than 24px between box centres the two hit areas overlap by a few pixels, and the later box in the document wins there; the
+default stacks are further apart than that.

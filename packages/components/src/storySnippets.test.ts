@@ -360,9 +360,10 @@ describe("Playground snippet for DataTable", () => {
   });
 
   it("DataTable writes only what differs from the defaults", () => {
-    expect(dataTablePlaygroundSnippet({ variant: "bordered", tone: "neutral", size: "md", selectionMode: "none" })).not.toMatch(
+    expect(dataTablePlaygroundSnippet({ variant: "bordered", tone: "brand", size: "md", selectionMode: "none" })).not.toMatch(
       /variant=|tone=|size=|selectionMode=/,
     );
+    expect(dataTablePlaygroundSnippet({ tone: "neutral" })).toContain('tone="neutral"');
     expect(dataTablePlaygroundSnippet({ selectionMode: "single", striped: true })).toMatch(/\n {2}striped\n {2}selectionMode="single"\n/);
   });
 });

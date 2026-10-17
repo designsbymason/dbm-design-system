@@ -13,8 +13,12 @@ import type {
 } from "./DataTable.types";
 import { rangeOf } from "./DataTable.page";
 
+// Each number is wrapped in a bidirectional isolate (U+2068 … U+2069): in a script with right-to-left digits the dash between two
+// numbers joins their run and a left-to-right page reads "1–10" as "10-1" (`05-component-api-conventions.md` §3).
+const isolate = (text: string) => `\u2068${text}\u2069`;
+
 const makePaginationLabels = (formatNumber: (value: number) => string): DataTablePaginationLabels => ({
-  summary: (first, last, total) => `${formatNumber(first)}–${formatNumber(last)} of ${formatNumber(total)}`,
+  summary: (first, last, total) => `${isolate(formatNumber(first))}–${isolate(formatNumber(last))} of ${isolate(formatNumber(total))}`,
   pageSize: "Rows per page",
 });
 
@@ -22,6 +26,19 @@ const makePaginationLabels = (formatNumber: (value: number) => string): DataTabl
  * The bar above a `DataTable`: a `TableToolbar`, so it takes the same parts (`TableToolbar.Search`, `.Filter`,
  * `.ActiveFilters`, `.Summary`) and `DataTable.Selection`. Place it as a direct child of the `DataTable`; it is drawn
  * above the table.
+ *
+ * @example
+ * ```tsx
+ * <DataTable aria-label="Team" columns={columns} data={rows}>
+ *   <DataTable.Toolbar aria-label="Team table tools">
+ *     <TableToolbar.Row>
+ *       <TableToolbar.Search>
+ *         <SearchInput aria-label="Search the team" onSearch={setQuery} />
+ *       </TableToolbar.Search>
+ *     </TableToolbar.Row>
+ *   </DataTable.Toolbar>
+ * </DataTable>
+ * ```
  */
 const DataTableToolbar = forwardRef<HTMLDivElement, DataTableToolbarProps>((props, ref) => <TableToolbar {...props} ref={ref} />);
 DataTableToolbar.displayName = "DataTable.Toolbar";
@@ -30,6 +47,17 @@ DataTableToolbar.displayName = "DataTable.Toolbar";
  * The bulk-action row of a `DataTable.Toolbar`: it appears when rows are chosen, says how many, offers "clear" (and
  * "select all N" when it can), and holds your bulk actions as its children. A `TableToolbar.Selection` read from the
  * table's own selection.
+ *
+ * @example
+ * ```tsx
+ * <DataTable.Toolbar aria-label="Team table tools">
+ *   <DataTable.Selection>
+ *     <Toolbar aria-label="Bulk actions" variant="secondary">
+ *       <Toolbar.Button>Delete</Toolbar.Button>
+ *     </Toolbar>
+ *   </DataTable.Selection>
+ * </DataTable.Toolbar>
+ * ```
  */
 const DataTableSelection = forwardRef<HTMLDivElement, DataTableSelectionProps>(({ onSelectAll, ...props }, ref) => {
   const table = useDataTable();
@@ -49,6 +77,13 @@ DataTableSelection.displayName = "DataTable.Selection";
 /**
  * The footer of a `DataTable`: the page controls, "1–10 of 47" and a page size select, all read from the table's own
  * page. Place it as a direct child of the `DataTable`; it is drawn below the table, and its presence turns paging on.
+ *
+ * @example
+ * ```tsx
+ * <DataTable aria-label="Team" columns={columns} data={rows} defaultPageSize={10} pageSizeOptions={[5, 10, 25]}>
+ *   <DataTable.Pagination />
+ * </DataTable>
+ * ```
  */
 const DataTablePagination = forwardRef<HTMLDivElement, DataTablePaginationProps>(
   (
@@ -58,7 +93,8 @@ const DataTablePagination = forwardRef<HTMLDivElement, DataTablePaginationProps>
       labels: labelOverrides,
       paginationLabels,
       formatNumber = String,
-      size,
+      dir = "ltr",
+      size = "sm",
       className,
       style,
       "data-testid": dataTestId,
@@ -89,9 +125,10 @@ const DataTablePagination = forwardRef<HTMLDivElement, DataTablePaginationProps>
           {showPageSize && (
             <span className={styles.pageSize}>
               <Select
-                size={size ?? "sm"}
+                size={size}
                 value={String(table.pageSize)}
                 onValueChange={(next) => table.setPageSize(Number(next))}
+                dir={dir}
                 aria-label={labels.pageSize}
                 className={styles.pageSizeSelect}
               >

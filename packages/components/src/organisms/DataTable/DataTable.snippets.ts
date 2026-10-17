@@ -32,7 +32,7 @@ export const dataTableSnippets = {
 />`,
 
   pagination: `${columnsNote}
-{/* DataTable.Pagination turns paging on: the page controls, "1–10 of 24" and a page size select. */}
+{/* DataTable.Pagination turns paging on: the page controls, "1–10 of 87" and a page size select. */}
 <DataTable aria-label="Team" columns={columns} data={rows} defaultPageSize={10} pageSizeOptions={[5, 10, 25]}>
   <DataTable.Pagination />
 </DataTable>`,
@@ -145,10 +145,18 @@ export const dataTableSnippets = {
     rest scrolls sideways. */}
 <DataTable aria-label="Team" columns={columns} data={rows} selectionMode="multiple" stickyFirstColumn stickyLastColumn />`,
 
+  tones: `${columnsNote}
+{/* tone: "brand" (default) | "neutral" | "info" | "success" | "warning" | "danger" — the header's solid fill, and the stripe and
+    hover tints, as Table's. neutral leaves the header unfilled. */}
+<DataTable aria-label="Team" columns={columns} data={rows} tone="success" striped />`,
+
   rightToLeft: `${columnsNote}
-{/* Alignment and pinning are logical, so a page with dir="rtl" mirrors the table. */}
+{/* Alignment and pinning are logical, so a page with dir="rtl" mirrors the table. The page size select opens a Radix list that
+    doesn't read the page's direction: give the pagination dir="rtl" too. */}
 <div dir="rtl">
-  <DataTable aria-label="Team" columns={columns} data={rows} selectionMode="multiple" />
+  <DataTable aria-label="Team" columns={columns} data={rows} selectionMode="multiple" defaultPageSize={5}>
+    <DataTable.Pagination dir="rtl" />
+  </DataTable>
 </div>`,
 };
 
@@ -176,7 +184,7 @@ export function dataTablePlaygroundSnippet(args: DataTablePlaygroundSnippetArgs)
   props.push(`aria-label=${/["&\\]/.test(label) ? `{${JSON.stringify(label)}}` : `"${label}"`}`);
   props.push("columns={columns}", "data={rows}");
   if (args.variant && args.variant !== "bordered") props.push(`variant="${args.variant}"`);
-  if (args.tone && args.tone !== "neutral") props.push(`tone="${args.tone}"`);
+  if (args.tone && args.tone !== "brand") props.push(`tone="${args.tone}"`);
   if (args.size && args.size !== "md") props.push(`size="${args.size}"`);
   if (args.striped) props.push("striped");
   if (args.hoverable === false) props.push("hoverable={false}");

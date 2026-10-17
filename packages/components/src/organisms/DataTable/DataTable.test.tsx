@@ -10,6 +10,9 @@ import { TableToolbar } from "../../molecules/TableToolbar";
 
 afterEach(() => vi.restoreAllMocks());
 
+// The footer's range wraps each number in a bidirectional isolate; a reader (and a test) sees through them.
+const rangeText = (text: string) => (content: string) => content.replace(/[\u2068\u2069]/g, "") === text;
+
 interface Person {
   id: string;
   name: string;
@@ -300,10 +303,10 @@ describe("DataTable", () => {
       );
       expect(names()).toHaveLength(10);
       expect(names()[0]).toBe("Person 01");
-      expect(screen.getByText("1–10 of 25")).toBeInTheDocument();
+      expect(screen.getByText(rangeText("1–10 of 25"))).toBeInTheDocument();
       await user.click(screen.getByRole("button", { name: "Next page" }));
       expect(names()[0]).toBe("Person 11");
-      expect(screen.getByText("11–20 of 25")).toBeInTheDocument();
+      expect(screen.getByText(rangeText("11–20 of 25"))).toBeInTheDocument();
     });
 
     it("sorts the whole set before taking the page", async () => {
@@ -342,7 +345,7 @@ describe("DataTable", () => {
       await user.click(await screen.findByRole("option", { name: "25" }));
       expect(onPageSizeChange).toHaveBeenCalledWith(25);
       expect(names()).toHaveLength(25);
-      expect(screen.getByText("1–25 of 25")).toBeInTheDocument();
+      expect(screen.getByText(rangeText("1–25 of 25"))).toBeInTheDocument();
     });
 
     it("holds a page that is past the end to the last page", () => {
@@ -351,7 +354,7 @@ describe("DataTable", () => {
           <DataTable.Pagination compact="never" />
         </DataTable>,
       );
-      expect(screen.getByText("21–25 of 25")).toBeInTheDocument();
+      expect(screen.getByText(rangeText("21–25 of 25"))).toBeInTheDocument();
     });
 
     it("draws data as given in manual mode and takes the count from totalCount", async () => {
@@ -363,7 +366,7 @@ describe("DataTable", () => {
         </DataTable>,
       );
       expect(names()).toHaveLength(10);
-      expect(screen.getByText("1–10 of 95")).toBeInTheDocument();
+      expect(screen.getByText(rangeText("1–10 of 95"))).toBeInTheDocument();
       await user.click(screen.getByRole("button", { name: "Next page" }));
       expect(onPageChange).toHaveBeenCalledWith(2);
     });
@@ -533,6 +536,192 @@ describe("DataTable", () => {
         </DataTable>,
       );
       expect(await axe(third.container)).toHaveNoViolations();
+    });
+  });
+  describe("what a review asked for", () => {
+    it("wraps each number of the range in a bidirectional isolate", () => {
+      render(
+        <DataTable<Person> columns={columns} data={people} aria-label="People" defaultPageSize={2}>
+          <DataTable.Pagination compact="never" />
+        </DataTable>,
+      );
+      expect(screen.getByText(rangeText("1–2 of 4")).textContent).toBe("\u20681\u2069–\u20682\u2069 of \u20684\u2069");
+    });
+
+    it("gives the page size select the footer's direction", () => {
+      render(
+        <DataTable<Person> columns={columns} data={people} aria-label="People" defaultPageSize={2}>
+          <DataTable.Pagination compact="never" dir="rtl" />
+        </DataTable>,
+      );
+      expect(screen.getByRole("combobox", { name: "Rows per page" })).toHaveAttribute("dir", "rtl");
+    });
+
+    it("keeps the select left-to-right unless told otherwise", () => {
+      render(
+        <DataTable<Person> columns={columns} data={people} aria-label="People" defaultPageSize={2}>
+          <DataTable.Pagination compact="never" />
+        </DataTable>,
+      );
+      expect(screen.getByRole("combobox", { name: "Rows per page" })).toHaveAttribute("dir", "ltr");
+    });
+
+    it("writes the footer's own text from labels, which get plain numbers", () => {
+      render(
+        <DataTable<Person> columns={columns} data={people} aria-label="People" defaultPageSize={2}>
+          <DataTable.Pagination
+            compact="never"
+            labels={{ summary: (first, last, total) => `${first} à ${last} sur ${total}`, pageSize: "Lignes par page" }}
+          />
+        </DataTable>,
+      );
+      expect(screen.getByText("1 à 2 sur 4")).toBeInTheDocument();
+      expect(screen.getByRole("combobox", { name: "Lignes par page" })).toBeInTheDocument();
+    });
+
+    it("writes the numbers of the default range through formatNumber", () => {
+      render(
+        <DataTable<Person> columns={columns} data={people} aria-label="People" defaultPageSize={2}>
+          <DataTable.Pagination compact="never" formatNumber={(value) => `#${value}`} />
+        </DataTable>,
+      );
+      expect(screen.getByText(rangeText("#1–#2 of #4"))).toBeInTheDocument();
+    });
+
+    it("keeps a default footer label when it is given as undefined", () => {
+      render(
+        <DataTable<Person> columns={columns} data={people} aria-label="People" defaultPageSize={2}>
+          <DataTable.Pagination compact="never" labels={{ pageSize: undefined }} />
+        </DataTable>,
+      );
+      expect(screen.getByRole("combobox", { name: "Rows per page" })).toBeInTheDocument();
+    });
+
+    it("does not let a same-named prop replace the page the pagination is computed from", () => {
+      render(
+        <DataTable<Person> columns={columns} data={people} aria-label="People" defaultPageSize={2}>
+          <DataTable.Pagination compact="never" {...({ pageCount: 99, value: 9 } as object)} />
+        </DataTable>,
+      );
+      expect(screen.getByRole("button", { name: /^Page 1/ })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /^Page 99/ })).toBeNull();
+    });
+
+    it("does not let a same-named prop replace the selection count", async () => {
+      const user = userEvent.setup();
+      render(
+        <DataTable<Person> columns={columns} data={people} aria-label="People" selectionMode="multiple" getRowLabel={(row) => row.name}>
+          <DataTable.Toolbar aria-label="Tools">
+            <DataTable.Selection {...({ count: 50 } as object)} />
+          </DataTable.Toolbar>
+        </DataTable>,
+      );
+      await user.click(screen.getByRole("checkbox", { name: "Select Cy" }));
+      expect(screen.getByText("1 selected")).toBeInTheDocument();
+    });
+
+    it("throws a clear error for a pagination outside a table", () => {
+      vi.spyOn(console, "error").mockImplementation(() => undefined);
+      expect(() => render(<DataTable.Pagination />)).toThrow(/inside a DataTable/);
+    });
+
+    it("keeps a table nested in a cell to its own state, toolbar and selection", async () => {
+      const user = userEvent.setup();
+      const inner: DataTableColumn<Person>[] = [{ id: "n", header: "Inner name", accessor: (row) => row.name, rowHeader: true }];
+      render(
+        <DataTable<Person>
+          aria-label="Outer"
+          columns={[{ id: "name", header: "Name", accessor: (row) => row.name, cell: () => (
+            <DataTable<Person> aria-label="Inner" columns={inner} data={people.slice(0, 2)} selectionMode="multiple" getRowLabel={(row) => row.name}>
+              <DataTable.Toolbar aria-label="Inner tools">
+                <DataTable.Selection />
+              </DataTable.Toolbar>
+            </DataTable>
+          ) }]}
+          data={people.slice(0, 1)}
+          selectionMode="multiple"
+          getRowLabel={(row) => row.name}
+        >
+          <DataTable.Toolbar aria-label="Outer tools">
+            <DataTable.Selection />
+          </DataTable.Toolbar>
+        </DataTable>,
+      );
+      await user.click(within(screen.getByRole("table", { name: "Inner" })).getByRole("checkbox", { name: "Select Cy" }));
+      expect(within(screen.getByRole("group", { name: "Inner tools" })).getByText("1 selected")).toBeInTheDocument();
+      expect(screen.getByRole("group", { name: "Outer tools" })).not.toHaveTextContent("1 selected");
+    });
+
+    it("presses a row with Space as well as Enter", async () => {
+      const onRowClick = vi.fn();
+      const user = userEvent.setup();
+      renderTable({ onRowClick });
+      (screen.getAllByRole("row")[1] as HTMLElement).focus();
+      await user.keyboard(" ");
+      expect(onRowClick).toHaveBeenCalledTimes(1);
+    });
+
+    it("gives a cell cut by a width its whole text as a title, and a cell without a width none", () => {
+      renderTable({
+        columns: [
+          { id: "name", header: "Name", accessor: (row) => row.name, rowHeader: true, width: "4rem" },
+          { id: "age", header: "Age", accessor: (row) => row.age },
+        ],
+      });
+      expect(screen.getByRole("rowheader", { name: "Cy" })).toHaveAttribute("title", "Cy");
+      expect(screen.getByRole("cell", { name: "30" })).not.toHaveAttribute("title");
+    });
+
+    it("passes the pinning and look props to the table", () => {
+      const { container } = renderTable({ stickyFirstColumn: true, stickyLastColumn: true, tone: "success", striped: true, variant: "ghost" });
+      const table = screen.getByRole("table");
+      expect(table.querySelector("thead")?.className).toMatch(/firstColumnSticky/);
+      expect(table.querySelector("thead")?.className).toMatch(/lastColumnSticky/);
+      expect(table.querySelector("tbody")?.className).toMatch(/bodyStripedTinted/);
+      expect(container.querySelector("[class*=containerGhost]")).not.toBeNull();
+    });
+
+    it("draws a brand header by default, and none with tone neutral", () => {
+      const { unmount } = renderTable();
+      expect(screen.getByRole("table").querySelector("thead")?.className).toMatch(/toneBrand/);
+      unmount();
+      renderTable({ tone: "neutral" });
+      expect(screen.getByRole("table").querySelector("thead")?.className).not.toMatch(/tone[A-Z]/);
+    });
+
+    it("does not warn about a sortable column with no accessor when sorting is manual", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      renderTable({ sortMode: "manual", columns: [{ id: "x", header: "X", sortable: true }] });
+      expect(warn).not.toHaveBeenCalledWith(expect.stringContaining("is `sortable`"));
+    });
+
+    it("does not sort again when only getRowId or isRowSelectable is a new function", () => {
+      // `compare` runs only while sorting, unlike `accessor`, which a cell also reads to draw itself.
+      const accessor = vi.fn((a: Person, b: Person) => a.name.localeCompare(b.name));
+      const cols: DataTableColumn<Person>[] = [{ id: "name", header: "Name", compare: accessor, accessor: (row) => row.name, sortable: true, rowHeader: true }];
+      const sorted: DataTableSort = [{ columnId: "name", direction: "ascending" }];
+      const { rerender } = render(<DataTable<Person> columns={cols} data={people} aria-label="People" defaultSort={sorted} getRowId={(row) => row.id} />);
+      const calls = accessor.mock.calls.length;
+      rerender(<DataTable<Person> columns={cols} data={people} aria-label="People" defaultSort={sorted} getRowId={(row) => row.id} isRowSelectable={() => true} />);
+      expect(accessor.mock.calls.length).toBe(calls);
+    });
+
+    it("warns once for a duplicate row id, however often it is drawn again", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const twins = [people[0] as Person, { ...(people[0] as Person), name: "Twin" }];
+      const { rerender } = render(<DataTable<Person> columns={columns} data={twins} aria-label="People" getRowId={(row) => row.id} />);
+      rerender(<DataTable<Person> columns={columns} data={twins} aria-label="People" getRowId={(row) => row.id} />);
+      expect(warn.mock.calls.filter(([message]) => String(message).includes("two rows have the id")).length).toBe(1);
+    });
+
+    it("orders text the same whatever the browser's locale", () => {
+      const original = String.prototype.localeCompare;
+      const spy = vi.spyOn(String.prototype, "localeCompare").mockImplementation(function (this: string, ...args: Parameters<typeof original>) {
+        return original.apply(this, args) * -1;
+      });
+      renderTable({ defaultSort: [{ columnId: "name", direction: "ascending" }] });
+      expect(names()).toEqual(["Ada", "Bo", "Cy", "Di"]);
+      spy.mockRestore();
     });
   });
 });

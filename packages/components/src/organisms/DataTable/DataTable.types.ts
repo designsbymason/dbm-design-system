@@ -231,8 +231,9 @@ export interface DataTableProps<TRow>
    */
   variant?: TableVariant;
   /**
-   * The table's colour treatment, the same as `Table`'s.
-   * @default 'neutral'
+   * The table's colour treatment, the same as `Table`'s, except that the default is `brand`: a header in the brand's solid
+   * colour. `neutral` leaves the header and caption unfilled.
+   * @default 'brand'
    */
   tone?: TableTone;
   /**
@@ -318,7 +319,13 @@ export interface DataTablePaginationLabels {
 
 /** The properties of `DataTable.Pagination`: the page controls, a range summary and a page size select. */
 export interface DataTablePaginationProps
-  extends Omit<PaginationProps, "pageCount" | "value" | "defaultValue" | "onValueChange" | "labels" | "formatNumber"> {
+  extends Omit<PaginationProps, "pageCount" | "value" | "defaultValue" | "onValueChange" | "labels" | "formatNumber" | "size"> {
+  /**
+   * The size of the page controls and the page size select. Smaller than `Pagination`'s own default, since the footer is
+   * secondary to the rows above it.
+   * @default 'sm'
+   */
+  size?: PaginationProps["size"];
   /**
    * Shows "1–10 of 47" beside the page numbers.
    * @default true
@@ -329,6 +336,12 @@ export interface DataTablePaginationProps
    * @default true
    */
   showPageSize?: boolean;
+  /**
+   * The direction of the page size select, which opens a Radix list that doesn't read the page's: pass `"rtl"` on a right-to-left
+   * page. The rest of the footer follows the page's own direction.
+   * @default 'ltr'
+   */
+  dir?: "ltr" | "rtl";
   /** Text written for the pagination (the page controls keep `Pagination`'s own labels). */
   labels?: Partial<DataTablePaginationLabels>;
   /**

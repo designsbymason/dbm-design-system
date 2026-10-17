@@ -445,8 +445,9 @@ real-browser `storybook` project (875 passing, identical to before), `tsup` buil
 `DataTable` ([ADR-0085](../adr/0085-datatable-takes-columns-and-data-and-holds-the-interaction-state-with-toolbar-selection-and-pagination-parts-over-composed-table-rows-or-a-headless-hook.md))
 is the consumer the "No speculative seams" note above was waiting for, and it needed two things from `Table`, approved with its plan:
 
-- **`Table.Row` `selected`** (default `false`): draws the row as chosen, with `bg.brand-subtle` replacing a stripe or a hover tint
-  (`tr.rowSelected:nth-child(n)`, declared after both, with a deeper hover step). Purely visual: it sets `data-selected` and no ARIA state,
+- **`Table.Row` `selected`** (default `false`): draws the row as chosen, with `bg.brand-subtle-hover` (one step past the `brand` tone's
+  stripe, which a first version of `bg.brand-subtle` was indistinguishable from) replacing a stripe or a hover tint
+  (`tr.rowSelected:nth-child(n)`, declared after both, with no further hover step). Purely visual: it sets `data-selected` and no ARIA state,
   since `aria-selected` isn't allowed on a plain table row, and the attribute is written after the spread so a stray one can't
   contradict the prop. The pinned columns read `--row-tint`, so they match the row.
 - **`Table` `containerRef`**: a ref to the scroll container, which a windowed list reads for its scroll position and size. `ref` still
@@ -457,4 +458,4 @@ behavioural output of anything that already existed at finalization time? No: bo
 doesn't pass them renders the same DOM and styles. Each got the scoped mini-pass of a new prop: JSDoc, a Properties-table row on
 the Docs page (`Table.Row` has its own order list now), `argTypes` descriptions, and unit tests (the class and `data-selected`, a stray
 `data-selected` not winning, `containerRef` and `ref` landing on different elements). The `Table` suite (377 tests) and the real-browser
-`Table` stories pass, and the contrast pairing (`text.primary` on `bg.brand-subtle`) is the one the `brand` tone already uses.
+`Table` stories pass, and the fill is quiet by design (1.14:1 against the surface in Purple light), so a consumer carries the state in another mark too (`DataTable`'s checkbox and edge marker).

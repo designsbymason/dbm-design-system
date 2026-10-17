@@ -118,7 +118,21 @@ export function TeamDemo({ data: _data, columns: _columns, ...props }: Partial<D
 const SERVER_TOTAL = 137;
 
 /** A page of rows "fetched" after a short wait, the way a server-backed table is driven. */
-export function ServerDemo({ data: _data, columns: _columns, ...props }: Partial<DataTableProps<Employee>>) {
+export function ServerDemo({
+  data: _data,
+  columns: _columns,
+  sortMode: _sortMode,
+  loading: _loading,
+  loadingRows: _loadingRows,
+  totalCount: _totalCount,
+  sort: _sort,
+  onSortChange: _onSortChange,
+  page: _page,
+  onPageChange: _onPageChange,
+  pageSize: _pageSize,
+  onPageSizeChange: _onPageSizeChange,
+  ...props
+}: Partial<DataTableProps<Employee>>) {
   const [sort, setSort] = useState<DataTableSort>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -140,9 +154,10 @@ export function ServerDemo({ data: _data, columns: _columns, ...props }: Partial
   const loading = loaded.request !== request;
   return (
     <DataTable<Employee>
+      aria-label="Team, from a server"
+      {...props}
       columns={employeeColumns}
       data={rows}
-      aria-label="Team, from a server"
       sortMode="manual"
       totalCount={SERVER_TOTAL}
       loading={loading}
@@ -156,7 +171,6 @@ export function ServerDemo({ data: _data, columns: _columns, ...props }: Partial
       onPageChange={setPage}
       pageSize={pageSize}
       onPageSizeChange={setPageSize}
-      {...props}
     >
       <DataTable.Pagination />
     </DataTable>

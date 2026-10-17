@@ -81,8 +81,8 @@ const meta: Meta<Args> = {
     tone: {
       control: "select",
       options: ["neutral", "brand", "info", "success", "warning", "danger"],
-      description: "The table's colour treatment, the same as Table's.",
-      table: { defaultValue: { summary: "neutral" } },
+      description: "The table's colour treatment, the same as Table's, except that the default is brand: a header in the brand's solid colour. neutral leaves the header unfilled.",
+      table: { defaultValue: { summary: "brand" } },
     },
     size: {
       control: "select",
@@ -117,7 +117,7 @@ const meta: Meta<Args> = {
     loading: false,
     loadingRows: 5,
     variant: "bordered",
-    tone: "neutral",
+    tone: "brand",
     size: "md",
     striped: false,
     hoverable: true,
@@ -176,7 +176,7 @@ export const Selection: Story = {
 export const Pagination: Story = {
   parameters: { docs: { source: { code: dataTableSnippets.pagination } } },
   render: ({ maxHeight, ...args }) => (
-    <DataTable<Employee> {...args} maxHeight={maxHeight || undefined} defaultPageSize={10} pageSizeOptions={[5, 10, 25]}>
+    <DataTable<Employee> {...args} maxHeight={maxHeight || undefined} data={makeEmployees(87)} defaultPageSize={10} pageSizeOptions={[5, 10, 25]}>
       <DataTable.Pagination />
     </DataTable>
   ),
@@ -210,6 +210,8 @@ export const LongTable: Story = {
 export const ServerSide: Story = {
   name: "Sorting and paging on a server",
   parameters: { docs: { source: { code: dataTableSnippets.serverSide } } },
+  // The demo owns the sort, the page, the count and the loading state, as a server-backed table does.
+  argTypes: { sortMode: noControls, loading: noControls, loadingRows: noControls },
   render: ({ maxHeight, ...args }) => <ServerDemo {...args} maxHeight={maxHeight || undefined} />,
 };
 
@@ -303,13 +305,36 @@ export const PinnedColumns: Story = {
   ),
 };
 
+export const Tones: Story = {
+  name: "Tones",
+  parameters: { docs: { source: { code: dataTableSnippets.tones } } },
+  args: { striped: true, selectionMode: "multiple", defaultSelection: ["e2"] },
+  argTypes: { tone: noControls },
+  render: ({ maxHeight, ...args }) => (
+    <div style={column}>
+      {(["brand", "neutral", "info", "success", "warning", "danger"] as const).map((tone) => (
+        <DataTable<Employee>
+          key={tone}
+          {...args}
+          maxHeight={maxHeight || undefined}
+          data={employees.slice(0, 3)}
+          tone={tone}
+          aria-label={`Team, tone ${tone}`}
+        />
+      ))}
+    </div>
+  ),
+};
+
 export const RightToLeft: Story = {
   name: "Right to left",
   parameters: { docs: { source: { code: dataTableSnippets.rightToLeft } } },
   args: { selectionMode: "multiple" },
   render: ({ maxHeight, ...args }) => (
     <div dir="rtl">
-      <DataTable<Employee> {...args} maxHeight={maxHeight || undefined} data={employees.slice(0, 5)} />
+      <DataTable<Employee> {...args} maxHeight={maxHeight || undefined} data={employees} defaultPageSize={5}>
+        <DataTable.Pagination dir="rtl" />
+      </DataTable>
     </div>
   ),
 };
