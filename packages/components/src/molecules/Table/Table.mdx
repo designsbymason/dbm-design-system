@@ -60,7 +60,7 @@ compose together rather than one component with a long list of props: put `Table
 `colSpan`, `rowSpan`, and `scope` work directly.
 
 `Table` deliberately has no sorting, row selection, or pagination — it's for displaying data, not manipulating it.
-A sortable, selectable, paginated table is the job of the future `DataTable`, which builds on this one.
+A sortable, selectable, paginated table is the job of `DataTable`, which builds on this one.
 
 ### Import
 
@@ -269,7 +269,7 @@ inside it.
 
 - Don't use a `Table` for page layout. If the content isn't genuinely tabular, reach for `Grid` or `Stack`.
 - Don't put interactive controls in every cell of a large table and expect sorting or selection to come with them —
-  those belong to the future `DataTable`.
+  those belong to `DataTable`.
 - Don't skip `Table.Header` and put column labels in ordinary body cells — assistive technology relies on real
   header cells to announce which column a value belongs to.
 - Don't put a non-neutral `tone` on every table on a page — a filled header is a strong accent, and it stops
@@ -292,7 +292,7 @@ inside it.
 - Don't wrap a table in your own `overflow` container to make it responsive — `Table` already scrolls sideways
   inside its own frame when it's wider than the space it's in. Use `containerClassName` if you need to adjust that
   frame.
-- For a very large dataset (hundreds of rows), prefer pagination or the future `DataTable`'s virtualized rendering
+- For a very large dataset (hundreds of rows), prefer pagination or `DataTable`'s virtualized rendering
   over one enormous `Table`.
 
 ## Accessibility

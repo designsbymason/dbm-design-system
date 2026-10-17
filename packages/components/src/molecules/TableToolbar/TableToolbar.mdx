@@ -58,7 +58,7 @@ export const selectionPropOrder = ["count", "totalCount", "onClear", "onSelectAl
 
 The bar above a table of data: search, filters, the filters currently applied, a result count, and the bulk actions that
 appear when rows are selected. It owns no data — rows, query, filters and selection are yours, passed in and called back — so
-a `Table`, a card list or a future `DataTable` can all sit under it.
+a `Table`, a card list or a `DataTable` (which draws it as `DataTable.Toolbar`) can all sit under it.
 
 It is a named `role="group"`, deliberately not a `role="toolbar"`: a search field can't live in a toolbar, which takes the left
 and right arrow keys for itself. Inside it the search field is an ordinary tab stop; the filters and the actions go in real

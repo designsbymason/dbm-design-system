@@ -109,7 +109,7 @@ export const tableToolbarSnippets = {
   </TableToolbar.Selection>
 </TableToolbar>`,
 
-  withATable: `{/* The bar owns no data: rows, query, filters and selection are the app's (or a future DataTable's), passed in and
+  withATable: `{/* The bar owns no data: rows, query, filters and selection are the app's (or a DataTable's), passed in and
     called back. A Checkbox per row selects; the header Checkbox is "indeterminate" while some are. */}
 <TableToolbar aria-label="Orders table tools">
   <TableToolbar.Row>

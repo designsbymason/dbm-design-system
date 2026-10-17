@@ -37,7 +37,7 @@ export const orders: Order[] = [
 const statuses = ["Open", "Shipped", "Delayed"] as const;
 const owners = ["Jane", "Marcus", "Priya"] as const;
 
-/** The orders, their filter state, and the filtering — what an app (or a future `DataTable`) holds. */
+/** The orders, their filter state, and the filtering — what an app (or a `DataTable`) holds. */
 export function useOrders(initial: { statuses?: string[]; owner?: string; selected?: string[] } = {}) {
   const [query, setQuery] = useState("");
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>(initial.statuses ?? []);

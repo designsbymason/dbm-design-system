@@ -472,3 +472,8 @@ pins one never measures anything. The new surface got the scoped mini-pass of a 
 columns at each edge"), unit tests (the marks on the row groups and the cap, the offsets from mocked widths and again when a width changes, a consumer's `style`
 kept), and two real-browser checks through `DataTable` (the pinned cells sit against each other and at the edge after a long scroll, in both directions). One
 caveat is recorded on the prop: a cell that spans columns isn't pinned and moves the cells after it out of their columns.
+
+## Post-Finalization follow-up (2026-10-17, at explicit direction) — wording that called `DataTable` a future component
+
+`DataTable` shipped, so the JSDoc on `Table` and its `hoverable` prop, and three lines of the Docs page, now say `DataTable` instead of "the future `DataTable`" and
+"when it ships". Wording only: no code, DOM, style or API changed, so by question 1 of the three-question test (`06-engineering-standards.md` §9) the component stays Finalized.

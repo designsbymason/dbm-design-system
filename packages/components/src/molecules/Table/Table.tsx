@@ -99,8 +99,8 @@ const alignClass: Record<TableCellAlign, string | undefined> = {
  * `headers`) all work directly.
  *
  * Deliberately has no sorting, selection, or pagination — a sortable,
- * selectable, paginated table is `DataTable`'s job (a future organism built
- * on this one).
+ * selectable, paginated table is `DataTable`'s job (the organism built on
+ * this one).
  *
  * The `<table>` is always wrapped in its own scroll container, so a wide
  * table scrolls sideways inside its own frame instead of overflowing the

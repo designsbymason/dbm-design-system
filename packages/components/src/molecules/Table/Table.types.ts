@@ -71,8 +71,8 @@ export interface TableProps
   /**
    * Highlights a `Table.Body` row while the pointer is over it, to help
    * track a row across wide columns. Purely a reading aid — the table
-   * itself stays non-interactive; use `DataTable` (when it ships) for
-   * selectable or clickable rows.
+   * itself stays non-interactive; use `DataTable` for selectable or
+   * clickable rows.
    * @default false
    */
   hoverable?: boolean;

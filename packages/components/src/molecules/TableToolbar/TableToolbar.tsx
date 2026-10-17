@@ -47,7 +47,7 @@ const safeCount = (value: unknown): number => (typeof value === "number" && Numb
 /**
  * The bar above a table of data: search, filters, the filters currently applied, a result count, and the bulk actions that
  * appear when rows are selected. It owns no data: everything is driven by props and callbacks, so a `Table`, a card list or
- * the future `DataTable` can all sit under it.
+ * a `DataTable` (which draws it as `DataTable.Toolbar`) can all sit under it.
  *
  * It is a named `role="group"`, not a `role="toolbar"`: a search field can't live in a toolbar, which takes the left and
  * right arrow keys for itself. Inside it the search field is an ordinary tab stop; the filters and actions go in real

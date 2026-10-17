@@ -145,3 +145,8 @@ anything that existed? Only where focus ends after a keyboard press that used to
 would have failed the focus line had it pressed the button from the keyboard, so it stays Finalized. Re-verified with four unit tests (focus lands on Clear
 selection; on the first bulk action when there is none; a mouse press is left alone; nothing moves when the button goes away without having focus), the
 `TableToolbar` suite (107 passing), and a real-browser check on `DataTable`'s server demo (Enter on "Select all 137" leaves focus on "Clear selection").
+
+## Post-Finalization follow-up (2026-10-17, at explicit direction) — wording that called `DataTable` a future component
+
+The component JSDoc, the Docs page intro, a snippet comment and the story kit's comment now say a `DataTable` (which draws the bar as `DataTable.Toolbar`) can sit under it,
+instead of "a future `DataTable`". Wording only, so the component stays Finalized (question 1 of the three-question test, `06-engineering-standards.md` §9).
