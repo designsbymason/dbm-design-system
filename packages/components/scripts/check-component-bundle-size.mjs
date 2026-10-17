@@ -75,8 +75,9 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DataTable: 26, DatePicker: 18, TimeRangePicker: 12, Toolbar: 12 };
 
 // The same for CSS. `DataTable`'s bundle holds the stylesheets of the `Table`, `TableToolbar`, `Pagination`, `Select`,
-// `Checkbox` and `Menu` parts it draws with (6.30KB measured against 3.45KB for `TableToolbar`, the largest of them), plus its own.
-const CSS_BUDGET_OVERRIDES_KB = { DataTable: 8 };
+// `Checkbox` and `Menu` parts it draws with (6.30KB measured against 3.45KB for `TableToolbar`, the largest of them), plus its own; 8.10KB
+// with the resize handle, the pinned columns, the expand column and the detail row.
+const CSS_BUDGET_OVERRIDES_KB = { DataTable: 9 };
 
 // Words only an opt-in extra's code contains, and the component whose bundle must not contain them: `CodeBlock`
 // ships Python, Go and Java as separate exports an app registers (ADR-0027). If a change makes the component

@@ -1,8 +1,9 @@
-import { ArrowDownIcon, ArrowUpIcon, CaretUpDownIcon } from "@dbm-design-system/icons";
+import { ArrowDownIcon, ArrowUpIcon, CaretDownIcon, CaretRightIcon, CaretUpDownIcon } from "@dbm-design-system/icons";
 import { cx, mergeDefined, useAnnouncement, useWindowedList } from "@dbm-design-system/primitives";
 import {
   Children,
   forwardRef,
+  Fragment,
   isValidElement,
   useCallback,
   useEffect,
@@ -20,6 +21,7 @@ import {
 } from "react";
 import { Checkbox } from "../../atoms/Checkbox";
 import { Icon } from "../../atoms/Icon";
+import { IconButton } from "../../atoms/IconButton";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Table, type TableSize } from "../../molecules/Table";
 import { lengthToPx, readLengthToken } from "./DataTable.length";
@@ -65,6 +67,9 @@ const makeLabels = (formatNumber: (value: number) => string): DataTableLabels =>
   row: (position) => `Row ${formatNumber(position)}`,
   selectColumn: "Select",
   actionsColumn: "Actions",
+  expandRow: (rowLabel) => `Expand ${rowLabel}`,
+  collapseRow: (rowLabel) => `Collapse ${rowLabel}`,
+  expandColumn: "Details",
   resizeColumn: (column) => `Resize ${column} column`,
   resizeHint: "Arrow keys resize, Shift for larger steps, Home and End for the limits, Enter resets",
   empty: "No results",
@@ -76,9 +81,9 @@ const noSubscription = () => () => undefined;
 const noSnapshot = (): undefined => undefined;
 
 /** The number of columns the table pins: the data columns asked for, and the checkbox or actions column beside them. */
-const pinned = (asked: boolean | number | undefined, extra: boolean): number => {
+const pinned = (asked: boolean | number | undefined, extra: number): number => {
   const count = asked === true ? 1 : typeof asked === "number" && Number.isFinite(asked) ? Math.max(0, Math.floor(asked)) : 0;
-  return count > 0 ? count + (extra ? 1 : 0) : 0;
+  return count > 0 ? count + extra : 0;
 };
 
 const defaultRowId = (row: unknown, index: number): string => {
@@ -138,6 +143,12 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
     selection: selectionProp,
     defaultSelection = NO_IDS,
     onSelectionChange,
+    renderExpandedRow,
+    isRowExpandable,
+    expanded: expandedProp,
+    defaultExpanded = NO_IDS,
+    onExpandedChange,
+    expandMode = "multiple",
     allSelected: allSelectedProp,
     defaultAllSelected = false,
     onAllSelectedChange,
@@ -189,6 +200,7 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
 
   const [sort, setSort] = useControllableValue(sortProp, defaultSort, onSortChange);
   const [selection, setSelection] = useControllableValue(selectionProp, defaultSelection, onSelectionChange);
+  const [expanded, setExpanded] = useControllableValue(expandedProp, defaultExpanded, onExpandedChange);
   const [allSelected, setAllSelected] = useControllableValue(allSelectedProp, defaultAllSelected, onAllSelectedChange);
   const [columnWidths, setColumnWidths] = useControllableValue(columnWidthsProp, defaultColumnWidths, onColumnWidthsChange);
   const [hiddenColumns, setHiddenColumns] = useControllableValue(hiddenProp, defaultHiddenColumns, onHiddenColumnsChange);
@@ -254,11 +266,15 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
   const allMatching = allSelected && selectionMode === "multiple";
   const hasWrap = visibleColumns.some((column) => column.wrap);
   const hasActions = Boolean(rowActions);
-  const columnCount = visibleColumns.length + (selecting ? 1 : 0) + (hasActions ? 1 : 0);
+  const expandable = Boolean(renderExpandedRow);
+  const expandedSet = useMemo(() => new Set(expanded), [expanded]);
+  const detailsId = useId();
+  const columnCount = visibleColumns.length + (selecting ? 1 : 0) + (expandable ? 1 : 0) + (hasActions ? 1 : 0);
 
   const windowed =
     !loading &&
     !hasWrap &&
+    !expandable &&
     displayed.length > 0 &&
     (virtualize === true || (virtualize === "auto" && !paginated && maxHeight !== undefined && displayed.length > WINDOW_THRESHOLD));
 
@@ -330,6 +346,8 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
     total,
     paginated,
     columns: columns.map((column) => ({ id: column.id, label: columnLabel(column) })),
+    expanded,
+    setExpanded,
     columnWidths,
     setColumnWidths,
     hiddenColumns,
@@ -378,6 +396,11 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
     }
     shiftHeld.current = false;
     lastToggled.current = entry.id;
+  };
+
+  const toggleExpanded = (id: string) => {
+    if (expandedSet.has(id)) setExpanded(expanded.filter((candidate) => candidate !== id));
+    else setExpanded(expandMode === "single" ? [id] : [...expanded, id]);
   };
 
   const toggleHeader = () => {
@@ -435,10 +458,10 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
     if (!caption && !ariaLabel && !ariaLabelledBy) {
       console.warn("DataTable: give the table a name with `caption`, `aria-label` or `aria-labelledby`.");
     }
-    if (virtualize === true && hasWrap) {
-      console.warn("DataTable: `virtualize` needs rows of one height, so it is ignored while a column has `wrap`.");
+    if (virtualize === true && (hasWrap || expandable)) {
+      console.warn(`DataTable: \`virtualize\` needs rows of one height, so it is ignored while ${expandable ? "rows can be expanded" : "a column has `wrap`"}.`);
     }
-  }, [columns, caption, ariaLabel, ariaLabelledBy, virtualize, hasWrap, manual]);
+  }, [columns, caption, ariaLabel, ariaLabelledBy, virtualize, hasWrap, expandable, manual]);
 
   const renderHeaderCell = (column: DataTableColumn<TRow>) => {
     const direction = directionOf(sort, column.id);
@@ -503,11 +526,15 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
   const renderRow = (entry: Entry<TRow>, position: number) => {
     const chosen = allMatching ? selectable(entry.row) : selectedSet.has(entry.id);
     const rowLabel = getRowLabel ? getRowLabel(entry.row, entry.index) : labels.row(firstPosition + position + 1);
+    const canExpand = expandable && (isRowExpandable ? isRowExpandable(entry.row) : true);
+    const open = canExpand && expandedSet.has(entry.id);
+    const detailId = `${detailsId}-${entry.id.replace(/\s/g, "_")}`;
     return (
+      <>
       <Table.Row
-        key={entry.id}
         selected={chosen}
-        {...(windowed || paginated ? { "aria-rowindex": firstPosition + position + 2 } : {})}
+        {...(open ? { "data-expanded": "" } : {})}
+        {...((windowed || paginated) && !expandable ? { "aria-rowindex": firstPosition + position + 2 } : {})}
         {...(onRowClick
           ? {
               tabIndex: 0,
@@ -533,6 +560,22 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
             </span>
           </Table.Cell>
         )}
+        {expandable && (
+          <Table.Cell className={styles.expandCell}>
+            {canExpand ? (
+              <IconButton
+                icon={open ? CaretDownIcon : CaretRightIcon}
+                size={size}
+                variant="ghost"
+                className={styles.expandButton}
+                aria-label={open ? labels.collapseRow(rowLabel) : labels.expandRow(rowLabel)}
+                aria-expanded={open}
+                aria-controls={open ? detailId : undefined}
+                onClick={() => toggleExpanded(entry.id)}
+              />
+            ) : null}
+          </Table.Cell>
+        )}
         {visibleColumns.map((column) => {
           const content = column.cell ? column.cell(entry.row, { index: entry.index }) : toText(column.accessor?.(entry.row));
           const cut = column.width !== undefined || column.maxWidth !== undefined || columnWidths[column.id] !== undefined;
@@ -556,6 +599,18 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
         })}
         {hasActions && <Table.Cell className={styles.actionsCell} style={fixedWidth(actionsColumnWidth)}>{rowActions?.(entry.row, entry.index)}</Table.Cell>}
       </Table.Row>
+      {open && (
+        <>
+          {/* A hidden row keeps the striping in step: the detail row and this one make two rows after the one it belongs to. */}
+          <tr hidden aria-hidden="true" />
+          <tr id={detailId} className={styles.detailRow}>
+            <Table.Cell colSpan={columnCount} className={styles.detailCell}>
+              {renderExpandedRow?.(entry.row, { index: entry.index })}
+            </Table.Cell>
+          </tr>
+        </>
+      )}
+      </>
     );
   };
 
@@ -575,15 +630,15 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
           striped={striped}
           hoverable={hoverable || Boolean(onRowClick)}
           stickyHeader={stickyHeader}
-          stickyFirstColumn={pinned(stickyFirstColumn, selecting)}
-          stickyLastColumn={pinned(stickyLastColumn, hasActions)}
+          stickyFirstColumn={pinned(stickyFirstColumn, (selecting ? 1 : 0) + (expandable ? 1 : 0))}
+          stickyLastColumn={pinned(stickyLastColumn, hasActions ? 1 : 0)}
           maxHeight={maxHeight}
           className={cx(styles.table, sizeClass[size], !hasWrap && styles.fixedRows)}
-          {...(windowed || paginated ? { "aria-rowcount": total + 1 } : {})}
+          {...((windowed || paginated) && !expandable ? { "aria-rowcount": total + 1 } : {})}
         >
           {caption && <Table.Caption>{caption}</Table.Caption>}
           <Table.Header>
-            <Table.Row {...(windowed || paginated ? { "aria-rowindex": 1 } : {})}>
+            <Table.Row {...((windowed || paginated) && !expandable ? { "aria-rowindex": 1 } : {})}>
               {selecting && (
                 <Table.HeaderCell className={styles.selectCell} style={fixedWidth(selectionColumnWidth)}>
                   {selectionMode === "multiple" ? (
@@ -599,6 +654,11 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
                   ) : (
                     <VisuallyHidden>{labels.selectColumn}</VisuallyHidden>
                   )}
+                </Table.HeaderCell>
+              )}
+              {expandable && (
+                <Table.HeaderCell className={styles.expandCell}>
+                  <VisuallyHidden>{labels.expandColumn}</VisuallyHidden>
                 </Table.HeaderCell>
               )}
               {visibleColumns.map(renderHeaderCell)}
@@ -621,7 +681,9 @@ function DataTableInner<TRow>(props: DataTableProps<TRow>, ref: ForwardedRef<HTM
                     <tr hidden aria-hidden="true" />
                   </>
                 )}
-                {visibleEntries.map((entry, offset) => renderRow(entry, (windowed ? start : 0) + offset))}
+                {visibleEntries.map((entry, offset) => (
+                  <Fragment key={entry.id}>{renderRow(entry, (windowed ? start : 0) + offset)}</Fragment>
+                ))}
                 {windowed && displayed.length - end > 0 && <Spacer rows={displayed.length - end} columns={columnCount} />}
               </>
             )}

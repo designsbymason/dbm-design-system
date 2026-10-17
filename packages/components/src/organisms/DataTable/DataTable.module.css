@@ -243,3 +243,41 @@ tr[data-selected] > .selectCell {
 .resizeHandleTinted:focus-visible {
   outline-color: currentcolor;
 }
+
+/* The column of expand buttons: as wide as a checkbox's, the button centred. A closed row's caret points toward the end edge, which is
+   the left in a right-to-left page, so it is turned round there. */
+.expandCell {
+  inline-size: var(--dbm-space-12);
+  max-inline-size: var(--dbm-space-12);
+  text-align: center;
+}
+
+.expandButton:dir(rtl) svg {
+  scale: -1 1;
+}
+
+/* An open row joins its detail: the divider between them is taken away, and forced colours (which draws a transparent border as a
+   solid line) is told to paint it as the page. */
+tr[data-expanded] > * {
+  border-block-end-color: transparent;
+}
+
+@media (forced-colors: active) {
+  tr[data-expanded] > * {
+    border-block-end-color: Canvas;
+  }
+}
+
+/* The detail of an open row: one cell as wide as the table, set apart by a quiet fill that neither a stripe nor the pointer changes,
+   with room to hold whatever the caller draws, at its own height (the fixed row height is for the rows of data). */
+.table > tbody > tr.detailRow,
+.table > tbody > tr.detailRow:hover {
+  background-color: var(--dbm-bg-neutral-subtle);
+}
+
+.fixedRows > tbody > tr.detailRow > td {
+  block-size: auto;
+  overflow: visible;
+  padding-block: var(--dbm-space-4);
+  white-space: normal;
+}

@@ -13,8 +13,8 @@ only the user declares that. A `/review-component DataTable` pass was run on 202
 - `Table` grew `Table.Row` `selected` and `containerRef`, additive and approved with the plan ([Table.md](Table.md)).
 - New component tokens, `data-table.row-height.{xs…xl}` (`2rem`, `2.5rem`, `2.75rem`, `3.5rem`, `4rem`), each just above the `IconButton` of
   its size. No new semantic token: a chosen row is `bg.brand-subtle` (the `brand` tone's own stripe), its hover `bg.brand-subtle-hover`.
-- No new dependency. Bundle size is 23.59KB JS and 7.68KB CSS, because the bundle holds `Table`, `TableToolbar`, `Pagination`, `Select`, `Checkbox`, `Menu` and
-  `Button`; budgets are 26KB and 8KB with the reason beside them in `check-component-bundle-size.mjs` (a `CSS_BUDGET_OVERRIDES_KB` was added).
+- No new dependency. Bundle size is 24.53KB JS and 8.10KB CSS, because the bundle holds `Table`, `TableToolbar`, `Pagination`, `Select`, `Checkbox`, `Menu` and
+  `Button`; budgets are 26KB and 9KB with the reason beside them in `check-component-bundle-size.mjs` (a `CSS_BUDGET_OVERRIDES_KB` was added).
 - Defaults: `tone` is `brand` (a solid brand header, as a data table's header usually wants), and `DataTable.Pagination` is size `sm`, since the
   footer is secondary to the rows. Text is ordered with one `Intl.Collator("en")`, not the browser's locale, so a server and a browser agree
   (ADR-0021); a column that needs another language's order gives its own `compare`.
@@ -92,9 +92,21 @@ Found while building them:
   needs a modifier uses one `userEvent.setup()`.
 - **A hover-sized check can't see what a probe-in-`waitFor` does** (06 §9): the forced-colours check keeps resolving colours outside its callback.
 
+## Expandable rows, a density toggle and saved views (2026-10-17)
+- **Expandable rows** are built into the table ([ADR-0090](../adr/0090-datatable-opens-a-rows-detail-in-a-row-of-its-own-under-it-with-an-expand-column-and-no-windowing-over-a-nested-table-or-a-side-panel.md)):
+  `renderExpandedRow`, `expanded` / `defaultExpanded` / `onExpandedChange`, `expandMode`, `isRowExpandable`, a column of expand buttons after the checkboxes, and a detail row
+  under an open one. A table with them is never windowed and sets no row count or index.
+- **A density toggle and saved views are recipes on the Docs page, not features:** `size` already sets the type, padding and row height together, so a density toggle is
+  a piece of the caller's state, and a saved view is a plain object of the table's own controlled state (`sort`, `hiddenColumns`, `columnWidths`, `pageSize`, `size`), so
+  there is nothing to add to the table and nowhere for it to store them. Each has a demo story, a "Show code" snippet and a real-browser check that the demo does what the
+  recipe says (a size per choice and rows of exactly that height; choosing a view hands its state back and saving copies the current state).
+- Found while building: a detail row between a row and the next breaks `:nth-child` stripes (two rows are added, a hidden one and the detail, to keep the parity), the
+  table's last-row rule needs the detail to be the last child (the hidden row goes *before* it), `aria-controls` on a closed row points at nothing so it is set only while
+  open, and the row count can't be kept right across pages, so it is left off.
+
 ## Verified
-- `eslint`, `tsc` and the Storybook `tsc`: clean. The `unit` project: 8684 passing. The `storybook` project in a real browser: 1811
-  passing (225 files), including eighteen hidden checks for this component and one for `Checkbox` (one run showed the known `TimePicker` width flake, which passed on a rerun of its folder). `pnpm build`, `pnpm check-component-bundle-size` and
+- `eslint`, `tsc` and the Storybook `tsc`: clean. The `unit` project: 8703 passing. The `storybook` project in a real browser: 1817
+  passing (225 files), including twenty-one hidden checks for this component and one for `Checkbox` (one run showed the known `TimePicker` width flake, which passed on a rerun of its folder). `pnpm build`, `pnpm check-component-bundle-size` and
   `pnpm check-guidelines`: clean.
 - Unit: sort, selection, paging and their pure helpers; the controlled/uncontrolled pairs wired to state; shift ranges; single mode;
   non-selectable rows; manual mode; the live-region announcement; `aria-rowcount` and `aria-rowindex`; `onRowClick` (and a control in the row not

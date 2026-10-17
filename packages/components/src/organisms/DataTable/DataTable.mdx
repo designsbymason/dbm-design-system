@@ -24,6 +24,12 @@ export const propOrder = [
   "onSortChange",
   "sortMode",
   "multiSort",
+  "expandMode",
+  "renderExpandedRow",
+  "isRowExpandable",
+  "expanded",
+  "defaultExpanded",
+  "onExpandedChange",
   "selectionMode",
   "allSelected",
   "defaultAllSelected",
@@ -164,6 +170,11 @@ reads and changes the table's state from your own parts inside it.
     "sort",
     "defaultSort",
     "onSortChange",
+    "renderExpandedRow",
+    "isRowExpandable",
+    "expanded",
+    "defaultExpanded",
+    "onExpandedChange",
     "allSelected",
     "defaultAllSelected",
     "onAllSelectedChange",
@@ -273,6 +284,17 @@ meant the rows matching the old one. A `client` table lists the ids as before.
 
 <Canvas of={DataTableStories.ServerSide} />
 
+### Expandable rows
+
+`renderExpandedRow` draws the detail of a row under it, in one cell as wide as the table, and adds a column of expand buttons after
+the checkboxes. Each button is named for its row ("Expand Ada Lovelace"), carries `aria-expanded`, and points at the detail with
+`aria-controls` while it is open. `expanded` and `onExpandedChange` keep which rows are open (by row id, across pages),
+`defaultExpanded` starts some open, `expandMode="single"` closes the open row when another opens, and `isRowExpandable` leaves a row's
+cell empty. Rows of different heights can't be drawn a window at a time, so such a table is never windowed, and it sets no
+`aria-rowcount` or `aria-rowindex`.
+
+<Canvas of={DataTableStories.ExpandableRows} />
+
 ### Pagination
 
 `DataTable.Pagination` turns paging on. Changing the page size goes back to the first page. A page that is past the end is held
@@ -328,6 +350,24 @@ A loading table shows placeholder rows and is `aria-busy`. An empty one says `em
 `size` sets the type, the padding and the fixed height of a row (`data-table.row-height.*`) together.
 
 <Canvas of={DataTableStories.AllSizes} />
+
+### Density toggle (a recipe)
+
+Density isn't a prop of its own: `size` already sets the type, the padding and the height of a row together, so a toggle is a piece of
+your state handed to it, from a `ToggleGroup` in the toolbar or a setting in the person's profile. Keep the choice wherever the
+person's other settings live.
+
+<Canvas of={DataTableStories.DensityToggle} />
+
+### Saved views (a recipe)
+
+A view is a plain object of the table's own controlled state, so there is nothing to add to the table: hold the `sort`,
+`hiddenColumns`, `columnWidths` and `pageSize` (and `size`, and the filters you keep beside the table) yourself; saving a view copies
+them and choosing one hands them back. Where views live (state, storage, a server) is yours to decide, which is also why the table
+doesn't store them. A view of `selection`, `page` or `expanded` is rarely wanted: they describe what a person did, not how they like to
+look.
+
+<Canvas of={DataTableStories.SavedViews} />
 
 ### Column sizes and resizing
 
@@ -430,6 +470,9 @@ doesn't read the page's direction, so give `DataTable.Pagination` `dir="rtl"` as
   `aria-valuemin` and, when there is one, `aria-valuemax` in pixels, and a hidden hint about its keys. The arrow keys follow the
   page's direction (right is wider in a left-to-right page and narrower in a right-to-left one), the hit area is 24px wide, and a drag
   ends however the pointer ends.
+- An expand button is a native button named for its row, with `aria-expanded` and (while open) `aria-controls` pointing at the detail
+  row; Enter and Space work, focus stays on it, and the detail's own controls come after it in the Tab order. A hidden row after an
+  open one keeps the stripes in step. The caret of a closed row points toward the end edge, so it turns round in right-to-left.
 - A sort by several columns says its order: the digit beside a column's arrow is hidden from assistive technology, which hears
   "sort order 2" after the heading, and the live region lists every column in the announcement.
 - An arrow on a column that isn't sorted is drawn at `opacity.80` and keeps 3:1 against its header (brand or neutral) in all four
@@ -523,6 +566,7 @@ const columns: DataTableColumn<Employee>[] = [
 <TokenRow token="space.3" usage="the gap between the toolbar, the table and the footer, and between footer items" />
 <TokenRow token="space.4" usage="the horizontal gap between footer items" />
 <TokenRow token="space.6" usage="the 24px minimum size of the sort button" />
+<TokenRow token="bg.neutral-subtle" usage="the fill of an open row's detail, which a stripe and the pointer leave alone" />
 <TokenRow token="space.12" usage="the width of the column of checkboxes" />
 <TokenRow token="space.20" usage="the least width of the page size select" />
 <TokenRow token="radius.sm" usage="the corners of the sort button's and a pressable row's focus ring" />

@@ -138,6 +138,63 @@ export const dataTableSnippets = {
 {/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" — the cell type size, the row height and the controls in it. */}
 <DataTable aria-label="Team" columns={columns} data={rows} size="sm" />`,
 
+  expandableRows: `${columnsNote}
+{/* renderExpandedRow draws the detail under a row and adds a column of expand buttons (aria-expanded, named for the row). The
+    open rows are expanded / onExpandedChange (or defaultExpanded); expandMode="single" closes the open row when another opens.
+    isRowExpandable leaves a row's cell empty. A table with expandable rows is never drawn a window at a time. */}
+<DataTable
+  aria-label="Team"
+  columns={columns}
+  data={rows}
+  getRowLabel={(row) => row.name}
+  defaultExpanded={["e2"]}
+  renderExpandedRow={(row) => (
+    <DescriptionList size="sm">
+      <DescriptionList.Item>
+        <DescriptionList.Term>Contact</DescriptionList.Term>
+        <DescriptionList.Details>{row.email}</DescriptionList.Details>
+      </DescriptionList.Item>
+    </DescriptionList>
+  )}
+/>`,
+
+  density: `{/* A density toggle needs no prop of its own: size sets the type, the padding and the height of a row together, so a
+    toggle is a piece of your state handed to it. Keep the choice where the person's other settings live (storage, a profile). */}
+{/* const [density, setDensity] = useState("md"); */}
+<ToggleGroup aria-label="Row density" size="sm" value={density} onValueChange={(next) => next && setDensity(next)}>
+  <ToggleGroup.Item value="sm">Compact</ToggleGroup.Item>
+  <ToggleGroup.Item value="md">Comfortable</ToggleGroup.Item>
+  <ToggleGroup.Item value="lg">Spacious</ToggleGroup.Item>
+</ToggleGroup>
+<DataTable aria-label="Team" columns={columns} data={rows} size={density} />`,
+
+  savedViews: `{/* A saved view is a plain object of the table's own controlled state. Saving one copies that state; choosing one hands it
+    back. Where views live (state, storage, a server) is the app's. A view might be:
+    { id, name, sort, hiddenColumns, columnWidths, pageSize, size }, and the filters the app holds beside the table. */}
+{/* const [sort, setSort] = useState([]);  const [hiddenColumns, setHiddenColumns] = useState([]);
+    const [columnWidths, setColumnWidths] = useState({});  const [pageSize, setPageSize] = useState(10); */}
+<Select value={viewId} onValueChange={chooseView} aria-label="View" size="sm">
+  <Select.Option value="default">Default</Select.Option>
+  <Select.Option value="payroll">Payroll</Select.Option>
+</Select>
+<Button size="sm" variant="secondary" onClick={saveCurrentView}>Save current view</Button>
+<DataTable
+  aria-label="Team"
+  columns={columns}
+  data={rows}
+  resizable
+  sort={sort}
+  onSortChange={setSort}
+  hiddenColumns={hiddenColumns}
+  onHiddenColumnsChange={setHiddenColumns}
+  columnWidths={columnWidths}
+  onColumnWidthsChange={setColumnWidths}
+  pageSize={pageSize}
+  onPageSizeChange={setPageSize}
+>
+  <DataTable.Pagination />
+</DataTable>`,
+
   resizable: `${columnsNote}
 {/* resizable puts a handle at the end of every heading: drag it, or focus it and use the arrow keys (Shift for larger steps,
     Home and End for the limits, Enter to reset). A column's width, minWidth and maxWidth are where it begins and where a drag stops;
@@ -187,6 +244,7 @@ export interface DataTablePlaygroundSnippetArgs {
   sortMode?: string;
   multiSort?: boolean;
   resizable?: boolean;
+  expandMode?: string;
   selectionColumnWidth?: string;
   actionsColumnWidth?: string;
   loading?: boolean;
@@ -217,6 +275,7 @@ export function dataTablePlaygroundSnippet(args: DataTablePlaygroundSnippetArgs)
   if (args.selectionMode && args.selectionMode !== "none") props.push(`selectionMode="${args.selectionMode}"`);
   if (args.sortMode === "manual") props.push('sortMode="manual"');
   if (args.resizable) props.push("resizable");
+  if (args.expandMode === "single") props.push('expandMode="single"');
   if (args.selectionColumnWidth) props.push(`selectionColumnWidth="${args.selectionColumnWidth}"`);
   if (args.actionsColumnWidth) props.push(`actionsColumnWidth="${args.actionsColumnWidth}"`);
   if (args.multiSort === false) props.push("multiSort={false}");

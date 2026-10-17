@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { DataTable } from "./DataTable";
-import { employeeColumns, employees, makeEmployees, RowMenu, ServerDemo, TeamDemo, type Employee } from "./DataTableStoryKit";
+import { DensityDemo, EmployeeDetail, SavedViewsDemo, employeeColumns, employees, makeEmployees, RowMenu, ServerDemo, TeamDemo, type Employee } from "./DataTableStoryKit";
 
 // Real-browser checks for what jsdom can't evaluate: the height of a row against its token, a window of rows over a long
 // table, the ellipsis, the size of a target, the real Tab order and a pointer on a menu inside the scrolling frame. Hidden
@@ -638,5 +638,112 @@ export const SelectAllAcrossPages: Story = {
     await expect(within(table).getAllByRole("checkbox", { checked: true }).length).toBe(11);
     await userEvent.click(within(table).getAllByRole("checkbox")[3] as HTMLElement);
     await expect(body.getByText("9 selected")).toBeInTheDocument();
+  },
+};
+
+export const ExpandedRowsKeepStripesAndLayout: Story = {
+  name: "An open row's detail spans the table, the stripes stay in step, and the caret turns round in right-to-left",
+  render: () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <DataTable<Employee>
+        aria-label="Expandable"
+        columns={employeeColumns}
+        data={employees.slice(0, 6)}
+        striped
+        selectionMode="multiple"
+        renderExpandedRow={(row) => <EmployeeDetail row={row} />}
+        getRowLabel={(row) => row.name}
+      />
+      <div dir="rtl">
+        <DataTable<Employee>
+          aria-label="Expandable right to left"
+          columns={employeeColumns}
+          data={employees.slice(0, 2)}
+          renderExpandedRow={(row) => <EmployeeDetail row={row} />}
+          getRowLabel={(row) => row.name}
+        />
+      </div>
+    </div>
+  ),
+  play: async () => {
+    // a pointer left over from an earlier check would tint the row under it
+    await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: 1, y: 1 });
+    const table = body.getByRole("table", { name: "Expandable" });
+    const buttons = within(table).getAllByRole("button", { name: /^Expand/ });
+    // targets: the button is at least the minimum size, at the row's own size
+    for (const button of buttons) await expect(Math.min(button.getBoundingClientRect().width, button.getBoundingClientRect().height)).toBeGreaterThanOrEqual(24);
+    const fill = (row: Element) => getComputedStyle(row).backgroundColor;
+    const dataRows = () => [...table.querySelectorAll<HTMLElement>("tbody > tr:not([hidden])")].filter((row) => !row.id);
+    // the fills ease in on first paint, so read them once two reads a moment apart agree
+    let before = dataRows().map(fill);
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      const now = dataRows().map(fill);
+      if (JSON.stringify(now) === JSON.stringify(before)) break;
+      before = now;
+    }
+    // a keyboard opens it and focus stays
+    buttons[1]?.focus();
+    await userEvent.keyboard("{Enter}");
+    const open = within(table).getByRole("button", { name: /^Collapse/ });
+    await expect(open).toHaveFocus();
+    const detail = table.querySelector<HTMLElement>("tbody > tr[id]") as HTMLElement;
+    const frame = table.getBoundingClientRect();
+    await expect(Math.abs(detail.getBoundingClientRect().width - frame.width)).toBeLessThan(2);
+    // the detail is taller than a row (it has its own height), and its fill is the same on and off the pointer
+    await expect(detail.getBoundingClientRect().height).toBeGreaterThan(tokenPx("--dbm-data-table-row-height-md"));
+    const quiet = fill(detail);
+    await expect(quiet).not.toBe("rgba(0, 0, 0, 0)");
+    // the stripes of the rows of data are what they were: an even row is still striped, an odd one still not
+    await waitFor(() => expect(JSON.stringify(dataRows().map(fill))).toBe(JSON.stringify(before)), { timeout: 3000 });
+    // and the row above the detail is joined to it: no divider between them
+    const parent = open.closest("tr") as HTMLElement;
+    await expect(getComputedStyle(parent.firstElementChild as Element).borderBlockEndColor).toBe("rgba(0, 0, 0, 0)");
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(table.querySelector("tbody > tr[id]")).toBeNull());
+    // in right to left the closed caret is turned round, and in left to right it is not
+    const rtlButton = within(body.getByRole("table", { name: "Expandable right to left" })).getAllByRole("button", { name: /^Expand/ })[0] as HTMLElement;
+    await expect(getComputedStyle(rtlButton.querySelector("svg") as Element).scale).toBe("-1 1");
+    await expect(getComputedStyle((buttons[0] as HTMLElement).querySelector("svg") as Element).scale).toBe("none");
+  },
+};
+
+export const DensityRecipeChangesRowHeight: Story = {
+  name: "The density recipe: each choice is a size, and its rows are exactly that size's height",
+  render: () => <DensityDemo />,
+  play: async () => {
+    const table = body.getByRole("table", { name: "Team" });
+    for (const [label, token] of [["Compact", "sm"], ["Comfortable", "md"], ["Spacious", "lg"]] as const) {
+      await userEvent.click(body.getByRole("radio", { name: label }));
+      await waitFor(() => expect(Math.abs((bodyRows(table)[0] as HTMLElement).getBoundingClientRect().height - tokenPx(`--dbm-data-table-row-height-${token}`))).toBeLessThan(1));
+    }
+  },
+};
+
+export const SavedViewsRecipeRoundTrips: Story = {
+  name: "The saved-views recipe: choosing a view hands its state back, saving one copies the current state",
+  render: () => (
+    <div style={{ minHeight: "26rem" }}>
+      <SavedViewsDemo />
+    </div>
+  ),
+  play: async () => {
+    const table = body.getByRole("table", { name: "Team" });
+    await userEvent.click(body.getByRole("combobox", { name: "View" }));
+    await userEvent.click(await body.findByRole("option", { name: "Payroll" }));
+    await waitFor(() => expect(within(table).queryByRole("columnheader", { name: /^Started/ })).toBeNull());
+    await expect(within(table).getByRole("columnheader", { name: /^Salary/ })).toHaveAttribute("aria-sort", "descending");
+    await expect(body.getByText((content) => content.replace(/[\u2068\u2069]/g, "") === "1–5 of 24")).toBeInTheDocument();
+    // change the current state (sort by name), save it, and the new view is chosen and keeps it
+    await userEvent.click(within(table).getByRole("button", { name: /^Name/ }));
+    await userEvent.click(body.getByRole("button", { name: "Save current view" }));
+    await waitFor(() => expect(body.getByRole("combobox", { name: "View" })).toHaveTextContent("View 3"));
+    await userEvent.click(body.getByRole("combobox", { name: "View" }));
+    await userEvent.click(await body.findByRole("option", { name: "Default" }));
+    await waitFor(() => expect(within(table).getByRole("columnheader", { name: /^Started/ })).toBeInTheDocument());
+    await userEvent.click(body.getByRole("combobox", { name: "View" }));
+    await userEvent.click(await body.findByRole("option", { name: "View 3" }));
+    await waitFor(() => expect(within(table).getByRole("columnheader", { name: /^Name/ })).toHaveAttribute("aria-sort", "ascending"));
+    await expect(within(table).queryByRole("columnheader", { name: /^Started/ })).toBeNull();
   },
 };

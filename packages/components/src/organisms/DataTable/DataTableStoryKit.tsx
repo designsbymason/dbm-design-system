@@ -5,14 +5,20 @@
 import { DotsThreeIcon, PencilSimpleIcon, TrashIcon } from "@dbm-design-system/icons";
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "../../atoms/Badge";
+import { Button } from "../../atoms/Button";
 import { IconButton } from "../../atoms/IconButton";
 import { SearchInput } from "../../molecules/SearchInput";
+import { Select } from "../../molecules/Select";
+import { ToggleGroup } from "../../molecules/ToggleGroup";
 import { Spacer } from "../../atoms/Spacer";
 import { TableToolbar } from "../../molecules/TableToolbar";
 import { Toolbar } from "../../molecules/Toolbar";
 import { Menu } from "../Menu";
+import { DescriptionList } from "../../molecules/DescriptionList";
 import { DataTable } from "./DataTable";
 import type { DataTableColumn, DataTableProps, DataTableSort } from "./DataTable.types";
+
+const demoColumn = { display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)", alignItems: "flex-start" } as const;
 
 export interface Employee {
   id: string;
@@ -59,6 +65,26 @@ export const employeeColumns: DataTableColumn<Employee>[] = [
     cell: (row) => <Badge tone={row.status === "Active" ? "success" : "warning"}>{row.status}</Badge>,
   },
 ];
+
+/** The detail of an open row: what the row's columns don't show. */
+export function EmployeeDetail({ row }: { row: Employee }) {
+  return (
+    <DescriptionList size="sm" columns={{ base: 1, md: 3 }}>
+      <DescriptionList.Item>
+        <DescriptionList.Term>Manager</DescriptionList.Term>
+        <DescriptionList.Details>{row.department} lead</DescriptionList.Details>
+      </DescriptionList.Item>
+      <DescriptionList.Item>
+        <DescriptionList.Term>Started</DescriptionList.Term>
+        <DescriptionList.Details>{row.started}</DescriptionList.Details>
+      </DescriptionList.Item>
+      <DescriptionList.Item>
+        <DescriptionList.Term>Contact</DescriptionList.Term>
+        <DescriptionList.Details>{row.name.split(" ")[0]?.toLowerCase()}@example.com</DescriptionList.Details>
+      </DescriptionList.Item>
+    </DescriptionList>
+  );
+}
 
 /** The menu at the end of a row. Its button takes the table's `size`, so it fits the fixed row height. */
 export function RowMenu({ row, size = "sm" }: { row: Employee; size?: "xs" | "sm" | "md" | "lg" | "xl" }) {
@@ -182,5 +208,115 @@ export function ServerDemo({
       </DataTable.Toolbar>
       <DataTable.Pagination />
     </DataTable>
+  );
+}
+
+type Density = "sm" | "md" | "lg";
+
+/** A density toggle: the app holds the size and hands it to the table, which draws its type, padding and row height from it. */
+export function DensityDemo({ data: _data, columns: _columns, size: _size, ...props }: Partial<DataTableProps<Employee>>) {
+  const [density, setDensity] = useState<Density>("md");
+  return (
+    <div style={demoColumn}>
+      <ToggleGroup aria-label="Row density" size="sm" value={density} onValueChange={(next) => next && setDensity(next as Density)}>
+        <ToggleGroup.Item value="sm">Compact</ToggleGroup.Item>
+        <ToggleGroup.Item value="md">Comfortable</ToggleGroup.Item>
+        <ToggleGroup.Item value="lg">Spacious</ToggleGroup.Item>
+      </ToggleGroup>
+      <div style={{ alignSelf: "stretch" }}>
+        <DataTable<Employee> aria-label="Team" {...props} columns={employeeColumns} data={employees.slice(0, 6)} size={density} />
+      </div>
+    </div>
+  );
+}
+
+interface SavedView {
+  id: string;
+  name: string;
+  sort: DataTableSort;
+  hiddenColumns: string[];
+  columnWidths: Record<string, number>;
+  pageSize: number;
+}
+
+const startingViews: SavedView[] = [
+  { id: "default", name: "Default", sort: [], hiddenColumns: [], columnWidths: {}, pageSize: 10 },
+  {
+    id: "payroll",
+    name: "Payroll",
+    sort: [{ columnId: "salary", direction: "descending" }],
+    hiddenColumns: ["started", "status"],
+    columnWidths: {},
+    pageSize: 5,
+  },
+];
+
+/**
+ * Saved views: a view is a plain object of the table's own controlled state, so saving one is copying that state and choosing one is
+ * handing it back. The app decides where views live (here, in state; in an app, a server or storage).
+ */
+export function SavedViewsDemo({ data: _data, columns: _columns, ...props }: Partial<DataTableProps<Employee>>) {
+  const [views, setViews] = useState<SavedView[]>(startingViews);
+  const [viewId, setViewId] = useState("default");
+  const [sort, setSort] = useState<DataTableSort>([]);
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+  const [pageSize, setPageSize] = useState(10);
+
+  const choose = (id: string) => {
+    const view = views.find((candidate) => candidate.id === id);
+    if (!view) return;
+    setViewId(id);
+    setSort(view.sort);
+    setHiddenColumns(view.hiddenColumns);
+    setColumnWidths(view.columnWidths);
+    setPageSize(view.pageSize);
+  };
+  const save = () => {
+    const id = `view-${views.length + 1}`;
+    setViews([...views, { id, name: `View ${views.length + 1}`, sort, hiddenColumns, columnWidths, pageSize }]);
+    setViewId(id);
+  };
+
+  return (
+    <div style={demoColumn}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-3)", alignItems: "center" }}>
+        <Select value={viewId} onValueChange={choose} aria-label="View" size="sm">
+          {views.map((view) => (
+            <Select.Option key={view.id} value={view.id}>
+              {view.name}
+            </Select.Option>
+          ))}
+        </Select>
+        <Button size="sm" variant="secondary" onClick={save}>
+          Save current view
+        </Button>
+      </div>
+      <div style={{ alignSelf: "stretch" }}>
+        <DataTable<Employee>
+          aria-label="Team"
+          {...props}
+          columns={employeeColumns}
+          data={employees}
+          resizable
+          sort={sort}
+          onSortChange={setSort}
+          hiddenColumns={hiddenColumns}
+          onHiddenColumnsChange={setHiddenColumns}
+          columnWidths={columnWidths}
+          onColumnWidthsChange={setColumnWidths}
+          pageSize={pageSize}
+          onPageSizeChange={setPageSize}
+        >
+          <DataTable.Toolbar aria-label="Team table tools">
+            <TableToolbar.Row>
+              <Spacer />
+              <DataTable.ColumnMenu />
+            </TableToolbar.Row>
+          </DataTable.Toolbar>
+          <DataTable.Pagination />
+        </DataTable>
+      </div>
+    </div>
   );
 }

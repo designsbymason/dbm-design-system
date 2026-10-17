@@ -37,6 +37,10 @@ export interface DataTableState {
   total: number;
   /** Whether the table is divided into pages. */
   paginated: boolean;
+  /** The ids of the rows that are open. */
+  expanded: string[];
+  /** Replaces which rows are open. */
+  setExpanded: (expanded: string[]) => void;
   /** The widths a person has given columns, in pixels, by column id. */
   columnWidths: Record<string, number>;
   /** Replaces the widths given to columns. */

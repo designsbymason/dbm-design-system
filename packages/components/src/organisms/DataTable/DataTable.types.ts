@@ -114,6 +114,12 @@ export interface DataTableLabels {
   selectColumn: string;
   /** The heading of the column of `rowActions`, read by a screen reader but not drawn. */
   actionsColumn: string;
+  /** The name of a row's expand button when it is closed: "Expand Ada Lovelace". */
+  expandRow: (rowLabel: string) => string;
+  /** The name of a row's expand button when it is open: "Collapse Ada Lovelace". */
+  collapseRow: (rowLabel: string) => string;
+  /** The heading of the column of expand buttons, read by a screen reader but not drawn. */
+  expandColumn: string;
   /** The name of a column's resize handle, a separator: "Resize Name column". */
   resizeColumn: (column: string) => string;
   /** What is said after the handle's name, about its keys. */
@@ -198,6 +204,29 @@ export interface DataTableProps<TRow>
   defaultAllSelected?: boolean;
   /** Called when a person chooses every row of the whole table, or goes back to a list of ids. */
   onAllSelectedChange?: (allSelected: boolean) => void;
+  /**
+   * Draws the detail of a row under it when it is opened, and adds a column of expand buttons (after the checkboxes) that open and
+   * close it. What it returns fills one cell as wide as the table. Rows of different heights can't be drawn a window at a time,
+   * so a table with this is never windowed, and the table sets no `aria-rowcount` or `aria-rowindex`, since the detail rows make
+   * the number of rows unknowable across pages.
+   */
+  renderExpandedRow?: (row: TRow, context: { index: number }) => ReactNode;
+  /** Says a row has no detail: its expand cell is left empty. Only read with `renderExpandedRow`. */
+  isRowExpandable?: (row: TRow) => boolean;
+  /** The ids of the rows that are open. Controlled with `onExpandedChange`. */
+  expanded?: string[];
+  /**
+   * The rows open to begin with.
+   * @default []
+   */
+  defaultExpanded?: string[];
+  /** Called with the ids a person asked to have open. A controlled table changes only when `expanded` does. */
+  onExpandedChange?: (expanded: string[]) => void;
+  /**
+   * `"multiple"` lets any number of rows be open; `"single"` closes the open row when another is opened.
+   * @default 'multiple'
+   */
+  expandMode?: "multiple" | "single";
   /** Says a row can't be chosen. Its checkbox is disabled, and the header checkbox leaves it out. */
   isRowSelectable?: (row: TRow) => boolean;
   /** The page, from 1. Controlled with `onPageChange`. Setting `pageSize` or adding a `DataTable.Pagination` turns paging on. */

@@ -6,7 +6,7 @@ import { TableToolbar } from "../../molecules/TableToolbar";
 import { DataTable } from "./DataTable";
 import { dataTablePlaygroundSnippet, dataTableSnippets } from "./DataTable.snippets";
 import type { DataTableProps } from "./DataTable.types";
-import { employeeColumns, employees, makeEmployees, RowMenu, ServerDemo, TeamDemo, type Employee } from "./DataTableStoryKit";
+import { EmployeeDetail, employeeColumns, employees, makeEmployees, DensityDemo, RowMenu, SavedViewsDemo, ServerDemo, TeamDemo, type Employee } from "./DataTableStoryKit";
 
 type Args = DataTableProps<Employee>;
 
@@ -45,6 +45,17 @@ const meta: Meta<Args> = {
       options: ["none", "single", "multiple"],
       description: "How many rows can be chosen. multiple adds a checkbox column with a header checkbox; single replaces the choice.",
       table: { defaultValue: { summary: "none" } },
+    },
+    renderExpandedRow: { ...noControls, description: "Draws the detail of a row under it when it is opened, and adds a column of expand buttons. A table with this is never drawn a window at a time." },
+    isRowExpandable: { ...noControls, description: "Says a row has no detail: its expand cell is left empty." },
+    expanded: { ...noControls, description: "The ids of the rows that are open. Controlled with onExpandedChange." },
+    defaultExpanded: { ...noControls, description: "The rows open to begin with.", table: { defaultValue: { summary: "[]" } } },
+    onExpandedChange: { ...noControls, description: "Called with the ids a person asked to have open." },
+    expandMode: {
+      control: "radio",
+      options: ["multiple", "single"],
+      description: "multiple lets any number of rows be open; single closes the open row when another is opened.",
+      table: { defaultValue: { summary: "multiple" } },
     },
     allSelected: { ...noControls, description: "Whether every row of the whole table is chosen, on every page, without their ids being listed: \"select all 137\" for a manual table with a totalCount. Controlled with onAllSelectedChange." },
     defaultAllSelected: { ...noControls, description: "Whether every row is chosen to begin with.", table: { defaultValue: { summary: "false" } } },
@@ -132,6 +143,7 @@ const meta: Meta<Args> = {
     "aria-label": "Team",
     sortMode: "client",
     multiSort: true,
+    expandMode: "multiple",
     resizable: false,
     selectionMode: "none",
     virtualize: "auto",
@@ -303,6 +315,25 @@ export const AllSizes: Story = {
   ),
 };
 
+export const ExpandableRows: Story = {
+  name: "Expandable rows",
+  parameters: { docs: { source: { code: dataTableSnippets.expandableRows } } },
+  args: { selectionMode: "multiple", defaultExpanded: ["e2"] },
+  render: ({ maxHeight, selectionColumnWidth, actionsColumnWidth, ...args }) => (
+    <DataTable<Employee>
+      {...args}
+      maxHeight={maxHeight || undefined}
+      selectionColumnWidth={selectionColumnWidth || undefined}
+      actionsColumnWidth={actionsColumnWidth || undefined}
+      data={employees.slice(0, 6)}
+      getRowLabel={(row) => row.name}
+      renderExpandedRow={(row) => <EmployeeDetail row={row} />}
+      isRowExpandable={(row) => row.status === "Active"}
+      striped
+    />
+  ),
+};
+
 export const ResizableColumns: Story = {
   name: "Resizable columns",
   parameters: { docs: { source: { code: dataTableSnippets.resizable } } },
@@ -332,6 +363,26 @@ export const PinnedColumns: Story = {
         data={employees.slice(0, 5)}
         rowActions={(row) => <RowMenu row={row} size={args.size} />}
       />
+    </div>
+  ),
+};
+
+export const DensityToggle: Story = {
+  name: "Density toggle (a recipe)",
+  parameters: { docs: { source: { code: dataTableSnippets.density } } },
+  argTypes: { size: noControls },
+  render: ({ maxHeight, selectionColumnWidth, actionsColumnWidth, ...args }) => (
+    <DensityDemo {...args} maxHeight={maxHeight || undefined} selectionColumnWidth={selectionColumnWidth || undefined} actionsColumnWidth={actionsColumnWidth || undefined} />
+  ),
+};
+
+export const SavedViews: Story = {
+  name: "Saved views (a recipe)",
+  parameters: { docs: { source: { code: dataTableSnippets.savedViews } } },
+  argTypes: { sortMode: noControls },
+  render: ({ maxHeight, selectionColumnWidth, actionsColumnWidth, ...args }) => (
+    <div style={{ minHeight: "28rem" }}>
+      <SavedViewsDemo {...args} maxHeight={maxHeight || undefined} selectionColumnWidth={selectionColumnWidth || undefined} actionsColumnWidth={actionsColumnWidth || undefined} />
     </div>
   ),
 };

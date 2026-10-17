@@ -4,6 +4,7 @@ import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DataTable } from "./DataTable";
+import styles from "./DataTable.module.css";
 import { useDataTable } from "./DataTable.context";
 import type { DataTableColumn, DataTableProps, DataTableSort } from "./DataTable.types";
 import { TableToolbar } from "../../molecules/TableToolbar";
@@ -11,6 +12,9 @@ import { TableToolbar } from "../../molecules/TableToolbar";
 afterEach(() => vi.restoreAllMocks());
 
 // The footer's range wraps each number in a bidirectional isolate; a reader (and a test) sees through them.
+/** The detail row's class, read from the stylesheet module so the test doesn't hold a hashed name. */
+const styles_detailRow = () => (styles as Record<string, string>).detailRow as string;
+
 const rangeText = (text: string) => (content: string) => content.replace(/[\u2068\u2069]/g, "") === text;
 
 interface Person {
@@ -1065,6 +1069,147 @@ describe("DataTable", () => {
       const header = screen.getAllByRole("columnheader");
       expect(header[0]).toHaveStyle({ inlineSize: "5rem", maxInlineSize: "5rem" });
       expect(header.at(-1)).toHaveStyle({ inlineSize: "7rem", maxInlineSize: "7rem" });
+    });
+  });
+  describe("expandable rows", () => {
+    const detail = (row: Person) => <p>Detail of {row.name}</p>;
+    const renderExpandable = (props: Partial<DataTableProps<Person>> = {}) =>
+      render(
+        <DataTable<Person>
+          columns={columns}
+          data={people}
+          aria-label="People"
+          getRowLabel={(row) => row.name}
+          renderExpandedRow={detail}
+          {...props}
+        />,
+      );
+
+    it("adds a column of expand buttons, named for their rows, with a heading only a screen reader reads", () => {
+      renderExpandable();
+      expect(screen.getByRole("columnheader", { name: "Details" })).toBeInTheDocument();
+      const button = screen.getByRole("button", { name: "Expand Cy" });
+      expect(button).toHaveAttribute("aria-expanded", "false");
+      expect(button).not.toHaveAttribute("aria-controls");
+      expect(screen.queryByText("Detail of Cy")).toBeNull();
+    });
+
+    it("opens a row's detail in one cell as wide as the table, and closes it again", async () => {
+      const user = userEvent.setup();
+      renderExpandable({ selectionMode: "multiple" });
+      await user.click(screen.getByRole("button", { name: "Expand Cy" }));
+      const open = screen.getByRole("button", { name: "Collapse Cy" });
+      expect(open).toHaveAttribute("aria-expanded", "true");
+      const detailRow = screen.getByText("Detail of Cy").closest("tr") as HTMLElement;
+      expect(open).toHaveAttribute("aria-controls", detailRow.id);
+      // the checkbox column, the expand column, and two data columns
+      expect(detailRow.querySelector("td")).toHaveAttribute("colspan", "4");
+      await user.click(open);
+      expect(screen.queryByText("Detail of Cy")).toBeNull();
+      expect(screen.getByRole("button", { name: "Expand Cy" })).toHaveFocus();
+    });
+
+    it("puts the expand column after the checkboxes", () => {
+      renderExpandable({ selectionMode: "multiple" });
+      const [first, second] = screen.getAllByRole("columnheader");
+      expect(within(first as HTMLElement).getByRole("checkbox", { name: "Select all rows" })).toBeInTheDocument();
+      expect(second).toHaveAccessibleName("Details");
+    });
+
+    it("starts from defaultExpanded and reports each change", async () => {
+      const onExpandedChange = vi.fn();
+      const user = userEvent.setup();
+      renderExpandable({ defaultExpanded: ["p2"], onExpandedChange });
+      expect(screen.getByText("Detail of Ada")).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: "Expand Bo" }));
+      expect(onExpandedChange).toHaveBeenLastCalledWith(["p2", "p3"]);
+      await user.click(screen.getByRole("button", { name: "Collapse Ada" }));
+      expect(onExpandedChange).toHaveBeenLastCalledWith(["p3"]);
+    });
+
+    it("closes the open row when another opens, in single mode", async () => {
+      const user = userEvent.setup();
+      renderExpandable({ expandMode: "single", defaultExpanded: ["p2"] });
+      await user.click(screen.getByRole("button", { name: "Expand Bo" }));
+      expect(screen.queryByText("Detail of Ada")).toBeNull();
+      expect(screen.getByText("Detail of Bo")).toBeInTheDocument();
+    });
+
+    it("a controlled table changes only when its prop does", async () => {
+      const user = userEvent.setup();
+      renderExpandable({ expanded: [] });
+      await user.click(screen.getByRole("button", { name: "Expand Cy" }));
+      expect(screen.queryByText("Detail of Cy")).toBeNull();
+    });
+
+    it("leaves the cell of a row with no detail empty", () => {
+      renderExpandable({ isRowExpandable: (row) => row.id !== "p1" });
+      expect(screen.queryByRole("button", { name: "Expand Cy" })).toBeNull();
+      expect(screen.getByRole("button", { name: "Expand Ada" })).toBeInTheDocument();
+    });
+
+    it("keeps the open rows across pages and sorting", async () => {
+      const user = userEvent.setup();
+      const many: Person[] = Array.from({ length: 6 }, (_, index) => ({ id: `r${index}`, name: `P${index}`, age: index }));
+      render(
+        <DataTable<Person> columns={columns} data={many} aria-label="People" getRowLabel={(row) => row.name} renderExpandedRow={detail} defaultPageSize={3}>
+          <DataTable.Pagination compact="never" />
+        </DataTable>,
+      );
+      await user.click(screen.getByRole("button", { name: "Expand P0" }));
+      await user.click(screen.getByRole("button", { name: "Next page" }));
+      expect(screen.queryByText("Detail of P0")).toBeNull();
+      await user.click(screen.getByRole("button", { name: "Previous page" }));
+      expect(screen.getByText("Detail of P0")).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: "Name" }));
+      expect(screen.getByText("Detail of P0")).toBeInTheDocument();
+    });
+
+    it("keeps the stripes in step with a hidden row between a row and its detail", async () => {
+      const user = userEvent.setup();
+      renderExpandable({ striped: true });
+      await user.click(screen.getByRole("button", { name: "Expand Cy" }));
+      const rows = [...(screen.getByRole("table").querySelector("tbody") as HTMLElement).children];
+      expect(rows).toHaveLength(6);
+      expect(rows[1]).toHaveAttribute("hidden");
+      expect(rows[2]).toHaveClass(styles_detailRow());
+      expect(rows[3]?.textContent).toContain("Ada");
+    });
+
+    it("sets no row count or row index, since detail rows make them unknowable", () => {
+      render(
+        <DataTable<Person> columns={columns} data={people} aria-label="People" renderExpandedRow={detail} defaultPageSize={2}>
+          <DataTable.Pagination compact="never" />
+        </DataTable>,
+      );
+      expect(screen.getByRole("table")).not.toHaveAttribute("aria-rowcount");
+      expect(screen.getAllByRole("row")[1]).not.toHaveAttribute("aria-rowindex");
+    });
+
+    it("is never windowed, and says so when asked to be", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const long: Person[] = Array.from({ length: 300 }, (_, index) => ({ id: `r${index}`, name: `P${index}`, age: index }));
+      renderExpandable({ data: long, maxHeight: "20rem", virtualize: true });
+      expect(screen.getAllByRole("row")).toHaveLength(301);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("rows can be expanded"));
+    });
+
+    it("counts the expand column among the columns pinned at the start", () => {
+      renderExpandable({ selectionMode: "multiple", stickyFirstColumn: 1 });
+      expect(screen.getByRole("table").querySelector("thead")).toHaveAttribute("data-pin-start", "3");
+    });
+
+    it("takes its words from labels", async () => {
+      const user = userEvent.setup();
+      renderExpandable({ labels: { expandRow: (name) => `Ouvrir ${name}`, collapseRow: undefined, expandColumn: "Détails" } });
+      expect(screen.getByRole("columnheader", { name: "Détails" })).toBeInTheDocument();
+      await user.click(screen.getByRole("button", { name: "Ouvrir Cy" }));
+      expect(screen.getByRole("button", { name: "Collapse Cy" })).toBeInTheDocument();
+    });
+
+    it("has no accessibility violations with a row open", async () => {
+      const { container } = renderExpandable({ defaultExpanded: ["p1"], selectionMode: "multiple" });
+      expect(await axe(container)).toHaveNoViolations();
     });
   });
 });
