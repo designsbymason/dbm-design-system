@@ -63,7 +63,10 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 //   Toolbar (2026-10-12): `overflow="menu"` draws the items that don't fit as a `Menu` (the panel, the item kinds, the
 //   scroll fades, and the tooltip and spinner an item can carry), 5.7KB before it and 11.12KB with it. A molecule
 //   holding an organism is the cost of the feature (ADR-0068), paid by every bar whether or not it uses the mode.
-const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, TimeRangePicker: 12, Toolbar: 12 };
+//   DatePicker (2026-10-17): a field and a popover around `Calendar`, so its bundle holds the whole 10.55KB calendar (the
+//   month, year and week grids, the footer, the markers) plus `Popover` (1.4KB) and its own segment entry, validation and
+//   `commitOn` code, 14.37KB measured. The calendar is the larger part and is the reason a date field is a date field.
+const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DatePicker: 16, TimeRangePicker: 12, Toolbar: 12 };
 
 // Words only an opt-in extra's code contains, and the component whose bundle must not contain them: `CodeBlock`
 // ships Python, Go and Java as separate exports an app registers (ADR-0027). If a change makes the component

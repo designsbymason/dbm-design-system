@@ -70,7 +70,7 @@ Anything that captures user input. Largest category by necessity — this is whe
 | RangeSlider | molecule | 🟡 | Dual-handle range with the same look, props and layouts as `Slider` (it shares its stylesheet and layout code); the value is a `[minimum, maximum]` pair, submitted as two values under `name[]`. Review: [RangeSlider.md](component-reviews/RangeSlider.md) |
 | SearchInput | molecule | 🟢 | Debounced, clear button, wraps Input |
 | PinInput | molecule | ⚪ | A code-entry field (one-time code, PIN) drawn as one cell per character over a single real `<input>`, so autofill, paste, screen readers and form submission work natively ([ADR-0040](adr/0040-pininput-is-one-real-input-drawn-as-cells-over-an-input-per-cell.md)). No dependency, no token. Review: [PinInput.md](component-reviews/PinInput.md) |
-| DatePicker | organism | 🟢 | Calendar popover, range mode |
+| DatePicker | organism | 🟢 | A date field of day, month and year segments you type into or step, with a button that opens a `Calendar` in a `Popover`; the value is a `"YYYY-MM-DD"` string. A single date: a range is `DateRangePicker`, and a time is `TimePicker` beside it. The order is an explicit `format`, never the locale ([ADR-0082](adr/0082-datepicker-is-a-single-date-segmented-field-with-a-calendar-popover-and-an-explicit-format-over-a-masked-text-input-a-range-mode-or-a-date-time-field.md)). `required`, a half-filled or impossible date and an unavailable one are real form constraints. Review: [DatePicker.md](component-reviews/DatePicker.md) |
 | DateRangePicker | organism | 🟡 | |
 | TimePicker | molecule | 🟡 | A time-of-day field of editable hour, minute, optional second and AM/PM segments, plus a `Popover` of wheels; the value is an `"HH:mm"` string ([ADR-0029](adr/0029-timepicker-is-a-segmented-field-with-a-popover-and-an-hhmm-string-value.md)). Holds its change report with `commitOn` and validates through a hidden time input ([ADR-0030](adr/0030-timepicker-holds-its-report-with-commiton-and-validates-through-a-hidden-time-input.md)). Review: [TimePicker.md](component-reviews/TimePicker.md) |
 | TimeRangePicker | molecule | 🟡 | A start and an end `TimePicker` in one named group whose value is one `[start, end]` pair; every setting goes to both ends, and it adds overnight and duration limits ([ADR-0031](adr/0031-timerangepicker-keeps-a-pair-of-times-of-day-and-judges-length-through-the-ends-own-rules.md)). A composition of two `TimePicker`s, not a `range` mode of one. Review: [TimeRangePicker.md](component-reviews/TimeRangePicker.md) |
@@ -258,7 +258,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 
 ### Organism-tier build order
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast`, `Form` and `Combobox` are built and Finalized, and the rest are not started.
+Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast`, `Form` and `Combobox` are built and Finalized, `DatePicker` is built and awaiting its review, and the rest are not started.
 
 **🟢 core**
 1. Dialog — foundation for every modal (Radix Dialog, `Backdrop`, `CloseButton`, `ScrollArea`); built, review in [Dialog.md](component-reviews/Dialog.md)
@@ -268,7 +268,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a ti
 6. Toast — independent; other organisms report results through it; built and Finalized, review in [Toast.md](component-reviews/Toast.md)
 7. Form — context and validation over `FormField` and `FieldGroup`; built and Finalized, review in [Form.md](component-reviews/Form.md)
 8. Combobox — `MultiSelect` and `CommandPalette` build on it (`TagsInput` is standalone; a suggestions list from this is a later, additive layer); built and Finalized, review in [Combobox.md](component-reviews/Combobox.md)
-9. Calendar (molecule, prerequisite; built), then DatePicker
+9. Calendar (molecule, prerequisite; built Finalized), then DatePicker — a field and a `Calendar` popover ([ADR-0082](adr/0082-datepicker-is-a-single-date-segmented-field-with-a-calendar-popover-and-an-explicit-format-over-a-masked-text-input-a-range-mode-or-a-date-time-field.md)); built, review in [DatePicker.md](component-reviews/DatePicker.md)
 10. DataTable — needs `Table`, `Pagination`, `TableToolbar`, Menu and virtualization
 11. Navbar / TopNav, 12. Sidebar / SideNav — use Menu and Drawer
 13. FileUpload / Dropzone

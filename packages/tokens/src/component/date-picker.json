@@ -1,0 +1,14 @@
+{
+  "date-picker": {
+    "segment-width": {
+      "$type": "dimension",
+      "$value": "2.25ch",
+      "$description": "New token, for DatePicker's day and month segments: the width of two digits in the field's own font, with a quarter of a digit to spare, so a segment never grows or shrinks as it fills and the separators between them don't shift. The same measurement as time-picker.segment-width (the digits of this font are not all one width, so exactly two ch scrolls a \"59\" sideways); kept as its own token so the two fields can be retuned apart. Font-relative (ch), following the size step; no home on any existing primitive scale, which are all absolute lengths."
+    },
+    "year-width": {
+      "$type": "dimension",
+      "$value": "4.25ch",
+      "$description": "New token, for DatePicker's year segment: the width of four digits in the field's own font, with a quarter of a digit to spare for the same reason as date-picker.segment-width. Font-relative (ch), following the size step; no home on any existing primitive scale."
+    }
+  }
+}
