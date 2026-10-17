@@ -258,7 +258,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 
 ### Organism-tier build order
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast`, `Form`, `Combobox` and `DatePicker` are built and Finalized, `DataTable` is built and awaiting Finalization, and the rest are not started.
+Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast`, `Form`, `Combobox`, `DatePicker` and `DataTable` are built and Finalized, and the rest are not started.
 
 **🟢 core**
 1. Dialog — foundation for every modal (Radix Dialog, `Backdrop`, `CloseButton`, `ScrollArea`); built, review in [Dialog.md](component-reviews/Dialog.md)
@@ -269,7 +269,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a ti
 7. Form — context and validation over `FormField` and `FieldGroup`; built and Finalized, review in [Form.md](component-reviews/Form.md)
 8. Combobox — `MultiSelect` and `CommandPalette` build on it (`TagsInput` is standalone; a suggestions list from this is a later, additive layer); built and Finalized, review in [Combobox.md](component-reviews/Combobox.md)
 9. Calendar (molecule, prerequisite; built Finalized), then DatePicker — a field and a `Calendar` popover ([ADR-0082](adr/0082-datepicker-is-a-single-date-segmented-field-with-a-calendar-popover-and-an-explicit-format-over-a-masked-text-input-a-range-mode-or-a-date-time-field.md)); built and Finalized, review in [DatePicker.md](component-reviews/DatePicker.md)
-10. DataTable — needs `Table`, `Pagination`, `TableToolbar`, Menu and virtualization; built, review in [DataTable.md](component-reviews/DataTable.md), awaiting Finalization
+10. DataTable — needs `Table`, `Pagination`, `TableToolbar`, Menu and virtualization; built and Finalized, review in [DataTable.md](component-reviews/DataTable.md)
 11. Navbar / TopNav, 12. Sidebar / SideNav — use Menu and Drawer
 13. FileUpload / Dropzone
 

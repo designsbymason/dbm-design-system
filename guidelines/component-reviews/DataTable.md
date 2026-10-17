@@ -1,8 +1,10 @@
 # DataTable — review findings
 
-Tenth organism, built 2026-10-17 with the `06-engineering-standards.md` §9 checklist applied as it was written. **Not Finalized:**
-only the user declares that. A `/review-component DataTable` pass was run on 2026-10-17 and all fourteen of its findings are fixed
-("Review pass" below). What follows is what was decided, found and verified, and what is known to be open.
+Tenth organism, built 2026-10-17 with the `06-engineering-standards.md` §9 checklist applied as it was written. **Finalized 2026-10-17** by the user, after two
+`/review-component DataTable` passes (fourteen findings, then seven) and their fixes, and the five features and two recipes added between them ("Review pass",
+"Added after the review" and "Final review pass" below), with the items under "Open at this point" accepted as open. What follows is what was decided, found and
+verified, and what is known to be open. Per `06-engineering-standards.md` §9, further changes to `DataTable` (code, stories, docs or its tokens) need the user's
+go-ahead first.
 
 ## Decisions
 - A generic component fed `columns` and `data` that holds the interaction state, with `DataTable.Toolbar`, `.Selection` and
