@@ -29,6 +29,13 @@ const variants: Array<[string, Partial<DatePickerProps>]> = [
   ["right to left", { dir: "rtl", defaultOpen: true, format: "ymd" }],
   ["with bounds and an unavailable rule", { min: "2026-10-01", max: "2026-10-31", isDateDisabled: (date) => date.endsWith("-10"), defaultValue: "2026-10-10" }],
   ["translated digits", { formatNumber: (n) => String.fromCodePoint(0x660 + n), defaultValue: "2026-10-03" }],
+  ["by month", { granularity: "month", defaultValue: "2026-10", min: "today" }],
+  ["by month, open", { granularity: "month", defaultValue: "2026-10", defaultOpen: true, presets: [{ label: "Next", value: "2026-11" }] }],
+  ["today as a bound", { min: "today", max: "2030-01-01", defaultValue: "2026-10-03" }],
+  ["presets that ask for today", { defaultOpen: true, presets: [{ label: "Soon", value: (today: string) => today }] }],
+  ["a reason and a side", { defaultOpen: true, side: "top", align: "center", unavailableReason: (date: string) => (date.endsWith("-10") ? "Booked" : undefined) }],
+  ["full width", { defaultOpen: true, presentation: "full-width" }],
+  ["a responsive presentation", { defaultOpen: true, presentation: { base: "full-width", sm: "anchored" } }],
   ["a today and a calendar option", { today: "2026-10-16", showTodayButton: true, defaultOpen: true, calendarProps: { showWeekNumbers: true } }],
 ];
 

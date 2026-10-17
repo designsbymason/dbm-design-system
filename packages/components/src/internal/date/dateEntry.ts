@@ -1,4 +1,4 @@
-import { daysInMonth, formatDate, isCivilDate } from "./dateValue";
+import { daysInMonth, formatDate, formatMonth, isCivilDate } from "./dateValue";
 
 // Typing into the three segments of a date field (`DatePicker`): the order they are written in, which digits finish a
 // segment, how the arrow keys step one, and how the three numbers become the `"YYYY-MM-DD"` value. Pure, so the odd
@@ -8,6 +8,9 @@ export type DateSegment = "day" | "month" | "year";
 
 /** The order the segments are written in: day-month-year, month-day-year or year-month-day. */
 export type DateFormat = "dmy" | "mdy" | "ymd";
+
+/** What the field chooses: a whole date (`"YYYY-MM-DD"`), or only a month of a year (`"YYYY-MM"`, with no day segment). */
+export type DateGranularity = "day" | "month";
 
 /** What the three segments show, each a number or nothing yet. Not always a real date (a 31st in February). */
 export interface DateDraft {
@@ -24,9 +27,10 @@ const orders: Record<DateFormat, readonly DateSegment[]> = {
   ymd: ["year", "month", "day"],
 };
 
-/** The segments in the order a format writes them; an unknown format reads as month-day-year. */
-export function segmentsForFormat(format: DateFormat): readonly DateSegment[] {
-  return orders[format] ?? orders.mdy;
+/** The segments in the order a format writes them; an unknown format reads as month-day-year. Without days, the day goes. */
+export function segmentsForFormat(format: DateFormat, granularity: DateGranularity = "day"): readonly DateSegment[] {
+  const order = orders[format] ?? orders.mdy;
+  return granularity === "month" ? order.filter((segment) => segment !== "day") : order;
 }
 
 /** How many digits a segment is drawn with once it is done. */
@@ -41,17 +45,24 @@ export function segmentBounds(segment: DateSegment): { min: number; max: number 
   return { min: 1, max: MAX_YEAR };
 }
 
-/** The draft a `"YYYY-MM-DD"` value stands for; a value that is not a real date is an empty draft. */
-export function valueToDateDraft(value: string): DateDraft {
+/** The draft a `"YYYY-MM-DD"` (or, by month, `"YYYY-MM"`) value stands for; a value that is not a real one is an empty draft. */
+export function valueToDateDraft(value: string, granularity: DateGranularity = "day"): DateDraft {
+  if (granularity === "month") {
+    const month = /^(\d{4})-(\d{2})$/.exec(value);
+    const year = month ? Number(month[1]) : 0;
+    const number = month ? Number(month[2]) : 0;
+    return year >= 1 && number >= 1 && number <= 12 ? { day: undefined, month: number, year } : emptyDateDraft;
+  }
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   if (!match) return emptyDateDraft;
   const date = { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) };
   return isCivilDate(date) ? { day: date.day, month: date.month, year: date.year } : emptyDateDraft;
 }
 
-/** The dates a draft is, as the value: `""` until all three are there and make a real date. */
-export function dateDraftToValue(draft: DateDraft): string {
+/** The dates a draft is, as the value: `""` until all three are there and make a real date (the month and year, by month). */
+export function dateDraftToValue(draft: DateDraft, granularity: DateGranularity = "day"): string {
   const { day, month, year } = draft;
+  if (granularity === "month") return month === undefined || year === undefined ? "" : formatMonth(year, month);
   if (day === undefined || month === undefined || year === undefined) return "";
   const date = { year, month, day };
   return isCivilDate(date) ? formatDate(date) : "";

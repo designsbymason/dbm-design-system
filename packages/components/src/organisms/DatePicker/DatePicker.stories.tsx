@@ -26,6 +26,13 @@ const meta: Meta<typeof DatePicker> = {
         "Shows the error state: a danger-coloured border and aria-invalid. A date outside min/max, one ruled out by isDateDisabled and three numbers that are not a real date show it too without this.",
       table: { defaultValue: { summary: "false" } },
     },
+    granularity: {
+      control: "select",
+      options: ["day", "month"],
+      description:
+        'What the field chooses: "day", a whole date as "YYYY-MM-DD", or "month", only a month of a year as "YYYY-MM", with no day segment and a grid of months to pick from. Every date prop is then written as "YYYY-MM". isDateDisabled only flags a month in the field, since the grid can only disable what min and max rule out.',
+      table: { defaultValue: { summary: '"day"' } },
+    },
     value: {
       control: false,
       description:
@@ -63,17 +70,27 @@ const meta: Meta<typeof DatePicker> = {
     min: {
       control: "text",
       description:
-        'The earliest allowed date, as "YYYY-MM-DD". An earlier date is flagged invalid, not refused, and the calendar disables the days before it.',
+        'The earliest allowed date, as "YYYY-MM-DD" or the word "today". An earlier date is flagged invalid, not refused, and the calendar disables the days before it; the form message says what the earliest date is. "today" follows the today prop, or the browser\'s date once the page has loaded.',
     },
     max: {
       control: "text",
       description:
-        'The latest allowed date, as "YYYY-MM-DD". A later date is flagged invalid, not refused, and the calendar disables the days after it.',
+        'The latest allowed date, as "YYYY-MM-DD" or the word "today". A later date is flagged invalid, not refused, and the calendar disables the days after it; the form message says what the latest date is.',
     },
     isDateDisabled: {
       control: false,
       description:
         'Rules out particular dates: weekends, holidays, booked days. Called with a date as "YYYY-MM-DD"; return true for one that is not available. A date it rules out is flagged invalid and still reported, and the calendar disables it. Keep it cheap and pure.',
+    },
+    unavailableReason: {
+      control: false,
+      description:
+        'Says why a date is not available: return a short reason ("Fully booked") for a date that cannot be chosen, and nothing for one that can. A date with a reason is unavailable as if isDateDisabled had ruled it out. The reason is read out as part of the day\'s name, shown under the calendar while that day has focus or the pointer, and is the form message for a typed date. Keep it cheap and pure.',
+    },
+    presets: {
+      control: false,
+      description:
+        'Quick choices shown as buttons under the calendar ("Tomorrow", "Next week"): each is { label, value }, where value is a date or a function of today\'s date, and picks that date and closes the calendar. A preset whose date is outside min/max or unavailable is disabled.',
     },
     weekStartsOn: {
       control: "select",
@@ -95,6 +112,25 @@ const meta: Meta<typeof DatePicker> = {
       control: false,
       description:
         "Any other Calendar prop for the calendar inside the panel: numberOfMonths, captionLayout, showWeekNumbers, getMarker, footer, labels (month and weekday names), size and the rest. The props DatePicker owns itself are not accepted here.",
+    },
+    side: {
+      control: "select",
+      options: ["bottom", "top"],
+      description: "Which side of the field the calendar opens on first; it flips to the other side when there is no room.",
+      table: { defaultValue: { summary: '"bottom"' } },
+    },
+    align: {
+      control: "select",
+      options: ["start", "center", "end"],
+      description: "How the calendar lines up with the field along that side. The calendar is anchored to the whole field, not to the button.",
+      table: { defaultValue: { summary: '"start"' } },
+    },
+    presentation: {
+      control: "select",
+      options: ["anchored", "full-width"],
+      description:
+        '"anchored" floats the calendar from the field; "full-width" spans the visible screen (an on-screen keyboard counted), which suits a phone. Takes a breakpoint map like { base: "full-width", sm: "anchored" }. align has no effect while it is full width.',
+      table: { defaultValue: { summary: '"anchored"' } },
     },
     showPicker: {
       control: "boolean",
@@ -177,7 +213,7 @@ const meta: Meta<typeof DatePicker> = {
     labels: {
       control: false,
       description:
-        "Every piece of text the field writes itself — segment names and the button names — for translation. Pass only the keys you want to change. Defaults: Day, Month, Year, Empty, Choose date, Choose a date, Clear date, Enter a complete date, This date doesn't exist, This date isn't available.",
+        "Every piece of text the field writes itself — segment names and the button names — for translation. Pass only the keys you want to change. Defaults: Day, Month, Year, Empty, Choose date, Choose a date, Clear date, Enter a complete date, This date doesn't exist, This date isn't available, Choose {date} or later, Choose {date} or earlier, Quick choices.",
     },
     formatNumber: {
       control: false,
@@ -216,6 +252,7 @@ const meta: Meta<typeof DatePicker> = {
     size: "md",
     hasError: false,
     defaultValue: "2026-10-15",
+    granularity: "day",
     commitOn: "change",
     format: "mdy",
     separator: "/",
@@ -223,6 +260,9 @@ const meta: Meta<typeof DatePicker> = {
     max: "",
     weekStartsOn: 0,
     showTodayButton: false,
+    side: "bottom",
+    align: "start",
+    presentation: "anchored",
     today: "2026-10-16",
     showPicker: true,
     defaultOpen: false,
@@ -251,7 +291,13 @@ const noControls = {
   separator: { control: false },
   min: { control: false },
   max: { control: false },
+  granularity: { control: false },
   isDateDisabled: { control: false },
+  unavailableReason: { control: false },
+  presets: { control: false },
+  side: { control: false },
+  align: { control: false },
+  presentation: { control: false },
   weekStartsOn: { control: false },
   showTodayButton: { control: false },
   today: { control: false },
@@ -364,6 +410,96 @@ export const CalendarOptions: Story = {
       showTodayButton
       today={TODAY}
       calendarProps={{ showWeekNumbers: true, captionLayout: "views" }}
+    />
+  ),
+};
+
+export const RelativeBounds: Story = {
+  name: "Bounds relative to today",
+  parameters: { docs: { source: { code: datePickerSnippets.relative } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <div style={stack}>
+      <DatePicker aria-label="Appointment, from today" min="today" defaultValue="2026-10-10" today={TODAY} />
+      <Text size="sm" color="secondary">
+        With <code>min=&quot;today&quot;</code> the 10th is in the past: the field is flagged, the form says &quot;Choose 10/16/2026 or later&quot;, and the calendar
+        disables every day before the 16th.
+      </Text>
+    </div>
+  ),
+};
+
+export const UnavailableReasons: Story = {
+  name: "Why a date is unavailable",
+  parameters: { docs: { source: { code: datePickerSnippets.reasons } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <div style={stack}>
+      <DatePicker
+        aria-label="Delivery date"
+        defaultValue="2026-10-14"
+        today={TODAY}
+        unavailableReason={(date) => (date === "2026-10-20" ? "Fully booked" : date === "2026-10-21" ? "Warehouse closed" : undefined)}
+      />
+      <Text size="sm" color="secondary">
+        Open the calendar and move to the 20th or 21st: the reason is read as part of the day&apos;s name and shown under the calendar.
+      </Text>
+    </div>
+  ),
+};
+
+export const Presets: Story = {
+  name: "Quick choices",
+  parameters: { docs: { source: { code: datePickerSnippets.presets } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <DatePicker
+      aria-label="Due date"
+      today={TODAY}
+      min="today"
+      presets={[
+        { label: "Today", value: (today) => today },
+        { label: "End of the month", value: "2026-10-31" },
+        { label: "New year", value: "2027-01-01" },
+        { label: "Yesterday", value: "2026-10-15" },
+      ]}
+    />
+  ),
+};
+
+export const ByMonth: Story = {
+  name: "A month and year only",
+  parameters: { docs: { source: { code: datePickerSnippets.month } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <div style={stack}>
+      <DatePicker granularity="month" aria-label="Card expires" min="today" today={TODAY} defaultValue="2028-03" />
+      <DatePicker granularity="month" format="ymd" separator="-" aria-label="Billing month" today={TODAY} />
+    </div>
+  ),
+};
+
+export const Placement: Story = {
+  name: "Side and alignment",
+  parameters: { docs: { source: { code: datePickerSnippets.placement } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <div style={{ ...stack, paddingBlockStart: "var(--dbm-space-4)" }}>
+      <DatePicker side="top" align="end" aria-label="Opens above, end-aligned" defaultValue="2026-10-03" today={TODAY} />
+    </div>
+  ),
+};
+
+export const FullWidth: Story = {
+  name: "Full width, for a phone",
+  parameters: { docs: { source: { code: datePickerSnippets.fullWidth } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <DatePicker
+      aria-label="Start date"
+      presentation={{ base: "full-width", sm: "anchored" }}
+      defaultValue="2026-10-03"
+      today={TODAY}
     />
   ),
 };

@@ -1,11 +1,33 @@
+import type { Responsive } from "@dbm-design-system/primitives";
 import type { ComponentPropsWithoutRef, CSSProperties, FocusEventHandler } from "react";
 import type { InputSize } from "../../atoms/Input";
-import type { DateFormat } from "../../internal/date/dateEntry";
+import type { DateFormat, DateGranularity } from "../../internal/date/dateEntry";
 import type { CalendarSingleProps, CalendarWeekStart } from "../../molecules/Calendar";
 
 export type DatePickerSize = InputSize;
 /** The order the day, month and year segments are written in. */
 export type DatePickerFormat = DateFormat;
+/** What the field chooses: a whole date (`"YYYY-MM-DD"`), or only a month of a year (`"YYYY-MM"`). */
+export type DatePickerGranularity = DateGranularity;
+/** How the calendar is drawn: floating from the field, or spanning the visible screen (a phone, usually). */
+export type DatePickerPresentation = "anchored" | "full-width";
+/** Which side of the field the calendar opens on, its first choice. */
+export type DatePickerSide = "top" | "bottom";
+/** How the calendar lines up with the field along the side it opens on. */
+export type DatePickerAlign = "start" | "center" | "end";
+
+/** A quick choice in the calendar's panel: a button that picks one date. */
+export interface DatePickerPreset {
+  /** The button's text, such as "Tomorrow". */
+  label: string;
+  /**
+   * The date it picks, as `"YYYY-MM-DD"` (`"YYYY-MM"` by month), or a function of today's date, so "next week" is
+   * written once and stays right: `(today) => addDays(today, 7)`. A function is asked for only once today is known
+   * (the `today` prop, or the browser's date after the first render).
+   */
+  value: string | ((today: string) => string);
+}
+
 /** When `onValueChange` is called: on every change, once a date is settled, or only when the person is done. */
 export type DatePickerCommitOn = "change" | "complete" | "blur";
 
@@ -33,8 +55,14 @@ export interface DatePickerLabels {
   incomplete: string;
   /** The form message for three numbers that are not a real date (the 31st of February). */
   invalid: string;
-  /** The form message for a real date that is outside `min`/`max` or ruled out by `isDateDisabled`. */
+  /** The form message for a real date that is ruled out by `isDateDisabled` and has no reason of its own. */
   unavailable: string;
+  /** The form message for a date before `min`, given the earliest allowed date written as the field writes it. */
+  beforeMin: (earliest: string) => string;
+  /** The form message for a date after `max`, given the latest allowed date written as the field writes it. */
+  afterMax: (latest: string) => string;
+  /** The name of the group of `presets` buttons. */
+  presets: string;
 }
 
 /** The calendar props `DatePicker` leaves to `calendarProps`: everything but what it owns itself. */
@@ -73,13 +101,21 @@ export interface DatePickerProps
    */
   hasError?: boolean;
   /**
-   * The date, as `"YYYY-MM-DD"`. Use `""` (or leave it out) for no date. While the field is only partly
-   * filled, or holds numbers that are not a real date, the value is `""`. A string that is not a real date
-   * reads as empty.
+   * What the field chooses: `"day"`, a whole date as `"YYYY-MM-DD"`, or `"month"`, only a month of a year as
+   * `"YYYY-MM"`, with no day segment and a grid of months to pick from. Every date prop (`value`, `min`, `max`,
+   * `presets`, `isDateDisabled`) is then written, or given, as `"YYYY-MM"`. `isDateDisabled` only flags a month
+   * in the field, since the grid can only disable what `min` and `max` rule out.
+   * @default 'day'
+   */
+  granularity?: DatePickerGranularity;
+  /**
+   * The date, as `"YYYY-MM-DD"` (`"YYYY-MM"` with `granularity="month"`). Use `""` (or leave it out) for no
+   * date. While the field is only partly filled, or holds numbers that are not a real date, the value is `""`.
+   * A string that is not a real date reads as empty.
    */
   value?: string;
   /**
-   * The initial date for uncontrolled usage, as `"YYYY-MM-DD"`. Ignored once `value` is provided.
+   * The initial date for uncontrolled usage, as `"YYYY-MM-DD"` (`"YYYY-MM"` by month). Ignored once `value` is provided.
    * @default ""
    */
   defaultValue?: string;
@@ -110,13 +146,14 @@ export interface DatePickerProps
    */
   separator?: string;
   /**
-   * The earliest allowed date, as `"YYYY-MM-DD"`. An earlier date is flagged invalid, not refused, and the
-   * calendar disables the days before it.
+   * The earliest allowed date, as `"YYYY-MM-DD"` or the word `"today"`. An earlier date is flagged invalid, not
+   * refused, and the calendar disables the days before it; the form message says what the earliest date is.
+   * `"today"` follows `today`, or the browser's date once the page has loaded (nothing is held back before then).
    */
   min?: string;
   /**
-   * The latest allowed date, as `"YYYY-MM-DD"`. A later date is flagged invalid, not refused, and the
-   * calendar disables the days after it.
+   * The latest allowed date, as `"YYYY-MM-DD"` or the word `"today"`. A later date is flagged invalid, not
+   * refused, and the calendar disables the days after it; the form message says what the latest date is.
    */
   max?: string;
   /**
@@ -125,6 +162,18 @@ export interface DatePickerProps
    * and the calendar disables it. Keep it cheap and pure.
    */
   isDateDisabled?: (date: string) => boolean;
+  /**
+   * Says why a date is not available: return a short reason (`"Fully booked"`) for a date that cannot be chosen, and
+   * nothing for one that can. A date with a reason is unavailable as if `isDateDisabled` had ruled it out. The reason
+   * is read out as part of the day's name in the calendar, shown under the calendar while that day has focus or the
+   * pointer, and is the form message for a typed date. Keep it cheap and pure.
+   */
+  unavailableReason?: (date: string) => string | null | undefined | false;
+  /**
+   * Quick choices shown as buttons under the calendar ("Tomorrow", "Next week"): each picks one date and closes
+   * the calendar. A preset whose date is outside `min`/`max` or unavailable is disabled.
+   */
+  presets?: readonly DatePickerPreset[];
   /**
    * The day each calendar week starts on, `0` (Sunday) to `6`. Explicit, never read from the locale.
    * @default 0
@@ -136,18 +185,36 @@ export interface DatePickerProps
    */
   showTodayButton?: boolean;
   /**
-   * Today's date as `"YYYY-MM-DD"`, for marking today in the calendar and starting an empty year at this
-   * year. By default the browser's date is read after the first render, so nothing differs between a server
+   * Today's date as `"YYYY-MM-DD"`, for marking today in the calendar, `min="today"`, the date presets and starting
+   * an empty year at this year. By default the browser's date is read after the first render, so nothing differs between a server
    * and the browser.
    */
   today?: string;
   /**
-   * Any other `Calendar` prop for the calendar inside the panel: `numberOfMonths`, `captionLayout`,
+   * Any other `Calendar` prop for the calendar inside the panel (by day): `numberOfMonths`, `captionLayout`,
    * `showWeekNumbers`, `getMarker`, `footer`, `labels` (month and weekday names), `size` and the rest. The
    * props `DatePicker` owns itself (`value`, `min`, `max`, `isDateDisabled`, `weekStartsOn`, `today`,
    * `showTodayButton`) are not accepted here.
    */
   calendarProps?: DatePickerCalendarProps;
+  /**
+   * Which side of the field the calendar opens on first; it flips to the other side when there is no room.
+   * @default 'bottom'
+   */
+  side?: DatePickerSide;
+  /**
+   * How the calendar lines up with the field along that side: its start edge, its centre or its end edge. The
+   * calendar is anchored to the whole field, not to the button.
+   * @default 'start'
+   */
+  align?: DatePickerAlign;
+  /**
+   * `"anchored"` floats the calendar from the field; `"full-width"` spans the visible screen (an on-screen keyboard
+   * counted), which suits a phone. Takes a breakpoint map like `side` does elsewhere:
+   * `{ base: "full-width", sm: "anchored" }`. `align` has no effect while it is full width.
+   * @default 'anchored'
+   */
+  presentation?: Responsive<DatePickerPresentation>;
   /**
    * Shows the button that opens the calendar. Turn it off for a field that is only ever typed into.
    * @default true
@@ -222,7 +289,7 @@ export interface DatePickerProps
   /**
    * Every piece of text the field writes itself — segment names and the button names — for translation.
    * Pass only the keys you want to change.
-   * @default { day: 'Day', month: 'Month', year: 'Year', empty: 'Empty', openPicker: 'Choose date', pickerName: 'Choose a date', clear: 'Clear date', incomplete: 'Enter a complete date', invalid: "This date doesn't exist", unavailable: "This date isn't available" }
+   * @default { day: 'Day', month: 'Month', year: 'Year', empty: 'Empty', openPicker: 'Choose date', pickerName: 'Choose a date', clear: 'Clear date', incomplete: 'Enter a complete date', invalid: "This date doesn't exist", unavailable: "This date isn't available", beforeMin: (earliest) => `Choose ${earliest} or later`, afterMax: (latest) => `Choose ${latest} or earlier`, presets: 'Quick choices' }
    */
   labels?: Partial<DatePickerLabels>;
   /**

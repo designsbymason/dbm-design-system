@@ -6,7 +6,15 @@
 // no demo scaffolding — and `storySnippets.test.ts` checks that stays true. See
 // `07-storybook-and-documentation-standards.md` §4.2.
 
-import type { DatePickerCommitOn, DatePickerFormat, DatePickerSize } from "./DatePicker.types";
+import type {
+  DatePickerAlign,
+  DatePickerCommitOn,
+  DatePickerFormat,
+  DatePickerGranularity,
+  DatePickerPresentation,
+  DatePickerSide,
+  DatePickerSize,
+} from "./DatePicker.types";
 
 export const datePickerSnippets = {
   basic: `<DatePicker aria-label="Start date" defaultValue="2026-10-03" />`,
@@ -27,6 +35,35 @@ export const datePickerSnippets = {
   defaultValue="2026-10-14"
   isDateDisabled={(date) => new Date(date + "T00:00:00Z").getUTCDay() % 6 === 0}
 />`,
+
+  relative: `{/* min and max can be the word "today": it follows the browser's date once the page has loaded (or the today prop). */}
+<DatePicker aria-label="Appointment" min="today" />`,
+
+  reasons: `{/* unavailableReason: return why a date can't be chosen, or nothing. The day is disabled, the reason is part of its name,
+    shown under the calendar and the form's message for a typed date. */}
+<DatePicker
+  aria-label="Delivery date"
+  unavailableReason={(date) => (fullyBooked.has(date) ? "Fully booked" : undefined)}
+/>`,
+
+  presets: `{/* presets: buttons under the calendar. A value is a date, or a function of today's date. One outside min and max is disabled. */}
+<DatePicker
+  aria-label="Due date"
+  min="today"
+  presets={[
+    { label: "Today", value: (today) => today },
+    { label: "New year", value: "2027-01-01" },
+  ]}
+/>`,
+
+  month: `{/* granularity="month": no day segment, a grid of months in the panel, and the value is "YYYY-MM". */}
+<DatePicker aria-label="Card expires" granularity="month" min="today" />`,
+
+  placement: `{/* side: "bottom" (default) | "top"; align: "start" (default) | "center" | "end". The panel is anchored to the whole field. */}
+<DatePicker aria-label="Start date" side="top" align="end" />`,
+
+  fullWidth: `{/* presentation: "anchored" (default) | "full-width", which spans the visible screen. It takes a map like side does elsewhere. */}
+<DatePicker aria-label="Start date" presentation={{ base: "full-width", sm: "anchored" }} />`,
 
   calendar: `{/* calendarProps: any other Calendar prop for the calendar in the panel. weekStartsOn and showTodayButton are
     DatePicker's own. */}
@@ -82,6 +119,10 @@ export const datePickerSnippets = {
 /** The Playground's live controls, as far as the snippet cares. */
 export interface DatePickerPlaygroundSnippetArgs {
   defaultValue?: string;
+  granularity?: DatePickerGranularity;
+  side?: DatePickerSide;
+  align?: DatePickerAlign;
+  presentation?: DatePickerPresentation;
   commitOn?: DatePickerCommitOn;
   format?: DatePickerFormat;
   separator?: string;
@@ -105,6 +146,7 @@ export interface DatePickerPlaygroundSnippetArgs {
 export function datePickerPlaygroundSnippet(args: DatePickerPlaygroundSnippetArgs): string {
   const attributes: string[] = ['aria-label="Start date"'];
   if (args.defaultValue) attributes.push(`defaultValue="${args.defaultValue}"`);
+  if (args.granularity && args.granularity !== "day") attributes.push(`granularity="${args.granularity}"`);
   if (args.commitOn && args.commitOn !== "change") attributes.push(`commitOn="${args.commitOn}"`);
   if (args.format && args.format !== "mdy") attributes.push(`format="${args.format}"`);
   if (args.separator && args.separator !== "/") attributes.push(`separator="${args.separator}"`);
@@ -112,6 +154,9 @@ export function datePickerPlaygroundSnippet(args: DatePickerPlaygroundSnippetArg
   if (args.max) attributes.push(`max="${args.max}"`);
   if (args.weekStartsOn !== undefined && args.weekStartsOn !== 0) attributes.push(`weekStartsOn={${args.weekStartsOn}}`);
   if (args.showTodayButton) attributes.push("showTodayButton");
+  if (args.side && args.side !== "bottom") attributes.push(`side="${args.side}"`);
+  if (args.align && args.align !== "start") attributes.push(`align="${args.align}"`);
+  if (args.presentation && args.presentation !== "anchored") attributes.push(`presentation="${args.presentation}"`);
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.hasError) attributes.push("hasError");
   if (args.disabled) attributes.push("disabled");

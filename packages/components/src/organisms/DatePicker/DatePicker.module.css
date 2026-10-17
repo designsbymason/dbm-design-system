@@ -211,13 +211,79 @@
   margin-block: calc((var(--dbm-font-size-lg) * var(--dbm-line-height-tight) - var(--dbm-icon-size-lg) - 2 * var(--dbm-space-3)) / 2);
 }
 
-/* The calendar's panel: `Popover.Content`'s own chrome, sized to the calendar inside it. The class is doubled so it
-   beats `.content`'s fixed `max-width` whatever order the two stylesheets load in: a calendar of several months is
-   wider than a text popover's cap, and is only held to the room the screen has (Radix's own measure of it). */
-.panel.panel {
+/* The floating panel. The same elevated surface as `Popover`'s and `Combobox`'s panels, portaled outside this component's tree,
+   so it sets its own font-family; shadows are a fixed light/dark primitive pair. On the `popover` step, so it sits above
+   a `Dialog`'s scrim and panel when the field is inside one. Wide enough for the calendar inside it, and no wider than the
+   room the screen has (Radix's own measure of it). */
+.panel {
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  box-shadow: var(--dbm-shadow-light-md);
+  color: var(--dbm-text-primary);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--dbm-font-family-primary);
+  gap: var(--dbm-space-2);
+  inline-size: max-content;
   max-inline-size: var(--radix-popper-available-width);
   padding: var(--dbm-space-2);
-  width: max-content;
+  z-index: var(--dbm-z-index-popover);
+}
+
+[data-theme$="-dark"] .panel {
+  box-shadow: var(--dbm-shadow-dark-md);
+}
+
+.panel[data-state="open"] {
+  animation: panelIn var(--dbm-motion-duration-fast) var(--dbm-motion-easing-emphasized);
+}
+
+.panel[data-state="closed"] {
+  animation: panelOut var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes panelOut {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Across the visible screen: the width is set from the visual viewport in DatePicker.tsx and the layer's collision
+   shift puts its edge a gap in from the screen's. The calendar keeps its own width and sits in the middle. */
+.fullWidth {
+  align-items: center;
+  inline-size: var(--date-picker-width, max-content);
+  max-inline-size: none;
+}
+
+/* Why the day under the pointer or focus can't be chosen: one line, always there, so the panel doesn't change height as the
+   pointer moves across days. */
+.hint {
+  align-self: stretch;
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-sm);
+  line-height: var(--dbm-line-height-tight);
+  min-block-size: calc(var(--dbm-font-size-sm) * var(--dbm-line-height-tight));
+  padding-inline: var(--dbm-space-2);
+  text-align: center;
+}
+
+/* The quick choices: small buttons that wrap, under the calendar. */
+.presets {
+  align-self: stretch;
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-1);
+  justify-content: center;
+  padding-block-start: var(--dbm-space-2);
 }
 
 /* The segment being edited has no fill in forced colours, so it takes the system highlight. */

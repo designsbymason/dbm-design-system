@@ -11,6 +11,7 @@ import * as DatePickerStories from "./DatePicker.stories";
 export const propOrder = [
   "size",
   "hasError",
+  "granularity",
   "value",
   "defaultValue",
   "onValueChange",
@@ -20,10 +21,15 @@ export const propOrder = [
   "min",
   "max",
   "isDateDisabled",
+  "unavailableReason",
+  "presets",
   "weekStartsOn",
   "showTodayButton",
   "today",
   "calendarProps",
+  "side",
+  "align",
+  "presentation",
   "showPicker",
   "open",
   "defaultOpen",
@@ -49,7 +55,7 @@ export const propOrder = [
   "style",
   "data-testid",
 ];
-export const playgroundExclude = ["onValueChange", "onClear", "onOpenChange", "onFocus", "onBlur", "isDateDisabled", "name"];
+export const playgroundExclude = ["onValueChange", "onClear", "onOpenChange", "onFocus", "onBlur", "isDateDisabled", "unavailableReason", "presets", "name"];
 
 <Meta of={DatePickerStories} />
 
@@ -104,9 +110,33 @@ and the `id` goes on the first segment, which is what a `FieldLabel`'s `htmlFor`
 
 <Canvas of={DatePickerStories.UnavailableDates} />
 
+### Bounds relative to today
+
+<Canvas of={DatePickerStories.RelativeBounds} />
+
+### Why a date is unavailable
+
+<Canvas of={DatePickerStories.UnavailableReasons} />
+
+### Quick choices
+
+<Canvas of={DatePickerStories.Presets} />
+
+### A month and year only
+
+<Canvas of={DatePickerStories.ByMonth} />
+
 ### Calendar options
 
 <Canvas of={DatePickerStories.CalendarOptions} />
+
+### Side and alignment
+
+<Canvas of={DatePickerStories.Placement} />
+
+### Full width, for a phone
+
+<Canvas of={DatePickerStories.FullWidth} />
 
 ### When it reports
 
@@ -151,6 +181,14 @@ and the `id` goes on the first segment, which is what a `FieldLabel`'s `htmlFor`
   for `weekStartsOn`.
 - Use `min` and `max` for a window and `isDateDisabled` for gaps in it (weekends, holidays, booked days); the
   calendar disables what cannot be reached.
+- Use `min="today"` for "not in the past" and `max="today"` for "not in the future", instead of working out today's
+  date yourself.
+- Use `unavailableReason` when people will wonder why a day is greyed out ("Fully booked", "Closed"): it is read out,
+  shown under the calendar and used as the form's message, which `isDateDisabled` alone cannot do.
+- Use `presets` for the choices people make most ("Today", "In a week"), and `granularity="month"` for a month and year
+  (a card's expiry, a billing month).
+- Use `presentation={{ base: "full-width", sm: "anchored" }}` where the field is used on a phone: the panel spans the
+  screen instead of floating beside a narrow field.
 - Pass `today` when the page should not depend on the visitor's clock (a demo, a test, a booking made for a fixed
   day).
 - Put it in a `FormField` for a visible label, helper text and error text wired together.
@@ -192,6 +230,13 @@ and the `id` goes on the first segment, which is what a `FieldLabel`'s `htmlFor`
 - When the owner controls `value`, a change it doesn't apply is undone: the field shows what `value` says.
 - The calendar opens on the month of the chosen date, or on today's month when the field is empty. For a field that
   should open somewhere else, pass `calendarProps`'s `defaultMonth`.
+- The panel is anchored to the whole field (`align="start"` lines its edge up with the field's), flips to the other
+  side when there is no room, and closes with the button, `Escape` or a press elsewhere; a press elsewhere leaves focus
+  where the person put it.
+- By month, the grid can only disable what `min` and `max` rule out: `isDateDisabled` and `unavailableReason` still
+  flag a month that has been chosen, and are written as `"YYYY-MM"`, but the grid does not grey it out.
+- A preset's function is asked for its date only once today is known, so a server-rendered preset button starts
+  disabled and is enabled after the first render in the browser.
 - In a table row or a toolbar, drop to `size="sm"` or `"xs"`; each size is as tall as an `Input` at the
   same step, so a row of fields lines up.
 
@@ -218,6 +263,12 @@ and the `id` goes on the first segment, which is what a `FieldLabel`'s `htmlFor`
   segments from the tab order.
 - A press on the box's padding or a separator goes to the nearest segment, as in a native date field. Every button
   is at least 24 × 24 pixels.
+- The month segment is announced by name ("October") when it has a value; the digits are what is shown.
+- A date that is unavailable keeps its place in the calendar's arrow-key order, is `aria-disabled`, and has its
+  reason as part of its name ("Wednesday, October 21, 2026, Fully booked"); the same text is shown under the calendar
+  (hidden from assistive technology, which has it already) and is the form message for a typed date.
+- The calendar button is `aria-haspopup="dialog"` with `aria-expanded`, and `aria-controls` while the panel is open;
+  closing returns focus to it, except after a press elsewhere. The preset buttons are a named group.
 - Everything the field says (segment names, "Empty", button names, form messages) is in `labels`, and the digits it
   shows and announces go through `formatNumber`, so what a person sees is what a screen reader reads.
 - The segments always read left to right, in a right-to-left page too, and the buttons and the calendar follow `dir`.
@@ -252,6 +303,17 @@ function Example() {
   {(field) => <DatePicker {...field} format="mdy" />}
 </FormField>
 
+{/* Not in the past, with presets and a reason for the days that are taken */}
+<DatePicker
+  aria-label="Booking date"
+  min="today"
+  presets={[{ label: "Tomorrow", value: (today) => nextDay(today) }]}
+  unavailableReason={(date) => (booked.has(date) ? "Fully booked" : undefined)}
+/>
+
+{/* A card's expiry: a month and year only, as "YYYY-MM" */}
+<DatePicker aria-label="Expires" granularity="month" min="today" />
+
 {/* A native <div> attribute, passed straight through to the group */}
 <DatePicker aria-label="Start date" title="Pick a start date" />
 
@@ -275,6 +337,7 @@ function Example() {
 <TokenRow token="radius.full" usage="the clear and calendar buttons' corners" />
 <TokenRow token="text.primary" usage="segment text" />
 <TokenRow token="text.tertiary" usage="an empty segment's placeholder, and the separators between segments" />
+<TokenRow token="text.secondary" usage="the reason a day is unavailable, shown under the calendar" />
 <TokenRow token="text.on-brand" usage="the focused segment's text" />
 <TokenRow token="bg.brand" usage="the focused segment's fill" />
 <TokenRow token="bg.neutral-subtle" usage="hover fill of the buttons" />
@@ -290,16 +353,20 @@ function Example() {
 <TokenRow token="icon-size.sm" usage="button icon size at size md" />
 <TokenRow token="icon-size.md" usage="button icon size at size lg" />
 <TokenRow token="icon-size.lg" usage="button icon size at size xl" />
-<TokenRow token="space.1" usage="gap between segments; the focus-ring offset; padding of the buttons at xs" />
-<TokenRow token="space.2" usage="gap between the segments and the buttons; padding at xs; the calendar panel's padding" />
+<TokenRow token="space.1" usage="gap between segments; the focus-ring offset; padding of the buttons at xs; the gap between preset buttons" />
+<TokenRow token="space.2" usage="gap between the segments and the buttons; padding at xs; the panel's padding and the gap inside it" />
 <TokenRow token="space.3" usage="padding at sizes sm and md" />
 <TokenRow token="space.4" usage="padding at sizes lg and xl" />
 <TokenRow token="space.6" usage="the smallest a button gets (24px), so it stays a large enough target at size xs" />
 <TokenRow token="date-picker.segment-width" usage="the width of a two-digit (day or month) segment" />
 <TokenRow token="date-picker.year-width" usage="the width of the four-digit year segment" />
+<TokenRow token="shadow.light-md" usage="the panel's elevation in a light theme" />
+<TokenRow token="shadow.dark-md" usage="the panel's elevation in a dark theme" />
+<TokenRow token="z-index.popover" usage="the panel's layer, above a Dialog's scrim and panel so it works inside one" />
 <TokenRow token="opacity.40" usage="the disabled field" />
 <TokenRow token="motion.duration.fast" usage="border and fill transitions" />
-<TokenRow token="motion.easing.standard" usage="border and fill transitions" />
+<TokenRow token="motion.easing.standard" usage="border and fill transitions; the panel fading out" />
+<TokenRow token="motion-easing.emphasized" usage="the panel fading in" />
 
 ## Related components
 

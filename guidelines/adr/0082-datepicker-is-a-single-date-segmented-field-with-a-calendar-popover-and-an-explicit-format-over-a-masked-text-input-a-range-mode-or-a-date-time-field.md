@@ -1,6 +1,6 @@
 # 0082 — `DatePicker` is a single-date field of day, month and year segments with a `Calendar` popover and an explicit `format`, over a masked text input, a range mode or a date-time field
 
-**Status:** Accepted · **Date:** 2026-10-17
+**Status:** Accepted · **Date:** 2026-10-17 · the calendar's anchoring (to its button, through the `Popover` molecule) is superseded by [ADR-0083](./0083-datepicker-anchors-its-panel-to-the-whole-field-with-a-trigger-less-radix-anchor-and-offers-side-align-and-a-full-width-presentation-over-the-popover-molecule-and-its-button.md); the rest stands
 
 ## Context
 [ADR-0044](./0044-calendar-dates-are-yyyy-mm-dd-strings-with-a-single-and-a-range-mode-and-a-hand-built-grid.md) left

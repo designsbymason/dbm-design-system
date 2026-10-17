@@ -28,7 +28,7 @@ const body = () => within(document.body);
 const segment = (name: string) => body().getByRole("spinbutton", { name }) as HTMLInputElement;
 const dayButton = (date: string) => document.querySelector<HTMLButtonElement>(`button[data-date="${date}"]`);
 // The field's own group (the calendar inside a panel is a group too).
-const field = () => body().getByRole("group", { name: /^Start date|^تاريخ/ }) as HTMLElement;
+const field = () => body().getByRole("group", { name: /^(Start date|Card expires|Delivery date|تاريخ)/ }) as HTMLElement;
 
 // A measurement taken while the panel is still fading in is wrong by the easing's distance.
 const settled = async (panel: HTMLElement) => {
@@ -347,5 +347,209 @@ export const ForcedColors: Story = {
     } finally {
       await emulate("none");
     }
+  },
+};
+
+export const PanelLinesUpWithTheField: Story = {
+  name: "The panel's start edge lines up with the field's, and end and top are honoured",
+  render: () => (
+    <Page>
+      <DatePicker aria-label="Start date" defaultValue="2026-10-15" today={TODAY} />
+    </Page>
+  ),
+  play: async () => {
+    await userEvent.click(body().getByRole("button", { name: "Choose date" }));
+    const dialog = await body().findByRole("dialog", { name: "Choose a date" });
+    await settled(dialog);
+    const f = field().getBoundingClientRect();
+    await expect(Math.abs(dialog.getBoundingClientRect().left - f.left)).toBeLessThan(1.5);
+  },
+};
+
+export const EndAlignedAndAbove: Story = {
+  name: "align=end puts the panel's end edge on the field's, and side=top opens above it",
+  render: () => (
+    <div style={{ padding: "var(--dbm-space-6)", paddingBlockStart: "26rem", maxWidth: "40rem" }}>
+      <DatePicker
+        aria-label="Start date"
+        defaultValue="2026-10-15"
+        today={TODAY}
+        side="top"
+        align="end"
+        style={{ marginInlineStart: "12rem" }}
+      />
+    </div>
+  ),
+  play: async () => {
+    await userEvent.click(body().getByRole("button", { name: "Choose date" }));
+    const dialog = await body().findByRole("dialog", { name: "Choose a date" });
+    await settled(dialog);
+    const f = field().getBoundingClientRect();
+    const p = dialog.getBoundingClientRect();
+    await expect(p.bottom).toBeLessThanOrEqual(f.top);
+    await expect(Math.abs(p.right - f.right)).toBeLessThan(1.5);
+  },
+};
+
+export const ButtonTogglesWithARealMouse: Story = {
+  name: "A real mouse on the button opens the panel, and a second press closes it without reopening",
+  render: () => (
+    <Page>
+      <DatePicker aria-label="Start date" defaultValue="2026-10-15" today={TODAY} />
+    </Page>
+  ),
+  play: async () => {
+    const button = body().getByRole("button", { name: "Choose date" });
+    await realClick(button);
+    await body().findByRole("dialog", { name: "Choose a date" });
+    await realClick(button);
+    await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a date" })).toBeNull());
+    // and it stays closed: the press was the toggle, not an outside press followed by a click
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await expect(body().queryByRole("dialog", { name: "Choose a date" })).toBeNull();
+    await expect(button).toHaveFocus();
+  },
+};
+
+export const FullWidthSpansTheScreen: Story = {
+  name: "Full width: the panel spans the visible screen with a small gap at each edge, and the calendar stays in the middle",
+  render: () => (
+    <Page>
+      <DatePicker aria-label="Start date" defaultValue="2026-10-15" today={TODAY} presentation="full-width" />
+    </Page>
+  ),
+  play: async () => {
+    await userEvent.click(body().getByRole("button", { name: "Choose date" }));
+    const dialog = await body().findByRole("dialog", { name: "Choose a date" });
+    await settled(dialog);
+    const p = dialog.getBoundingClientRect();
+    const width = window.visualViewport?.width ?? window.innerWidth;
+    await expect(Math.abs(p.width - (width - 16))).toBeLessThan(1.5);
+    await expect(p.left).toBeGreaterThanOrEqual(7);
+    await expect(p.right).toBeLessThanOrEqual(width - 7);
+    // the calendar is centred in it, not left against the edge
+    const grid = within(dialog).getByRole("grid") as HTMLElement;
+    const g = grid.getBoundingClientRect();
+    await expect(Math.abs(g.left - p.left - (p.right - g.right))).toBeLessThan(2);
+  },
+};
+
+export const PanelOnAPhone: Story = {
+  name: "On a narrow screen the panel fits inside it, with presets wrapping under the calendar",
+  render: () => (
+    <div style={{ width: "20rem", padding: "var(--dbm-space-2)", overflow: "hidden" }}>
+      <DatePicker
+        aria-label="Start date"
+        defaultValue="2026-10-15"
+        today={TODAY}
+        size="sm"
+        calendarProps={{ size: "sm" }}
+        presets={[
+          { label: "Today", value: TODAY },
+          { label: "End of the month", value: "2026-10-31" },
+          { label: "New year", value: "2027-01-01" },
+        ]}
+      />
+    </div>
+  ),
+  play: async () => {
+    await userEvent.click(body().getByRole("button", { name: "Choose date" }));
+    const dialog = await body().findByRole("dialog", { name: "Choose a date" });
+    await settled(dialog);
+    const p = dialog.getBoundingClientRect();
+    await expect(p.left).toBeGreaterThanOrEqual(0);
+    await expect(p.right).toBeLessThanOrEqual(window.innerWidth);
+    const group = within(dialog).getByRole("group", { name: "Quick choices" });
+    await expect(group.getBoundingClientRect().top).toBeGreaterThan(within(dialog).getByRole("grid").getBoundingClientRect().bottom - 1);
+  },
+};
+
+export const PresetWithARealMouseInADialog: Story = {
+  name: "A preset chosen with a real mouse inside a Dialog picks the date and leaves the Dialog open",
+  render: () => (
+    <Dialog defaultOpen>
+      <Dialog.Content aria-label="With a date">
+        <Dialog.Body>
+          <DatePicker aria-label="Start date" today={TODAY} presets={[{ label: "Today", value: (today) => today }]} />
+        </Dialog.Body>
+      </Dialog.Content>
+    </Dialog>
+  ),
+  play: async () => {
+    await realClick(await body().findByRole("button", { name: "Choose date" }));
+    const preset = await body().findByRole("button", { name: "Today" });
+    await settled(body().getByRole("dialog", { name: "Choose a date" }));
+    const r = preset.getBoundingClientRect();
+    await expect(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)).toBe(preset);
+    await realClick(preset);
+    await waitFor(() => expect(segment("Day")).toHaveValue("16"));
+    await expect(body().getByRole("dialog", { name: "With a date" })).toBeInTheDocument();
+  },
+};
+
+export const MonthGridWithARealMouse: Story = {
+  name: "By month: a real mouse chooses a month from the grid, in a Dialog, and the field fills",
+  render: () => (
+    <Dialog defaultOpen>
+      <Dialog.Content aria-label="With a month">
+        <Dialog.Body>
+          <DatePicker aria-label="Card expires" granularity="month" defaultValue="2028-03" today={TODAY} />
+        </Dialog.Body>
+      </Dialog.Content>
+    </Dialog>
+  ),
+  play: async () => {
+    await realClick(await body().findByRole("button", { name: "Choose date" }));
+    const dialog = await body().findByRole("dialog", { name: "Choose a date" });
+    await settled(dialog);
+    const month = within(dialog).getByRole("button", { name: "July" });
+    const r = month.getBoundingClientRect();
+    await expect(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)).toBe(month);
+    await realClick(month);
+    await waitFor(() => expect(segment("Month")).toHaveValue("07"));
+    await expect(segment("Year")).toHaveValue("2028");
+  },
+};
+
+export const MonthFieldWidthDoesNotMove: Story = {
+  name: "By month: the field does not change width as digits are typed",
+  render: () => (
+    <Page>
+      <DatePicker aria-label="Card expires" granularity="month" today={TODAY} />
+    </Page>
+  ),
+  play: async () => {
+    const measure = () => Math.round(field().getBoundingClientRect().width * 10) / 10;
+    const empty = measure();
+    await userEvent.click(segment("Month"));
+    for (const text of ["08", "2", "20", "2088"]) {
+      await userEvent.keyboard(text);
+      await expect(measure()).toBe(empty);
+    }
+  },
+};
+
+export const ReasonDoesNotMoveThePanel: Story = {
+  name: "The reason line under the calendar does not change the panel's height as the focus moves across days",
+  render: () => (
+    <Page>
+      <DatePicker
+        aria-label="Delivery date"
+        defaultValue="2026-10-19"
+        today={TODAY}
+        unavailableReason={(date) => (date === "2026-10-20" ? "Fully booked, choose another day" : undefined)}
+      />
+    </Page>
+  ),
+  play: async () => {
+    await userEvent.click(body().getByRole("button", { name: "Choose date" }));
+    const dialog = await body().findByRole("dialog", { name: "Choose a date" });
+    await settled(dialog);
+    await waitFor(() => expect(dayButton("2026-10-19")).toHaveFocus());
+    const before = dialog.getBoundingClientRect().height;
+    await userEvent.keyboard("{ArrowRight}");
+    const hint = dialog.querySelector("[class*='hint']") as HTMLElement;
+    await waitFor(() => expect(hint).toHaveTextContent("Fully booked"));
+    await expect(dialog.getBoundingClientRect().height).toBe(before);
   },
 };

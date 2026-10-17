@@ -181,3 +181,23 @@ describe("padSegment", () => {
     expect(padSegment(5, 2, arabic)).toBe("٠٥");
   });
 });
+
+describe("by month", () => {
+  it("drops the day from every order", () => {
+    expect(segmentsForFormat("dmy", "month")).toEqual(["month", "year"]);
+    expect(segmentsForFormat("mdy", "month")).toEqual(["month", "year"]);
+    expect(segmentsForFormat("ymd", "month")).toEqual(["year", "month"]);
+  });
+
+  it("round-trips a month as YYYY-MM, with no day", () => {
+    expect(valueToDateDraft("2026-10", "month")).toEqual({ day: undefined, month: 10, year: 2026 });
+    expect(dateDraftToValue({ day: undefined, month: 10, year: 2026 }, "month")).toBe("2026-10");
+    expect(dateDraftToValue({ day: undefined, month: 10, year: undefined }, "month")).toBe("");
+  });
+
+  it("reads anything else as empty", () => {
+    for (const bad of ["", "2026-13", "2026-00", "2026-10-03", "0000-05", "nope"]) {
+      expect(valueToDateDraft(bad, "month")).toEqual(emptyDateDraft);
+    }
+  });
+});

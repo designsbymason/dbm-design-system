@@ -66,7 +66,8 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 //   DatePicker (2026-10-17): a field and a popover around `Calendar`, so its bundle holds the whole 10.55KB calendar (the
 //   month, year and week grids, the footer, the markers) plus `Popover` (1.4KB) and its own segment entry, validation and
 //   `commitOn` code, 14.37KB measured. The calendar is the larger part and is the reason a date field is a date field.
-const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DatePicker: 16, TimeRangePicker: 12, Toolbar: 12 };
+//   With its own anchored panel, presets, reasons, bounds relative to today and the month grid (ADR-0083, ADR-0084): 15.39KB.
+const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DatePicker: 18, TimeRangePicker: 12, Toolbar: 12 };
 
 // Words only an opt-in extra's code contains, and the component whose bundle must not contain them: `CodeBlock`
 // ships Python, Go and Java as separate exports an app registers (ADR-0027). If a change makes the component

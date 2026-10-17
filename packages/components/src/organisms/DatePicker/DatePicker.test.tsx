@@ -765,7 +765,7 @@ describe("DatePicker form validation", () => {
     expect(input(container).validationMessage).toBe("This date doesn't exist");
     await userEvent.click(segment("Day"));
     await userEvent.keyboard("{Backspace}2");
-    expect(input(container).validationMessage).toBe("This date isn't available");
+    expect(input(container).validationMessage).toBe("Choose 02/05/2026 or later");
   });
 
   it("sends focus to the first empty segment when the browser focuses the invalid input", async () => {
@@ -792,6 +792,365 @@ describe("DatePicker accessibility", () => {
     await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
     await screen.findByRole("dialog");
     // The page-level "content in landmarks" rule is about whole pages, not a field.
+    expect(await axe(document.body, { rules: { region: { enabled: false } } })).toHaveNoViolations();
+  });
+});
+
+describe("DatePicker month names", () => {
+  it("reads the month segment out by name, and the digits for the others", () => {
+    render(<DatePicker aria-label="d" defaultValue="2026-10-03" />);
+    expect(segment("Month")).toHaveAttribute("aria-valuetext", "October");
+    expect(segment("Day")).toHaveAttribute("aria-valuetext", "03");
+    expect(segment("Month").value).toBe("10");
+  });
+
+  it("uses the calendar's own translated month names", () => {
+    const months = ["j", "f", "m", "a", "m", "j", "j", "a", "s", "o", "n", "d"];
+    render(<DatePicker aria-label="d" defaultValue="2026-10-03" calendarProps={{ labels: { months } }} />);
+    expect(segment("Month")).toHaveAttribute("aria-valuetext", "o");
+  });
+
+  it("reads the digits typed so far while the month is unfinished", async () => {
+    render(<DatePicker aria-label="d" />);
+    await userEvent.click(segment("Month"));
+    await userEvent.keyboard("1");
+    expect(segment("Month")).toHaveAttribute("aria-valuetext", "1");
+  });
+});
+
+describe("DatePicker bounds", () => {
+  it('reads "today" from the today prop for min and max', () => {
+    render(<DatePicker aria-label="d" today="2026-10-16" min="today" defaultValue="2026-10-10" />);
+    expect(segment("Day")).toHaveAttribute("aria-invalid", "true");
+    render(<DatePicker aria-label="e" today="2026-10-16" max="today" defaultValue="2026-10-20" />);
+    expect(screen.getAllByRole("spinbutton", { name: "Day" })[1]).toHaveAttribute("aria-invalid", "true");
+  });
+
+  it('allows today itself when min is "today"', () => {
+    render(<DatePicker aria-label="d" today="2026-10-16" min="today" defaultValue="2026-10-16" />);
+    expect(segment("Day")).not.toHaveAttribute("aria-invalid");
+  });
+
+  it('disables the days before today in the calendar when min is "today"', async () => {
+    render(<DatePicker aria-label="d" today="2026-10-16" min="today" defaultValue="2026-10-20" />);
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    await screen.findByRole("dialog");
+    expect(day("2026-10-15").closest("td")).toHaveAttribute("aria-disabled", "true");
+    expect(day("2026-10-16").closest("td")).not.toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("says which bound a date missed, written as the field writes dates", async () => {
+    const { container } = render(
+      <form>
+        <DatePicker aria-label="d" name="when" format="dmy" separator="." min="2026-10-05" max="2026-10-25" defaultValue="2026-10-01" />
+      </form>,
+    );
+    const input = container.querySelector('input[type="date"]') as HTMLInputElement;
+    expect(input.validationMessage).toBe("Choose 05.10.2026 or later");
+    await userEvent.click(segment("Day"));
+    await userEvent.keyboard("30");
+    expect(input.validationMessage).toBe("Choose 25.10.2026 or earlier");
+  });
+
+  it("translates the bound messages, and keeps the default for one left undefined", () => {
+    const { container } = render(
+      <form>
+        <DatePicker
+          aria-label="d"
+          name="when"
+          min="2026-10-05"
+          defaultValue="2026-10-01"
+          labels={{ beforeMin: (earliest) => `Dès le ${earliest}`, afterMax: undefined }}
+        />
+      </form>,
+    );
+    expect((container.querySelector('input[type="date"]') as HTMLInputElement).validationMessage).toBe("Dès le 10/05/2026");
+  });
+});
+
+describe("DatePicker unavailable reasons", () => {
+  const reason = (date: string) => (date === "2026-10-20" ? "Fully booked" : undefined);
+
+  it("rules the date out, flags it, and uses the reason as the form message", () => {
+    const { container } = render(
+      <form>
+        <DatePicker aria-label="d" name="when" defaultValue="2026-10-20" unavailableReason={reason} />
+      </form>,
+    );
+    expect(segment("Day")).toHaveAttribute("aria-invalid", "true");
+    expect((container.querySelector('input[type="date"]') as HTMLInputElement).validationMessage).toBe("Fully booked");
+  });
+
+  it("names the reason in the day's accessible name, and disables the day", async () => {
+    render(<DatePicker aria-label="d" defaultValue="2026-10-15" unavailableReason={reason} />);
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    await screen.findByRole("dialog");
+    expect(day("2026-10-20")).toHaveAccessibleName(/Fully booked/);
+    expect(day("2026-10-20").closest("td")).toHaveAttribute("aria-disabled", "true");
+    expect(day("2026-10-21")).not.toHaveAccessibleName(/Fully booked/);
+  });
+
+  it("shows the reason under the calendar while the day has focus, and clears it on a day that is free", async () => {
+    render(<DatePicker aria-label="d" defaultValue="2026-10-19" unavailableReason={reason} />);
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    await screen.findByRole("dialog");
+    const hint = () => document.querySelector("[class*='hint']") as HTMLElement;
+    expect(hint()).toHaveTextContent("");
+    await userEvent.keyboard("{ArrowRight}");
+    await waitFor(() => expect(hint()).toHaveTextContent("Fully booked"));
+    await userEvent.keyboard("{ArrowRight}");
+    await waitFor(() => expect(hint()).toHaveTextContent(""));
+  });
+
+  it("keeps the calendar's own day label, and adds the reason to it", async () => {
+    render(
+      <DatePicker
+        aria-label="d"
+        defaultValue="2026-10-15"
+        unavailableReason={reason}
+        calendarProps={{ labels: { day: (info) => `D${info.day}` } }}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    await screen.findByRole("dialog");
+    expect(day("2026-10-20")).toHaveAccessibleName("D20, Fully booked");
+    expect(day("2026-10-21")).toHaveAccessibleName("D21");
+  });
+
+  it("combines with isDateDisabled, which has no reason of its own", () => {
+    const { container } = render(
+      <form>
+        <DatePicker aria-label="d" name="when" defaultValue="2026-10-03" isDateDisabled={(date) => date.endsWith("-03")} unavailableReason={reason} />
+      </form>,
+    );
+    expect((container.querySelector('input[type="date"]') as HTMLInputElement).validationMessage).toBe("This date isn't available");
+  });
+});
+
+describe("DatePicker presets", () => {
+  it("draws a named group of buttons under the calendar, and a press picks the date and closes it", async () => {
+    const onValueChange = vi.fn();
+    render(
+      <DatePicker
+        aria-label="d"
+        today="2026-10-16"
+        defaultValue="2026-10-01"
+        onValueChange={onValueChange}
+        presets={[
+          { label: "Next day", value: (today) => today.replace("-16", "-17") },
+          { label: "New year", value: "2027-01-01" },
+        ]}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    const group = await screen.findByRole("group", { name: "Quick choices" });
+    expect(within(group).getAllByRole("button").map((button) => button.textContent)).toEqual(["Next day", "New year"]);
+    await userEvent.click(within(group).getByRole("button", { name: "Next day" }));
+    expect(onValueChange).toHaveBeenLastCalledWith("2026-10-17");
+    expect(texts()).toEqual(["10", "17", "2026"]);
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("disables a preset outside min and max or ruled out", async () => {
+    render(
+      <DatePicker
+        aria-label="d"
+        today="2026-10-16"
+        min="2026-10-10"
+        max="2026-12-31"
+        isDateDisabled={(date) => date === "2026-11-11"}
+        presets={[
+          { label: "Early", value: "2026-10-01" },
+          { label: "Blocked", value: "2026-11-11" },
+          { label: "Fine", value: "2026-11-12" },
+          { label: "Late", value: "2027-01-01" },
+        ]}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    const group = await screen.findByRole("group", { name: "Quick choices" });
+    const state = Object.fromEntries(within(group).getAllByRole("button").map((button) => [button.textContent, (button as HTMLButtonElement).disabled]));
+    expect(state).toEqual({ Early: true, Blocked: true, Fine: false, Late: true });
+  });
+
+  it("renames the group through labels, and draws none without presets", async () => {
+    render(<DatePicker aria-label="d" defaultOpen presets={[{ label: "A", value: "2026-10-01" }]} labels={{ presets: "Raccourcis" }} />);
+    expect(await screen.findByRole("group", { name: "Raccourcis" })).toBeInTheDocument();
+  });
+
+  it("draws no group when there are no presets", async () => {
+    render(<DatePicker aria-label="d" defaultOpen />);
+    await screen.findByRole("dialog");
+    expect(screen.queryByRole("group", { name: "Quick choices" })).toBeNull();
+  });
+});
+
+describe("DatePicker panel placement", () => {
+  it("hands its side and align to the floating layer", async () => {
+    render(<DatePicker aria-label="d" defaultOpen side="top" align="center" />);
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toHaveAttribute("data-side", "top");
+    expect(dialog).toHaveAttribute("data-align", "center");
+  });
+
+  it("opens below, aligned to the start, by default", async () => {
+    render(<DatePicker aria-label="d" defaultOpen />);
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toHaveAttribute("data-side", "bottom");
+    expect(dialog).toHaveAttribute("data-align", "start");
+  });
+
+  it("toggles from the button: a second press closes it, with the button's state wired to the panel", async () => {
+    render(<DatePicker aria-label="d" defaultValue="2026-10-15" />);
+    const button = screen.getByRole("button", { name: "Choose date" });
+    expect(button).toHaveAttribute("aria-expanded", "false");
+    expect(button).toHaveAttribute("aria-haspopup", "dialog");
+    await userEvent.click(button);
+    const dialog = await screen.findByRole("dialog");
+    expect(button).toHaveAttribute("aria-expanded", "true");
+    expect(button).toHaveAttribute("aria-controls", dialog.id);
+    await userEvent.click(button);
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(button).toHaveAttribute("aria-expanded", "false");
+    expect(button).not.toHaveAttribute("aria-controls");
+  });
+
+  it("closes on a press elsewhere without pulling focus back to the button", async () => {
+    render(
+      <>
+        <DatePicker aria-label="d" defaultValue="2026-10-15" />
+        <button type="button">elsewhere</button>
+      </>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    await screen.findByRole("dialog");
+    await userEvent.click(screen.getByText("elsewhere"));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(screen.getByText("elsewhere")).toHaveFocus();
+  });
+
+  it("takes a presentation, as a value or a map, without changing the calendar", async () => {
+    const { rerender } = render(<DatePicker aria-label="d" defaultOpen presentation="full-width" />);
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    rerender(<DatePicker aria-label="d" defaultOpen presentation={{ base: "full-width", sm: "anchored" }} />);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+});
+
+describe("DatePicker by month", () => {
+  it("has a month and a year segment, and no day", () => {
+    render(<DatePicker aria-label="d" granularity="month" defaultValue="2026-10" />);
+    expect(screen.getAllByRole("spinbutton").map((input) => input.getAttribute("aria-label"))).toEqual(["Month", "Year"]);
+    expect(texts()).toEqual(["10", "2026"]);
+  });
+
+  it.each([
+    ["dmy", ["Month", "Year"]],
+    ["mdy", ["Month", "Year"]],
+    ["ymd", ["Year", "Month"]],
+  ] as const)("writes %s without the day", (format, names) => {
+    render(<DatePicker aria-label="d" granularity="month" format={format} />);
+    expect(screen.getAllByRole("spinbutton").map((input) => input.getAttribute("aria-label"))).toEqual(names);
+  });
+
+  it("types a month and reports YYYY-MM", async () => {
+    const onValueChange = vi.fn();
+    render(<DatePicker aria-label="d" granularity="month" onValueChange={onValueChange} />);
+    await userEvent.click(segment("Month"));
+    await userEvent.keyboard("102026");
+    expect(texts()).toEqual(["10", "2026"]);
+    expect(onValueChange).toHaveBeenLastCalledWith("2026-10");
+  });
+
+  it("reports nothing until both are there, and reads a whole date as empty", async () => {
+    const onValueChange = vi.fn();
+    render(<DatePicker aria-label="d" granularity="month" defaultValue="2026-10-03" onValueChange={onValueChange} />);
+    expect(texts()).toEqual(["", ""]);
+    await userEvent.click(segment("Month"));
+    await userEvent.keyboard("10");
+    expect(onValueChange).not.toHaveBeenCalledWith(expect.stringMatching(/./));
+  });
+
+  it("submits YYYY-MM through a month input", () => {
+    const { container } = render(
+      <form data-testid="form">
+        <DatePicker aria-label="d" granularity="month" name="expires" defaultValue="2026-10" />
+      </form>,
+    );
+    expect(container.querySelector('input[type="month"]')).not.toBeNull();
+    expect(new FormData(screen.getByTestId("form") as HTMLFormElement).get("expires")).toBe("2026-10");
+  });
+
+  it("opens a grid of months on the chosen year, and chooses one", async () => {
+    const onValueChange = vi.fn();
+    render(<DatePicker aria-label="d" granularity="month" defaultValue="2026-10" onValueChange={onValueChange} />);
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).queryByRole("grid", { name: "Calendar" })).toBeNull();
+    await userEvent.click(within(dialog).getByRole("button", { name: "March" }));
+    expect(onValueChange).toHaveBeenLastCalledWith("2026-03");
+    expect(texts()).toEqual(["03", "2026"]);
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("focuses the chosen month when it opens, and chooses with the keyboard", async () => {
+    render(<DatePicker aria-label="d" granularity="month" defaultValue="2026-10" />);
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    await screen.findByRole("dialog");
+    await waitFor(() => expect(screen.getByRole("button", { name: "October" })).toHaveFocus());
+    await userEvent.keyboard("{ArrowLeft}{Enter}");
+    expect(texts()).toEqual(["09", "2026"]);
+  });
+
+  it("holds the grid to min and max, as months, and flags a month outside them", async () => {
+    render(<DatePicker aria-label="d" granularity="month" min="2026-05" max="2026-12-15" defaultValue="2027-01" />);
+    expect(segment("Year")).toHaveAttribute("aria-invalid", "true");
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    const dialog = await screen.findByRole("dialog");
+    // the grid opens on the year of the chosen month; step back to 2026
+    await userEvent.click(within(dialog).getByRole("button", { name: /Previous year/ }));
+    const cell = (name: string) => within(dialog).getByRole("button", { name }).closest("[role=gridcell]");
+    expect(cell("April")).toHaveAttribute("aria-disabled", "true");
+    expect(cell("May")).not.toHaveAttribute("aria-disabled", "true");
+    expect(cell("December")).not.toHaveAttribute("aria-disabled", "true");
+  });
+
+  it('reads "today" as this month, and says the bound as a month', () => {
+    const { container } = render(
+      <form>
+        <DatePicker aria-label="d" granularity="month" name="when" today="2026-10-16" min="today" defaultValue="2026-09" />
+      </form>,
+    );
+    expect((container.querySelector('input[type="month"]') as HTMLInputElement).validationMessage).toBe("Choose 10/2026 or later");
+    expect(segment("Month")).toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("takes presets as months", async () => {
+    const onValueChange = vi.fn();
+    render(
+      <DatePicker
+        aria-label="d"
+        granularity="month"
+        today="2026-10-16"
+        onValueChange={onValueChange}
+        presets={[{ label: "Next month", value: "2026-11" }]}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Next month" }));
+    expect(onValueChange).toHaveBeenLastCalledWith("2026-11");
+  });
+
+  it("warns that a Today button has no place by month", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(<DatePicker aria-label="d" granularity="month" showTodayButton />);
+    expect(warn.mock.calls.some(([message]) => String(message).includes("showTodayButton"))).toBe(true);
+  });
+
+  it("has no axe violations with the months grid open", async () => {
+    render(<DatePicker aria-label="d" granularity="month" defaultValue="2026-10" />);
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    await screen.findByRole("dialog");
     expect(await axe(document.body, { rules: { region: { enabled: false } } })).toHaveNoViolations();
   });
 });
