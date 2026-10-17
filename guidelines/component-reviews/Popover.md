@@ -3,9 +3,8 @@
 **Overlay & Disclosure:** Popover — built 2026-09-16, item 8 in the itemized molecule-tier build
 order (`04-component-inventory.md`), "wraps Radix Popover; prioritized since it's the pattern later
 organisms (Menu, Combobox, DatePicker) will reuse." Adds `@radix-ui/react-popover` (^1.1.23) as a
-new dependency. **Not yet Finalized** — per the standing rule that only the user declares a
-component's review pass done, this file records what was built/checked/found, not a self-declared
-Finalized status.
+new dependency. **Finalized 2026-09-17** by the user (see "Finalized 2026-09-17" further down); only the
+user declares a component's review pass done. This file records what was built, checked and found.
 
 **The first true Radix-mirroring compound component in this system.** `Select` (the only prior
 compound-flavored molecule) is actually a single component with declarative `<Select.Option>`
