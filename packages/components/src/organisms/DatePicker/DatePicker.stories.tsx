@@ -269,7 +269,6 @@ const meta: Meta<typeof DatePicker> = {
     side: "bottom",
     align: "start",
     presentation: "anchored",
-    today: "2026-10-16",
     showPicker: true,
     defaultOpen: false,
     clearable: false,
@@ -326,8 +325,22 @@ const noControls = {
 
 const stack = { display: "flex", flexDirection: "column", gap: "var(--dbm-space-4)", alignItems: "flex-start" } as const;
 
-// A fixed "today" keeps every story, and its screenshots, the same on any day.
-const TODAY = "2026-10-16";
+// Stories that depend on the date work from the real one, so they stay true on any day. Plain "YYYY-MM-DD" arithmetic, as a
+// reader's own code would write it.
+const pad = (value: number) => String(value).padStart(2, "0");
+const isoToday = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+};
+const shiftDays = (date: string, days: number) => {
+  const [year, month, day] = date.split("-").map(Number) as [number, number, number];
+  const shifted = new Date(Date.UTC(year, month - 1, day + days));
+  return `${shifted.getUTCFullYear()}-${pad(shifted.getUTCMonth() + 1)}-${pad(shifted.getUTCDate())}`;
+};
+const lastDayOfMonth = (date: string) => {
+  const [year, month] = date.split("-").map(Number) as [number, number];
+  return `${year}-${pad(month)}-${pad(new Date(Date.UTC(year, month, 0)).getUTCDate())}`;
+};
 
 /** Type a date into the segments, step them with the arrow keys, or open the calendar; drive every prop from the Controls panel. */
 export const Playground: Story = {
@@ -350,7 +363,7 @@ export const Sizes: Story = {
   render: () => (
     <div style={stack}>
       {(["xs", "sm", "md", "lg", "xl"] as const).map((size) => (
-        <DatePicker key={size} size={size} aria-label={`Start date, ${size}`} defaultValue="2026-10-03" today={TODAY} />
+        <DatePicker key={size} size={size} aria-label={`Start date, ${size}`} defaultValue="2026-10-03" />
       ))}
     </div>
   ),
@@ -362,9 +375,9 @@ export const Formats: Story = {
   argTypes: { ...noControls },
   render: () => (
     <div style={stack}>
-      <DatePicker format="mdy" aria-label="Start date, month first" defaultValue="2026-10-03" today={TODAY} />
-      <DatePicker format="dmy" separator="." aria-label="Start date, day first" defaultValue="2026-10-03" today={TODAY} />
-      <DatePicker format="ymd" separator="-" aria-label="Start date, year first" defaultValue="2026-10-03" today={TODAY} />
+      <DatePicker format="mdy" aria-label="Start date, month first" defaultValue="2026-10-03" />
+      <DatePicker format="dmy" separator="." aria-label="Start date, day first" defaultValue="2026-10-03" />
+      <DatePicker format="ymd" separator="-" aria-label="Start date, year first" defaultValue="2026-10-03" />
     </div>
   ),
 };
@@ -380,7 +393,6 @@ export const DateRange: Story = {
         max="2026-10-25"
         aria-label="Booking date, outside the range"
         defaultValue="2026-10-30"
-        today={TODAY}
       />
       <Text size="sm" color="secondary">
         30 October is after the 25th latest, so the field is flagged; open the calendar to see the unreachable days disabled.
@@ -398,7 +410,6 @@ export const UnavailableDates: Story = {
       <DatePicker
         aria-label="Delivery date"
         defaultValue="2026-10-14"
-        today={TODAY}
         isDateDisabled={(date) => new Date(date + "T00:00:00Z").getUTCDay() % 6 === 0}
       />
       <Text size="sm" color="secondary">
@@ -417,7 +428,6 @@ export const CalendarOptions: Story = {
       aria-label="Start date"
       weekStartsOn={1}
       showTodayButton
-      today={TODAY}
       calendarProps={{ showWeekNumbers: true, captionLayout: "views" }}
     />
   ),
@@ -429,10 +439,10 @@ export const RelativeBounds: Story = {
   argTypes: { ...noControls },
   render: () => (
     <div style={stack}>
-      <DatePicker aria-label="Appointment, from today" min="today" defaultValue="2026-10-10" today={TODAY} />
+      <DatePicker aria-label="Appointment, from today" min="today" defaultValue={shiftDays(isoToday(), -6)} />
       <Text size="sm" color="secondary">
-        With <code>min=&quot;today&quot;</code> the 10th is in the past: the field is flagged, the form says &quot;Choose 10/16/2026 or later&quot;, and the calendar
-        disables every day before the 16th.
+        With <code>min=&quot;today&quot;</code> the date six days ago is in the past: the field is flagged, the form asks for a
+        date from today on, and the calendar disables every day before today.
       </Text>
     </div>
   ),
@@ -442,19 +452,24 @@ export const UnavailableReasons: Story = {
   name: "Why a date is unavailable",
   parameters: { docs: { source: { code: datePickerSnippets.reasons } } },
   argTypes: { ...noControls },
-  render: () => (
-    <div style={stack}>
-      <DatePicker
-        aria-label="Delivery date"
-        defaultValue="2026-10-14"
-        today={TODAY}
-        unavailableReason={(date) => (date === "2026-10-20" ? "Fully booked" : date === "2026-10-21" ? "Warehouse closed" : undefined)}
-      />
-      <Text size="sm" color="secondary">
-        Open the calendar and move to the 20th or 21st: the reason is read as part of the day&apos;s name and shown under the calendar.
-      </Text>
-    </div>
-  ),
+  render: function UnavailableReasonsStory() {
+    const today = isoToday();
+    const booked = shiftDays(today, 3);
+    const closed = shiftDays(today, 4);
+    return (
+      <div style={stack}>
+        <DatePicker
+          aria-label="Delivery date"
+          defaultValue={shiftDays(today, 1)}
+          unavailableReason={(date) => (date === booked ? "Fully booked" : date === closed ? "Warehouse closed" : undefined)}
+        />
+        <Text size="sm" color="secondary">
+          Open the calendar and move to three or four days from today: the reason is read as part of the day&apos;s name and shown
+          under the calendar.
+        </Text>
+      </div>
+    );
+  },
 };
 
 export const Presets: Story = {
@@ -464,13 +479,12 @@ export const Presets: Story = {
   render: () => (
     <DatePicker
       aria-label="Due date"
-      today={TODAY}
       min="today"
       presets={[
         { label: "Today", value: (today) => today },
-        { label: "End of the month", value: "2026-10-31" },
-        { label: "New year", value: "2027-01-01" },
-        { label: "Yesterday", value: "2026-10-15" },
+        { label: "End of the month", value: (today) => lastDayOfMonth(today) },
+        { label: "New year", value: (today) => `${Number(today.slice(0, 4)) + 1}-01-01` },
+        { label: "Yesterday", value: (today) => shiftDays(today, -1) },
       ]}
     />
   ),
@@ -482,8 +496,8 @@ export const ByMonth: Story = {
   argTypes: { ...noControls },
   render: () => (
     <div style={stack}>
-      <DatePicker granularity="month" aria-label="Card expires" min="today" today={TODAY} defaultValue="2028-03" />
-      <DatePicker granularity="month" format="ymd" separator="-" aria-label="Billing month" today={TODAY} />
+      <DatePicker granularity="month" aria-label="Card expires" min="today" defaultValue="2028-03" />
+      <DatePicker granularity="month" format="ymd" separator="-" aria-label="Billing month" />
     </div>
   ),
 };
@@ -494,7 +508,7 @@ export const Placement: Story = {
   argTypes: { ...noControls },
   render: () => (
     <div style={{ ...stack, paddingBlockStart: "var(--dbm-space-4)" }}>
-      <DatePicker side="top" align="end" aria-label="Opens above, end-aligned" defaultValue="2026-10-03" today={TODAY} />
+      <DatePicker side="top" align="end" aria-label="Opens above, end-aligned" defaultValue="2026-10-03" />
     </div>
   ),
 };
@@ -508,7 +522,6 @@ export const FullWidth: Story = {
       aria-label="Start date"
       presentation={{ base: "full-width", sm: "anchored" }}
       defaultValue="2026-10-03"
-      today={TODAY}
     />
   ),
 };
@@ -521,7 +534,6 @@ function ReportingField({ commitOn }: { commitOn: "change" | "complete" | "blur"
       <DatePicker
         aria-label={`Start date, commitOn ${commitOn}`}
         defaultValue="2026-10-03"
-        today={TODAY}
         commitOn={commitOn}
         onValueChange={(next) => setReports((all) => [...all, next])}
       />
@@ -560,7 +572,7 @@ export const InAForm: Story = {
           setSubmitted(String(new FormData(event.currentTarget).get("checkIn")));
         }}
       >
-        <DatePicker aria-label="Check-in" name="checkIn" required min="2026-10-01" today={TODAY} />
+        <DatePicker aria-label="Check-in" name="checkIn" required min="2026-10-01" />
         <Button type="submit">Save</Button>
         <Text size="sm" color="secondary">
           {submitted === null ? "Submit it empty, half-filled or out of range: the browser stops it." : `Submitted ${submitted}`}
@@ -576,9 +588,9 @@ export const States: Story = {
   argTypes: { ...noControls },
   render: () => (
     <div style={stack}>
-      <DatePicker hasError aria-label="Start date, error" defaultValue="2026-10-03" today={TODAY} />
-      <DatePicker disabled aria-label="Start date, disabled" defaultValue="2026-10-03" today={TODAY} />
-      <DatePicker readOnly aria-label="Start date, read-only" defaultValue="2026-10-03" today={TODAY} />
+      <DatePicker hasError aria-label="Start date, error" defaultValue="2026-10-03" />
+      <DatePicker disabled aria-label="Start date, disabled" defaultValue="2026-10-03" />
+      <DatePicker readOnly aria-label="Start date, read-only" defaultValue="2026-10-03" />
     </div>
   ),
 };
@@ -589,7 +601,7 @@ export const Clearable: Story = {
   argTypes: { ...noControls },
   render: function ClearableStory() {
     const [value, setValue] = useState("2026-10-03");
-    return <DatePicker aria-label="Start date" value={value} onValueChange={setValue} today={TODAY} clearable />;
+    return <DatePicker aria-label="Start date" value={value} onValueChange={setValue} clearable />;
   },
 };
 
@@ -597,7 +609,7 @@ export const WithoutPicker: Story = {
   name: "Without the calendar",
   parameters: { docs: { source: { code: datePickerSnippets.withoutPicker } } },
   argTypes: { ...noControls },
-  render: () => <DatePicker showPicker={false} aria-label="Start date" defaultValue="2026-10-03" today={TODAY} />,
+  render: () => <DatePicker showPicker={false} aria-label="Start date" defaultValue="2026-10-03" />,
 };
 
 export const Controlled: Story = {
@@ -608,7 +620,7 @@ export const Controlled: Story = {
     const [date, setDate] = useState("2026-10-03");
     return (
       <div style={stack}>
-        <DatePicker aria-label="Start date" value={date} onValueChange={setDate} today={TODAY} />
+        <DatePicker aria-label="Start date" value={date} onValueChange={setDate} />
         <Text size="sm" color="secondary">
           Value: <code>{date === "" ? '""' : date}</code>
         </Text>
@@ -623,7 +635,7 @@ export const InFormField: Story = {
   argTypes: { ...noControls },
   render: () => (
     <FormField label="Birthday" helperText="Month, day, year">
-      {(field) => <DatePicker {...field} today={TODAY} />}
+      {(field) => <DatePicker {...field} />}
     </FormField>
   ),
 };
@@ -639,7 +651,6 @@ export const Translated: Story = {
         dir="rtl"
         format="dmy"
         defaultValue="2026-10-03"
-        today={TODAY}
         labels={{
           day: "اليوم",
           month: "الشهر",
