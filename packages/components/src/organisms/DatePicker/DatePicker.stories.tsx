@@ -132,6 +132,12 @@ const meta: Meta<typeof DatePicker> = {
         '"anchored" floats the calendar from the field; "full-width" spans the visible screen (an on-screen keyboard counted), which suits a phone. Takes a breakpoint map like { base: "full-width", sm: "anchored" }. align has no effect while it is full width.',
       table: { defaultValue: { summary: '"anchored"' } },
     },
+    container: {
+      control: false,
+      description:
+        "The element the calendar's panel is drawn into, instead of the end of the page: a scrolling or transformed box that would clip it, an element inside a dialog or a shadow root, or a box that scopes a demo.",
+      table: { defaultValue: { summary: "document.body" } },
+    },
     showPicker: {
       control: "boolean",
       description:
@@ -213,7 +219,7 @@ const meta: Meta<typeof DatePicker> = {
     labels: {
       control: false,
       description:
-        "Every piece of text the field writes itself — segment names and the button names — for translation. Pass only the keys you want to change. Defaults: Day, Month, Year, Empty, Choose date, Choose a date, Clear date, Enter a complete date, This date doesn't exist, This date isn't available, Choose {date} or later, Choose {date} or earlier, Quick choices.",
+        "Every piece of text the field writes itself — segment names and the button names — for translation. Pass only the keys you want to change. Defaults: Day, Month, Year, Empty, Choose date, Choose a date, Clear date, Enter a complete date, This date doesn't exist, This date isn't available, Choose {date} or later, Choose {date} or earlier, Quick choices, Date chosen: {date}.",
     },
     formatNumber: {
       control: false,
@@ -298,6 +304,7 @@ const noControls = {
   side: { control: false },
   align: { control: false },
   presentation: { control: false },
+  container: { control: false },
   weekStartsOn: { control: false },
   showTodayButton: { control: false },
   today: { control: false },
@@ -324,6 +331,8 @@ const TODAY = "2026-10-16";
 
 /** Type a date into the segments, step them with the arrow keys, or open the calendar; drive every prop from the Controls panel. */
 export const Playground: Story = {
+  // A field chosen by month takes "YYYY-MM": the demo date is cut to its month when the control is switched over.
+  render: (args) => <DatePicker {...args} defaultValue={args.granularity === "month" ? args.defaultValue?.slice(0, 7) : args.defaultValue} />,
   parameters: {
     docs: {
       source: {

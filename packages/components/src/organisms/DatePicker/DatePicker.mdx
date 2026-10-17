@@ -30,6 +30,7 @@ export const propOrder = [
   "side",
   "align",
   "presentation",
+  "container",
   "showPicker",
   "open",
   "defaultOpen",
@@ -230,6 +231,11 @@ and the `id` goes on the first segment, which is what a `FieldLabel`'s `htmlFor`
 - When the owner controls `value`, a change it doesn't apply is undone: the field shows what `value` says.
 - The calendar opens on the month of the chosen date, or on today's month when the field is empty. For a field that
   should open somewhere else, pass `calendarProps`'s `defaultMonth`.
+- Pressing the day that is already chosen is a choice too: it closes the calendar and reports nothing, since nothing
+  changed.
+- Use `container` when the panel would be clipped or must live somewhere else (an element inside a dialog or a
+  shadow root, or a box that scopes a demo); the other layer settings are not exposed, since the field sets the
+  collision padding and the side itself.
 - The panel is anchored to the whole field (`align="start"` lines its edge up with the field's), flips to the other
   side when there is no room, and closes with the button, `Escape` or a press elsewhere; a press elsewhere leaves focus
   where the person put it.
@@ -267,8 +273,13 @@ and the `id` goes on the first segment, which is what a `FieldLabel`'s `htmlFor`
 - A date that is unavailable keeps its place in the calendar's arrow-key order, is `aria-disabled`, and has its
   reason as part of its name ("Wednesday, October 21, 2026, Fully booked"); the same text is shown under the calendar
   (hidden from assistive technology, which has it already) and is the form message for a typed date.
-- The calendar button is `aria-haspopup="dialog"` with `aria-expanded`, and `aria-controls` while the panel is open;
-  closing returns focus to it, except after a press elsewhere. The preset buttons are a named group.
+- The calendar button is `aria-haspopup="dialog"` with `aria-expanded`, and `aria-controls` while the panel is open.
+  Closing the panel gives focus back to where it was opened from (the segment, for `Alt`+`ArrowDown`; otherwise the
+  button), except after a press elsewhere, which leaves focus wherever the person put it. The preset buttons are a
+  named group.
+- A date chosen in the calendar, the grid of months or a preset is said aloud ("Date chosen: 10/16/2026", from
+  `labels.chosen`) through a status region that is in the page from the start, because focus goes back to a button
+  whose name does not change. Typing says nothing extra: the segments already speak.
 - Everything the field says (segment names, "Empty", button names, form messages) is in `labels`, and the digits it
   shows and announces go through `formatNumber`, so what a person sees is what a screen reader reads.
 - The segments always read left to right, in a right-to-left page too, and the buttons and the calendar follow `dir`.

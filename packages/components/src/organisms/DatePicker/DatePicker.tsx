@@ -1,15 +1,13 @@
 import { CalendarBlankIcon, XIcon } from "@dbm-design-system/icons";
-import { cx, mergeDefined, mergeRefs, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
+import { cx, mergeDefined, mergeRefs, useAnnouncement, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { Fragment, forwardRef, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import type { ChangeEvent, CSSProperties, FocusEvent, KeyboardEvent, MouseEvent } from "react";
-import { Button } from "../../atoms/Button";
 import { Icon } from "../../atoms/Icon";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import {
-  dateDraftToValue,
   emptyDateDraft,
   endOfDateSegment,
-  enterDateDigit,
   hasDateContent,
   isImpossibleDate,
   padSegment,
@@ -17,20 +15,18 @@ import {
   segmentWidth,
   segmentsForFormat,
   stepDateSegment,
-  valueToDateDraft,
 } from "../../internal/date/dateEntry";
-import type { DateBuffer, DateDraft, DateSegment } from "../../internal/date/dateEntry";
-import { formatDate, formatMonth, parseDate, parseMonth } from "../../internal/date/dateValue";
-import { digitValue } from "../../internal/time/segmentEntry";
-import { Calendar } from "../../molecules/Calendar";
-import calendarStyles from "../../molecules/Calendar/Calendar.module.css";
-import { CalendarPicker } from "../../molecules/Calendar/CalendarPicker";
+import type { DateSegment } from "../../internal/date/dateEntry";
+import { parseDate, parseMonth } from "../../internal/date/dateValue";
+import { useViewportRoom } from "../../internal/useViewportRoom";
 import { noClockOnTheServer, readClock, subscribeToNothing } from "../../molecules/Calendar/calendarHelpers";
 import { buildLabels } from "../../molecules/Calendar/calendarLabels";
-import type { CalendarDayInfo, CalendarSize } from "../../molecules/Calendar";
-import { useViewportRoom } from "../../internal/useViewportRoom";
 import styles from "./DatePicker.module.css";
 import type { DatePickerLabels, DatePickerProps, DatePickerSize } from "./DatePicker.types";
+import { DatePickerPanel } from "./DatePickerPanel";
+import type { PresetChoice } from "./DatePickerPanel";
+import { reasonOf } from "./datePickerReason";
+import { useDatePickerValue } from "./useDatePickerValue";
 
 const defaultLabels: DatePickerLabels = {
   day: "Day",
@@ -46,6 +42,7 @@ const defaultLabels: DatePickerLabels = {
   beforeMin: (earliest) => `Choose ${earliest} or later`,
   afterMax: (latest) => `Choose ${latest} or earlier`,
   presets: "Quick choices",
+  chosen: (date) => `Date chosen: ${date}`,
 };
 
 const sizeClass: Record<DatePickerSize, string | undefined> = {
@@ -67,27 +64,12 @@ const buttonClass: Record<DatePickerSize, string | undefined> = {
 // `Input`'s own mapping: the icon is one step down from the field's size, so the button stays inside its row.
 const iconSizeFor: Record<DatePickerSize, "xs" | "sm" | "md" | "lg"> = { xs: "xs", sm: "xs", md: "sm", lg: "md", xl: "lg" };
 
-// The calendar's own size classes, for the grid of months drawn in the calendar's place when only a month is chosen.
-const calendarSizeClass: Record<CalendarSize, string | undefined> = {
-  xs: calendarStyles.sizeXs,
-  sm: calendarStyles.sizeSm,
-  md: calendarStyles.sizeMd,
-  lg: calendarStyles.sizeLg,
-  xl: calendarStyles.sizeXl,
-};
-
 const SIDE_OFFSET = 4;
 // The gap kept between a full-width panel and the edges of the screen, in pixels (also the layer's collision padding).
 const EDGE_GAP = SIDE_OFFSET * 2;
 // A full-width panel opens on the side that has at least this much room (pixels) before the other side is tried: about
 // a calendar's height. A behaviour threshold, not a design value.
 const MIN_ROOM = 360;
-
-/** The digits typed into a segment and not yet finished, kept so the next digit can complete the number. */
-interface Pending {
-  segment: DateSegment;
-  buffer: DateBuffer;
-}
 
 /**
  * A date field: separate day, month and year segments you type into or step with the arrow keys, and a button
@@ -145,6 +127,7 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
       side = "bottom",
       align = "start",
       presentation = "anchored",
+      container,
       size = "md",
       hasError = false,
       disabled = false,
@@ -194,6 +177,15 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
     const minDate = resolveBound(min);
     const maxDate = resolveBound(max);
 
+    const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
+    const open = (openProp ?? uncontrolledOpen) && !disabled && !readOnly && showPicker;
+    const setOpen = (next: boolean) => {
+      if (openProp === undefined) setUncontrolledOpen(next);
+      onOpenChange?.(next);
+    };
+
+    const fullWidth = useResolvedResponsiveValue(presentation, "anchored") === "full-width";
+
     useEffect(() => {
       if (process.env.NODE_ENV === "production") return;
       for (const [prop, text, parsed] of [["min", min, minDate], ["max", max, maxDate]] as const) {
@@ -209,9 +201,12 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
       if (byMonth && showTodayButton) {
         console.warn('DatePicker: `showTodayButton` has no effect with `granularity="month"`; use a preset.');
       }
+      if (fullWidth && align !== "start") {
+        console.warn('DatePicker: `align` has no effect while `presentation` is "full-width"; the panel spans the screen.');
+      }
       // Only the values that make a warning matter, not their identity on every render.
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [min, max, format, byMonth, showTodayButton]);
+    }, [min, max, format, byMonth, showTodayButton, fullWidth, align]);
 
     useEffect(() => {
       if (process.env.NODE_ENV === "production") return;
@@ -223,38 +218,16 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // The committed value, and what the segments show, which can be ahead of it (a segment emptied, a date half-typed).
-    const toDraft = (text: string) => valueToDateDraft(text, granularity);
-    const toValue = (from: DateDraft) => dateDraftToValue(from, granularity);
-    const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
-    const isControlled = valueProp !== undefined;
-    const rawValue = isControlled ? valueProp : uncontrolledValue;
-    const value = toValue(toDraft(rawValue));
-    const [draft, setDraft] = useState<DateDraft>(() => toDraft(rawValue));
-    // With `commitOn` the segments run ahead of the value on purpose: `dirty` is an edit not yet reported.
-    const [dirty, setDirty] = useState(false);
-    const draftValue = toValue(draft);
-    // A value that is no longer what the segments stand for (set from outside) wins, except while an edit is being
-    // held back and nothing outside has changed. Adjusted while rendering, not in an effect, so there is never a
-    // frame showing the old date.
-    const [seenValue, setSeenValue] = useState(value);
-    if (seenValue !== value) {
-      setSeenValue(value);
-      if (value !== draftValue) {
-        setDraft(toDraft(value));
-        setDirty(false);
-      }
-    } else if (!dirty && value !== draftValue) {
-      setDraft(toDraft(value));
-    }
-
-    const [pending, setPending] = useState<Pending | null>(null);
-    const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
-    const open = (openProp ?? uncontrolledOpen) && !disabled && !readOnly && showPicker;
-    const setOpen = (next: boolean) => {
-      if (openProp === undefined) setUncontrolledOpen(next);
-      onOpenChange?.(next);
-    };
+    const { value, draft, draftValue, pending, setPending, commit, flush, typeText, toDraft } = useDatePickerValue({
+      value: valueProp,
+      defaultValue,
+      onValueChange,
+      granularity,
+      commitOn,
+      open,
+      segments,
+      separator,
+    });
 
     const segmentRefs = useRef<Partial<Record<DateSegment, HTMLInputElement | null>>>({});
     const focusSegment = (segment: DateSegment | undefined) => {
@@ -267,65 +240,14 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // What handlers that outlive a render read: the latest of each, kept up to date after every render.
-    const latest = useRef({ value, draft, open, dirty });
-    useEffect(() => {
-      latest.current = { value, draft, open, dirty };
-    });
-
-    const setHeld = (held: boolean) => {
-      latest.current.dirty = held;
-      setDirty(held);
-    };
-
-    // The one place `onValueChange` is called from. Comparing with the latest value (not the one this render saw) is
-    // what keeps two commits in one event from reporting the same date twice.
-    const report = (nextValue: string) => {
-      if (nextValue === latest.current.value) return;
-      latest.current.value = nextValue;
-      if (!isControlled) setUncontrolledValue(nextValue);
-      onValueChange?.(nextValue);
-    };
-
-    // `awaiting`: a digit has been typed that may still get another. `now`: an explicit action (the clear button, a day
-    // chosen in the calendar, a key) that is a decision, not an edit in progress, so it is never held back.
-    const commit = (next: DateDraft, { awaiting = false, now = false } = {}) => {
-      latest.current.draft = next;
-      setDraft(next);
-      const nextValue = toValue(next);
-      const hold =
-        !now &&
-        (commitOn === "blur" ||
-          (commitOn === "complete" && (awaiting || latest.current.open || (nextValue === "" && hasDateContent(next)))));
-      setHeld(hold);
-      if (!hold) report(nextValue);
-    };
-
-    // Reports whatever is being held, as it stands: what leaving the field, closing the calendar or `Enter` does.
-    const flush = () => {
-      if (!latest.current.dirty) return;
-      setHeld(false);
-      report(toValue(latest.current.draft));
-    };
-
-    // The calendar closing, however it was closed (also when `open` is controlled), is the end of choosing.
-    useEffect(() => {
-      if (!open) flush();
-      // `flush` reads only refs.
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [open]);
-
-    // A date as the field writes it ("10/01/2026"), for a message that names a bound.
+    // A date as the field writes it ("10/01/2026"), for a message that names a bound and for what is announced.
     const writeDate = (text: string): string => {
       const parts = toDraft(text);
       return segments.map((segment) => (parts[segment] === undefined ? "" : padSegment(parts[segment], segmentWidth(segment), formatNumber))).join(separator);
     };
 
-    const reasonFor = (date: string): string => {
-      const reason = unavailableReason?.(date);
-      return typeof reason === "string" ? reason : "";
-    };
-    const isBlocked = (date: string): boolean => isDateDisabled?.(date) === true || (unavailableReason ? Boolean(unavailableReason(date)) : false);
+    const isBlocked = (date: string): boolean =>
+      isDateDisabled?.(date) === true || (unavailableReason ? Boolean(unavailableReason(date)) : false);
 
     const complete = draftValue !== "";
     const beforeMin = complete && minDate !== undefined && draftValue < minDate;
@@ -344,7 +266,7 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
         : afterMax
           ? labels.afterMax(writeDate(maxDate as string))
           : blocked
-            ? reasonFor(draftValue) || labels.unavailable
+            ? reasonOf(unavailableReason, draftValue) || labels.unavailable
             : !complete && hasContent
               ? labels.incomplete
               : "";
@@ -353,61 +275,27 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
       proxy.current?.setCustomValidity(validationMessage);
     }, [validationMessage]);
 
-    // Feeds typed text into the field, starting at `startSegment`: digits into the segments, and a separator to finish
-    // the one being typed. One keystroke is one character; a phone's keyboard, an autofill or a paste can deliver
-    // several at once ("03102026"), and each goes where the one before it left off.
-    const typeText = (startSegment: DateSegment, text: string) => {
-      let working = draft;
-      let current = startSegment;
-      let carried = pending;
-      // Whether a digit has gone into `current` since focus arrived there: a separator only finishes a segment that has one.
-      let touched = false;
-      for (const character of text) {
-        let digit = digitValue(character);
-        if (digit === undefined) {
-          // A separator finishes the segment being typed, if a digit has gone into it.
-          const next = segments[segments.indexOf(current) + 1];
-          if ((character === separator || /[\s/.,:-]/u.test(character)) && touched && next !== undefined) {
-            current = next;
-            carried = null;
-            touched = false;
-          }
-          continue;
-        }
-        for (;;) {
-          const buffer = carried?.segment === current ? carried.buffer : undefined;
-          const result = enterDateDigit(current, buffer, digit);
-          working = { ...working, [current]: result.value };
-          touched = true;
-          if (!result.done) {
-            carried = result.buffer === undefined ? null : { segment: current, buffer: result.buffer };
-            break;
-          }
-          carried = null;
-          const next = segments[segments.indexOf(current) + 1];
-          if (next === undefined) break;
-          current = next;
-          touched = false;
-          if (result.carry !== undefined) {
-            digit = result.carry;
-            continue;
-          }
-          break;
-        }
-      }
-      setPending(carried);
-      commit(working, { awaiting: carried !== null });
-      if (current !== startSegment) focusSegment(current);
-    };
+    // The calendar's own labels: the month names for what a screen reader hears of the month segment, and the base of a
+    // day's name, which gets the reason a date is unavailable.
+    const calendarLabels = buildLabels(formatNumber, calendarProps?.labels);
 
-    const fallbackYear = () => parseDate(today)?.year ?? new Date().getUTCFullYear();
+    // Where focus was when the calendar was opened from the keyboard, so closing gives it back there; and whether it was
+    // closed by a press somewhere else, in which case focus is wherever the person put it.
+    const openedFrom = useRef<DateSegment | "button" | null>(null);
+    const interactedOutside = useRef(false);
+    const { message: announcement, announce } = useAnnouncement();
+
+    const fallbackYear = () => parseDate(today ?? readClock())?.year ?? 1;
 
     const onSegmentKeyDown = (event: KeyboardEvent<HTMLInputElement>, segment: DateSegment) => {
       const key = event.key;
       const editable = !disabled && !readOnly;
       if (event.altKey && key === "ArrowDown") {
         event.preventDefault();
-        if (showPicker && editable) setOpen(true);
+        if (showPicker && editable) {
+          openedFrom.current = segment;
+          setOpen(true);
+        }
         return;
       }
       if (event.ctrlKey || event.metaKey || event.altKey) return;
@@ -465,7 +353,8 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
       if (key.length === 1 || key === "Process") {
         if (key === "Process") return;
         event.preventDefault();
-        typeText(segment, key);
+        const next = typeText(segment, key);
+        if (next !== segment) focusSegment(next);
       }
     };
 
@@ -473,7 +362,9 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
     const onSegmentChange = (event: ChangeEvent<HTMLInputElement>, segment: DateSegment) => {
       if (disabled || readOnly) return;
       const inserted = (event.nativeEvent as InputEvent).data ?? "";
-      if (inserted) typeText(segment, inserted);
+      if (!inserted) return;
+      const next = typeText(segment, inserted);
+      if (next !== segment) focusSegment(next);
     };
 
     // A press on the field's own padding or on a separator (not on a segment or a button) goes to the nearest segment,
@@ -520,11 +411,13 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
       focusSegment(segments[0]);
     };
 
-    // A date chosen in the calendar, the months grid or a preset fills the segments at once and ends the choosing.
+    // A date chosen in the calendar, the months grid or a preset fills the segments at once, ends the choosing, and is
+    // said aloud, since focus goes back to a button whose name doesn't change.
     const pick = (picked: string) => {
       setPending(null);
       commit(toDraft(picked), { now: true });
       setOpen(false);
+      announce(labels.chosen(writeDate(picked)));
     };
 
     const segmentText = (segment: DateSegment): string => {
@@ -532,10 +425,6 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
       const current = draft[segment];
       return current === undefined ? "" : padSegment(current, segmentWidth(segment), formatNumber);
     };
-
-    // The calendar's own labels: the month names for what a screen reader hears of the month segment, and the base of a
-    // day's name, which gets the reason a date is unavailable.
-    const calendarLabels = buildLabels(formatNumber, calendarProps?.labels);
 
     const segmentSpec = (segment: DateSegment) => {
       const text = segmentText(segment);
@@ -555,7 +444,6 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
     // Where the panel opens. Full width (a phone, usually) spans the visible screen, and goes on whichever side has room
     // once an on-screen keyboard is counted, which the floating layer doesn't know about.
     const panelId = useId();
-    const fullWidth = useResolvedResponsiveValue(presentation, "anchored") === "full-width";
     const room = useViewportRoom(group, fullWidth && open);
     const preferredTop = side === "top";
     const roomOnPreferred = room ? (preferredTop ? room.above : room.below) : 0;
@@ -570,17 +458,8 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
           : "bottom";
     const panelStyle: CSSProperties | undefined =
       fullWidth && room ? ({ "--date-picker-width": `${room.width - 2 * EDGE_GAP}px` } as CSSProperties) : undefined;
-    const interactedOutside = useRef(false);
 
-    // Why the day under the pointer or focus is unavailable, drawn under the calendar (the day's own name carries it too).
-    const [hint, setHint] = useState("");
-    const hintFrom = (target: EventTarget) => {
-      if (!unavailableReason || !(target instanceof Element)) return;
-      const date = target.closest<HTMLElement>("button[data-date]")?.dataset.date;
-      if (date !== undefined) setHint(reasonFor(date));
-    };
-
-    const presetList = (presets ?? []).map((preset) => {
+    const presetList: PresetChoice[] = (presets ?? []).map((preset) => {
       const date = typeof preset.value === "function" ? (today === undefined ? undefined : preset.value(today)) : preset.value;
       const resolved = date !== undefined ? resolveBound(date) : undefined;
       const allowed =
@@ -591,167 +470,126 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
       return { label: preset.label, date: resolved, allowed };
     });
 
-    const shown = parseDate(draftValue) ?? parseMonth(draftValue.slice(0, 7));
-    const calendarSize: CalendarSize = calendarProps?.size ?? "md";
-    const dayName = (info: CalendarDayInfo): string => {
-      const base = (calendarProps?.labels?.day ?? calendarLabels.day)(info);
-      const reason = unavailableReason ? reasonFor(formatDate({ year: info.year, month: info.month, day: info.day })) : "";
-      return reason ? `${base}, ${reason}` : base;
-    };
-
-    const panelContent = byMonth ? (
-      <div className={cx(calendarStyles.root, calendarSizeClass[calendarSize])}>
-        <CalendarPicker
-          shown={shown ? { year: shown.year, month: shown.month } : parseMonth((today ?? "").slice(0, 7)) ?? { year: new Date().getUTCFullYear(), month: 1 }}
-          today={today}
-          min={minDate ? `${minDate}-01` : ""}
-          max={maxDate ? `${maxDate}-01` : ""}
-          size={calendarSize}
-          rounded={false}
-          disabled={false}
-          dir={dir ?? "ltr"}
-          labels={calendarLabels}
-          formatNumber={formatNumber}
-          say={() => undefined}
-          onChoose={(year, month) => pick(formatMonth(year, month))}
-          onClose={() => setOpen(false)}
-        />
-      </div>
-    ) : (
-      <Calendar
-        {...calendarProps}
-        size={calendarSize}
-        value={draftValue}
-        onValueChange={pick}
-        min={minDate}
-        max={maxDate}
-        isDateDisabled={(date) => isBlocked(date)}
-        weekStartsOn={weekStartsOn}
-        showTodayButton={showTodayButton}
-        today={todayProp}
-        dir={dir}
-        formatNumber={formatNumber}
-        labels={{ ...calendarProps?.labels, day: dayName }}
-      />
-    );
-
     const field = (
       // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- a pointer convenience only, like clicking a <label>: a press on the box's padding is sent to the nearest segment, which is already fully keyboard-operable (each is a tab stop), so the group itself needs no role or key handling.
-    <div
-      {...props}
-      ref={mergeRefs(ref, group)}
-      role="group"
-      dir={dir}
-      aria-label={ariaLabel}
-      aria-labelledby={ariaLabelledBy}
-      aria-describedby={ariaDescribedBy}
-      aria-disabled={disabled || undefined}
-      data-testid={dataTestId}
-      style={style}
-      onMouseDown={(event) => {
-        onFieldMouseDown(event);
-        props.onMouseDown?.(event);
-      }}
-      onFocus={onGroupFocus}
-      onBlur={onGroupBlur}
-      className={cx(styles.root, sizeClass[size], invalid && styles.error, disabled && styles.disabled, className)}
-    >
-      <div className={styles.segments}>
-        {segments.map((segment, index) => {
-          const spec = segmentSpec(segment);
-          return (
-            <Fragment key={segment}>
-              {index > 0 && (
-                <span aria-hidden="true" className={styles.separator}>
-                  {separator}
-                </span>
-              )}
-              <input
-                ref={(element) => {
-                  segmentRefs.current[segment] = element;
-                }}
-                // The id a label's `htmlFor` points at lives on the first segment.
-                id={index === 0 ? id : undefined}
-                type="text"
-                role="spinbutton"
-                inputMode="numeric"
-                autoComplete="off"
-                spellCheck={false}
-                aria-label={spec.label}
-                aria-valuemin={spec.min}
-                aria-valuemax={spec.max}
-                aria-valuenow={spec.now}
-                aria-valuetext={spec.valueText}
-                aria-invalid={invalid || undefined}
-                aria-required={required || undefined}
-                disabled={disabled}
-                readOnly={readOnly}
-                placeholder={segment === "year" ? "––––" : "––"}
-                value={spec.text}
-                className={cx(styles.segment, segment === "year" && styles.year)}
-                onKeyDown={(event) => onSegmentKeyDown(event, segment)}
-                onChange={(event) => onSegmentChange(event, segment)}
-                onFocus={(event) => event.currentTarget.select()}
-                // Only this segment's own unfinished digits: focus moving on to the next segment must not wipe the digit just carried into it.
-                onBlur={() => setPending((current) => (current?.segment === segment ? null : current))}
-              />
-            </Fragment>
-          );
-        })}
-      </div>
-      {showClear && (
-        <button type="button" className={cx(styles.iconButton, buttonClass[size])} aria-label={labels.clear} onClick={clear}>
-          <Icon icon={XIcon} size={iconSizeFor[size]} tone="default" />
-        </button>
-      )}
-      {showPicker && (
-        <button
-          ref={pickerButton}
-          type="button"
-          className={cx(styles.iconButton, buttonClass[size])}
-          aria-label={labels.openPicker}
-          aria-haspopup="dialog"
-          aria-expanded={open}
-          aria-controls={open ? panelId : undefined}
-          disabled={disabled || readOnly}
-          onClick={() => {
-            interactedOutside.current = false;
-            setOpen(!open);
-          }}
-        >
-          <Icon icon={CalendarBlankIcon} size={iconSizeFor[size]} tone="default" />
-        </button>
-      )}
-      {/* The value a form submits and validates. A hidden input is never validated, so this is a date input that is only
-          hidden from sight (and from assistive tech, which has the segments): `required` and the custom message above
-          give a surrounding form its native checks. Arriving on it, which a browser does to show its message, sends
-          focus to the segment that needs attention. */}
-      <input
-        ref={proxy}
-        type={byMonth ? "month" : "date"}
-        tabIndex={-1}
-        aria-hidden="true"
-        className={styles.proxy}
-        name={name}
-        form={form}
-        value={value}
-        required={required}
-        disabled={disabled}
-        readOnly={readOnly}
-        onChange={() => {}}
-        onFocus={() => {
-          const empty = segments.find((segment) => segmentText(segment) === "");
-          focusSegment(empty ?? segments[0]);
+      <div
+        {...props}
+        ref={mergeRefs(ref, group)}
+        role="group"
+        dir={dir}
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabelledBy}
+        aria-describedby={ariaDescribedBy}
+        aria-disabled={disabled || undefined}
+        data-testid={dataTestId}
+        style={style}
+        onMouseDown={(event) => {
+          onFieldMouseDown(event);
+          props.onMouseDown?.(event);
         }}
-      />
-    </div>
+        onFocus={onGroupFocus}
+        onBlur={onGroupBlur}
+        className={cx(styles.root, sizeClass[size], invalid && styles.error, disabled && styles.disabled, className)}
+      >
+        <div className={styles.segments}>
+          {segments.map((segment, index) => {
+            const spec = segmentSpec(segment);
+            return (
+              <Fragment key={segment}>
+                {index > 0 && (
+                  <span aria-hidden="true" className={styles.separator}>
+                    {separator}
+                  </span>
+                )}
+                <input
+                  ref={(element) => {
+                    segmentRefs.current[segment] = element;
+                  }}
+                  // The id a label's `htmlFor` points at lives on the first segment.
+                  id={index === 0 ? id : undefined}
+                  type="text"
+                  role="spinbutton"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  spellCheck={false}
+                  aria-label={spec.label}
+                  aria-valuemin={spec.min}
+                  aria-valuemax={spec.max}
+                  aria-valuenow={spec.now}
+                  aria-valuetext={spec.valueText}
+                  aria-invalid={invalid || undefined}
+                  aria-required={required || undefined}
+                  disabled={disabled}
+                  readOnly={readOnly}
+                  placeholder={segment === "year" ? "––––" : "––"}
+                  value={spec.text}
+                  className={cx(styles.segment, segment === "year" && styles.year)}
+                  onKeyDown={(event) => onSegmentKeyDown(event, segment)}
+                  onChange={(event) => onSegmentChange(event, segment)}
+                  onFocus={(event) => event.currentTarget.select()}
+                  // Only this segment's own unfinished digits: focus moving on to the next segment must not wipe the digit just carried into it.
+                  onBlur={() => setPending((current) => (current?.segment === segment ? null : current))}
+                />
+              </Fragment>
+            );
+          })}
+        </div>
+        {showClear && (
+          <button type="button" className={cx(styles.iconButton, buttonClass[size])} aria-label={labels.clear} onClick={clear}>
+            <Icon icon={XIcon} size={iconSizeFor[size]} tone="default" />
+          </button>
+        )}
+        {showPicker && (
+          <button
+            ref={pickerButton}
+            type="button"
+            className={cx(styles.iconButton, buttonClass[size])}
+            aria-label={labels.openPicker}
+            aria-haspopup="dialog"
+            aria-expanded={open}
+            aria-controls={open ? panelId : undefined}
+            disabled={disabled || readOnly}
+            onClick={() => {
+              openedFrom.current = "button";
+              setOpen(!open);
+            }}
+          >
+            <Icon icon={CalendarBlankIcon} size={iconSizeFor[size]} tone="default" />
+          </button>
+        )}
+        {/* A date chosen in the calendar is said here: focus goes back to a button whose name doesn't change. The region is in
+            the page before its text does, so it is announced as a change. */}
+        <VisuallyHidden role="status">{announcement}</VisuallyHidden>
+        {/* The value a form submits and validates. A hidden input is never validated, so this is a date input that is only
+            hidden from sight (and from assistive tech, which has the segments): `required` and the custom message above
+            give a surrounding form its native checks. Arriving on it, which a browser does to show its message, sends
+            focus to the segment that needs attention. */}
+        <input
+          ref={proxy}
+          type={byMonth ? "month" : "date"}
+          tabIndex={-1}
+          aria-hidden="true"
+          className={styles.proxy}
+          name={name}
+          form={form}
+          value={value}
+          required={required}
+          disabled={disabled}
+          readOnly={readOnly}
+          onChange={() => {}}
+          onFocus={() => {
+            const empty = segments.find((segment) => segmentText(segment) === "");
+            focusSegment(empty ?? segments[0]);
+          }}
+        />
+      </div>
     );
 
     return (
       <PopoverPrimitive.Root open={open} onOpenChange={setOpen} modal={false}>
         <PopoverPrimitive.Anchor asChild>{field}</PopoverPrimitive.Anchor>
         {showPicker && (
-          <PopoverPrimitive.Portal>
+          <PopoverPrimitive.Portal container={container}>
             <PopoverPrimitive.Content
               ref={panel}
               id={panelId}
@@ -765,16 +603,23 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
               style={panelStyle}
               onOpenAutoFocus={(event) => {
                 event.preventDefault();
-                // Focus goes to the day Tab would land on (the chosen one, else today), not to the panel itself.
+                // Every opening starts clean: a press elsewhere that closed an earlier one says nothing about this one.
+                interactedOutside.current = false;
+                // Focus goes to the day (or month) Tab would land on: the chosen one, else today. Not to the panel itself.
                 (event.currentTarget as HTMLElement)
                   .querySelector<HTMLElement>(byMonth ? "button[data-picker-cell][tabindex='0']" : "button[data-date][tabindex='0']")
                   ?.focus();
               }}
               onCloseAutoFocus={(event) => {
-                // Radix has no trigger to hand focus back to, so it is done here: to the button, unless the person
-                // closed the panel by pressing somewhere else, which is where their focus now is.
+                // Radix has no trigger to hand focus back to, so it is done here: to where the panel was opened from (the
+                // segment, for the keyboard shortcut; else the button), unless the person closed it by pressing somewhere
+                // else, which is where their focus now is.
                 event.preventDefault();
-                if (!interactedOutside.current) pickerButton.current?.focus();
+                const from = openedFrom.current;
+                openedFrom.current = null;
+                if (interactedOutside.current) return;
+                (from && from !== "button" ? segmentRefs.current[from] : null)?.focus();
+                if (!(from && from !== "button")) pickerButton.current?.focus();
               }}
               onInteractOutside={(event) => {
                 // The button toggles the panel itself: a press on it is not an outside press.
@@ -784,31 +629,27 @@ export const DatePicker = forwardRef<HTMLDivElement, DatePickerProps>(
                 }
                 interactedOutside.current = true;
               }}
-              onFocusCapture={(event) => hintFrom(event.target)}
-              onMouseOverCapture={(event) => hintFrom(event.target)}
             >
-              {panelContent}
-              {unavailableReason && !byMonth && (
-                <div aria-hidden="true" className={styles.hint}>
-                  {hint}
-                </div>
-              )}
-              {presetList.length > 0 && (
-                <div role="group" aria-label={labels.presets} className={styles.presets}>
-                  {presetList.map((preset) => (
-                    <Button
-                      key={preset.label}
-                      type="button"
-                      variant="tertiary"
-                      size="xs"
-                      disabled={!preset.allowed}
-                      onClick={() => preset.date !== undefined && pick(preset.date)}
-                    >
-                      {preset.label}
-                    </Button>
-                  ))}
-                </div>
-              )}
+              <DatePickerPanel
+                byMonth={byMonth}
+                draftValue={draftValue}
+                today={today}
+                todayProp={todayProp}
+                minDate={minDate}
+                maxDate={maxDate}
+                dir={dir}
+                formatNumber={formatNumber}
+                calendarProps={calendarProps}
+                calendarLabels={calendarLabels}
+                weekStartsOn={weekStartsOn}
+                showTodayButton={showTodayButton}
+                isBlocked={isBlocked}
+                unavailableReason={unavailableReason}
+                presets={presetList}
+                presetsLabel={labels.presets}
+                onPick={pick}
+                onClose={() => setOpen(false)}
+              />
             </PopoverPrimitive.Content>
           </PopoverPrimitive.Portal>
         )}

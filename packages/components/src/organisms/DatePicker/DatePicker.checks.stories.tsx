@@ -253,7 +253,7 @@ export const RightToLeft: Story = {
 };
 
 export const KeyboardRoundTrip: Story = {
-  name: "Alt+ArrowDown opens the calendar, a key chooses a day, and focus is back on the button",
+  name: "Alt+ArrowDown opens the calendar, a key chooses a day, and focus is back on the segment it was opened from",
   render: () => (
     <Page>
       <DatePicker aria-label="Start date" defaultValue="2026-10-15" today={TODAY} />
@@ -266,12 +266,78 @@ export const KeyboardRoundTrip: Story = {
     await waitFor(() => expect(dayButton("2026-10-15")).toHaveFocus());
     await userEvent.keyboard("{ArrowDown}{Enter}");
     await waitFor(() => expect(segment("Day")).toHaveValue("22"));
-    await waitFor(() => expect(body().getByRole("button", { name: "Choose date" })).toHaveFocus());
-    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(segment("Day")).toHaveFocus());
+    // opened from the button, it goes back to the button
+    await userEvent.click(body().getByRole("button", { name: "Choose date" }));
     await body().findByRole("dialog");
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(body().queryByRole("dialog")).toBeNull());
     await expect(body().getByRole("button", { name: "Choose date" })).toHaveFocus();
+  },
+};
+
+export const FocusIsKeptAfterAnOutsidePressOnce: Story = {
+  name: "A press elsewhere that closed the calendar once does not stop focus coming back after a later keyboard close",
+  render: () => (
+    <Page>
+      <DatePicker aria-label="Start date" defaultValue="2026-10-15" today={TODAY} />
+    </Page>
+  ),
+  play: async () => {
+    await userEvent.click(body().getByRole("button", { name: "Choose date" }));
+    await body().findByRole("dialog");
+    await realClick(body().getByTestId("aside"));
+    await waitFor(() => expect(body().queryByRole("dialog")).toBeNull());
+    segment("Month").focus();
+    await userEvent.keyboard("{Alt>}{ArrowDown}{/Alt}");
+    await waitFor(() => expect(dayButton("2026-10-15")).toHaveFocus());
+    await userEvent.keyboard("{ArrowRight}{Enter}");
+    await waitFor(() => expect(body().queryByRole("dialog")).toBeNull());
+    await expect(document.activeElement).not.toBe(document.body);
+    await expect(segment("Month")).toHaveFocus();
+  },
+};
+
+export const ChosenDayChosenAgain: Story = {
+  name: "A real mouse on the day that is already chosen closes the calendar and keeps the value",
+  render: () => (
+    <Page>
+      <DatePicker aria-label="Start date" defaultValue="2026-10-15" today={TODAY} />
+    </Page>
+  ),
+  play: async () => {
+    await realClick(body().getByRole("button", { name: "Choose date" }));
+    const dialog = await body().findByRole("dialog", { name: "Choose a date" });
+    await settled(dialog);
+    await realClick(dayButton("2026-10-15") as Element);
+    await waitFor(() => expect(body().queryByRole("dialog", { name: "Choose a date" })).toBeNull());
+    await expect(segment("Day")).toHaveValue("15");
+    await expect(body().getByRole("button", { name: "Choose date" })).toHaveFocus();
+  },
+};
+
+export const PresetButtonsAreBigEnough: Story = {
+  name: "The preset buttons are at least 24 by 24 pixels",
+  render: () => (
+    <Page>
+      <DatePicker
+        aria-label="Start date"
+        today={TODAY}
+        presets={[
+          { label: "Today", value: TODAY },
+          { label: "New year", value: "2027-01-01" },
+        ]}
+      />
+    </Page>
+  ),
+  play: async () => {
+    await userEvent.click(body().getByRole("button", { name: "Choose date" }));
+    const group = await body().findByRole("group", { name: "Quick choices" });
+    for (const button of within(group).getAllByRole("button")) {
+      const r = button.getBoundingClientRect();
+      await expect(r.width).toBeGreaterThanOrEqual(24);
+      await expect(r.height).toBeGreaterThanOrEqual(24);
+    }
   },
 };
 

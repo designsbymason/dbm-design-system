@@ -1,7 +1,7 @@
 # DatePicker — review findings
 
 Ninth organism, built 2026-10-17 with the `06-engineering-standards.md` §9 checklist applied as it was written. **Not yet
-Finalized:** the final review pass (`/review-component DatePicker`) has not been run, and only the user declares a
+Finalized:** the review pass (`/review-component DatePicker`) has been run and its findings fixed (below); only the user declares a
 component Finalized. What follows is what was decided and found while building it.
 
 ## Decisions
@@ -10,7 +10,7 @@ component Finalized. What follows is what was decided and found while building i
 - The calendar is `Calendar` in single mode (or, by month, `Calendar`'s months grid: [ADR-0084](../adr/0084-datepicker-chooses-a-month-with-a-granularity-prop-that-reuses-calendars-months-grid-over-a-separate-monthpicker.md)); `min`, `max`, `isDateDisabled`, `weekStartsOn`, `showTodayButton` and `today` are `DatePicker`'s own props and everything else goes through `calendarProps` (the props the field owns are left out of its type).
 - Segment entry is its own module (`internal/date/dateEntry.ts`, with its own tests), not shared with `TimePicker`'s; the reasons are in ADR-0082.
 - Two component tokens, `date-picker.segment-width` and `date-picker.year-width` (`03` token table). No other new token; the panel's width is `Radix`'s available width, and the rule for it is doubled (`.panel.panel`) so it beats `Popover`'s `max-width` whatever order the stylesheets load in.
-- Bundle: 15.39KB JS / 3.79KB CSS gzipped after the additions below, so an 18KB JS override with its reason in `check-component-bundle-size.mjs`.
+- Bundle: 15.85KB JS / 3.83KB CSS gzipped after the additions and fixes below, so an 18KB JS override with its reason in `check-component-bundle-size.mjs`.
 - No new dependency.
 
 ## Shared hook
@@ -33,6 +33,21 @@ component Finalized. What follows is what was decided and found while building i
 - **Field height is `Input`'s, not `Button`'s:** the field is 2px shorter than a `Button` of the same size (as `TimePicker`'s is). Copy and the check say `Input`.
 - **Calendar day state is on the cell, not the button:** `aria-disabled` and `aria-selected` are on the `td`, so tests read the day's `closest("td")`.
 
+## Review pass (2026-10-17) and its fixes
+The §9 review (`/review-component DatePicker`) found twelve things; all are fixed.
+- **Focus dropped to `<body>` after a keyboard-opened close** if an earlier opening had been closed by a press elsewhere (`interactedOutside` was reset only by the button). Reset on every opening, and focus now goes back to where the panel was opened from: the segment for `Alt`+`ArrowDown`, the button otherwise.
+- **The day that is already chosen did nothing**: `Calendar` doesn't call `onValueChange` for an unchanged date, so the panel stayed open. The panel treats a press on it as a choice (reporting nothing, announcing it).
+- **The five public types were not exported** (`DatePickerGranularity`, `DatePickerPreset`, `DatePickerPresentation`, `DatePickerSide`, `DatePickerAlign`); a test now uses them through `index.ts`.
+- **A value that doesn't fit the granularity read as empty without a word.** A development warning now names it; the Playground story and its snippet cut the demo date to its month when `granularity` is switched.
+- **The reason line went stale** across closing and reopening, and when focus moved to a preset or an arrow. It lives in the panel, so it starts empty on each opening, and anything that isn't a day clears it.
+- **`container`** added (Radix-primitive prop audit), as `Combobox` has; the other layer props stay unexposed on purpose.
+- **A chosen date is now announced** ("Date chosen: …", `labels.chosen`) through a status region in the page from the start, using the shared `useAnnouncement`; focus returns to a button whose name doesn't change, so nothing else said it.
+- **The year a stepped empty year starts at** and the month grid's fallback used the UTC year while `today` is the local date; both use `today`, else the browser's date.
+- **A development warning for `align` with a full-width panel**, as `Combobox` has.
+- **`DatePicker.tsx` was 819 lines.** The value, draft and typing are `useDatePickerValue.ts`, the panel's contents are `DatePickerPanel.tsx`, and the component is the field, the keys and the layer.
+- **Tests added:** both focus paths in jsdom and a real browser, the chosen day chosen again (mouse and Enter), the reason line's reopen, focus and pointer paths, the exported types, the value warning, `container`, the announcement, the year fallback and the `align` warning; the preset buttons' target size is in a real-browser check. The new tests were broken on purpose once to see them fail.
+- ADR-0082's stale 16KB figure is amended.
+
 ## Checks run (2026-10-17)
 - `pnpm lint` (ESLint, both typechecks): clean.
 - Unit project: `DatePicker` 172 tests across the component, server render and hydration (11 variants each), the docs-token guard and `dateEntry` (30), all passing, plus `storySnippets.test.ts`.
@@ -40,8 +55,8 @@ component Finalized. What follows is what was decided and found while building i
 - Docs page opened in a running Storybook: 11 sections, 14 canvases, the Properties table with every default as written, no error display; dark mode with the Emerald brand looked at with the calendar open.
 - `pnpm build` and `check-component-bundle-size`: within budget.
 
-## Open for the final review
-- `DatePicker` also imports `CalendarPicker`, `calendarHelpers`, `buildLabels` and `Calendar`'s stylesheet from `Calendar`'s folder (ADR-0084); the same applies to any change there.
-- Not yet run: the §9 review as a prioritized list, light/dark across both brands at every size, a phone-width look at the calendar panel, and a screen-reader pass.
-- The related-card preview scales a `Calendar` to half size with a transform; check it is still representative.
-- A full-width phone presentation like `Combobox`'s ([ADR-0081](../adr/0081-combobox-offers-a-full-width-presentation-measured-against-the-visual-viewport-over-a-docked-bottom-sheet.md)) is not built (planned decision 5: later and additive).
+## Open at the end of the review
+- `DatePicker` imports `CalendarPicker`, `calendarHelpers`, `buildLabels` and `Calendar`'s stylesheet from `Calendar`'s folder (ADR-0084); a change there needs a look here too.
+- Not run: a screen-reader pass, a real phone's on-screen keyboard, Windows high-contrast mode (only Chromium's emulation), Firefox and Safari, light Emerald and a tablet width, and a fresh contrast measurement of the reason line and the preset buttons (both are existing token pairings).
+- The related-card preview scales a `Calendar` to half size with a transform.
+- Making the full-width presentation the default below `sm` waits for a real device ([ADR-0083](../adr/0083-datepicker-anchors-its-panel-to-the-whole-field-with-a-trigger-less-radix-anchor-and-offers-side-align-and-a-full-width-presentation-over-the-popover-molecule-and-its-button.md)).

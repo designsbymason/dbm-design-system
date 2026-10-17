@@ -6,6 +6,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { FieldLabel } from "../../atoms/FieldLabel";
 import { FormField } from "../../molecules/FormField";
 import { DatePicker } from "./DatePicker";
+import type {
+  DatePickerAlign,
+  DatePickerGranularity,
+  DatePickerPreset,
+  DatePickerPresentation,
+  DatePickerSide,
+} from "./index";
 
 const segment = (name: string) => screen.getByRole("spinbutton", { name }) as HTMLInputElement;
 const texts = () => screen.getAllByRole("spinbutton").map((input) => (input as HTMLInputElement).value);
@@ -1152,5 +1159,207 @@ describe("DatePicker by month", () => {
     await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
     await screen.findByRole("dialog");
     expect(await axe(document.body, { rules: { region: { enabled: false } } })).toHaveNoViolations();
+  });
+});
+
+describe("DatePicker focus after the calendar closes", () => {
+  it("returns to the segment the keyboard shortcut was used from, and to the button otherwise", async () => {
+    render(<DatePicker aria-label="d" defaultValue="2026-10-15" />);
+    await userEvent.click(segment("Month"));
+    await userEvent.keyboard("{Alt>}{ArrowDown}{/Alt}");
+    await waitFor(() => expect(day("2026-10-15")).toHaveFocus());
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(segment("Month")).toHaveFocus();
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    await screen.findByRole("dialog");
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(screen.getByRole("button", { name: "Choose date" })).toHaveFocus();
+  });
+
+  it("still returns after an earlier opening was closed by a press elsewhere", async () => {
+    render(
+      <>
+        <DatePicker aria-label="d" defaultValue="2026-10-15" />
+        <button type="button">elsewhere</button>
+      </>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    await screen.findByRole("dialog");
+    await userEvent.click(screen.getByText("elsewhere"));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    await userEvent.click(segment("Day"));
+    await userEvent.keyboard("{Alt>}{ArrowDown}{/Alt}");
+    await waitFor(() => expect(day("2026-10-15")).toHaveFocus());
+    await userEvent.keyboard("{ArrowRight}{Enter}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(segment("Day")).toHaveFocus();
+  });
+});
+
+describe("DatePicker choosing the day that is already chosen", () => {
+  it("closes the calendar with a click and reports no change", async () => {
+    const onValueChange = vi.fn();
+    render(<DatePicker aria-label="d" defaultValue="2026-10-15" onValueChange={onValueChange} />);
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    await screen.findByRole("dialog");
+    await userEvent.click(day("2026-10-15"));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(texts()).toEqual(["10", "15", "2026"]);
+  });
+
+  it("closes it with Enter on that day", async () => {
+    render(<DatePicker aria-label="d" defaultValue="2026-10-15" />);
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    await waitFor(() => expect(day("2026-10-15")).toHaveFocus());
+    await userEvent.keyboard("{Enter}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("does not close for a day that is not available", async () => {
+    render(<DatePicker aria-label="d" defaultValue="2026-10-15" max="2026-10-20" />);
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    await screen.findByRole("dialog");
+    await userEvent.click(day("2026-10-25"));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("is announced like any other choice", async () => {
+    render(<DatePicker aria-label="d" defaultValue="2026-10-15" />);
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    await screen.findByRole("dialog");
+    await userEvent.click(day("2026-10-15"));
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Date chosen: 10/15/2026"));
+  });
+});
+
+describe("DatePicker reason line", () => {
+  const reason = (date: string) => (date === "2026-10-20" ? "Fully booked" : undefined);
+  const hint = () => document.querySelector("[class*='hint']") as HTMLElement;
+
+  it("is empty again when the calendar is reopened", async () => {
+    render(<DatePicker aria-label="d" defaultValue="2026-10-19" unavailableReason={reason} />);
+    const button = screen.getByRole("button", { name: "Choose date" });
+    await userEvent.click(button);
+    await screen.findByRole("dialog");
+    await userEvent.keyboard("{ArrowRight}");
+    await waitFor(() => expect(hint()).toHaveTextContent("Fully booked"));
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    await userEvent.click(button);
+    await screen.findByRole("dialog");
+    expect(hint()).toHaveTextContent("");
+  });
+
+  it("is cleared when focus moves to something that is not a day", async () => {
+    render(<DatePicker aria-label="d" defaultValue="2026-10-19" unavailableReason={reason} />);
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    await screen.findByRole("dialog");
+    await userEvent.keyboard("{ArrowRight}");
+    await waitFor(() => expect(hint()).toHaveTextContent("Fully booked"));
+    screen.getByRole("button", { name: "Previous month" }).focus();
+    await waitFor(() => expect(hint()).toHaveTextContent(""));
+  });
+
+  it("follows the pointer over a day, and clears over a free one", async () => {
+    render(<DatePicker aria-label="d" defaultValue="2026-10-15" unavailableReason={reason} />);
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    await screen.findByRole("dialog");
+    await userEvent.hover(day("2026-10-20"));
+    await waitFor(() => expect(hint()).toHaveTextContent("Fully booked"));
+    await userEvent.hover(day("2026-10-21"));
+    await waitFor(() => expect(hint()).toHaveTextContent(""));
+  });
+});
+
+describe("DatePicker public types", () => {
+  it("exports the types a caller needs to write presets, a side, an alignment and a presentation", () => {
+    const preset: DatePickerPreset = { label: "Today", value: (today) => today };
+    const side: DatePickerSide = "top";
+    const align: DatePickerAlign = "end";
+    const presentation: DatePickerPresentation = "full-width";
+    const granularity: DatePickerGranularity = "month";
+    render(<DatePicker aria-label="d" presets={[preset]} side={side} align={align} presentation={presentation} granularity={granularity} />);
+    expect(screen.getByRole("group", { name: "d" })).toBeInTheDocument();
+  });
+});
+
+describe("DatePicker values that do not fit", () => {
+  it("warns about a whole date handed to a month field, and a month handed to a day field", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(<DatePicker aria-label="d" granularity="month" defaultValue="2026-10-15" />);
+    expect(warn.mock.calls.some(([message]) => String(message).includes('"YYYY-MM"') && String(message).includes("2026-10-15"))).toBe(true);
+    render(<DatePicker aria-label="e" defaultValue="2026-10" />);
+    expect(warn.mock.calls.some(([message]) => String(message).includes('"YYYY-MM-DD"') && String(message).includes('"2026-10"'))).toBe(true);
+  });
+
+  it("does not warn for an empty value or one that fits", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(<DatePicker aria-label="d" defaultValue="" />);
+    render(<DatePicker aria-label="e" defaultValue="2026-10-15" />);
+    render(<DatePicker aria-label="f" granularity="month" defaultValue="2026-10" />);
+    expect(warn.mock.calls.filter(([message]) => String(message).includes("is not a"))).toHaveLength(0);
+  });
+});
+
+describe("DatePicker container", () => {
+  it("draws the panel inside the element it is given", async () => {
+    const host = document.createElement("div");
+    document.body.append(host);
+    render(<DatePicker aria-label="d" defaultOpen container={host} />);
+    const dialog = await screen.findByRole("dialog");
+    expect(host.contains(dialog)).toBe(true);
+    host.remove();
+  });
+});
+
+describe("DatePicker announcing a choice", () => {
+  it("has a status region in the page before anything is chosen, and says nothing while typing", async () => {
+    render(<DatePicker aria-label="d" />);
+    expect(screen.getByRole("status")).toHaveTextContent("");
+    await userEvent.click(segment("Month"));
+    await userEvent.keyboard("10032026");
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(screen.getByRole("status")).toHaveTextContent("");
+  });
+
+  it("says a chosen day aloud, in the field's own order, with the words in labels", async () => {
+    render(<DatePicker aria-label="d" format="dmy" separator="." defaultValue="2026-10-15" labels={{ chosen: (date) => `Choisi : ${date}` }} />);
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    await screen.findByRole("dialog");
+    await userEvent.click(day("2026-10-20"));
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Choisi : 20.10.2026"));
+  });
+
+  it("says a preset's date aloud too", async () => {
+    render(<DatePicker aria-label="d" presets={[{ label: "New year", value: "2027-01-01" }]} />);
+    await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
+    await userEvent.click(await screen.findByRole("button", { name: "New year" }));
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Date chosen: 01/01/2027"));
+  });
+});
+
+describe("DatePicker this year", () => {
+  it("starts an empty year at the browser's year when no today is given", async () => {
+    render(<DatePicker aria-label="d" />);
+    await userEvent.click(segment("Year"));
+    await userEvent.keyboard("{ArrowUp}");
+    expect(segment("Year").value).toBe(String(new Date().getFullYear()).padStart(4, "0"));
+  });
+});
+
+describe("DatePicker align with a full-width panel", () => {
+  it("warns that align has no effect", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(<DatePicker aria-label="d" presentation="full-width" align="end" />);
+    expect(warn.mock.calls.some(([message]) => String(message).includes("`align` has no effect"))).toBe(true);
+  });
+
+  it("does not warn at the default alignment", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    render(<DatePicker aria-label="d" presentation="full-width" />);
+    expect(warn.mock.calls.some(([message]) => String(message).includes("`align` has no effect"))).toBe(false);
   });
 });

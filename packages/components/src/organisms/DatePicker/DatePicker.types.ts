@@ -63,6 +63,8 @@ export interface DatePickerLabels {
   afterMax: (latest: string) => string;
   /** The name of the group of `presets` buttons. */
   presets: string;
+  /** Said aloud when a date is chosen from the calendar or a preset, given the date written as the field writes it. */
+  chosen: (date: string) => string;
 }
 
 /** The calendar props `DatePicker` leaves to `calendarProps`: everything but what it owns itself. */
@@ -216,6 +218,12 @@ export interface DatePickerProps
    */
   presentation?: Responsive<DatePickerPresentation>;
   /**
+   * The element the calendar's panel is drawn into, instead of the end of the page: a scrolling or transformed box
+   * that would clip it, an element inside a dialog or a shadow root, or a box that scopes a demo.
+   * @default document.body
+   */
+  container?: HTMLElement | null;
+  /**
    * Shows the button that opens the calendar. Turn it off for a field that is only ever typed into.
    * @default true
    */
@@ -289,7 +297,7 @@ export interface DatePickerProps
   /**
    * Every piece of text the field writes itself — segment names and the button names — for translation.
    * Pass only the keys you want to change.
-   * @default { day: 'Day', month: 'Month', year: 'Year', empty: 'Empty', openPicker: 'Choose date', pickerName: 'Choose a date', clear: 'Clear date', incomplete: 'Enter a complete date', invalid: "This date doesn't exist", unavailable: "This date isn't available", beforeMin: (earliest) => `Choose ${earliest} or later`, afterMax: (latest) => `Choose ${latest} or earlier`, presets: 'Quick choices' }
+   * @default { day: 'Day', month: 'Month', year: 'Year', empty: 'Empty', openPicker: 'Choose date', pickerName: 'Choose a date', clear: 'Clear date', incomplete: 'Enter a complete date', invalid: "This date doesn't exist", unavailable: "This date isn't available", beforeMin: (earliest) => `Choose ${earliest} or later`, afterMax: (latest) => `Choose ${latest} or earlier`, presets: 'Quick choices', chosen: (date) => `Date chosen: ${date}` }
    */
   labels?: Partial<DatePickerLabels>;
   /**

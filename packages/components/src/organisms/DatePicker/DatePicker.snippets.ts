@@ -145,7 +145,9 @@ export interface DatePickerPlaygroundSnippetArgs {
  */
 export function datePickerPlaygroundSnippet(args: DatePickerPlaygroundSnippetArgs): string {
   const attributes: string[] = ['aria-label="Start date"'];
-  if (args.defaultValue) attributes.push(`defaultValue="${args.defaultValue}"`);
+  // A field chosen by month takes "YYYY-MM", so a whole demo date is cut to its month.
+  const initial = args.granularity === "month" ? args.defaultValue?.slice(0, 7) : args.defaultValue;
+  if (initial) attributes.push(`defaultValue="${initial}"`);
   if (args.granularity && args.granularity !== "day") attributes.push(`granularity="${args.granularity}"`);
   if (args.commitOn && args.commitOn !== "change") attributes.push(`commitOn="${args.commitOn}"`);
   if (args.format && args.format !== "mdy") attributes.push(`format="${args.format}"`);
