@@ -21,6 +21,13 @@ export type NavbarSize = "sm" | "md" | "lg";
 export type NavbarVariant = "outlined" | "filled" | "ghost";
 
 /**
+ * How the current page's link (and a group that holds it) is marked, beyond `aria-current="page"`, which is always set:
+ * `subtle` (a tinted pill with brand-coloured text), `underline` (a brand line under the link, along the start edge of a link in
+ * the phone panel) or `solid` (a brand fill with the text on it). The same names `Tabs` uses for its variants.
+ */
+export type NavbarCurrentVariant = "subtle" | "underline" | "solid";
+
+/**
  * The width below which the primary links leave the bar for a menu button: a breakpoint step (`"md"` is 768px), or
  * `"never"` to keep the links in the bar at every width. `"base"` is not an option, since it would mean never.
  */
@@ -54,6 +61,12 @@ export interface NavbarProps extends Omit<ComponentPropsWithoutRef<"header">, "d
    * @default 'outlined'
    */
   variant?: NavbarVariant;
+  /**
+   * How the current page's link is marked — see {@link NavbarCurrentVariant}. One look for the whole bar, the phone panel
+   * included, and not overridable per link. The marker is only the look: `aria-current="page"` is set whichever it is.
+   * @default 'subtle'
+   */
+  currentVariant?: NavbarCurrentVariant;
   /**
    * The bar's height, on a three-step scale. Each step is as tall as an `IconButton` of the same step plus room above and
    * below, so a button in the bar never touches its edges.

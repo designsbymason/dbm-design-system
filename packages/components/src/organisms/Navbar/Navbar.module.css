@@ -162,6 +162,55 @@ a.brand:focus-visible,
   background-color: var(--dbm-bg-brand-subtle-hover);
 }
 
+/* --- `currentVariant`: how the current page's link is marked (the default, `subtle`, is the tint above) ---
+   The classes are on the links themselves, not the root, since the menu panel is drawn in a portal outside the bar. */
+
+/* `underline`: no fill, a brand line under the link (a bar at the start edge in the menu panel), text in the primary colour. */
+.currentUnderline,
+.currentUnderline:hover {
+  position: relative;
+  background-color: transparent;
+  color: var(--dbm-text-primary);
+}
+
+.currentUnderline:hover {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+.currentUnderline::after {
+  content: "";
+  position: absolute;
+  inset-inline: var(--dbm-space-3);
+  inset-block-end: 0;
+  block-size: var(--dbm-border-width-2);
+  border-radius: var(--dbm-radius-full);
+  background-color: var(--dbm-bg-brand);
+}
+
+.panelList .currentUnderline::after {
+  inset-inline: 0 auto;
+  inset-block: var(--dbm-space-2);
+  inline-size: var(--dbm-border-width-2);
+  block-size: auto;
+}
+
+/* `solid`: a brand fill with the text on it. Its focus ring is drawn inside the link in the on-brand colour, since the
+   standard ring (`border.focus`) is unreadable against a brand fill. */
+.currentSolid,
+.currentSolid:hover {
+  background-color: var(--dbm-bg-brand);
+  color: var(--dbm-text-on-brand);
+}
+
+.currentSolid:hover {
+  background-color: var(--dbm-bg-brand-hover);
+}
+
+.currentSolid:focus-visible {
+  outline-color: var(--dbm-icon-on-brand);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
 /* A `Navbar.Group`'s button: a button drawn as a link (no border, background or font of its own), with a caret that turns while
    the group is open. */
 .groupTrigger {
@@ -340,6 +389,21 @@ a.brand:focus-visible,
   .current:focus-visible {
     outline-offset: var(--dbm-space-1);
     outline-width: var(--dbm-border-width-2);
+  }
+
+  /* The underline is a background, which forced colours replaces, so it names a system colour; it marks the link
+     by itself, so the outline the other looks use is not drawn unless the link has focus. */
+  .currentUnderline::after {
+    background-color: Highlight;
+  }
+
+  .currentUnderline:not(:focus-visible) {
+    outline: none;
+  }
+
+  .currentSolid:focus-visible {
+    outline-color: HighlightText;
+    outline-offset: calc(-1 * var(--dbm-border-width-2));
   }
 }
 

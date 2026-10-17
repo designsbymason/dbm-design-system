@@ -5,7 +5,7 @@
 // be pasted anywhere. Each snippet is the smallest real usage of what its story shows, and `storySnippets.test.ts`
 // checks that stays true. See `07-storybook-and-documentation-standards.md` §4.2.
 
-import type { NavbarCollapseBelow, NavbarSize, NavbarVariant } from "./Navbar.types";
+import type { NavbarCollapseBelow, NavbarCurrentVariant, NavbarSize, NavbarVariant } from "./Navbar.types";
 
 const brand = `  <Navbar.Brand href="/">Acme</Navbar.Brand>`;
 
@@ -29,6 +29,10 @@ ${inner}
 export const navbarSnippets = {
   variants: `{/* variant: "outlined" (default) | "filled" | "ghost" */}
 ${navbar('variant="filled"')}`,
+
+  currentVariants: `{/* currentVariant: "subtle" (default) | "underline" | "solid". One look for the whole bar, the phone panel included;
+    aria-current="page" is set whichever it is. */}
+${navbar('currentVariant="underline"')}`,
 
   sizes: `{/* size: "sm" | "md" (default) | "lg". The bar is as tall as an IconButton of the same step plus room. */}
 ${navbar('size="lg"')}`,
@@ -121,6 +125,7 @@ ${navbar('dir="rtl" labels={{ menu: "القائمة", navigation: "الرئيس�
 /** The Playground's live controls, as far as the snippet cares. */
 export interface NavbarPlaygroundSnippetArgs {
   variant?: NavbarVariant;
+  currentVariant?: NavbarCurrentVariant;
   size?: NavbarSize;
   collapseBelow?: NavbarCollapseBelow;
   menuSide?: "start" | "end" | "top" | "bottom";
@@ -137,6 +142,7 @@ export interface NavbarPlaygroundSnippetArgs {
 export function navbarPlaygroundSnippet(args: NavbarPlaygroundSnippetArgs): string {
   const attributes: string[] = [];
   if (args.variant && args.variant !== "outlined") attributes.push(`variant="${args.variant}"`);
+  if (args.currentVariant && args.currentVariant !== "subtle") attributes.push(`currentVariant="${args.currentVariant}"`);
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.collapseBelow && args.collapseBelow !== "md") attributes.push(`collapseBelow="${args.collapseBelow}"`);
   if (args.menuSide && args.menuSide !== "start") attributes.push(`menuSide="${args.menuSide}"`);

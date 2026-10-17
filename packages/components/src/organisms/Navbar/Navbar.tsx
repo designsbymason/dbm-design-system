@@ -26,6 +26,7 @@ import type {
   NavbarActionsProps,
   NavbarBrandProps,
   NavbarCollapseBelow,
+  NavbarCurrentVariant,
   NavbarGroupProps,
   NavbarLabels,
   NavbarLinkProps,
@@ -53,6 +54,12 @@ const sizeClass: Record<NavbarSize, string | undefined> = {
   lg: styles.sizeLg,
 };
 
+const currentVariantClass: Record<NavbarCurrentVariant, string | undefined> = {
+  subtle: undefined,
+  underline: styles.currentUnderline,
+  solid: styles.currentSolid,
+};
+
 // The widths the `collapseBelow` steps stand for, the literal values of the breakpoint tokens (a media query can't read a
 // custom property). Used only to close the menu panel when the page grows past the step, so it doesn't sit over a bar
 // that already shows the links.
@@ -69,6 +76,7 @@ interface NavbarContextValue {
   labels: NavbarLabels;
   size: NavbarSize;
   closeMenuOnNavigate: boolean;
+  currentVariant: NavbarCurrentVariant;
   menuSide: NonNullable<NavbarProps["menuSide"]>;
   dir: NonNullable<NavbarProps["dir"]>;
   menuContainer: HTMLElement | null | undefined;
@@ -129,6 +137,7 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
     {
       children,
       variant = "outlined",
+      currentVariant = "subtle",
       size = "md",
       collapseBelow = "md",
       menuOpen,
@@ -181,10 +190,10 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
     const showAutomaticMenuButton = hasLinks && !hasMenuButton && collapseBelow !== "never";
 
     const contextValue = useMemo<NavbarContextValue>(
-      () => ({ labels: resolvedLabels, size, closeMenuOnNavigate, menuSide, menuContainer, dir, closeMenu }),
+      () => ({ labels: resolvedLabels, size, closeMenuOnNavigate, currentVariant, menuSide, menuContainer, dir, closeMenu }),
       // `mergeDefined` returns a fresh object each render; its three strings are what the value really depends on.
       // eslint-disable-next-line react-hooks/exhaustive-deps
-      [resolvedLabels.menu, resolvedLabels.navigation, resolvedLabels.close, size, closeMenuOnNavigate, menuSide, menuContainer, dir, closeMenu],
+      [resolvedLabels.menu, resolvedLabels.navigation, resolvedLabels.close, size, closeMenuOnNavigate, currentVariant, menuSide, menuContainer, dir, closeMenu],
     );
 
     const content = (
@@ -306,7 +315,7 @@ NavbarLinks.displayName = "Navbar.Links";
  */
 const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
   ({ current = false, disabled = false, asChild = false, className, onClick, onClickCapture, children, ...props }, ref) => {
-    const { closeMenuOnNavigate, closeMenu } = useNavbarContext("Navbar.Link");
+    const { closeMenuOnNavigate, closeMenu, currentVariant } = useNavbarContext("Navbar.Link");
     const inPanel = useContext(NavbarPanelContext);
     const inMenu = useContext(NavbarMenuContext);
     const Component = asChild ? Slot : "a";
@@ -337,7 +346,11 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
         aria-disabled={disabled || undefined}
         onClick={handleClick}
         onClickCapture={handleClickCapture}
-        className={cx(!inMenu && styles.link, !inMenu && current && styles.current, disabled && styles.disabled, className)}
+        className={cx(
+          !inMenu && styles.link,
+          !inMenu && current && styles.current,
+          !inMenu && current && currentVariantClass[currentVariant],
+          disabled && styles.disabled, className)}
       >
         {children}
       </Component>
@@ -371,7 +384,7 @@ NavbarLink.displayName = "Navbar.Link";
  */
 const NavbarGroup = forwardRef<HTMLButtonElement, NavbarGroupProps>(
   ({ label, current = false, disabled = false, defaultOpen, align = "start", className, children, ...props }, ref) => {
-    const { dir } = useNavbarContext("Navbar.Group");
+    const { dir, currentVariant } = useNavbarContext("Navbar.Group");
     const inPanel = useContext(NavbarPanelContext);
     const [open, setOpen] = useState(defaultOpen ?? current);
     const regionId = useId();
@@ -381,7 +394,13 @@ const NavbarGroup = forwardRef<HTMLButtonElement, NavbarGroupProps>(
         <Icon icon={CaretDownIcon} size="xs" className={styles.caret} />
       </>
     );
-    const triggerClass = cx(styles.link, styles.groupTrigger, current && styles.current, className);
+    const triggerClass = cx(
+      styles.link,
+      styles.groupTrigger,
+      current && styles.current,
+      current && currentVariantClass[currentVariant],
+      className,
+    );
 
     if (inPanel) {
       return (

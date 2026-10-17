@@ -525,3 +525,54 @@ describe("Navbar.Group in the menu panel", () => {
     await user.keyboard("{Escape}");
   });
 });
+
+describe("Navbar currentVariant", () => {
+  const currentLink = () => screen.getByRole("link", { name: "Products", ...inline });
+
+  it("marks the current link with the tint by default, and adds nothing for the other looks' classes", () => {
+    render(<Basic />);
+    expect(currentLink()).toHaveClass(styles.current!);
+    expect(currentLink()).not.toHaveClass(styles.currentUnderline!);
+    expect(currentLink()).not.toHaveClass(styles.currentSolid!);
+  });
+
+  it.each([
+    ["underline", () => styles.currentUnderline!],
+    ["solid", () => styles.currentSolid!],
+  ] as const)("marks the current link with the %s look, and only that link", (variant, className) => {
+    render(<Basic currentVariant={variant} />);
+    expect(currentLink()).toHaveClass(styles.current!, className());
+    expect(screen.getByRole("link", { name: "Pricing", ...inline })).not.toHaveClass(styles.current!, className());
+  });
+
+  it("keeps aria-current on whichever look is chosen", () => {
+    render(<Basic currentVariant="solid" />);
+    expect(currentLink()).toHaveAttribute("aria-current", "page");
+  });
+
+  it("gives the menu panel's copy of the current link the same look, though the panel is outside the bar", async () => {
+    const user = userEvent.setup();
+    render(<Basic currentVariant="underline" />);
+    await user.click(screen.getByRole("button", { name: "Menu" }));
+    const panel = await screen.findByRole("dialog");
+    expect(within(panel).getByRole("link", { name: "Products" })).toHaveClass(styles.currentUnderline!);
+    expect(within(panel).getByRole("link", { name: "Pricing" })).not.toHaveClass(styles.currentUnderline!);
+  });
+
+  it("gives a group that holds the current page the same look on its button", () => {
+    render(
+      <Navbar collapseBelow="never" currentVariant="solid">
+        <Navbar.Links>
+          <Navbar.Group label="Resources" current>
+            <Navbar.Link href="/a">A</Navbar.Link>
+          </Navbar.Group>
+          <Navbar.Group label="More">
+            <Navbar.Link href="/b">B</Navbar.Link>
+          </Navbar.Group>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    expect(screen.getByRole("button", { name: "Resources" })).toHaveClass(styles.currentSolid!);
+    expect(screen.getByRole("button", { name: "More" })).not.toHaveClass(styles.currentSolid!);
+  });
+});

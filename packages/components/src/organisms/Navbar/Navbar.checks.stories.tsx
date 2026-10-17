@@ -386,3 +386,97 @@ export const GroupInThePanel: Story = {
     await waitFor(() => expect(menuButton).toHaveFocus());
   },
 };
+
+export const CurrentLinkLooks: Story = {
+  name: "Each way of marking the current link is readable, and the solid one keeps a visible focus ring",
+  render: () => (
+    <NavbarStage minBlockSize="18rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start", display: "grid", gap: "1rem" }}>
+          {(["subtle", "underline", "solid"] as const).map((currentVariant) => (
+            <GalleryBar key={currentVariant} name={`${currentVariant} bar`}>
+              <DemoNavbar
+                currentVariant={currentVariant}
+                linksLabel={`${currentVariant} navigation`}
+                collapseBelow="never"
+                menuContainer={menuContainer}
+              />
+            </GalleryBar>
+          ))}
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const bar = (name: string) => within(canvasElement).getByRole("region", { name: `${name} bar` });
+    const surface = (name: string) => getComputedStyle(bar(name).querySelector("header")!).backgroundColor;
+    const current = (name: string) => within(bar(name)).getByRole("link", { name: "Products" });
+
+    // subtle: brand text on the tint
+    const subtle = getComputedStyle(current("subtle"));
+    expect(contrast(subtle.color, subtle.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+
+    // underline: primary text on the bar, and a brand line of 2px along the link's bottom edge that clears 3:1 against it
+    const underline = current("underline");
+    expect(contrast(getComputedStyle(underline).color, surface("underline"))).toBeGreaterThanOrEqual(4.5);
+    const line = getComputedStyle(underline, "::after");
+    expect(line.content).not.toBe("none");
+    expect(line.position).toBe("absolute");
+    expect(px(line.height)).toBe(2);
+    expect(line.bottom).toBe("0px");
+    expect(contrast(line.backgroundColor, surface("underline"))).toBeGreaterThanOrEqual(3);
+    // and nothing else is marked: the other links carry no line
+    expect(getComputedStyle(within(bar("underline")).getByRole("link", { name: "Pricing" }), "::after").content).toBe("none");
+
+    // solid: on-brand text on the fill, the fill itself clearing 3:1 against the bar, and a ring inside the link that shows
+    const solid = current("solid");
+    const solidStyle = getComputedStyle(solid);
+    expect(contrast(solidStyle.color, solidStyle.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(solidStyle.backgroundColor, surface("solid"))).toBeGreaterThanOrEqual(3);
+    solid.focus();
+    await userEvent.keyboard("{Shift>}{/Shift}");
+    await waitFor(() => expect(solid).toHaveFocus());
+    const ring = getComputedStyle(solid);
+    expect(ring.outlineStyle).toBe("solid");
+    expect(px(ring.outlineOffset)).toBeLessThan(0);
+    expect(contrast(ring.outlineColor, ring.backgroundColor)).toBeGreaterThanOrEqual(3);
+  },
+};
+
+export const CurrentLinkInThePanelAndForcedColours: Story = {
+  name: "The underline is a bar at the start edge in the menu panel, and every look stays visible in forced colours",
+  render: () => (
+    <NavbarStage minBlockSize="26rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+          <DemoNavbar currentVariant="underline" collapseBelow="3xl" menuContainer={menuContainer} />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Menu" }));
+    const panel = await canvas.findByRole("dialog", { name: "Menu" });
+    await waitFor(() => expect(panel.getAnimations().every((animation) => animation.playState === "finished")).toBe(true));
+    const link = within(panel).getByRole("link", { name: "Products" });
+    const mark = getComputedStyle(link, "::after");
+    expect(px(mark.width)).toBe(2);
+    expect(mark.insetInlineStart).toBe("0px");
+    expect(px(mark.height)).toBeGreaterThan(8);
+    const emulate = (value: "active" | "none") =>
+      send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
+    await emulate("active");
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await expect(window.matchMedia("(forced-colors: active)").matches).toBe(true);
+      // the line names a system colour, so it differs from the panel's own (forced) background
+      const forced = getComputedStyle(link, "::after");
+      await expect(forced.backgroundColor).not.toBe(getComputedStyle(panel).backgroundColor);
+      // and it marks the link by itself, so no outline is drawn on top of it
+      await expect(getComputedStyle(link).outlineStyle).toBe("none");
+    } finally {
+      await emulate("none");
+    }
+  },
+};

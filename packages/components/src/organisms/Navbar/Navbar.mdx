@@ -14,6 +14,7 @@ import * as NavbarMenuButtonStories from "./NavbarMenuButton.stories";
 export const propOrder = [
   "children",
   "variant",
+  "currentVariant",
   "size",
   "collapseBelow",
   "menuOpen",
@@ -38,6 +39,7 @@ export const propOrder = [
 ];
 export const playgroundOrder = [
   "variant",
+  "currentVariant",
   "size",
   "collapseBelow",
   "menuSide",
@@ -148,6 +150,15 @@ place one yourself to put it elsewhere or give it another icon.
 for a bar that sits over a hero or a coloured page.
 
 <Canvas of={NavbarStories.Variants} />
+
+### Marking the current page
+
+`currentVariant` chooses how the current link is marked: `subtle` is a tinted pill, `underline` a brand line
+under the link (a bar at the start edge in the phone panel), and `solid` a brand fill. It is one look for the
+whole bar, the phone panel and a `Navbar.Group` that holds the page included, and can't be set per link.
+`aria-current="page"` is set whichever it is, and a link is never told apart by colour alone.
+
+<Canvas of={NavbarStories.CurrentVariants} />
 
 ### Sizes
 
@@ -305,8 +316,9 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 - The only motion is a short colour fade on hover, removed under `prefers-reduced-motion`. In
   forced-colours mode a filled or stuck bar and the current link get a one-pixel outline, since a fill or
   shadow alone would vanish.
-- The current link's colours (`text.brand` on `bg.brand-subtle`) are the pairing `Tabs` uses, and clear AA
-  in every theme.
+- `subtle` uses `text.brand` on `bg.brand-subtle`, the pairing `Tabs` uses; `solid` uses `text.on-brand` on `bg.brand`, the pairing
+  a primary `Button` uses, with its focus ring drawn inside the link in `icon.on-brand`; `underline` keeps `text.primary` and draws a
+  `bg.brand` line. In forced colours the underline is a system-colour line and the other two get an outline.
 
 </Callout>
 
@@ -374,12 +386,16 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 <TokenRow token="bg.brand-subtle / bg.brand-subtle-hover" usage="a link's hover, and the current link's fill and its hover" />
 <TokenRow token="text.primary" usage="the bar's text, the brand, and a hovered link" />
 <TokenRow token="text.secondary" usage="a link at rest, and a disabled one" />
-<TokenRow token="text.brand" usage="the current link" />
+<TokenRow token="text.brand" usage="the current link, in the subtle look" />
+<TokenRow token="text.on-brand" usage="the current link's text in the solid look" />
+<TokenRow token="bg.brand / bg.brand-hover" usage="the solid look's fill and its hover, and the underline look's line" />
+<TokenRow token="icon.on-brand" usage="the focus ring on the solid look, drawn inside the link where the standard ring would be unreadable" />
 <TokenRow token="border.default" usage="the line under an outlined bar" />
 <TokenRow token="border.focus" usage="the focus ring on the brand and the links" />
 <TokenRow token="border-width.1" usage="the outlined bar's line" />
-<TokenRow token="border-width.2" usage="the focus ring's width" />
+<TokenRow token="border-width.2" usage="the focus ring's width, and the underline look's line thickness" />
 <TokenRow token="radius.md" usage="a link's corners" />
+<TokenRow token="radius.full" usage="the underline look's line" />
 <TokenRow token="radius.sm" usage="the focus ring's corners, on the brand and the links" />
 <TokenRow token="shadow.light.md / shadow.dark.md" usage="a sticky bar's elevation while it is stuck" />
 <TokenRow token="font-family.primary" usage="the bar's typography" />

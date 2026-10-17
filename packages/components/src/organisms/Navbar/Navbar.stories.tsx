@@ -4,13 +4,14 @@ import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Navbar } from "./Navbar";
 import { navbarPlaygroundSnippet, navbarSnippets } from "./Navbar.snippets";
-import type { NavbarCollapseBelow, NavbarSize, NavbarVariant } from "./Navbar.types";
+import type { NavbarCollapseBelow, NavbarCurrentVariant, NavbarSize, NavbarVariant } from "./Navbar.types";
 import { DemoNavbar, GalleryBar, NavbarStage, NavbarViewModeContext, StickyDemo } from "./NavbarStoryKit";
 
 // Combines Navbar's root-level args in one Playground. Each sub-part gets its own Properties table from a hidden,
 // docs-only stories file (guidelines/adr/0013).
 interface PlaygroundArgs {
   variant: NavbarVariant;
+  currentVariant: NavbarCurrentVariant;
   size: NavbarSize;
   collapseBelow: NavbarCollapseBelow;
   menuSide: "start" | "end" | "top" | "bottom";
@@ -28,6 +29,7 @@ const playgroundSource = {
 
 const noControls = {
   variant: { control: false },
+  currentVariant: { control: false },
   size: { control: false },
   collapseBelow: { control: false },
   menuSide: { control: false },
@@ -60,6 +62,13 @@ const meta: Meta<PlaygroundArgs> = {
       options: ["outlined", "filled", "ghost"],
       description: "How the bar itself is drawn: a surface with a line under it, a tinted surface, or nothing of its own.",
       table: { defaultValue: { summary: '"outlined"' } },
+    },
+    currentVariant: {
+      control: "select",
+      options: ["subtle", "underline", "solid"],
+      description:
+        "How the current page's link is marked: a tinted pill, a brand line under it, or a brand fill. aria-current is set whichever it is, and the look is the same in the phone panel.",
+      table: { defaultValue: { summary: '"subtle"' } },
     },
     size: {
       control: "select",
@@ -109,6 +118,7 @@ const meta: Meta<PlaygroundArgs> = {
   },
   args: {
     variant: "outlined",
+    currentVariant: "subtle",
     size: "md",
     collapseBelow: "md",
     menuSide: "start",
@@ -151,6 +161,30 @@ export const Variants: Story = {
               <DemoNavbar
                 variant={variant}
                 linksLabel={`${variant} navigation`}
+                menuContainer={menuContainer}
+                collapseBelow={args.collapseBelow}
+              />
+            </GalleryBar>
+          ))}
+        </div>
+      )}
+    </NavbarStage>
+  ),
+};
+
+export const CurrentVariants: Story = {
+  name: "Marking the current page",
+  parameters: { docs: { source: { code: navbarSnippets.currentVariants } } },
+  argTypes: { ...noControls },
+  render: (args) => (
+    <NavbarStage minBlockSize="16rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", display: "grid", gap: "var(--dbm-space-4)", alignSelf: "start" }}>
+          {(["subtle", "underline", "solid"] as const).map((currentVariant) => (
+            <GalleryBar key={currentVariant} name={`${currentVariant} current link`}>
+              <DemoNavbar
+                currentVariant={currentVariant}
+                linksLabel={`${currentVariant} navigation`}
                 menuContainer={menuContainer}
                 collapseBelow={args.collapseBelow}
               />

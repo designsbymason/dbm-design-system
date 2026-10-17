@@ -17,6 +17,13 @@ const meta: Meta<typeof Navbar> = {
       description: "How the bar itself is drawn: a surface with a line under it, a tinted surface, or nothing of its own.",
       table: { defaultValue: { summary: '"outlined"' } },
     },
+    currentVariant: {
+      control: "select",
+      options: ["subtle", "underline", "solid"],
+      description:
+        "How the current page's link is marked: a tinted pill, a brand line under it (a bar at the start edge in the phone panel), or a brand fill. One look for the whole bar, not overridable per link; aria-current is set whichever it is.",
+      table: { defaultValue: { summary: '"subtle"' } },
+    },
     size: {
       control: "select",
       options: ["sm", "md", "lg"],
