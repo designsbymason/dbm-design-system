@@ -55,6 +55,18 @@ export const comboboxSnippets = {
   onInputValueChange={(text, reason) => reason === "input" && search(text)}
 />`,
 
+  create: `{/* You own the options: const [options, setOptions] = useState(countries); */}
+{/* Return the new option to have it chosen. A promise works too: the row waits for it. */}
+<Combobox
+  aria-label="Country"
+  options={options}
+  onCreate={(text) => {
+    const option = { value: text.toLowerCase(), label: text };
+    setOptions((current) => [...current, option]);
+    return option;
+  }}
+/>`,
+
   customValue: `{/* The typed text is the value when it isn't an option; Enter or leaving the field commits it. */}
 <Combobox aria-label="Destination" options={countries} allowCustomValue />`,
 

@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { StrictMode, createRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { PlusIcon } from "@dbm-design-system/icons";
 import { Combobox } from "./Combobox";
 import type { ComboboxOption, ComboboxProps } from "./Combobox.types";
 
@@ -664,6 +665,182 @@ describe("Combobox", () => {
       render(<Combobox aria-label="x" options={[{ value: "a", label: "" }, { value: "b", label: "B" }]} />);
       await user.click(field());
       expect(screen.getAllByRole("option")).toHaveLength(2);
+    });
+  });
+  describe("matching several words", () => {
+    const places: ComboboxOption[] = [
+      { value: "ny", label: "New York" },
+      { value: "nj", label: "New Jersey" },
+      { value: "yk", label: "York, England" },
+    ];
+
+    it("keeps an option when it holds every word, in any order", async () => {
+      const user = userEvent.setup();
+      render(<Combobox aria-label="Place" options={places} />);
+      await user.type(field(), "york new");
+      expect(labelsOf()).toEqual(["New York"]);
+      await user.clear(field());
+      await user.type(field(), "new");
+      expect(labelsOf()).toEqual(["New York", "New Jersey"]);
+    });
+
+    it("marks every word wherever it appears, and joins marks that touch", async () => {
+      const user = userEvent.setup();
+      render(<Combobox aria-label="Place" options={places} />);
+      await user.type(field(), "ne yo");
+      const row = screen.getByRole("option", { name: "New York" });
+      expect([...row.querySelectorAll("mark")].map((mark) => mark.textContent)).toEqual(["Ne", "Yo"]);
+      await user.clear(field());
+      await user.type(field(), "new york");
+      expect([...screen.getByRole("option", { name: "New York" }).querySelectorAll("mark")].map((mark) => mark.textContent)).toEqual(["New", "York"]);
+    });
+
+    it("marks every occurrence of a word in one label", async () => {
+      const user = userEvent.setup();
+      render(<Combobox aria-label="Place" options={[{ value: "a", label: "Ant and Anne" }]} />);
+      await user.type(field(), "an");
+      const row = screen.getByRole("option");
+      expect([...row.querySelectorAll("mark")].map((mark) => mark.textContent)).toEqual(["An", "an", "An"]);
+    });
+  });
+
+  describe("icons", () => {
+    it("holds a place for the icon in rows that have none, but only when another row has one", async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(
+        <Combobox
+          aria-label="Plan"
+          options={[
+            { value: "a", label: "With", icon: PlusIcon },
+            { value: "b", label: "Without" },
+          ]}
+        />,
+      );
+      await user.click(field());
+      const spacerIn = (name: string) => screen.getByRole("option", { name }).querySelector('span[aria-hidden="true"]:empty');
+      expect(spacerIn("Without")).not.toBeNull();
+      expect(spacerIn("With")).toBeNull();
+      rerender(<Combobox aria-label="Plan" options={[{ value: "b", label: "Without" }]} />);
+      expect(spacerIn("Without")).toBeNull();
+    });
+  });
+
+  describe("creating an option", () => {
+    const create = (props: Partial<ComboboxProps> = {}) =>
+      render(<Combobox aria-label="Label" options={countries} onCreate={(text) => ({ value: text, label: text })} {...props} />);
+
+    it("offers a Create row only for text that names no option", async () => {
+      const user = userEvent.setup();
+      create();
+      await user.click(field());
+      expect(screen.queryByRole("option", { name: /Create/ })).toBeNull();
+      await user.type(field(), "Atlantis");
+      expect(screen.getByRole("option", { name: "Create “Atlantis”" })).toBeInTheDocument();
+      await user.clear(field());
+      await user.type(field(), "canada");
+      expect(screen.queryByRole("option", { name: /Create/ })).toBeNull();
+    });
+
+    it("offers nothing without onCreate", async () => {
+      const user = userEvent.setup();
+      setup();
+      await user.type(field(), "Atlantis");
+      expect(screen.queryByRole("option", { name: /Create/ })).toBeNull();
+    });
+
+    it("is the highlighted row when nothing else matches, and Enter creates and chooses", async () => {
+      const user = userEvent.setup();
+      const onCreate = vi.fn((text: string) => ({ value: `id-${text}`, label: text }));
+      const onValueChange = vi.fn();
+      create({ onCreate, onValueChange });
+      await user.type(field(), "Atlantis");
+      expect(field()).toHaveAttribute("aria-activedescendant", screen.getByRole("option", { name: /Create/ }).id);
+      await user.keyboard("{Enter}");
+      expect(onCreate).toHaveBeenCalledWith("Atlantis");
+      expect(onValueChange).toHaveBeenCalledWith("id-Atlantis", { value: "id-Atlantis", label: "Atlantis" });
+      expect(field()).toHaveValue("Atlantis");
+      expect(list()).toBeNull();
+    });
+
+    it("comes after the matches, which keep the highlight", async () => {
+      const user = userEvent.setup();
+      create();
+      await user.type(field(), "Cu");
+      const names = screen.getAllByRole("option").map((option) => option.textContent);
+      expect(names).toEqual(["Curaçao", "Create “Cu”"]);
+      expect(field()).toHaveAttribute("aria-activedescendant", screen.getByRole("option", { name: "Curaçao" }).id);
+    });
+
+    it("is reached with the arrow keys and chosen with a click", async () => {
+      const user = userEvent.setup();
+      const onCreate = vi.fn();
+      create({ onCreate });
+      await user.type(field(), "Cu");
+      await user.keyboard("{ArrowDown}");
+      expect(field()).toHaveAttribute("aria-activedescendant", screen.getByRole("option", { name: /Create/ }).id);
+      await user.click(screen.getByRole("option", { name: /Create/ }));
+      expect(onCreate).toHaveBeenCalledWith("Cu");
+    });
+
+    it("closes the list when the owner answers with nothing, and keeps the value alone", async () => {
+      const user = userEvent.setup();
+      const onValueChange = vi.fn();
+      create({ onCreate: () => undefined, onValueChange });
+      await user.type(field(), "Atlantis");
+      await user.keyboard("{Enter}");
+      expect(list()).toBeNull();
+      expect(onValueChange).not.toHaveBeenCalled();
+    });
+
+    it("holds the row while a promise is out, then chooses what it resolves with", async () => {
+      const user = userEvent.setup();
+      let finish: (option: ComboboxOption) => void = () => undefined;
+      const onCreate = vi.fn(() => new Promise<ComboboxOption>((resolve) => (finish = resolve)));
+      create({ onCreate });
+      await user.type(field(), "Atlantis");
+      await user.keyboard("{Enter}");
+      expect(screen.getByRole("option", { name: /Create/ })).toHaveAttribute("aria-disabled", "true");
+      await user.click(screen.getByRole("option", { name: /Create/ }));
+      expect(onCreate).toHaveBeenCalledTimes(1);
+      await act(async () => finish({ value: "x", label: "Atlantis" }));
+      await waitFor(() => expect(list()).toBeNull());
+      expect(field()).toHaveValue("Atlantis");
+    });
+
+    it("announces a rejection and keeps the list open", async () => {
+      const user = userEvent.setup();
+      create({ onCreate: () => Promise.reject(new Error("no")) });
+      await user.type(field(), "Atlantis");
+      await user.keyboard("{Enter}");
+      await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Something went wrong. Try again."));
+      expect(list()).not.toBeNull();
+      expect(screen.getByRole("option", { name: /Create/ })).not.toHaveAttribute("aria-disabled", "true");
+    });
+
+    it("words the row with labels.create, and leaves the result count alone", async () => {
+      const user = userEvent.setup();
+      create({ labels: { create: (text) => `Add ${text}` } });
+      await user.type(field(), "Cu");
+      expect(screen.getByRole("option", { name: "Add Cu" })).toBeInTheDocument();
+      await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("1 results available"));
+    });
+
+    it("keeps the created option as the value before the owner has added it to options", async () => {
+      const user = userEvent.setup();
+      create();
+      await user.type(field(), "Atlantis");
+      await user.keyboard("{Enter}");
+      await user.click(field());
+      expect(field()).toHaveValue("Atlantis");
+      await user.tab();
+      expect(field()).toHaveValue("Atlantis");
+    });
+
+    it("has no axe violations with the row in the list", async () => {
+      const user = userEvent.setup();
+      create();
+      await user.type(field(), "Atlantis");
+      expect(await axe(document.body, noLandmarks)).toHaveNoViolations();
     });
   });
 });

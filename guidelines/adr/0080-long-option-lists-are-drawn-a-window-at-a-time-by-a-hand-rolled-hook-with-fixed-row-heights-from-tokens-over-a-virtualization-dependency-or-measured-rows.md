@@ -1,6 +1,6 @@
 # 0080 — Long option lists are drawn a window at a time by a hand-rolled hook with fixed row heights from tokens, over a virtualization dependency or measured rows
 
-**Status:** Accepted · **Date:** 2026-10-16
+**Status:** Accepted · **Date:** 2026-10-16 · **Amended 2026-10-16** — a windowed option carries its group's name; the decision itself is unchanged
 
 ## Context
 `06-engineering-standards.md` §4 makes windowing part of the definition of done for any component that can realistically
@@ -32,8 +32,10 @@ view through the hook, so the option the field points at with `aria-activedescen
 ## Consequences
 - The padding that holds the space can't be on the scrolling box: a box can't shrink below its own padding, so a capped
   box with padding was as tall as the whole list. The spacers are on an inner box.
-- In a windowed list, group headings are plain rows rather than grouped regions, so a screen reader reads every option
-  but not the group name.
+- In a windowed list, group headings are plain rows rather than grouped regions, and each option carries its group's
+  name as hidden text after its own, so a screen reader reads "Item 1, Alpha".
+  *(Amended 2026-10-16: this originally said a screen reader read every option but not the group name, because the
+  group's own element isn't drawn. Giving each option the name was a small, additive fix.)*
 - `DataTable` can reuse the hook, with its own row heights.
 - A row's height must be a token: a size that changes with the root font size is read from the page when the list opens.
 

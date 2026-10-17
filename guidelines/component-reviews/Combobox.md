@@ -23,6 +23,13 @@ component Finalized. What follows is what was decided and found while building i
 - **A disabled option's description stayed in the secondary text colour**, so it read as available beside a dimmed label. It follows the disabled colour.
 - **Cheap to get wrong in jsdom:** Enter during an input method's composition, a controlled value that the owner refuses, a late-arriving option for a controlled value (the label appears by itself, since the field shows the label of whatever the value names unless text has been typed).
 
+## Added after the first build
+- **Group names in a windowed list:** each option is read with its group's name (an amendment to ADR-0080).
+- **Word matching:** the default filter keeps an option that holds every word of the typed text in any order, and every matching stretch of a label is marked (touching marks are joined).
+- **Icon space:** when any option has an icon, the rows without one hold a blank place for it, so labels line up.
+- **`onCreate`:** a "Create …" row at the end of the list while the text names no option; the owner returns the new option (or a promise of it) to have it chosen. The row is highlighted only when nothing else matches.
+- Type-ahead by first letter was not added: typing already opens the list and narrows it.
+
 ## Verified
 - Unit tests (jsdom): structure and naming, pointer and keyboard choosing, filtering, announcements, controlled and uncontrolled value, text and open state, states, forms and validity, axe, StrictMode, server render and hydration in eight variants, and the windowing hook.
 - Real-browser checks (Chromium): placement and width, a real mouse choosing inside a `Dialog` and a `Popover`, Escape closing the list before the dialog, text inserted all at once, the keyboard end to end with one tab stop, a list of 2,000 options (rows drawn, scroll height, wrap to the last option in view, the chosen option far down in view), a phone width, field height against `Input` at every size, 24px buttons, right to left, forced colours, form refusal and focus, page scroll, controlled open state.
@@ -31,8 +38,8 @@ component Finalized. What follows is what was decided and found while building i
 ## Open (known, not yet decided)
 - The full §9 review pass, including the feature-completeness pass, has not been run.
 - Real-browser runs inside a `Dialog` or `Popover` print a "ResizeObserver loop" warning from the browser; a `Select` inside a `Dialog` prints it too, so it is not specific to this component, and no check fails on it.
-- Group headings in a list over 100 rows are plain rows, so a screen reader doesn't read the group name ([ADR-0080](../adr/0080-long-option-lists-are-drawn-a-window-at-a-time-by-a-hand-rolled-hook-with-fixed-row-heights-from-tokens-over-a-virtualization-dependency-or-measured-rows.md)).
-- An option with no icon doesn't reserve the icon's width, so labels don't line up in a list where only some options have one.
+- Matching is by words (every word of the typed text, in any order), and `filter` replaces it whole; there is no per-option `keywords` list yet, only `textValue`.
+- `onCreate` needs the owner to add the new option to `options`; until they do the created option is kept only as the value's label. There is no built-in way to mark a created option as unsaved.
 - Escape with the list closed passes through, so there is no "press again to clear"; the clear button does that.
 - No type-ahead by first letter and no multi-select: `MultiSelect` builds on this later.
 - Contrast: no new colour pairing was introduced (the list uses `Select`'s surface, highlight and selected colours, and `Highlight`'s own tone), but the pairings have not been re-measured here.

@@ -1,4 +1,4 @@
-import { CaretDownIcon, CheckIcon, XIcon } from "@dbm-design-system/icons";
+import { CaretDownIcon, CheckIcon, PlusIcon, XIcon } from "@dbm-design-system/icons";
 import {
   cx,
   mergeDefined,
@@ -72,6 +72,7 @@ const buildDefaultLabels = (formatNumber: (value: number) => string): ComboboxLa
   error: "Something went wrong. Try again.",
   results: (count) => `${formatNumber(count)} results available`,
   pickAnOption: "Choose one of the options",
+  create: (text) => `Create “${text}”`,
 });
 
 /** Lower-cases and drops accents, writing each character on its own so positions map back to the original text. */
@@ -91,23 +92,44 @@ function foldCharacters(text: string): { folded: string; origin: number[] } {
 
 const fold = (text: string): string => foldCharacters(text).folded;
 
+/** The words of the typed text, folded: a label matches when it holds every one of them, in any order. */
+const queryWords = (text: string): string[] => fold(text.trim()).split(/\s+/).filter(Boolean);
+
 function defaultFilter(option: ComboboxOption, text: string): boolean {
-  const query = fold(text.trim());
-  if (query === "") return true;
-  return fold(option.textValue ?? option.label).includes(query);
+  const words = queryWords(text);
+  if (words.length === 0) return true;
+  const haystack = fold(option.textValue ?? option.label);
+  return words.every((word) => haystack.includes(word));
 }
 
-/** The first stretch of `label` that the typed text matches, ignoring case and accents, or `undefined`. */
-function findMatch(label: string, text: string): [number, number] | undefined {
-  const query = fold(text.trim());
-  if (query === "") return undefined;
+/**
+ * Every stretch of `label` that a word of the typed text matches, ignoring case and accents, as `[from, to]` pairs in
+ * order. Stretches that touch or overlap are joined, so "new york" marks "New York" as one.
+ */
+function findMatches(label: string, text: string): Array<[number, number]> {
+  const words = queryWords(text);
+  if (words.length === 0) return [];
   const { folded, origin } = foldCharacters(label);
-  const at = folded.indexOf(query);
-  if (at === -1) return undefined;
-  const from = origin[at];
-  const to = origin[at + query.length];
-  return from === undefined || to === undefined ? undefined : [from, to];
+  const found: Array<[number, number]> = [];
+  for (const word of words) {
+    for (let at = folded.indexOf(word); at !== -1; at = folded.indexOf(word, at + word.length)) {
+      const from = origin[at];
+      const to = origin[at + word.length];
+      if (from !== undefined && to !== undefined) found.push([from, to]);
+    }
+  }
+  found.sort((a, b) => a[0] - b[0]);
+  const merged: Array<[number, number]> = [];
+  for (const range of found) {
+    const last = merged[merged.length - 1];
+    if (last && range[0] <= last[1]) last[1] = Math.max(last[1], range[1]);
+    else merged.push([range[0], range[1]]);
+  }
+  return merged;
 }
+
+// The value of the "Create …" row. It holds a character no option's value will, so it never collides with one.
+const CREATE_VALUE = "\u0000create";
 
 const ignoreChange = () => undefined;
 
@@ -222,6 +244,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
       loading = false,
       error = false,
       emptyContent,
+      onCreate,
       renderOption,
       clearable = false,
       onClear,
@@ -275,7 +298,13 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
     const isValueControlled = valueProp !== undefined;
     const [innerValue, setInnerValue] = useState(defaultValue);
     const value = isValueControlled ? valueProp : innerValue;
-    const selected = useMemo(() => options.find((option) => option.value === value), [options, value]);
+    // An option made by `onCreate` that the owner hasn't added to `options` yet still names the value.
+    const [created, setCreated] = useState<ComboboxOption | undefined>();
+    const [creating, setCreating] = useState(false);
+    const selected = useMemo(
+      () => options.find((option) => option.value === value) ?? (created?.value === value ? created : undefined),
+      [options, value, created],
+    );
 
     // The text in the field. `typed` is the text the person has entered since the last choice, `null` while the
     // field just shows the chosen option's label. Keeping it apart means a label that arrives late (a value whose
@@ -306,7 +335,22 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
       const matches = filter ?? defaultFilter;
       return options.filter((option) => matches(option, filterText));
     }, [options, filter, filterText]);
-    const { rows, flat } = useMemo(() => buildRows(visible), [visible]);
+    // The "Create …" row: offered for text that names no option, once the person has typed something.
+    const typedText = dirty ? inputValue.trim() : "";
+    const offersCreate =
+      onCreate !== undefined && typedText !== "" && !options.some((option) => fold(option.label) === fold(typedText));
+    const createLabel = offersCreate ? labels.create(typedText) : undefined;
+    const { rows, flat } = useMemo(() => {
+      const built = buildRows(visible);
+      if (createLabel !== undefined) {
+        const option: ComboboxOption = { value: CREATE_VALUE, label: createLabel, disabled: creating };
+        built.rows.push({ kind: "option", key: "create", option, index: built.flat.length });
+        built.flat.push(option);
+      }
+      return built;
+    }, [visible, createLabel, creating]);
+    const resultCount = flat.length - (createLabel === undefined ? 0 : 1);
+    const hasIcons = useMemo(() => options.some((option) => option.icon !== undefined), [options]);
     const rowIndexOfOption = useMemo(() => {
       const map: number[] = [];
       rows.forEach((row, rowIndex) => {
@@ -404,11 +448,11 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
         lastAnnounced.current = "";
         return;
       }
-      const key = `${filterText}|${flat.length}|${loading}`;
+      const key = `${filterText}|${resultCount}|${loading}`;
       if (key === lastAnnounced.current) return;
       lastAnnounced.current = key;
-      if (!loading) announce(flat.length === 0 ? labels.noResults : labels.results(flat.length));
-    }, [open, dirty, filterText, flat.length, loading, labels, announce]);
+      if (!loading) announce(resultCount === 0 ? labels.noResults : labels.results(resultCount));
+    }, [open, dirty, filterText, resultCount, loading, labels, announce]);
     const lastError = useRef(false);
     useEffect(() => {
       if (error && !lastError.current) announce(labels.error);
@@ -425,11 +469,40 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
     };
     const choose = (option: ComboboxOption) => {
       if (isDisabled(option)) return;
+      if (option.value === CREATE_VALUE) {
+        runCreate();
+        return;
+      }
       updateValue(option.value, option);
       setTyped(null);
       setText(option.label, "select");
       setNavigated(null);
       setOpen(false);
+    };
+    // Asks the owner to make an option for the typed text. It may answer with the new option (chosen at once, even
+    // before it is in `options`), with nothing (the owner is handling it), or with a promise of either.
+    const finishCreate = (option: ComboboxOption | void) => {
+      if (option) {
+        setCreated(option);
+        choose(option);
+      } else setOpen(false);
+    };
+    const runCreate = () => {
+      if (!onCreate || typedText === "" || creating) return;
+      const result = onCreate(typedText);
+      if (result && typeof (result as Promise<ComboboxOption | void>).then === "function") {
+        setCreating(true);
+        (result as Promise<ComboboxOption | void>).then(
+          (option) => {
+            setCreating(false);
+            finishCreate(option);
+          },
+          () => {
+            setCreating(false);
+            announce(labels.error);
+          },
+        );
+      } else finishCreate(result as ComboboxOption | void);
     };
     const exactMatch = (text: string) => {
       const wanted = fold(text.trim());
@@ -574,22 +647,37 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
 
     const renderRowContent = (option: ComboboxOption, isHighlighted: boolean, isSelected: boolean): ReactNode => {
       if (renderOption) return renderOption(option, { highlighted: isHighlighted, selected: isSelected });
-      const match = findMatch(option.label, markText);
-      const label = match ? (
-        <>
-          {option.label.slice(0, match[0])}
-          <Highlight tone="highlight" className={styles.match}>
-            {option.label.slice(match[0], match[1])}
-          </Highlight>
-          {option.label.slice(match[1])}
-        </>
-      ) : (
-        option.label
-      );
+      if (option.value === CREATE_VALUE) {
+        return (
+          <>
+            <Icon icon={PlusIcon} size={optionIconSize[size]} tone="default" className={styles.optionIcon} />
+            <span className={styles.optionText}>
+              <span className={styles.optionLabel}>{option.label}</span>
+            </span>
+          </>
+        );
+      }
+      const matches = findMatches(option.label, markText);
+      const parts: ReactNode[] = [];
+      let at = 0;
+      matches.forEach(([from, to], position) => {
+        if (from > at) parts.push(option.label.slice(at, from));
+        parts.push(
+          <Highlight key={position} tone="highlight" className={styles.match}>
+            {option.label.slice(from, to)}
+          </Highlight>,
+        );
+        at = to;
+      });
+      if (at < option.label.length) parts.push(option.label.slice(at));
+      const label = matches.length > 0 ? <>{parts}</> : option.label;
       return (
         <>
           {option.icon ? (
             <Icon icon={option.icon} size={optionIconSize[size]} tone="default" className={styles.optionIcon} />
+          ) : hasIcons ? (
+            // Keeps the labels of options without an icon in line with those that have one.
+            <span aria-hidden="true" className={styles.optionIconSpace} />
           ) : null}
           <span className={styles.optionText}>
             <span className={styles.optionLabel}>{label}</span>
@@ -604,6 +692,8 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
       const isSelected = option.value === value;
       const isHighlighted = index === highlighted;
       const reason = typeof option.disabled === "string" ? option.disabled : undefined;
+      // In a windowed list the group's own element isn't drawn, so each option carries the group's name to be read.
+      const groupName = windowed && rowSizes ? option.group : undefined;
       return (
         // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/interactive-supports-focus -- an option of a combobox is never focused: focus stays in the field, which points at the highlighted option with aria-activedescendant and answers the keys itself (the ARIA combobox pattern).
         <div
@@ -623,8 +713,9 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
           }}
         >
           {renderRowContent(option, isHighlighted, isSelected)}
+          {groupName ? <VisuallyHidden>{`, ${groupName}`}</VisuallyHidden> : null}
           {reason ? <VisuallyHidden>{`, ${reason}`}</VisuallyHidden> : null}
-          {isSelected ? (
+          {isSelected && option.value !== CREATE_VALUE ? (
             <Icon icon={CheckIcon} size={optionIconSize[size]} tone="brand" className={styles.optionCheck} />
           ) : null}
         </div>

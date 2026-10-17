@@ -63,6 +63,11 @@ export interface ComboboxLabels {
    * @default "Choose one of the options"
    */
   pickAnOption: string;
+  /**
+   * The text of the row offered by `onCreate`. Receives the typed text.
+   * @default (text) => `Create “${text}”`
+   */
+  create: (text: string) => string;
 }
 
 export interface ComboboxProps
@@ -112,7 +117,7 @@ export interface ComboboxProps
   allowCustomValue?: boolean;
   /**
    * How the options are narrowed by the typed text. A function decides for one option; `false` shows `options`
-   * as given, for a caller that filters or fetches on its own. The default matches `textValue ?? label` anywhere,
+   * as given, for a caller that filters or fetches on its own. The default matches when `textValue ?? label` holds every word of the typed text, in any order,
    * ignoring case and accents. The list is not narrowed while the field shows a chosen option's label unedited.
    */
   filter?: ((option: ComboboxOption, text: string) => boolean) | false;
@@ -137,6 +142,13 @@ export interface ComboboxProps
    * `loading` is `false`.
    */
   emptyContent?: ReactNode;
+  /**
+   * Offers a "Create …" row at the end of the list while the typed text names no option, which is how a person adds
+   * one. Called with the typed text when the row is chosen. Return the new option to have it chosen (it needn't be in
+   * `options` yet, but add it there so it stays), return nothing if you are handling it yourself (the list closes), or
+   * return a promise of either: the row is held while it is out, and a rejection is announced and keeps the list open.
+   */
+  onCreate?: (text: string) => ComboboxOption | void | Promise<ComboboxOption | void>;
   /**
    * Draws an option's row. Receives the option and whether it is `highlighted` and `selected`. The default row is
    * the icon, label (with the typed text marked) and description. Rows have a fixed height (a long list is drawn

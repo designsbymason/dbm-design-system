@@ -1,3 +1,4 @@
+import { GlobeIcon } from "@dbm-design-system/icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
@@ -267,6 +268,53 @@ export const LongListIsWindowed: Story = {
     // typing narrows to a short list that is drawn whole
     await userEvent.keyboard("{Control>}a{/Control}1999");
     await waitFor(() => expect(within(list).getAllByRole("option")).toHaveLength(1));
+  },
+};
+
+export const LongGroupedListNamesItsGroups: Story = {
+  name: "In a long grouped list each option is read with its group's name, and the heading rows stay out of the way",
+  render: () => (
+    <Page>
+      <Combobox
+        aria-label="Item"
+        options={Array.from({ length: 300 }, (_, index) => ({
+          value: `v${index}`,
+          label: `Item ${index + 1}`,
+          group: index < 150 ? "Alpha" : "Beta",
+        }))}
+      />
+    </Page>
+  ),
+  play: async () => {
+    await userEvent.click(field());
+    const list = await body().findByRole("listbox");
+    await settled(list);
+    await expect(within(list).queryAllByRole("group")).toHaveLength(0);
+    const first = await option(/^Item 1\s*,\s*Alpha$/);
+    await expect(first).toHaveAccessibleName(/^Item 1\s*,\s*Alpha$/);
+    await expect(within(list).getAllByRole("option").length).toBeLessThan(60);
+  },
+};
+
+export const IconlessRowsLineUp: Story = {
+  name: "Labels line up when only some options have an icon",
+  render: () => (
+    <Page>
+      <Combobox
+        aria-label="Plan"
+        defaultOpen
+        options={[
+          { value: "a", label: "With an icon", icon: GlobeIcon },
+          { value: "b", label: "Without one" },
+        ]}
+      />
+    </Page>
+  ),
+  play: async () => {
+    const withIcon = await option("With an icon");
+    const without = await option("Without one");
+    const left = (row: HTMLElement) => (row.querySelector("[class*=optionLabel]") as HTMLElement).getBoundingClientRect().left;
+    await expect(Math.abs(left(withIcon) - left(without))).toBeLessThan(1);
   },
 };
 

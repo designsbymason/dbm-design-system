@@ -26,6 +26,7 @@ export const propOrder = [
   "loading",
   "error",
   "emptyContent",
+  "onCreate",
   "renderOption",
   "clearable",
   "onClear",
@@ -99,6 +100,7 @@ import { Combobox } from "@dbm-design-system/components";
     "filter",
     "autoHighlight",
     "emptyContent",
+    "onCreate",
     "renderOption",
     "onClear",
     "open",
@@ -158,6 +160,10 @@ import { Combobox } from "@dbm-design-system/components";
 
 <Canvas of={ComboboxStories.Async} />
 
+### Creating new options
+
+<Canvas of={ComboboxStories.Create} />
+
 ### Free text as well
 
 <Canvas of={ComboboxStories.CustomValue} />
@@ -201,6 +207,7 @@ import { Combobox } from "@dbm-design-system/components";
 - Give each option a short, distinct `label`; put the detail in `description` and the id people also search by in `textValue`.
 - Say why an option can't be chosen with `disabled="reason"`, rather than leaving it dimmed and unexplained.
 - Use `allowCustomValue` when the list is only a suggestion and any text is acceptable.
+- Use `onCreate` when a person may add an item the list doesn't hold yet (a label, a company); return the new option so it is chosen.
 
 </Callout>
 <Callout tone="danger" title="Don't">
@@ -232,8 +239,15 @@ import { Combobox } from "@dbm-design-system/components";
 - Inside a `Form`, a hidden input carries `name` and `required` and the chosen value, so the form refuses a field with
   nothing chosen and focuses the field you can see. A form with only a combobox and no submit button doesn't submit on
   Enter, because a browser needs one text-only field for that; give the form a submit button.
-- Once a list holds more than a hundred rows, group headings are drawn as plain rows rather than as grouped regions, so
-  a screen reader still reads every option but not the group name.
+- Once a list holds more than a hundred rows, group headings are drawn as plain rows rather than as grouped regions, and
+  each option is read with its group's name after its own.
+- Typed text matches an option when the label holds every word of it, in any order, so "york new" finds "New York".
+  Every matching stretch of a label is marked, not only the first.
+- When any option has an icon, the rows without one keep a blank place for it, so the labels stay in line. A row you
+  draw yourself with `renderOption` is yours to align.
+- `onCreate` adds a last row, "Create …", while the typed text names no option. It is highlighted only when nothing
+  else matches, so Enter still chooses a real match first. Add the new option to `options` yourself: until you do, the
+  field still shows its label, and the value is kept.
 
 ## Accessibility
 
@@ -244,7 +258,8 @@ import { Combobox } from "@dbm-design-system/components";
   option is named by `aria-activedescendant`, so a screen reader reads each option as the arrow keys reach it.
 - The list is a `listbox` named like the field (from `aria-label`, `aria-labelledby` or the field's visible label). Each row is
   an `option` with `aria-selected`; one that can't be chosen has `aria-disabled`, and its reason is read after its name.
-  Groups are `group`s named by their heading.
+  Groups are `group`s named by their heading; in a list long enough to be windowed, each option is read with its group's name instead.
+- The "Create …" row is an option like any other, reached with the arrow keys; while its promise is out it is `aria-disabled`, and a rejection is announced.
 - "No results" and "Loading…" are rows in the list that can't be chosen, so a list is never empty to assistive technology.
   A loading list is `aria-busy`.
 - The number of matches is announced in a status region that was already in the page, only as the person types and the
@@ -271,7 +286,7 @@ import { Combobox } from "@dbm-design-system/components";
 | Escape | Closes the list and puts back the last choice's label. |
 | Tab | Leaves the field. Text that names an option exactly chooses it; other text is put back (or committed, with `allowCustomValue`). |
 | Home, End, Left, Right | Move the caret in the text, as in any field. |
-| Typing | Opens the list and narrows it; the first match is highlighted. |
+| Typing | Opens the list and narrows it; the first match is highlighted. With `onCreate`, a "Create …" row comes last. |
 
 ## Code examples
 
@@ -290,6 +305,9 @@ import { Combobox } from "@dbm-design-system/components";
   loading={isFetching}
   onInputValueChange={(text, reason) => reason === "input" && search(text)}
 />
+
+{/* Let a person add an item the list doesn't hold; return it so it is chosen */}
+<Combobox aria-label="Label" options={labels} onCreate={(text) => addLabel(text)} />
 
 {/* Show a saved choice before its option has loaded */}
 <Combobox aria-label="Assignee" options={people} value={assigneeId} inputValue={assigneeName} />
@@ -355,9 +373,9 @@ The field itself is an `Input`, which lists its own tokens; the list below is wh
 <TokenRow token="space.2" usage="the gap inside a row, and the button padding at `sm` and `md`" />
 <TokenRow token="space.3" usage="the inset of a row's content, and the button padding at `lg` and `xl`" />
 <TokenRow token="space.6" usage="the least size of the caret and clear buttons, a 24px target" />
-<TokenRow token="icon-size.xs" usage="the caret and clear icons at `xs` and `sm`" />
-<TokenRow token="icon-size.sm" usage="the caret and clear icons at `md`" />
-<TokenRow token="icon-size.md" usage="the caret and clear icons at `lg`" />
+<TokenRow token="icon-size.xs" usage="the caret and clear icons at `xs` and `sm`, and an option's icon at `xs`" />
+<TokenRow token="icon-size.sm" usage="the caret and clear icons at `md`, and an option's icon at `sm` and `md`" />
+<TokenRow token="icon-size.md" usage="the caret and clear icons at `lg`, and an option's icon at `lg` and `xl`" />
 <TokenRow token="icon-size.lg" usage="the caret and clear icons at `xl`" />
 <TokenRow token="font-family.primary" usage="the list's text, which is drawn outside the field and sets its own" />
 <TokenRow token="font-size.xs" usage="the row text at `xs`, and descriptions and headings" />
@@ -367,6 +385,7 @@ The field itself is an `Input`, which lists its own tokens; the list below is wh
 <TokenRow token="font-size.lg" usage="the row text at `xl`" />
 <TokenRow token="font-weight.regular" usage="a description" />
 <TokenRow token="font-weight.semibold" usage="the chosen option and group headings" />
+<TokenRow token="letter-spacing.wide" usage="the group headings, which are drawn in capitals" />
 <TokenRow token="line-height.tight" usage="the row text and the buttons' height arithmetic, matching `Input`" />
 <TokenRow token="motion-duration.fast" usage="the list's fade and the buttons' hover fill" />
 <TokenRow token="motion-easing.emphasized" usage="the list fading in" />

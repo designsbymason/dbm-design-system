@@ -113,30 +113,35 @@
 
 /* The row height and text size follow the field's size. */
 .sizeXs {
+  --combobox-icon: var(--dbm-icon-size-xs);
   --combobox-row: var(--dbm-combobox-option-height-xs);
   --combobox-row-described: var(--dbm-combobox-option-height-described-xs);
   font-size: var(--dbm-font-size-xs);
 }
 
 .sizeSm {
+  --combobox-icon: var(--dbm-icon-size-sm);
   --combobox-row: var(--dbm-combobox-option-height-sm);
   --combobox-row-described: var(--dbm-combobox-option-height-described-sm);
   font-size: var(--dbm-font-size-sm);
 }
 
 .sizeMd {
+  --combobox-icon: var(--dbm-icon-size-sm);
   --combobox-row: var(--dbm-combobox-option-height-md);
   --combobox-row-described: var(--dbm-combobox-option-height-described-md);
   font-size: var(--dbm-font-size-base);
 }
 
 .sizeLg {
+  --combobox-icon: var(--dbm-icon-size-md);
   --combobox-row: var(--dbm-combobox-option-height-lg);
   --combobox-row-described: var(--dbm-combobox-option-height-described-lg);
   font-size: var(--dbm-font-size-md);
 }
 
 .sizeXl {
+  --combobox-icon: var(--dbm-icon-size-md);
   --combobox-row: var(--dbm-combobox-option-height-xl);
   --combobox-row-described: var(--dbm-combobox-option-height-described-xl);
   font-size: var(--dbm-font-size-lg);
@@ -189,6 +194,12 @@
   flex-shrink: 0;
 }
 
+/* Stands where an icon would, in a row that has none, when other options in the list have one. */
+.optionIconSpace {
+  flex-shrink: 0;
+  inline-size: var(--combobox-icon);
+}
+
 .optionText {
   display: flex;
   flex: 1 1 auto;
@@ -236,7 +247,10 @@
   display: flex;
   font-size: var(--dbm-font-size-xs);
   font-weight: var(--dbm-font-weight-semibold);
+  /* Drawn in capitals only: the text in the page, and so the group's accessible name, is as written. */
+  letter-spacing: var(--dbm-letter-spacing-wide);
   padding-inline: var(--dbm-space-3);
+  text-transform: uppercase;
 }
 
 /* The loading and error notes under the options. */

@@ -87,6 +87,11 @@ const meta: Meta<typeof Combobox> = {
       control: false,
       description: "Replaces the No results row with content of your own while no option matches.",
     },
+    onCreate: {
+      control: false,
+      description:
+        "Offers a Create row at the end of the list while the typed text names no option. Called with the text when it is chosen: return the new option to have it chosen, nothing if you are handling it yourself, or a promise of either.",
+    },
     renderOption: {
       control: false,
       description:
@@ -350,6 +355,30 @@ export const Async: Story = {
       <SearchingCombobox {...args} />
     </div>
   ),
+};
+
+export const Create: Story = {
+  name: "Creating new options",
+  parameters: { docs: { source: { code: comboboxSnippets.create } } },
+  // The story owns the options, and onCreate is what it demonstrates.
+  argTypes: { options: { control: false } },
+  args: { "aria-label": "Country", placeholder: "Choose or add a country" },
+  render: function CreateStory(args) {
+    const [options, setOptions] = useState(countries.slice(0, 6));
+    return (
+      <div style={{ maxWidth: "24rem", minHeight: "20rem" }}>
+        <Combobox
+          {...args}
+          options={options}
+          onCreate={(text) => {
+            const option = { value: text.toLowerCase(), label: text };
+            setOptions((current) => [...current, option]);
+            return option;
+          }}
+        />
+      </div>
+    );
+  },
 };
 
 export const CustomValue: Story = {
