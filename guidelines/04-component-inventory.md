@@ -258,7 +258,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). `Grid`, `List` an
 
 ### Organism-tier build order
 
-Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast` and `Form` are built and Finalized, `Combobox` is built and awaiting its review pass, and the rest are not started.
+Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a time, each with the full `06-engineering-standards.md` §9 pass; note any deviation here. `Dialog`, `AlertDialog`, `ConfirmDialog`, `Drawer`, `Menu`, `Toast`, `Form` and `Combobox` are built and Finalized, and the rest are not started.
 
 **🟢 core**
 1. Dialog — foundation for every modal (Radix Dialog, `Backdrop`, `CloseButton`, `ScrollArea`); built, review in [Dialog.md](component-reviews/Dialog.md)
@@ -267,7 +267,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a ti
 5. Menu (dropdown) — `ContextMenu`, `Menubar`, `Navbar`, `Sidebar` and `DataTable` row actions reuse it; built and Finalized, review in [Menu.md](component-reviews/Menu.md)
 6. Toast — independent; other organisms report results through it; built and Finalized, review in [Toast.md](component-reviews/Toast.md)
 7. Form — context and validation over `FormField` and `FieldGroup`; built and Finalized, review in [Form.md](component-reviews/Form.md)
-8. Combobox — `MultiSelect` and `CommandPalette` build on it (`TagsInput` is standalone; a suggestions list from this is a later, additive layer); built, review in [Combobox.md](component-reviews/Combobox.md)
+8. Combobox — `MultiSelect` and `CommandPalette` build on it (`TagsInput` is standalone; a suggestions list from this is a later, additive layer); built and Finalized, review in [Combobox.md](component-reviews/Combobox.md)
 9. Calendar (molecule, prerequisite; built), then DatePicker
 10. DataTable — needs `Table`, `Pagination`, `TableToolbar`, Menu and virtualization
 11. Navbar / TopNav, 12. Sidebar / SideNav — use Menu and Drawer

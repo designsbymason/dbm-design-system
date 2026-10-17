@@ -1,8 +1,9 @@
 # Combobox — review findings
 
-Eighth organism, built 2026-10-16 with the `06-engineering-standards.md` §9 checklist applied as it was written. **Not yet
-Finalized:** the full review pass (`/review-component Combobox`) has not been run, and only the maintainer declares a
-component Finalized. What follows is what was decided and found while building it, and what is known to be open.
+Eighth organism, built 2026-10-16 with the `06-engineering-standards.md` §9 checklist applied as it was written.
+**Finalized 2026-10-16** by the user, after the final review pass (`/review-component Combobox`) and its fixes, with the
+items under "Open at Finalization" accepted as open. What follows is what was decided and found while building it, and
+what the final review fixed.
 
 ## Decisions
 - The list floats from a Radix Popover with an anchor and no trigger, and works inside a `Dialog` and a `Popover`: [ADR-0077](../adr/0077-combobox-floats-its-list-with-a-radix-popover-anchor-and-no-trigger-over-popover-popper-and-a-dismissable-layer-or-a-bare-portal.md).
@@ -52,11 +53,10 @@ Findings from the review, all fixed:
 - Real-browser checks (Chromium): placement and width, a real mouse choosing inside a `Dialog` and a `Popover`, Escape closing the list before the dialog, text inserted all at once, the keyboard end to end with one tab stop, a list of 2,000 options (rows drawn, scroll height, wrap to the last option in view, the chosen option far down in view), a phone width, field height against `Input` at every size, 24px buttons, right to left, forced colours, form refusal and focus, page scroll, controlled open state.
 - Light and dark in the Purple brand, and dark in the Emerald brand, looked at directly; Emerald light was not.
 
-## Open (known, not yet decided)
+## Open at Finalization
 - The full-width presentation's keyboard handling is covered by a mocked visual viewport and by real-browser checks of width, edges and side; it has not been tried with a real on-screen keyboard. Making it the default below `sm` waits for that.
-- The full §9 review pass, including the feature-completeness pass, has not been run.
 - Matching is by words (every word of the typed text, in any order), and `filter` replaces it whole.
 - `onCreate` needs the owner to add the new option to `options`; until they do the created option is kept only as the value's label. There is no built-in way to mark a created option as unsaved.
 - Escape with the list closed passes through, so there is no "press again to clear"; the clear button does that.
 - No type-ahead by first letter and no multi-select: `MultiSelect` builds on this later.
-- Contrast: no new colour pairing was introduced (the list uses `Select`'s surface, highlight and selected colours, and `Highlight`'s own tone), but the pairings have not been re-measured here.
+- Contrast: the one new pairing (the description on the highlighted row) was measured and fixed; the other pairings are the ones `Select` already uses, and were not re-measured here. A check measures the label and description on the highlighted row in all four themes.
