@@ -1,6 +1,6 @@
 import type { Responsive } from "@dbm-design-system/primitives";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
-import type { ButtonSize, ButtonVariant } from "../../atoms/Button";
+import type { ButtonSize, ButtonTone, ButtonVariant } from "../../atoms/Button";
 
 export type ButtonGroupOrientation = "horizontal" | "vertical";
 
@@ -20,6 +20,13 @@ export interface ButtonGroupProps
    * @default 'primary'
    */
   variant?: ButtonVariant;
+  /**
+   * The colour family every button in the group uses unless it sets its own `tone`: `brand` or `neutral`. Left out, each button
+   * keeps its own (`brand` by default). `destructive` buttons ignore it. An attached group draws a neutral `tertiary` or `ghost`
+   * separator in neutral colours.
+   * @default 'brand'
+   */
+  tone?: ButtonTone;
   /**
    * The size every button in the group uses unless it sets its own `size`. Left out, each button keeps
    * its own (`md` by default).

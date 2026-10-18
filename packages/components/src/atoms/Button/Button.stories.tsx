@@ -77,6 +77,13 @@ const meta: Meta<typeof Button> = {
       options: ["primary", "secondary", "tertiary", "ghost", "destructive"],
       table: { defaultValue: { summary: "primary" } },
     },
+    tone: {
+      control: "select",
+      options: ["brand", "neutral"],
+      description:
+        "The colour family: brand, or neutral, a grey look for a control that shouldn't draw the eye to the brand colour. Every variant but destructive follows it; destructive ignores it and stays danger-coloured.",
+      table: { defaultValue: { summary: "brand" } },
+    },
     size: { control: "select", options: ["xs", "sm", "md", "lg", "xl"], table: { defaultValue: { summary: "md" } } },
     rounded: {
       control: "boolean",
@@ -157,6 +164,7 @@ const meta: Meta<typeof Button> = {
   args: {
     children: "Button",
     variant: "primary",
+    tone: "brand",
     size: "md",
     rounded: false,
     type: "button",
@@ -211,6 +219,26 @@ export const AllVariants: Story = {
         <Button key={variant} {...args} variant={variant}>
           {variant}
         </Button>
+      ))}
+    </div>
+  ),
+};
+
+export const Tones: Story = {
+  name: "Neutral tone",
+  parameters: { docs: { source: { code: buttonSnippets.tones } } },
+  // `tone`, `variant` and `children` are the whole point of this grid: each row sets its own tone and each button its variant.
+  argTypes: { tone: { control: false }, variant: { control: false }, children: { control: false } },
+  render: (args) => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-4)" }}>
+      {(["brand", "neutral"] as const).map((tone) => (
+        <div key={tone} style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-4)" }}>
+          {(["primary", "secondary", "tertiary", "ghost", "destructive"] as const).map((variant) => (
+            <Button key={variant} {...args} tone={tone} variant={variant}>
+              {variant}
+            </Button>
+          ))}
+        </div>
       ))}
     </div>
   ),

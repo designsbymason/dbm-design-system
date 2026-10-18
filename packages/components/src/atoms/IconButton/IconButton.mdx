@@ -12,6 +12,7 @@ import * as IconButtonStories from "./IconButton.stories";
 export const propOrder = [
   "icon",
   "variant",
+  "tone",
   "size",
   "isLoading",
   "loadingLabel",
@@ -78,6 +79,13 @@ element `asChild`'s slotted child renders).
 ### All variants
 
 <Canvas of={IconButtonStories.AllVariants} />
+
+### Neutral tone
+
+`tone` is `brand` unless set. `neutral` is a grey look for a control that shouldn't draw the eye to the brand colour. Every variant but
+`destructive` follows it, including the pressed state of a toggle; `destructive` ignores it and stays danger-coloured.
+
+<Canvas of={IconButtonStories.Tones} />
 
 ### All sizes
 
@@ -241,6 +249,13 @@ convenience for sighted users, never the only name — and nothing opens on a di
 <TokenRow token="bg.danger-subtle" usage="`destructive` variant's pressed-state fill" />
 <TokenRow token="bg.danger-subtle-hover" usage="`destructive` variant's hover-while-pressed fill" />
 <TokenRow token="border.brand" usage="`secondary` variant's border, at rest and pressed alike" />
+<TokenRow token="bg.neutral" usage="the neutral tone: `primary` variant's rest fill; also `secondary`/`tertiary`/`ghost` variants' pressed-state fill" />
+<TokenRow token="bg.neutral-hover" usage="the neutral tone: `primary` variant's hover fill; also `secondary`/`tertiary`/`ghost` variants' hover-while-pressed fill" />
+<TokenRow token="bg.neutral-subtle" usage="the neutral tone: `ghost` variant's rest fill; also `primary` variant's pressed-state fill" />
+<TokenRow token="bg.neutral-subtle-hover" usage="the neutral tone: `secondary`/`tertiary`/`ghost` variants' rest-state hover fill; also `primary` variant's hover-while-pressed fill" />
+<TokenRow token="border.neutral-strong" usage="the neutral tone: `secondary` variant's border, at rest and pressed alike" />
+<TokenRow token="icon.on-neutral" usage="the neutral tone: `primary` variant's rest-state icon; also `secondary`/`tertiary`/`ghost` variants' pressed-state icon" />
+<TokenRow token="icon.default" usage="the neutral tone: `secondary`/`tertiary`/`ghost` variants' rest-state icon; also `primary` variant's pressed-state icon" />
 <TokenRow token="border.focus" usage="focus-visible outline" />
 <TokenRow token="icon.on-brand" usage="`primary` variant's rest-state icon; also `secondary`/`tertiary`/`ghost` variants' pressed-state icon" />
 <TokenRow token="icon.on-danger" usage="`destructive` variant's rest-state icon" />

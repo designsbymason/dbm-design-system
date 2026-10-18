@@ -47,6 +47,13 @@ const meta: Meta<typeof IconButton> = {
         "Visual style, signaling emphasis: primary for the one main action, down to ghost for the quietest, and destructive for an action that deletes or can't be undone. The same five styles Button has.",
       table: { defaultValue: { summary: "primary" } },
     },
+    tone: {
+      control: "select",
+      options: ["brand", "neutral"],
+      description:
+        "The colour family: brand, or neutral, a grey look for a control that shouldn't draw the eye to the brand colour. Every variant but destructive follows it; destructive ignores it and stays danger-coloured.",
+      table: { defaultValue: { summary: "brand" } },
+    },
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
@@ -178,6 +185,7 @@ const meta: Meta<typeof IconButton> = {
   args: {
     icon: "Heart" as unknown as IconButtonProps["icon"],
     variant: "primary",
+    tone: "brand",
     size: "md",
     isLoading: false,
     loadingLabel: "Favoriting…",
@@ -293,6 +301,25 @@ export const AllVariants: Story = {
           aria-label={`${variant} delete`}
           variant={variant}
         />
+      ))}
+    </div>
+  ),
+};
+
+export const Tones: Story = {
+  name: "Neutral tone",
+  parameters: { docs: { source: { code: iconButtonSnippets.tones } } },
+  // `tone` and `variant` are the whole point of this grid, paired with `icon`/`aria-label` (fixed per instance so every
+  // button has a distinct accessible name); every other prop stays live and shared via `{...args}`.
+  argTypes: { tone: { control: false }, variant: { control: false }, icon: { control: false }, "aria-label": { control: false } },
+  render: (args) => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-4)" }}>
+      {(["brand", "neutral"] as const).map((tone) => (
+        <div key={tone} style={{ display: "flex", gap: "var(--dbm-space-4)" }}>
+          {(["primary", "secondary", "tertiary", "ghost", "destructive"] as const).map((variant) => (
+            <IconButton key={variant} {...args} icon={TrashIcon} aria-label={`${tone} ${variant} delete`} tone={tone} variant={variant} />
+          ))}
+        </div>
       ))}
     </div>
   ),

@@ -154,6 +154,40 @@
   background-color: var(--dbm-bg-brand-subtle-hover);
 }
 
+/* `tone="neutral"`: the same four variants in the neutral family, over the brand ones above, with icon colours as the brand ones use
+   (never a `text.*` token). `destructive` is never given this class. Icons are non-text, so they need 3:1: `icon.on-neutral` on
+   `bg.neutral` is 4.7:1 light and 8.2:1 dark, and `icon.default` on `bg.neutral-subtle` and its hover is 4.1:1 or more in every theme.
+   The `secondary` outline is `border.neutral-strong` (4.7:1 light, 6.1:1 dark), since `border.neutral` is only 2.3:1 on the light
+   surface. */
+.toneNeutral.variantPrimary {
+  background-color: var(--dbm-bg-neutral);
+  color: var(--dbm-icon-on-neutral);
+}
+
+.toneNeutral.variantPrimary:not(:disabled):not(.disabled):hover {
+  background-color: var(--dbm-bg-neutral-hover);
+}
+
+.toneNeutral.variantSecondary {
+  border-color: var(--dbm-border-neutral-strong);
+  color: var(--dbm-icon-default);
+}
+
+.toneNeutral.variantTertiary {
+  color: var(--dbm-icon-default);
+}
+
+.toneNeutral.variantGhost {
+  background-color: var(--dbm-bg-neutral-subtle);
+  color: var(--dbm-icon-default);
+}
+
+.toneNeutral.variantSecondary:not(:disabled):not(.disabled):hover,
+.toneNeutral.variantTertiary:not(:disabled):not(.disabled):hover,
+.toneNeutral.variantGhost:not(:disabled):not(.disabled):hover {
+  background-color: var(--dbm-bg-neutral-subtle-hover);
+}
+
 .variantDestructive {
   background-color: var(--dbm-bg-danger);
   color: var(--dbm-icon-on-danger);
@@ -211,6 +245,31 @@
 .variantTertiary.pressed:not(:disabled):not(.disabled):hover,
 .variantGhost.pressed:not(:disabled):not(.disabled):hover {
   background-color: var(--dbm-bg-brand-hover);
+}
+
+/* Pressed, neutral: the same inversion as the brand tone, in neutral tokens. `primary` (a solid fill at rest) goes to the quieter
+   `bg.neutral-subtle` with `icon.default`; the three that have no solid fill at rest go to the solid `bg.neutral` with `icon.on-neutral`.
+   Three classes, so these beat both the brand pressed rules above and the neutral rest rules. */
+.toneNeutral.variantPrimary.pressed {
+  background-color: var(--dbm-bg-neutral-subtle);
+  color: var(--dbm-icon-default);
+}
+
+.toneNeutral.variantPrimary.pressed:not(:disabled):not(.disabled):hover {
+  background-color: var(--dbm-bg-neutral-subtle-hover);
+}
+
+.toneNeutral.variantSecondary.pressed,
+.toneNeutral.variantTertiary.pressed,
+.toneNeutral.variantGhost.pressed {
+  background-color: var(--dbm-bg-neutral);
+  color: var(--dbm-icon-on-neutral);
+}
+
+.toneNeutral.variantSecondary.pressed:not(:disabled):not(.disabled):hover,
+.toneNeutral.variantTertiary.pressed:not(:disabled):not(.disabled):hover,
+.toneNeutral.variantGhost.pressed:not(:disabled):not(.disabled):hover {
+  background-color: var(--dbm-bg-neutral-hover);
 }
 
 .spinner {

@@ -99,6 +99,63 @@ describe("Button", () => {
     });
   });
 
+  describe("tone", () => {
+    it("is brand unless set: nothing about it changes", () => {
+      render(<Button data-testid="btn">Go</Button>);
+      expect(screen.getByTestId("btn")).toHaveStyle({ backgroundColor: "var(--dbm-bg-brand)", color: "var(--dbm-text-on-brand)" });
+      expect(screen.getByTestId("btn")).not.toHaveAttribute("data-tone");
+    });
+
+    it("draws each variant in the neutral tokens with tone neutral", () => {
+      const { rerender } = render(
+        <Button tone="neutral" data-testid="btn">
+          Go
+        </Button>,
+      );
+      expect(screen.getByTestId("btn")).toHaveStyle({ backgroundColor: "var(--dbm-bg-neutral)", color: "var(--dbm-text-on-neutral)" });
+      for (const variant of ["secondary", "tertiary"] as const) {
+        rerender(
+          <Button tone="neutral" variant={variant} data-testid="btn">
+            Go
+          </Button>,
+        );
+        expect(screen.getByTestId("btn")).toHaveStyle({ backgroundColor: "rgba(0, 0, 0, 0)", color: "var(--dbm-text-secondary)" });
+      }
+      rerender(
+        <Button tone="neutral" variant="ghost" data-testid="btn">
+          Go
+        </Button>,
+      );
+      expect(screen.getByTestId("btn")).toHaveStyle({ backgroundColor: "var(--dbm-bg-neutral-subtle)", color: "var(--dbm-text-secondary)" });
+    });
+
+    it("leaves destructive danger-coloured, whatever the tone", () => {
+      render(
+        <Button tone="neutral" variant="destructive" data-testid="btn">
+          Go
+        </Button>,
+      );
+      expect(screen.getByTestId("btn")).toHaveStyle({ backgroundColor: "var(--dbm-bg-danger)", color: "var(--dbm-text-on-danger)" });
+    });
+
+    it("draws the icon in on-neutral on the primary fill and in the default icon colour on the others", () => {
+      const { rerender } = render(
+        <Button tone="neutral" leadingIcon={WalletIcon}>
+          Go
+        </Button>,
+      );
+      expect(screen.getByRole("button").querySelector("svg")).toHaveStyle({ color: "var(--dbm-icon-on-neutral)" });
+      for (const variant of ["secondary", "tertiary", "ghost"] as const) {
+        rerender(
+          <Button tone="neutral" variant={variant} leadingIcon={WalletIcon}>
+            Go
+          </Button>,
+        );
+        expect(screen.getByRole("button").querySelector("svg")).toHaveStyle({ color: "var(--dbm-icon-default)" });
+      }
+    });
+  });
+
   it("applies each size's padding/font-size tokens", () => {
     render(
       <Button size="xl" data-testid="btn">

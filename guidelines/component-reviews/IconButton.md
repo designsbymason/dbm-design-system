@@ -55,3 +55,7 @@ or `size`, since the type file had only `@default` tags and the stories' `argTyp
 JSDoc prose, which is why its table was fine). A finalization checklist item ("every row has a non-empty Description") the
 original pass should have caught, so by the three-question test it is a defect fix and stays Finalized. Both now have JSDoc
 prose in the type file and the same text in the story's `argTypes`, the reliable mechanism (`07` §5).
+
+## `tone` added, 2026-10-18 (additive; stays Finalized)
+
+At explicit direction ([ADR-0097](../adr/0097-button-and-iconbutton-take-a-tone-brand-or-neutral-that-destructive-ignores-and-buttongroup-hands-down.md)): `tone` is `brand` (the default) or `neutral`, in the same neutral tokens as `Button` but with `icon.*` colours, never `text.*` ones (`icon.on-neutral` on `bg.neutral`, `icon.default` elsewhere, `border.neutral-strong` for the `secondary` outline). The pressed state of a toggle follows the brand pattern in neutral tokens: `primary` goes quiet (`bg.neutral-subtle`, `icon.default`), the other three go solid (`bg.neutral`, `icon.on-neutral`). `destructive` ignores the tone. Additive, so `IconButton` stays Finalized. Icons need 3:1, and the neutral pairings are 4.0:1 or more in every theme; `Button.checks.stories.tsx` measures them in the browser, including a pressed toggle. New unit tests cover each variant, the pressed state, `destructive` and the default.

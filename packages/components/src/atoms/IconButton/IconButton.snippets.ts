@@ -17,6 +17,13 @@ export const iconButtonSnippets = {
     An icon button has no visible text, so aria-label names it. TrashIcon comes from @dbm-design-system/icons. */}
 <IconButton icon={TrashIcon} aria-label="Delete" variant="secondary" />`,
 
+  tones: `{/* tone: "brand" (default) | "neutral". Neutral is a grey look for a control that shouldn't draw the eye to the brand colour;
+    every variant follows it except destructive, which stays danger-coloured. TrashIcon comes from @dbm-design-system/icons. */}
+<IconButton icon={TrashIcon} aria-label="Delete" tone="neutral" />
+<IconButton icon={TrashIcon} aria-label="Delete" tone="neutral" variant="secondary" />
+<IconButton icon={TrashIcon} aria-label="Delete" tone="neutral" variant="tertiary" />
+<IconButton icon={TrashIcon} aria-label="Delete" tone="neutral" variant="ghost" />`,
+
   allSizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl". HeartIcon comes from @dbm-design-system/icons. */}
 <IconButton icon={HeartIcon} aria-label="Favorite" size="lg" />`,
 
@@ -82,6 +89,7 @@ const iconName = (icon: unknown): string | undefined => {
 export interface IconButtonPlaygroundSnippetArgs {
   icon?: unknown;
   variant?: string;
+  tone?: string;
   size?: string;
   isLoading?: boolean;
   loadingLabel?: string;
@@ -107,6 +115,7 @@ export interface IconButtonPlaygroundSnippetArgs {
 export function iconButtonPlaygroundSnippet(args: IconButtonPlaygroundSnippetArgs): string {
   const attributes: string[] = [`icon={${iconName(args.icon) ?? "HeartIcon"}}`, `aria-label="${args["aria-label"] || "Favorite"}"`];
   if (args.variant && args.variant !== "primary") attributes.push(`variant="${args.variant}"`);
+  if (args.tone && args.tone !== "brand") attributes.push(`tone="${args.tone}"`);
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.rounded) attributes.push("rounded");
   // The Playground's select hands the transform its option key; accept the mapped value too.

@@ -31,6 +31,16 @@ const iconToneForVariant: Record<ButtonVariant, IconTone> = {
   destructive: "on-danger",
 };
 
+// The neutral tone's icons: the `primary` fill is `bg.neutral`, so its icon is `on-neutral`; the rest sit on the surface or a pale
+// neutral tint, in the default icon colour.
+const iconToneForNeutralVariant: Record<ButtonVariant, IconTone> = {
+  primary: "on-neutral",
+  secondary: "default",
+  tertiary: "default",
+  ghost: "default",
+  destructive: "on-danger",
+};
+
 const sizeClass: Record<ButtonSize, string | undefined> = {
   xs: styles.sizeXs,
   sm: styles.sizeSm,
@@ -69,6 +79,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
       variant: variantProp,
+      tone: toneProp,
       size: sizeProp,
       rounded: roundedProp,
       leadingIcon,
@@ -92,10 +103,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     // a disabled group disables it. Outside one `group` is `null` and nothing here changes.
     const group = useButtonGroup();
     const variant = variantProp ?? group?.variant ?? "primary";
+    // `destructive` is always danger-coloured, so the tone (its own or the group's) has no effect on it.
+    const neutral = (toneProp ?? group?.tone ?? "brand") === "neutral" && variant !== "destructive";
     const size = sizeProp ?? group?.size ?? "md";
     const rounded = roundedProp ?? group?.rounded ?? false;
     const iconSize = iconSizeForButtonSize[size];
-    const iconTone = iconToneForVariant[variant];
+    const iconTone = (neutral ? iconToneForNeutralVariant : iconToneForVariant)[variant];
     // `||`, not `??` — `isLoading` must disable the button even when a
     // consumer explicitly passes `disabled={false}`; `??` would let that
     // explicit `false` win and leave a "loading" button fully clickable.
@@ -168,11 +181,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         aria-busy={isLoading || undefined}
         // Lets a `ButtonGroup`'s stylesheet draw the right separator for this variant; absent outside a group.
         data-variant={group ? variant : undefined}
+        data-tone={group && neutral ? "neutral" : undefined}
         onClick={onClick}
         onClickCapture={handleClickCapture}
         className={cx(
           styles.root,
           variantClass[variant],
+          neutral && styles.toneNeutral,
           sizeClass[size],
           rounded && styles.rounded,
           fullWidth && styles.fullWidth,

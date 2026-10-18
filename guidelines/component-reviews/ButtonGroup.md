@@ -85,3 +85,7 @@ Declared by the user after the final review: its five defects were fixed, and th
 - **The `tertiary` separator is very faint:** `border.brand-subtle` is 1.08–1.24:1 against the surface, so in dark themes a `tertiary` group reads as separated words with almost no visible rule. The colour chosen at explicit direction, the same decorative accent used elsewhere; each button is still identified by its label.
 
 Later changes get a dated entry here, and go through `06-engineering-standards.md` §9's Finalized rules (ask first, then the three-question test).
+
+## `tone` added, 2026-10-18
+
+At explicit direction ([ADR-0097](../adr/0097-button-and-iconbutton-take-a-tone-brand-or-neutral-that-destructive-ignores-and-buttongroup-hands-down.md)): the group takes `tone` as a default for its buttons, as it does `variant`, `size` and `rounded`, with the same precedence (a button's own prop wins; an inner group keeps what it leaves out from the outer one). A neutral `Button` or `IconButton` in a group carries `data-tone="neutral"`, and an attached group draws a neutral `tertiary` separator in `border.neutral-subtle` and a neutral `ghost` one in `border.neutral`; the solid and `secondary` separators were neutral already. Not looked at in a browser beside brand groups: the separators are checked by the CSS only.

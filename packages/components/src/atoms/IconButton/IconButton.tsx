@@ -43,6 +43,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
     {
       icon,
       variant: variantProp,
+      tone: toneProp,
       size: sizeProp,
       isLoading = false,
       loadingLabel,
@@ -69,6 +70,8 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
     // a disabled group disables it. Outside one `group` is `null` and nothing here changes.
     const group = useButtonGroup();
     const variant = variantProp ?? group?.variant ?? "primary";
+    // `destructive` is always danger-coloured, so the tone (its own or the group's) has no effect on it.
+    const neutral = (toneProp ?? group?.tone ?? "brand") === "neutral" && variant !== "destructive";
     const size = sizeProp ?? group?.size ?? "md";
     const rounded = roundedProp ?? group?.rounded ?? false;
     // Naming/shape mirrors Radix `Toggle`'s own `pressed`/`defaultPressed`/
@@ -181,6 +184,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         aria-busy={isLoading || undefined}
         // Lets a `ButtonGroup`'s stylesheet draw the right separator for this variant; absent outside a group.
         data-variant={group ? variant : undefined}
+        data-tone={group && neutral ? "neutral" : undefined}
         // Not applied in `asChild` mode — see the dev-mode warning above:
         // `aria-pressed` is only valid on roles that support it, and `Slot`
         // can render onto an element (e.g. a native `<a>`) that doesn't.
@@ -193,6 +197,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         className={cx(
           styles.root,
           variantClass[variant],
+          neutral && styles.toneNeutral,
           sizeClass[size],
           rounded && styles.rounded,
           isToggle && isPressed && styles.pressed,

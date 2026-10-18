@@ -8,6 +8,7 @@ import type {
 export type ButtonVariant =
   "primary" | "secondary" | "tertiary" | "ghost" | "destructive";
 export type ButtonSize = "xs" | "sm" | "md" | "lg" | "xl";
+export type ButtonTone = "brand" | "neutral";
 
 export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
   /**
@@ -15,6 +16,13 @@ export interface ButtonProps extends ComponentPropsWithoutRef<"button"> {
    * @default 'primary'
    */
   variant?: ButtonVariant;
+  /**
+   * The colour family: `brand` (the default) or `neutral`, a grey look for a control that shouldn't draw the eye to the brand
+   * colour (a quiet icon button in a bar, say). Every variant but `destructive` follows it; `destructive` ignores it and stays
+   * danger-coloured.
+   * @default 'brand'
+   */
+  tone?: ButtonTone;
   /**
    * Controls padding, gap, and font-size together as one step on the
    * shared size scale.

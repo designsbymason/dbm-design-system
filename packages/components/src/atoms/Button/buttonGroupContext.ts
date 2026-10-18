@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { ButtonSize, ButtonVariant } from "./Button.types";
+import type { ButtonSize, ButtonTone, ButtonVariant } from "./Button.types";
 
 /**
  * What a `ButtonGroup` (a molecule) hands to the `Button`s and `IconButton`s inside it. Not exported from the
@@ -9,6 +9,7 @@ import type { ButtonSize, ButtonVariant } from "./Button.types";
  */
 export interface ButtonGroupContextValue {
   variant?: ButtonVariant;
+  tone?: ButtonTone;
   size?: ButtonSize;
   rounded?: boolean;
   disabled?: boolean;

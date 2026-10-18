@@ -89,6 +89,36 @@ describe("ButtonGroup", () => {
   });
 
   describe("settings for the buttons inside", () => {
+    it("gives every Button and IconButton the group's tone, marks it for the separators, and lets a button's own tone win", () => {
+      render(
+        <ButtonGroup aria-label="Actions" variant="tertiary" tone="neutral">
+          <Button>Copy</Button>
+          <IconButton icon={TrashIcon} aria-label="Delete" />
+          <Button tone="brand">Paste</Button>
+          <Button variant="destructive">Remove</Button>
+        </ButtonGroup>,
+      );
+      expect(screen.getByRole("button", { name: "Copy" })).toHaveClass(buttonStyles.toneNeutral as string);
+      expect(screen.getByRole("button", { name: "Copy" })).toHaveAttribute("data-tone", "neutral");
+      expect(screen.getByRole("button", { name: "Delete" })).toHaveClass(iconButtonStyles.toneNeutral as string);
+      expect(screen.getByRole("button", { name: "Delete" })).toHaveAttribute("data-tone", "neutral");
+      expect(screen.getByRole("button", { name: "Paste" })).not.toHaveClass(buttonStyles.toneNeutral as string);
+      expect(screen.getByRole("button", { name: "Paste" })).not.toHaveAttribute("data-tone");
+      // destructive stays danger-coloured, so it is not marked neutral either
+      expect(screen.getByRole("button", { name: "Remove" })).not.toHaveClass(buttonStyles.toneNeutral as string);
+    });
+
+    it("keeps an outer group's tone for what an inner group leaves out", () => {
+      render(
+        <ButtonGroup aria-label="Outer" tone="neutral">
+          <ButtonGroup aria-label="Inner" variant="ghost">
+            <Button>Copy</Button>
+          </ButtonGroup>
+        </ButtonGroup>,
+      );
+      expect(screen.getByRole("button", { name: "Copy" })).toHaveClass(buttonStyles.toneNeutral as string);
+    });
+
     it("gives every Button and IconButton the group's variant and size", () => {
       render(
         <ButtonGroup aria-label="Actions" variant="secondary" size="sm">

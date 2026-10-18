@@ -247,6 +247,39 @@ describe("IconButton", () => {
     expect(xlIconClass).not.toBe(lgIconClass);
   });
 
+  describe("tone", () => {
+    it("is brand unless set: nothing about it changes", () => {
+      render(<IconButton icon={HeartIcon} aria-label="Favorite" />);
+      expect(screen.getByRole("button")).toHaveStyle({ backgroundColor: "var(--dbm-bg-brand)", color: "var(--dbm-icon-on-brand)" });
+      expect(screen.getByRole("button")).not.toHaveAttribute("data-tone");
+    });
+
+    it("draws each variant in the neutral tokens with tone neutral, using icon colours, never text ones", () => {
+      const { rerender } = render(<IconButton icon={HeartIcon} aria-label="Favorite" tone="neutral" />);
+      expect(screen.getByRole("button")).toHaveStyle({ backgroundColor: "var(--dbm-bg-neutral)", color: "var(--dbm-icon-on-neutral)" });
+      for (const variant of ["secondary", "tertiary"] as const) {
+        rerender(<IconButton icon={HeartIcon} aria-label="Favorite" tone="neutral" variant={variant} />);
+        expect(screen.getByRole("button")).toHaveStyle({ backgroundColor: "rgba(0, 0, 0, 0)", color: "var(--dbm-icon-default)" });
+      }
+      rerender(<IconButton icon={HeartIcon} aria-label="Favorite" tone="neutral" variant="ghost" />);
+      expect(screen.getByRole("button")).toHaveStyle({ backgroundColor: "var(--dbm-bg-neutral-subtle)", color: "var(--dbm-icon-default)" });
+    });
+
+    it("leaves destructive danger-coloured, whatever the tone", () => {
+      render(<IconButton icon={TrashIcon} aria-label="Delete" tone="neutral" variant="destructive" />);
+      expect(screen.getByRole("button")).toHaveStyle({ backgroundColor: "var(--dbm-bg-danger)", color: "var(--dbm-icon-on-danger)" });
+    });
+
+    it("draws a pressed toggle in the neutral tokens: primary goes quiet, the others solid", () => {
+      const { rerender } = render(<IconButton icon={HeartIcon} aria-label="Favorite" tone="neutral" defaultPressed />);
+      expect(screen.getByRole("button")).toHaveStyle({ backgroundColor: "var(--dbm-bg-neutral-subtle)", color: "var(--dbm-icon-default)" });
+      for (const variant of ["secondary", "tertiary", "ghost"] as const) {
+        rerender(<IconButton icon={HeartIcon} aria-label="Favorite" tone="neutral" variant={variant} defaultPressed />);
+        expect(screen.getByRole("button")).toHaveStyle({ backgroundColor: "var(--dbm-bg-neutral)", color: "var(--dbm-icon-on-neutral)" });
+      }
+    });
+  });
+
   describe("toggle (pressed) state — review finding #11", () => {
     it("does not render aria-pressed at all for a plain, non-toggle button", () => {
       render(<IconButton icon={HeartIcon} aria-label="Favorite" />);

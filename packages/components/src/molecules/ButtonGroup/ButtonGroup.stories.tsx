@@ -46,6 +46,13 @@ const meta: Meta<PlaygroundArgs> = {
         "The visual style every button in the group uses unless it sets its own variant. Left out, each button keeps its own, which is primary unless it says otherwise. An attached group draws the separator between buttons to suit each one's variant.",
       table: { defaultValue: { summary: "primary" } },
     },
+    tone: {
+      control: "select",
+      options: ["brand", "neutral"],
+      description:
+        "The colour family every button in the group uses unless it sets its own tone: brand, or neutral. Left out, each button keeps its own, which is brand unless it says otherwise. destructive buttons ignore it. An attached group draws neutral tertiary and ghost separators in neutral colours.",
+      table: { defaultValue: { summary: "brand" } },
+    },
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],
@@ -115,6 +122,7 @@ const meta: Meta<PlaygroundArgs> = {
   // controls start there.
   args: {
     variant: "primary",
+    tone: "brand",
     size: "md",
     rounded: false,
     disabled: false,

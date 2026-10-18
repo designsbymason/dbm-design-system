@@ -20,11 +20,18 @@ import {
   TrashIcon,
   WalletIcon,
 } from "@dbm-design-system/icons";
-import type { ButtonSize, ButtonVariant } from "./Button.types";
+import type { ButtonSize, ButtonTone, ButtonVariant } from "./Button.types";
 
 export const buttonSnippets = {
   allVariants: `{/* variant: "primary" (default) | "secondary" | "tertiary" | "ghost" | "destructive" */}
 <Button variant="secondary">secondary</Button>`,
+
+  tones: `{/* tone: "brand" (default) | "neutral". Neutral is a grey look for a control that shouldn't draw the eye to the brand colour;
+    every variant follows it except destructive, which stays danger-coloured. */}
+<Button tone="neutral">primary</Button>
+<Button tone="neutral" variant="secondary">secondary</Button>
+<Button tone="neutral" variant="tertiary">tertiary</Button>
+<Button tone="neutral" variant="ghost">ghost</Button>`,
 
   allSizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" */}
 <Button size="lg">Size lg</Button>`,
@@ -79,6 +86,7 @@ const iconName = (icon: unknown): string | undefined => {
 export interface ButtonPlaygroundSnippetArgs {
   children?: unknown;
   variant?: ButtonVariant;
+  tone?: ButtonTone;
   size?: ButtonSize;
   rounded?: boolean;
   type?: "button" | "submit" | "reset";
@@ -100,6 +108,7 @@ export interface ButtonPlaygroundSnippetArgs {
 export function buttonPlaygroundSnippet(args: ButtonPlaygroundSnippetArgs): string {
   const attributes: string[] = [];
   if (args.variant && args.variant !== "primary") attributes.push(`variant="${args.variant}"`);
+  if (args.tone && args.tone !== "brand") attributes.push(`tone="${args.tone}"`);
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.rounded) attributes.push("rounded");
   if (args.type && args.type !== "button") attributes.push(`type="${args.type}"`);

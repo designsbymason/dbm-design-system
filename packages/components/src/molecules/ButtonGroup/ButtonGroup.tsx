@@ -6,7 +6,7 @@ import type { ButtonGroupOrientation, ButtonGroupProps } from "./ButtonGroup.typ
 
 /**
  * A set of related buttons laid out as one: fused into a segmented control (`attached`, the default) or
- * spaced apart, in a row or a column. It is a `role="group"` with a name, and it hands its `variant`, `size`,
+ * spaced apart, in a row or a column. It is a `role="group"` with a name, and it hands its `variant`, `tone`, `size`,
  * `rounded` and `disabled` to the `Button`s and `IconButton`s inside it as defaults — a button's own prop
  * still wins — so a group of five needs them said once. A group inside another keeps the outer one's settings
  * for whatever it leaves out.
@@ -31,6 +31,7 @@ export const ButtonGroup = forwardRef<HTMLDivElement, ButtonGroupProps>(
     {
       children,
       variant,
+      tone,
       size,
       rounded,
       disabled = false,
@@ -64,17 +65,19 @@ export const ButtonGroup = forwardRef<HTMLDivElement, ButtonGroupProps>(
     // Without this the inner context would replace the outer and silently drop all four.
     const parent = useButtonGroup();
     const parentVariant = parent?.variant;
+    const parentTone = parent?.tone;
     const parentSize = parent?.size;
     const parentRounded = parent?.rounded;
     const parentDisabled = parent?.disabled;
     const settings = useMemo(
       () => ({
         variant: variant ?? parentVariant,
+        tone: tone ?? parentTone,
         size: size ?? parentSize,
         rounded: rounded ?? parentRounded,
         disabled: disabled || parentDisabled,
       }),
-      [variant, size, rounded, disabled, parentVariant, parentSize, parentRounded, parentDisabled],
+      [variant, tone, size, rounded, disabled, parentVariant, parentTone, parentSize, parentRounded, parentDisabled],
     );
 
     return (

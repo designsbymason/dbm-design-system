@@ -6,7 +6,7 @@ import type {
   ReactNode,
 } from "react";
 import type { TooltipSide } from "../Tooltip/Tooltip.types";
-import type { ButtonSize, ButtonVariant } from "../Button/Button.types";
+import type { ButtonSize, ButtonTone, ButtonVariant } from "../Button/Button.types";
 
 export interface IconButtonProps extends Omit<
   ComponentPropsWithoutRef<"button">,
@@ -26,6 +26,13 @@ export interface IconButtonProps extends Omit<
    * @default 'primary'
    */
   variant?: ButtonVariant;
+  /**
+   * The colour family: `brand` (the default) or `neutral`, a grey look for a control that shouldn't draw the eye to the brand
+   * colour. The same two tones `Button` has; every variant but `destructive` follows it, and `destructive` ignores it and stays
+   * danger-coloured.
+   * @default 'brand'
+   */
+  tone?: ButtonTone;
   /**
    * The button's box, on the shared 5-step size scale. Its height and width match a `Button` of the same step, so an
    * `IconButton` sits flush beside one; the icon scales with it.

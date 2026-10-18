@@ -150,6 +150,40 @@
   background-color: var(--dbm-bg-brand-subtle-hover);
 }
 
+/* `tone="neutral"`: the same four variants in the neutral family, over the brand ones above (two classes beat one, so source order
+   doesn't matter). `destructive` is never given this class. Text pairs are checked against the surface or tint each sits on, in every
+   theme: `text.on-neutral` on `bg.neutral` (4.7:1 light, 8.2:1 dark), `text.secondary` on the surface and on `bg.neutral-subtle` and
+   its hover (6.0:1 or more). The `secondary` outline is `border.neutral-strong`, not `border.neutral`, which is under the 3:1 a
+   control's boundary needs on the light surface. */
+.toneNeutral.variantPrimary {
+  background-color: var(--dbm-bg-neutral);
+  color: var(--dbm-text-on-neutral);
+}
+
+.toneNeutral.variantPrimary:not(:disabled):not(.disabled):hover {
+  background-color: var(--dbm-bg-neutral-hover);
+}
+
+.toneNeutral.variantSecondary {
+  border-color: var(--dbm-border-neutral-strong);
+  color: var(--dbm-text-secondary);
+}
+
+.toneNeutral.variantTertiary {
+  color: var(--dbm-text-secondary);
+}
+
+.toneNeutral.variantGhost {
+  background-color: var(--dbm-bg-neutral-subtle);
+  color: var(--dbm-text-secondary);
+}
+
+.toneNeutral.variantSecondary:not(:disabled):not(.disabled):hover,
+.toneNeutral.variantTertiary:not(:disabled):not(.disabled):hover,
+.toneNeutral.variantGhost:not(:disabled):not(.disabled):hover {
+  background-color: var(--dbm-bg-neutral-subtle-hover);
+}
+
 .variantDestructive {
   background-color: var(--dbm-bg-danger);
   color: var(--dbm-text-on-danger);

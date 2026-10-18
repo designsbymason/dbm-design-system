@@ -118,3 +118,22 @@
 .attached[data-orientation="vertical"] > [data-variant="ghost"]:not(:first-child) {
   border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-focus);
 }
+
+/* Neutral tone (`data-tone="neutral"`, set on a `Button` or `IconButton` that is neutral in a group): the solid and `secondary`
+   separators above are neutral already (a surface hairline, a shared border), so only the two drawn in an accent change colour. A
+   `tertiary` rule is the faint neutral border, a `ghost` one the neutral border, which shows against its pale grey tint. */
+.attached[data-orientation="horizontal"] > [data-tone="neutral"][data-variant="tertiary"]:not(:first-child) {
+  border-inline-start-color: var(--dbm-border-neutral-subtle);
+}
+
+.attached[data-orientation="vertical"] > [data-tone="neutral"][data-variant="tertiary"]:not(:first-child) {
+  border-block-start-color: var(--dbm-border-neutral-subtle);
+}
+
+.attached[data-orientation="horizontal"] > [data-tone="neutral"][data-variant="ghost"]:not(:first-child) {
+  border-inline-start-color: var(--dbm-border-neutral);
+}
+
+.attached[data-orientation="vertical"] > [data-tone="neutral"][data-variant="ghost"]:not(:first-child) {
+  border-block-start-color: var(--dbm-border-neutral);
+}
