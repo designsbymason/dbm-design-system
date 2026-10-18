@@ -156,7 +156,7 @@
 
 /* `tone="neutral"`: the same four variants in the neutral family, over the brand ones above, with icon colours as the brand ones use
    (never a `text.*` token). `destructive` is never given this class. Icons are non-text, so they need 3:1: `icon.on-neutral` on
-   `bg.neutral` is 4.7:1 light and 8.2:1 dark, and `icon.default` on `bg.neutral-subtle` and its hover is 4.1:1 or more in every theme.
+   `bg.neutral` is 4.7:1 light and 8.2:1 dark, and `icon.default` on `bg.neutral-subtle` and its hover is 5.1:1 or more in every theme.
    The `secondary` outline is `border.neutral-strong` (4.7:1 light, 6.1:1 dark), since `border.neutral` is only 2.3:1 on the light
    surface. */
 .toneNeutral.variantPrimary {

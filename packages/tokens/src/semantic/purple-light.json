@@ -488,8 +488,8 @@
   "icon": {
     "default": {
       "$type": "color",
-      "$value": "{color.gray.600}",
-      "$description": "vs bg.neutral-subtle: 4.51:1 (verified 2026-09-04, finalizing Image — its fallback state's default icon pairs the two) — clears the 3:1 non-text floor comfortably, but also happens to share text.tertiary's own primitive step, which only barely clears the stricter 4.5:1 text floor against this same background; revisit if the primitive gray scale is ever regenerated."
+      "$value": "{color.gray.700}",
+      "$description": "Mapped to gray.700 (2026-10-18, at explicit direction; was gray.600), the same step as text.secondary, so a default icon and secondary text read at one strength, and no longer the step text.tertiary shares. Verified vs bg.surface: 6.88:1; vs bg.neutral-subtle: 6.59:1; vs bg.neutral-subtle-hover and bg.canvas: 6.05:1 — all clear the 3:1 non-text floor, and the 4.5:1 text one, comfortably. Also Image's fallback icon, its default state."
     },
     "secondary": {
       "$type": "color",

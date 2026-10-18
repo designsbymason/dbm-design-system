@@ -191,7 +191,7 @@ See [ADR-0011](adr/0011-darker-dark-mode-representative-background.md) for the d
 
 | Token | Light | Dark | Verified against | Status |
 |---|---|---|---|---|
-| `default` | `gray.600` | `gray.300` | vs `bg.neutral-subtle`: **4.51:1 (razor-thin — revisit if the primitive scale is ever regenerated)** / 5.86:1 | AA (non-text floor). Also `Image`'s fallback icon (its default state, via `currentColor`). `bg.neutral-subtle` is darker in dark mode (ADR-0011), which tightens this but doesn't endanger it |
+| `default` | `gray.700` | `gray.200` | vs `bg.surface`: 6.88:1 / 10.47:1; vs `bg.neutral-subtle`: 6.59:1 / 7.47:1; vs `bg.neutral-subtle-hover` and `bg.canvas`: 6.05:1 / 5.10:1 | AA (non-text floor, and the text one too). The same step as `text.secondary`, so a default icon and secondary text read at one strength; moved from `gray.600` / `gray.300` on 2026-10-18 at explicit direction, which also ended the step it shared with `text.tertiary` and its razor-thin 4.51:1 on `bg.neutral-subtle`. Also `Image`'s fallback icon (its default state, via `currentColor`). `bg.neutral-subtle` is darker in dark mode (ADR-0011) |
 | `secondary` | `gray.500` | `gray.500` | vs `bg.surface`: 3.25:1 / 4.34:1 | AA (non-text floor) |
 | `brand` | `purple.600` / `emerald.600` | `purple.300` / `emerald.300` | vs `bg.surface`: 7.37:1 (purple)/light; 7.45:1 (purple)/8.51:1 (emerald) dark; also checked vs `bg.canvas` dark: 3.63:1 (purple)/4.15:1 (emerald) | AA (non-text floor) |
 | `on-brand` | `neutral.white` | `gray.900` | vs `bg.brand`: 7.37:1 / 6.08:1 light; 7.45:1 / 8.51:1 dark | AA |
