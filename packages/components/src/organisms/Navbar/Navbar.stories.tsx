@@ -362,10 +362,10 @@ export const Sizes: Story = {
   parameters: { docs: { source: { code: navbarSnippets.sizes } } },
   argTypes: { ...noControls },
   render: (args) => (
-    <NavbarStage minBlockSize="18rem">
+    <NavbarStage minBlockSize="26rem">
       {(menuContainer) => (
         <div style={{ inlineSize: "100%", display: "grid", gap: "var(--dbm-space-4)", alignSelf: "start" }}>
-          {(["sm", "md", "lg"] as const).map((size) => (
+          {(["xs", "sm", "md", "lg"] as const).map((size) => (
             <GalleryBar key={size} name={`${size} bar`}>
               <DemoNavbar
                 size={size}

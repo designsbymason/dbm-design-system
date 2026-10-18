@@ -91,16 +91,17 @@ export interface NavbarProps extends Omit<ComponentPropsWithoutRef<"header">, "d
    */
   rounded?: boolean;
   /**
-   * The bar's height, on a three-step scale. Each step is as tall as an `IconButton` of the same step plus room above and
-   * below, so a button in the bar never touches its edges.
+   * The bar's height, on a four-step scale. Each step is as tall as an `IconButton` of the same step plus room above and
+   * below, so a button in the bar never touches its edges. It is also the default size of the links (see `linkSize`), of the menu
+   * button and the search button, and of any `Button` or `IconButton` in `Navbar.Actions` that sets none.
    * @default 'md'
    */
   size?: NavbarSize;
   /**
    * The text size, icon size and padding of the links in the bar's rows, on the same five steps as `Menu`'s `size`, apart from the
-   * bar's `size` (the height). Left out, it follows `size` so nothing changes (`xs` and `sm` bars read `xs` and `sm`, `md` reads
-   * `sm`, `lg` reads `md`), and a `quiet` set reads `xs`; set, a `quiet` set reads one step below it. A group's dropdown takes
-   * the same step for its items. The menu panel's links keep their own size.
+   * bar's `size` (the height). Left out, it follows `size` (`xs` reads `xs`, `sm` reads `sm`, `md` reads `md`, `lg` reads `lg`), so a
+   * taller bar has larger links. A `quiet` set reads one step below its size, never under `xs`. A group's dropdown takes the same
+   * step for its items when one is set. The menu panel's links keep their own size.
    */
   linkSize?: NavbarLinkSize;
   /**
@@ -531,7 +532,11 @@ export interface NavbarSkipLinkProps extends Omit<AnchorHTMLAttributes<HTMLAncho
 }
 
 export interface NavbarActionsProps extends HTMLAttributes<HTMLDivElement> {
-  /** What sits at the bar's end: a search field, icon buttons, a `Menu` for the account, a call to action. */
+  /**
+   * What sits at the bar's end: a search field, icon buttons, a `Menu` for the account, a call to action. A `Button` or `IconButton`
+   * here that sets no `size` takes its row's (`Navbar.Row`'s `size`, else the bar's); its own `size` always wins. A search field isn't
+   * one of those and keeps the size you give it.
+   */
   children?: ReactNode;
   /**
    * The column this part sits in when its row is drawn in `columns`; ignored otherwise.

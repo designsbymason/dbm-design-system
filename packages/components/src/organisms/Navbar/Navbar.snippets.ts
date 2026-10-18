@@ -341,8 +341,16 @@ ${brand}
 ${actions}
 </Navbar>`,
 
-  sizes: `{/* size: "sm" | "md" (default) | "lg". The bar is as tall as an IconButton of the same step plus room. */}
-${navbar('size="lg"')}`,
+  sizes: `{/* size: "xs" | "sm" | "md" (default) | "lg". The bar is as tall as an IconButton of the same step plus room, and the step is the
+    default size of its links (set linkSize to size them apart), of the menu and search buttons, and of any Button or IconButton in
+    Navbar.Actions that sets no size of its own. xs is a thin strip, for a courtesy row. */}
+<Navbar size="lg">
+${brand}
+${links}
+  <Navbar.Actions>
+    <Button>Sign in</Button>
+  </Navbar.Actions>
+</Navbar>`,
 
   actions: `{/* Whatever belongs to the whole app goes in Navbar.Actions, at the bar's end. */}
 ${navbar(

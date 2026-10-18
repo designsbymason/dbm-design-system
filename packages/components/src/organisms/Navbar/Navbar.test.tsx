@@ -6,6 +6,9 @@ import { createRef, StrictMode, useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Button } from "../../atoms/Button";
 import { Navbar } from "./Navbar";
+import buttonStyles from "../../atoms/Button/Button.module.css";
+import iconButtonStyles from "../../atoms/IconButton/IconButton.module.css";
+import { IconButton } from "../../atoms/IconButton";
 import styles from "./Navbar.module.css";
 
 // jsdom applies the stylesheet but matches no media query, so below the breakpoint the bar's own links are `display: none`
@@ -413,8 +416,8 @@ describe("Navbar in the menu panel", () => {
 describe("Navbar linkSize", () => {
   const nav = (name: string) => screen.getByRole("navigation", { name, hidden: true });
 
-  it("follows the bar's height step when none is set, reading today's text sizes", () => {
-    const expected = { xs: styles.linkSizeXs, sm: styles.linkSizeSm, md: styles.linkSizeSm, lg: styles.linkSizeMd } as const;
+  it("follows the bar's height step when none is set, a taller bar having larger links", () => {
+    const expected = { xs: styles.linkSizeXs, sm: styles.linkSizeSm, md: styles.linkSizeMd, lg: styles.linkSizeLg } as const;
     for (const size of ["xs", "sm", "md", "lg"] as const) {
       const { unmount } = render(
         <Navbar size={size} collapseBelow="never">
@@ -453,9 +456,17 @@ describe("Navbar linkSize", () => {
     expect(nav("Set")).toHaveClass(styles.linkSizeXl!);
   });
 
-  it("reads a quiet set as xs when none is set, and one step below what was set otherwise (never below xs)", () => {
+  it("reads a quiet set one step below its size, set or followed (never below xs)", () => {
     const { rerender } = render(
       <Navbar size="lg" collapseBelow="never">
+        <Navbar.Links aria-label="Quiet" quiet>
+          <Navbar.Link href="/a">A</Navbar.Link>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    expect(nav("Quiet")).toHaveClass(styles.linkSizeMd!);
+    rerender(
+      <Navbar size="xs" collapseBelow="never">
         <Navbar.Links aria-label="Quiet" quiet>
           <Navbar.Link href="/a">A</Navbar.Link>
         </Navbar.Links>
@@ -522,6 +533,37 @@ describe("Navbar linkSize", () => {
     render(<WithGroup collapseBelow="never" linkSize="xl" />);
     await user.click(screen.getByRole("button", { name: "Resources" }));
     expect((await screen.findByRole("menu")).className).toMatch(/sizeXl/);
+  });
+});
+
+describe("Navbar.Actions and the bar's size", () => {
+  const actions = (props: Partial<React.ComponentProps<typeof Navbar>> = {}, rowSize?: "xs" | "sm" | "md" | "lg") => (
+    <Navbar {...props}>
+      <Navbar.Row size={rowSize}>
+        <Navbar.Brand href="/">dbM</Navbar.Brand>
+        <Navbar.Actions>
+          <Button>Plain</Button>
+          <Button size="xs">Own</Button>
+          <IconButton icon={HouseIcon} aria-label="Home" />
+        </Navbar.Actions>
+        <Button>Outside</Button>
+      </Navbar.Row>
+    </Navbar>
+  );
+
+  it("gives a Button or IconButton that sets no size the bar's size, and leaves its own and any outside alone", () => {
+    render(actions({ size: "lg" }));
+    expect(screen.getByRole("button", { name: "Plain" })).toHaveClass(buttonStyles.sizeLg!);
+    expect(screen.getByRole("button", { name: "Own" })).toHaveClass(buttonStyles.sizeXs!);
+    expect(screen.getByRole("button", { name: "Home" })).toHaveClass(iconButtonStyles.sizeLg!);
+    expect(screen.getByRole("button", { name: "Outside" })).toHaveClass(buttonStyles.sizeMd!);
+  });
+
+  it("takes the row's size over the bar's, and md when neither is set", () => {
+    const { rerender } = render(actions({ size: "lg" }, "xs"));
+    expect(screen.getByRole("button", { name: "Plain" })).toHaveClass(buttonStyles.sizeXs!);
+    rerender(actions());
+    expect(screen.getByRole("button", { name: "Plain" })).toHaveClass(buttonStyles.sizeMd!);
   });
 });
 

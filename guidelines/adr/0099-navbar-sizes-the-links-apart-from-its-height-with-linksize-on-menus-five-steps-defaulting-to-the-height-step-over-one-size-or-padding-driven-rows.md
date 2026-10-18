@@ -7,7 +7,7 @@
 
 ## Decision
 - **`linkSize?: "xs" | "sm" | "md" | "lg" | "xl"`** on `Navbar`, `Navbar.Row` and `Navbar.Links` (the nearest wins), after `size` in the prop order. It sets a link's text size, icon size and padding: text `font-size.xs`/`sm`/`base`/`md`/`lg` as `Menu`'s sizes do; padding a link bar's (`space.1`/`2`, `2`/`3`, `2`/`3`, `3`/`4`, `3`/`4`); icon `xs`/`sm`/`sm`/`md`/`lg`. No new tokens.
-- **Left out, it follows `size`, so nothing changes:** `xs` → `xs`, `sm` → `sm`, `md` → `sm`, `lg` → `md` (today's two text sizes). A `quiet` set reads `xs` then, and one step below what was set otherwise (never below `xs`).
+- **Left out, it follows `size` step for step:** `xs` → `xs`, `sm` → `sm`, `md` → `md`, `lg` → `lg`, so a taller bar has larger links. A `quiet` set reads one step below its size, set or followed (never below `xs`). *(Amended 2026-10-18, before this record was pushed: the first draft mapped `md` to `sm` and `lg` to `md` and read a quiet set as `xs`, to leave every existing bar unchanged, which left `sm` and `md` bars with identical links; the component is unreleased, so the mapping follows the step.)*
 - **`size` stays the row's height, a floor** (`min-block-size`): a taller child still grows the row, and the height does not depend on what the row holds, so bars of different content are as tall as their step says. It also stays the default for the row's controls (menu and search buttons), so there are two props and not three.
 - **A `Navbar.Group`'s dropdown takes the set's size for its items** when one was set (`Menu.Content`'s `size`), and `Menu`'s own default otherwise. A link's icon follows the step in the bar; in a group's list and in the menu panel it keeps its own. **The menu panel's links keep their own sizing** (touch rows): the step is set on the bar's `<nav>`, which the panel's copy is not inside.
 - Removed: the one-off `.sizeLg .links` and `.quiet.links` font rules, now the default mapping.
@@ -19,7 +19,7 @@
 - **Copying `Menu`'s padding exactly.** Rejected: its rows are list rows; a link bar wants a little more inline room.
 
 ## Consequences
-- A bar that sets no `linkSize` is unchanged: the default mapping reproduces today's text, icon and padding, and a real-browser check asserts the default `md` bar reads the `sm` step exactly.
+- A bar's default links are larger than they were at `md` (text 16px, not 14px) and `lg`, and a `quiet` set in an `md` or `lg` bar is larger than the old fixed `xs`. A real-browser check asserts the default `md` bar reads the `md` step exactly.
 - The bar's height does not move with `linkSize` until a link is taller than the row's floor; the Docs say so.
 - Navbar's stylesheet grows by about 0.6KB.
 

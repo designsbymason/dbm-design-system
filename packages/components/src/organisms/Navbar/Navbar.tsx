@@ -5,6 +5,7 @@ import { forwardRef, useCallback, useContext, useEffect, useId, useMemo, useRef,
 import type { CSSProperties, MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { Affix } from "../../atoms/Affix";
+import { ButtonGroupProvider, useButtonGroup } from "../../atoms/Button/buttonGroupContext";
 import { Icon } from "../../atoms/Icon";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { IconButton } from "../../atoms/IconButton";
@@ -428,9 +429,10 @@ const NavbarLinks = forwardRef<HTMLElement, NavbarLinksProps>(
     const { labels, panelBody, panelQuietBody, size: barSize, linkSize: barLinkSize } = useNavbarContext("Navbar.Links");
     const row = useContext(NavbarRowContext);
     // The size a set reads: its own, else its row's, else the bar's; none of them set, it follows the row's height step. A `quiet` set
-    // reads `xs` then, and one step below what was set otherwise.
+    // reads one step below that.
     const explicit = ownLinkSize ?? row?.linkSize ?? barLinkSize;
-    const resolvedLinkSize = quiet ? (explicit ? stepDown(explicit) : "xs") : (explicit ?? defaultLinkSize[row?.size ?? barSize]);
+    const baseLinkSize = explicit ?? defaultLinkSize[row?.size ?? barSize];
+    const resolvedLinkSize = quiet ? stepDown(baseLinkSize) : baseLinkSize;
     const linkSizeValue = useMemo(() => ({ size: resolvedLinkSize, explicit: explicit !== undefined }), [resolvedLinkSize, explicit]);
     const panelTarget = quiet ? panelQuietBody : panelBody;
     const name = ariaLabelledBy === undefined ? (ariaLabel ?? labels.navigation) : ariaLabel;
@@ -660,9 +662,20 @@ const NavbarGroup = forwardRef<HTMLButtonElement, NavbarGroupProps>(
 NavbarGroup.displayName = "Navbar.Group";
 
 /** The bar's end: whatever belongs to the whole app, pushed to the far edge. */
-const NavbarActions = forwardRef<HTMLDivElement, NavbarActionsProps>(({ column: _column, className, ...props }, ref) => (
-  <div {...props} ref={ref} className={cx(styles.actions, className)} />
-));
+const NavbarActions = forwardRef<HTMLDivElement, NavbarActionsProps>(({ column: _column, className, ...props }, ref) => {
+  // The `Button`s and `IconButton`s inside take the row's size when they set none (their own always wins), through the same context a
+  // `ButtonGroup` hands its buttons; whatever else the group already set (its variant, tone, rounded, disabled) is kept.
+  const bar = useNavbarContext("Navbar.Actions");
+  const row = useContext(NavbarRowContext);
+  const parent = useButtonGroup();
+  const size = row?.size ?? bar.size;
+  const buttons = useMemo(() => ({ ...parent, size }), [parent, size]);
+  return (
+    <ButtonGroupProvider value={buttons}>
+      <div {...props} ref={ref} className={cx(styles.actions, className)} />
+    </ButtonGroupProvider>
+  );
+});
 NavbarActions.displayName = "Navbar.Actions";
 
 /**

@@ -104,7 +104,7 @@ export function DemoNavbar({
       </Navbar.Links>
       {actions === "button" && (
         <Navbar.Actions>
-          <Button size="sm">Sign in</Button>
+          <Button>Sign in</Button>
         </Navbar.Actions>
       )}
       {actions === "responsive" && (

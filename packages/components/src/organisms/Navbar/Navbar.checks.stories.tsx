@@ -1498,10 +1498,10 @@ export const LinkSizeSteps: Story = {
     expect(metrics[0]!.font).toBeCloseTo(tokenPx("--dbm-font-size-xs") * 16, 1);
     expect(metrics[1]!.font).toBeCloseTo(tokenPx("--dbm-font-size-sm") * 16, 1);
     expect(metrics[2]!.font).toBeCloseTo(tokenPx("--dbm-font-size-base") * 16, 1);
-    // no setting follows the height step: the default md bar reads the sm step exactly
+    // no setting follows the height step: the default md bar reads the md step exactly
     const plain = getComputedStyle(linkOf("default links"));
-    expect(px(plain.fontSize)).toBeCloseTo(metrics[1]!.font, 1);
-    expect(px(plain.paddingInlineStart)).toBeCloseTo(metrics[1]!.padInline, 1);
+    expect(px(plain.fontSize)).toBeCloseTo(metrics[2]!.font, 1);
+    expect(px(plain.paddingInlineStart)).toBeCloseTo(metrics[2]!.padInline, 1);
     // the bar's height is its own: it does not move with the links (all md bars, links shorter than the row's floor)
     const headerHeight = (name: string) => canvas.getByRole("region", { name }).querySelector("header")!.getBoundingClientRect().height;
     const heights = [...steps.map((step) => `${step} links`), "default links"].map(headerHeight);
@@ -1509,6 +1509,39 @@ export const LinkSizeSteps: Story = {
     // a tall bar with small links keeps its own height and the small step's text
     expect(headerHeight("tall bar, small links")).toBeGreaterThan(heights[0]! + 4);
     expect(px(getComputedStyle(linkOf("tall bar, small links")).fontSize)).toBeCloseTo(metrics[0]!.font, 1);
+  },
+};
+
+export const BarSizeScalesLinksAndActions: Story = {
+  name: "A taller bar has larger links and larger action buttons: each step is the size of the same name",
+  render: () => (
+    <NavbarStage minBlockSize="26rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", display: "grid", gap: "1rem", alignSelf: "start" }}>
+          {(["xs", "sm", "md", "lg"] as const).map((size) => (
+            <GalleryBar key={size} name={`${size} bar`}>
+              <DemoNavbar size={size} linksLabel={`${size} links`} menuContainer={menuContainer} collapseBelow="never" />
+            </GalleryBar>
+          ))}
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const steps = ["xs", "sm", "md", "lg"] as const;
+    const linkFont = steps.map((step) => px(getComputedStyle(within(canvas.getByRole("navigation", { name: `${step} links` })).getByRole("link", { name: "Products" })).fontSize));
+    const button = steps.map((step) => within(canvas.getByRole("region", { name: `${step} bar` })).getByRole("button", { name: "Sign in" }).getBoundingClientRect().height);
+    const bar = steps.map((step) => canvas.getByRole("region", { name: `${step} bar` }).querySelector("header")!.getBoundingClientRect().height);
+    for (let i = 1; i < steps.length; i++) {
+      expect(linkFont[i]!).toBeGreaterThan(linkFont[i - 1]!);
+      expect(button[i]!).toBeGreaterThan(button[i - 1]!);
+      expect(bar[i]!).toBeGreaterThan(bar[i - 1]!);
+    }
+    // each action button is the box of its step, as an IconButton of that step is (they match a Button's height to the pixel)
+    steps.forEach((step, i) => {
+      expect(Math.abs(button[i]! - tokenPx(`--dbm-icon-button-size-${step}`))).toBeLessThan(1.5);
+    });
   },
 };
 

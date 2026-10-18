@@ -264,8 +264,8 @@ as one box, so a row that scrolls away can't sit below one that sticks. The icon
 ### Link size
 
 `size` is the bar's height. `linkSize` sets the links' text size, icon size and padding on its own, on the same five steps as `Menu`'s `size`,
-so a tall bar can have small links and the reverse. Left out it follows `size`, so nothing changes (`md` reads `sm`, `lg` reads `md`).
-Set it on the bar, on a `Navbar.Row` or on one `Navbar.Links`; the nearest wins. A `quiet` set reads one step below it, and a
+so a tall bar can have small links and the reverse. Left out it follows `size` (`xs`, `sm`, `md` and `lg` read the step of the same name), so a taller bar has larger links.
+Set it on the bar, on a `Navbar.Row` or on one `Navbar.Links`; the nearest wins. A `quiet` set reads one step below its size, and a
 `Navbar.Group`'s dropdown takes the same step for its items. The menu panel's links keep their own size, and the bar's height is a
 floor that a taller link still grows.
 
@@ -337,7 +337,9 @@ It reads best with `subtle` or `solid`, since an underline has no shape to round
 ### Sizes
 
 The bar is as tall as an `IconButton` of the same step plus room above and below, so a button in the bar
-never touches its edges.
+never touches its edges. The step is also the default size of the links (`linkSize` sizes them apart), of the menu and search
+buttons, and of any `Button` or `IconButton` in `Navbar.Actions` that sets no `size` of its own; a search field in the actions
+keeps the size you give it. `xs` is a thin strip, for a courtesy row.
 
 <Canvas of={NavbarStories.Sizes} />
 
