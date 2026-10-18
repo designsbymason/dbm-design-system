@@ -1685,6 +1685,32 @@ describe("Navbar columns", () => {
     expect(button.className).toMatch(/sizeSm/);
   });
 
+  it("takes a colour family for the menu button and the search button", () => {
+    render(
+      <Navbar>
+        <Navbar.Row>
+          <Navbar.MenuButton aria-label="Open" tone="neutral" />
+          <Navbar.Search buttonTone="neutral" />
+        </Navbar.Row>
+      </Navbar>,
+    );
+    expect(screen.getByRole("button", { name: "Open", hidden: true }).className).toMatch(/toneNeutral/);
+    expect(screen.getByLabelText("Search", { selector: "button" }).className).toMatch(/toneNeutral/);
+  });
+
+  it("leaves the menu button and the search button brand-coloured unless told", () => {
+    render(
+      <Navbar>
+        <Navbar.Row>
+          <Navbar.MenuButton aria-label="Open" />
+          <Navbar.Search />
+        </Navbar.Row>
+      </Navbar>,
+    );
+    expect(screen.getByRole("button", { name: "Open", hidden: true }).className).not.toMatch(/toneNeutral/);
+    expect(screen.getByLabelText("Search", { selector: "button" }).className).not.toMatch(/toneNeutral/);
+  });
+
   it("takes a size for the search button apart from the field's", () => {
     render(
       <Navbar>

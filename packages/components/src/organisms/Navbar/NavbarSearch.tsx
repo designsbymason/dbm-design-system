@@ -34,6 +34,7 @@ export const NavbarSearch = forwardRef<HTMLDivElement, NavbarSearchProps>(
       column: _column,
       size,
       buttonVariant = "ghost",
+      buttonTone,
       buttonSize,
       "aria-label": ariaLabel,
       id,
@@ -73,6 +74,7 @@ export const NavbarSearch = forwardRef<HTMLDivElement, NavbarSearchProps>(
               <IconButton
                 icon={MagnifyingGlassIcon}
                 variant={buttonVariant}
+                tone={buttonTone}
                 size={buttonSize ?? fieldSize}
                 aria-label={name}
                 className={styles.searchButton}

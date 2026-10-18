@@ -135,8 +135,8 @@ ${navbar('currentVariant="solid"')}`,
     first in its column wherever it is. Each icon button has a caption under it on a wide window: your own markup and CSS (IconButton has no visible label), a
     column with the caption hidden below the step the row goes into columns at (.caption { display: none } @media (min-width: 48rem)
     { .caption { display: block } }); the caption is aria-hidden as the button's own name says it, and has a negative margin-block-start (space-1) to sit close to the
-    icon, with pointer-events: none. They are medium tertiary icon buttons here (variant and size on Navbar.MenuButton, buttonVariant and buttonSize on
-    Navbar.Search, which keeps its field small). A style on Navbar.Links sets the text of all its links. */}
+    icon, with pointer-events: none. They are medium, neutral, tertiary icon buttons here (variant, tone and size on Navbar.MenuButton, buttonVariant, buttonTone and
+    buttonSize on Navbar.Search, which keeps its field small). A style on Navbar.Links sets the text of all its links. */}
 <Navbar>
   <Navbar.Row size="xs" variant="outlined" sticky={false}>
     <Navbar.Links aria-label="Help" quiet align="end">
@@ -149,18 +149,18 @@ ${navbar('currentVariant="solid"')}`,
     <Navbar.Brand href="/">
       dbM
     </Navbar.Brand>
-    <Navbar.Search size="sm" buttonVariant="tertiary" buttonSize="md" placeholder="Search products" style={{ marginInline: "auto" }} />
+    <Navbar.Search size="sm" buttonVariant="tertiary" buttonTone="neutral" buttonSize="md" placeholder="Search products" style={{ marginInline: "auto" }} />
     <Navbar.Actions style={{ marginInlineStart: 0 }}>
       <span className="labelled">
-        <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="md" />
+        <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" tone="neutral" size="md" />
         <span className="caption" aria-hidden="true">Account</span>
       </span>
       <span className="labelled">
-        <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="md" />
+        <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" tone="neutral" size="md" />
         <span className="caption" aria-hidden="true">Cart</span>
       </span>
     </Navbar.Actions>
-    <Navbar.MenuButton variant="tertiary" size="md" />
+    <Navbar.MenuButton variant="tertiary" tone="neutral" size="md" />
   </Navbar.Row>
   <Navbar.Row size="sm" variant="outlined">
     <Navbar.Links
@@ -220,18 +220,18 @@ ${navbar('currentVariant="solid"')}`,
     <Navbar.Brand href="/">
       dbM
     </Navbar.Brand>
-    <Navbar.Search size="sm" buttonVariant="tertiary" buttonSize="md" collapseBelow="3xl" style={{ marginInline: "auto" }} />
+    <Navbar.Search size="sm" buttonVariant="tertiary" buttonTone="neutral" buttonSize="md" collapseBelow="3xl" style={{ marginInline: "auto" }} />
     <Navbar.Actions style={{ marginInlineStart: 0 }}>
       <span className="labelled">
-        <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="md" />
+        <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" tone="neutral" size="md" />
         <span className="caption" aria-hidden="true">Account</span>
       </span>
       <span className="labelled">
-        <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="md" />
+        <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" tone="neutral" size="md" />
         <span className="caption" aria-hidden="true">Cart</span>
       </span>
     </Navbar.Actions>
-    <Navbar.MenuButton variant="tertiary" size="md" />
+    <Navbar.MenuButton variant="tertiary" tone="neutral" size="md" />
   </Navbar.Row>
   <Navbar.Row size="sm" variant="outlined">
     <Navbar.Links
@@ -275,14 +275,14 @@ ${navbar('currentVariant="solid"')}`,
     <Navbar.Brand href="/">
       dbM
     </Navbar.Brand>
-    <Navbar.Search size="sm" buttonVariant="tertiary" buttonSize="md" style={{ marginInline: "auto" }} />
+    <Navbar.Search size="sm" buttonVariant="tertiary" buttonTone="neutral" buttonSize="md" style={{ marginInline: "auto" }} />
     <Navbar.Actions style={{ marginInlineStart: 0 }}>
       <span className="labelled">
-        <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="md" />
+        <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" tone="neutral" size="md" />
         <span className="caption" aria-hidden="true">Account</span>
       </span>
     </Navbar.Actions>
-    <Navbar.MenuButton variant="tertiary" size="md" />
+    <Navbar.MenuButton variant="tertiary" tone="neutral" size="md" />
   </Navbar.Row>
   <Navbar.Row size="sm" variant="outlined">
     <Navbar.Links aria-label="Categories" align="center">

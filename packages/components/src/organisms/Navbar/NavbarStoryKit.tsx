@@ -249,16 +249,17 @@ export function DemoRowsNavbar({
         <Navbar.Search
           size="sm"
           buttonVariant="tertiary"
+          buttonTone="neutral"
           buttonSize="md"
           collapseBelow={searchCollapseBelow}
           placeholder="Search products"
           style={{ marginInline: "auto" }}
         />
         <Navbar.Actions style={{ marginInlineStart: 0 }}>
-          <LabelledButton caption="Account" step={collapseBelow} icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="md" />
-          <LabelledButton caption="Cart" step={collapseBelow} icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="md" />
+          <LabelledButton caption="Account" step={collapseBelow} icon={UserCircleIcon} aria-label="Account" variant="tertiary" tone="neutral" size="md" />
+          <LabelledButton caption="Cart" step={collapseBelow} icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" tone="neutral" size="md" />
         </Navbar.Actions>
-        <Navbar.MenuButton variant="tertiary" size="md" />
+        <Navbar.MenuButton variant="tertiary" tone="neutral" size="md" />
       </Navbar.Row>
       <Navbar.Row size="sm" variant="outlined">
         <Navbar.Links

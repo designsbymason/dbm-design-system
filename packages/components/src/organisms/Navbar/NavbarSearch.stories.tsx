@@ -32,6 +32,13 @@ const meta: Meta<typeof Navbar.Search> = {
         "The look of the search button the field becomes below collapseBelow: any IconButton variant, so it can match the icon buttons beside it.",
       table: { defaultValue: { summary: '"ghost"' } },
     },
+    buttonTone: {
+      control: "select",
+      options: ["brand", "neutral"],
+      description:
+        "The colour family of the search button the field becomes below collapseBelow: brand or neutral, so it can match the icon buttons beside it.",
+      table: { defaultValue: { summary: '"brand"' } },
+    },
     buttonSize: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],

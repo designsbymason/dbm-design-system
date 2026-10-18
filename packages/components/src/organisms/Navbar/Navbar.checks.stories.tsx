@@ -1278,6 +1278,20 @@ export const RowsOnAPhone: Story = {
     await step("the captions under the buttons are not drawn on a phone", async () => {
       for (const name of ["Account", "Cart"]) expect(getComputedStyle(within(main).getByText(name)).display).toBe("none");
     });
+    await step("all four buttons are neutral, in the default icon colour, not the brand's", async () => {
+      const probe = document.createElement("span");
+      probe.style.color = "var(--dbm-icon-default)";
+      canvasElement.append(probe);
+      const neutral = getComputedStyle(probe).color;
+      probe.style.color = "var(--dbm-icon-brand)";
+      const brand = getComputedStyle(probe).color;
+      probe.remove();
+      expect(neutral).not.toBe(brand);
+      for (const label of ["Menu", "Search", "Account", /Cart/]) {
+        const button = canvasElement.querySelector<HTMLElement>(typeof label === "string" ? `button[aria-label="${label}"]` : 'button[aria-label^="Cart"]')!;
+        expect(getComputedStyle(button).color).toBe(neutral);
+      }
+    });
     await step("all four buttons are medium tertiary icon buttons", async () => {
       for (const button of [menu, search, account, cart]) {
         expect(Math.round(button.height)).toBe(Math.round(tokenPx("--dbm-icon-button-size-md")));

@@ -8,7 +8,7 @@ import type {
   ReactNode,
   RefObject,
 } from "react";
-import type { ButtonSize, ButtonVariant } from "../../atoms/Button";
+import type { ButtonSize, ButtonTone, ButtonVariant } from "../../atoms/Button";
 import type { DrawerOpenChangeDetails, DrawerSide } from "../Drawer";
 import type { SearchInputProps } from "../../molecules/SearchInput";
 import type { MenuAlign } from "../Menu";
@@ -259,6 +259,11 @@ export interface NavbarSearchProps extends Omit<SearchInputProps, "size" | "clas
    * @default 'ghost'
    */
   buttonVariant?: ButtonVariant;
+  /**
+   * The colour family of the search button the field becomes below `collapseBelow`: `brand` or `neutral`, so it can match the icon buttons beside it.
+   * @default 'brand'
+   */
+  buttonTone?: ButtonTone;
   /** The size of the search button the field becomes below `collapseBelow`, in place of the field's `size`, so the button can match the icon buttons beside it while the field stays smaller. */
   buttonSize?: ButtonSize;
   /**
@@ -543,6 +548,11 @@ export interface NavbarMenuButtonProps extends Omit<ComponentPropsWithoutRef<"bu
    * @default 'ghost'
    */
   variant?: ButtonVariant;
+  /**
+   * The button's colour family: `brand` or `neutral`, so it can match the icon buttons beside it.
+   * @default 'brand'
+   */
+  tone?: ButtonTone;
   /** The button's size, in place of its row's: the same scale as `IconButton`. */
   size?: ButtonSize;
   /**

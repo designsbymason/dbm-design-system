@@ -15,6 +15,12 @@ const meta: Meta<typeof Navbar.MenuButton> = {
       description: "The button's look, in place of the quiet one it has by default: any IconButton variant, so it can match the icon buttons beside it.",
       table: { defaultValue: { summary: '"ghost"' } },
     },
+    tone: {
+      control: "select",
+      options: ["brand", "neutral"],
+      description: "The button's colour family: brand or neutral, so it can match the icon buttons beside it.",
+      table: { defaultValue: { summary: '"brand"' } },
+    },
     size: {
       control: "select",
       options: ["xs", "sm", "md", "lg", "xl"],

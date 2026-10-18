@@ -30,7 +30,7 @@ Every `Button` and `IconButton` variant but `destructive` was drawn in the brand
 
 ## Consequences
 - `Button`, `IconButton` and `ButtonGroup` gain one optional prop each; nothing changes for code that doesn't set it. Both atoms stay as they were reviewed: this is additive (`06-engineering-standards.md` §9, question 1).
-- `Navbar.MenuButton` and `Navbar.Search` don't pass `tone` through yet; that is a follow-up for the bar.
+- `Navbar.MenuButton` and `Navbar.Search` don't pass `tone` through yet; that is a follow-up for the bar. *(Amended 2026-10-18: done. `Navbar.MenuButton` takes `tone` and `Navbar.Search` a `buttonTone`, as they take `variant` and `buttonVariant`.)*
 - A neutral `secondary` outline is darker than the brand one is faint, by design: it is the boundary of the control.
 
 ## Related

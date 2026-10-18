@@ -684,7 +684,7 @@ NavbarSkipLink.displayName = "Navbar.SkipLink";
  * place one yourself to put it elsewhere or give it another icon.
  */
 const NavbarMenuButton = forwardRef<HTMLButtonElement, NavbarMenuButtonProps>(
-  ({ icon = ListIcon, variant = "ghost", size: ownSize, column: _column, className, "aria-label": ariaLabel, ...props }, ref) => {
+  ({ icon = ListIcon, variant = "ghost", tone, size: ownSize, column: _column, className, "aria-label": ariaLabel, ...props }, ref) => {
     const { labels, size: barSize } = useNavbarContext("Navbar.MenuButton");
     const rowSize = useContext(NavbarRowContext)?.size;
     const size = ownSize ?? rowSize ?? barSize;
@@ -695,6 +695,7 @@ const NavbarMenuButton = forwardRef<HTMLButtonElement, NavbarMenuButtonProps>(
           ref={ref}
           icon={icon}
           variant={variant}
+          tone={tone}
           size={size}
           aria-label={ariaLabel ?? labels.menu}
           className={cx(styles.menuButton, className)}
