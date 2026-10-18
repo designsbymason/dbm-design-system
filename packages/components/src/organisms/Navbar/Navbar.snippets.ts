@@ -5,6 +5,7 @@
 // be pasted anywhere. Each snippet is the smallest real usage of what its story shows, and `storySnippets.test.ts`
 // checks that stays true. See `07-storybook-and-documentation-standards.md` §4.2.
 
+import { quote } from "../../snippetHelpers";
 import type { NavbarCollapseBelow, NavbarCurrentVariant, NavbarSize, NavbarVariant } from "./Navbar.types";
 
 const brand = `  <Navbar.Brand href="/">dbM</Navbar.Brand>`;
@@ -15,6 +16,9 @@ const links = `  <Navbar.Links>
     </Navbar.Link>
     <Navbar.Link href="/pricing">Pricing</Navbar.Link>
     <Navbar.Link href="/docs">Docs</Navbar.Link>
+    <Navbar.Link href="/beta" disabled>
+      Beta
+    </Navbar.Link>
   </Navbar.Links>`;
 
 const actions = `  <Navbar.Actions>
@@ -35,8 +39,9 @@ ${navbar('variant="filled"')}`,
 ${navbar('currentVariant="solid"')}`,
 
   responsiveActions: `{/* Navbar.Action hideBelow takes an action out of the bar below a width; Navbar.PanelActions is where it comes
-    back, at the foot of the menu panel. PanelActions is drawn only in the panel, and goes directly inside Navbar. */}
-<Navbar>
+    back, at the foot of the menu panel. PanelActions is drawn only in the panel, and goes directly inside Navbar. This demo uses
+    the widest step ("3xl") for both so it shows on any window narrower than 1920px; an app picks the step that suits it. */}
+<Navbar collapseBelow="3xl">
   <Navbar.Brand href="/">dbM</Navbar.Brand>
   <Navbar.Links>
     <Navbar.Link href="/products" current>
@@ -47,7 +52,7 @@ ${navbar('currentVariant="solid"')}`,
     <Navbar.Action>
       <SearchInput aria-label="Search" size="sm" />
     </Navbar.Action>
-    <Navbar.Action hideBelow="md">
+    <Navbar.Action hideBelow="3xl">
       <Button size="sm">Sign in</Button>
     </Navbar.Action>
   </Navbar.Actions>
@@ -72,6 +77,9 @@ ${navbar('currentVariant="solid"')}`,
   linkExtras: `{/* icon goes before the text; badge after it, and is part of the link's name ("Inbox 3"); an href starting http(s):// or //
     is external (a new tab, a trailing icon and a hidden cue), or say it with external. */}
 <Navbar.Links>
+  <Navbar.Link href="/pricing" badge="New">
+    Pricing
+  </Navbar.Link>
   <Navbar.Link href="/docs" icon={BookOpenIcon}>
     Docs
   </Navbar.Link>
@@ -95,8 +103,9 @@ ${navbar('currentVariant="solid"')}`,
   </Navbar.Actions>
 </Navbar>`,
 
-  ghostSticky: `{/* A sticky ghost bar is transparent over the page until it is stuck, then takes a surface and a shadow. */}
-<Navbar sticky variant="ghost">
+  ghostSticky: `{/* A sticky ghost bar is transparent over the page until it is stuck, then takes a surface and a shadow. boxRef is the
+    scrolling box, as in the sticky example; leave scrollContainerRef out to stick to the page. */}
+<Navbar sticky variant="ghost" scrollContainerRef={boxRef}>
   <Navbar.Brand href="/">dbM</Navbar.Brand>
   <Navbar.Links>
     <Navbar.Link href="/products" current>
@@ -106,8 +115,9 @@ ${navbar('currentVariant="solid"')}`,
 </Navbar>`,
 
   hideOnScroll: `{/* hideOnScroll slides a sticky bar away while the reader scrolls down and brings it back on a scroll up or near the top. It
-    stays while anything in it has focus. In a scrolling box of your own, name it with scrollContainerRef. */}
-<Navbar sticky hideOnScroll>
+    stays while anything in it has focus. boxRef is the scrolling box, as in the sticky example; leave scrollContainerRef out to follow
+    the page's own scroll. */}
+<Navbar sticky hideOnScroll scrollContainerRef={boxRef}>
   <Navbar.Brand href="/">dbM</Navbar.Brand>
   <Navbar.Links>
     <Navbar.Link href="/products" current>
@@ -118,7 +128,25 @@ ${navbar('currentVariant="solid"')}`,
 
   rounded: `{/* rounded makes each link and group button a pill; the bar itself keeps its shape. It is the same prop Button,
     IconButton and Toolbar have. */}
-${navbar('rounded currentVariant="subtle"')}`,
+<Navbar rounded currentVariant="subtle">
+${brand}
+  <Navbar.Links>
+    <Navbar.Link href="/products" current>
+      Products
+    </Navbar.Link>
+    <Navbar.Link href="/pricing">Pricing</Navbar.Link>
+    <Navbar.Link href="/docs">Docs</Navbar.Link>
+    <Navbar.Link href="/beta" disabled>
+      Beta
+    </Navbar.Link>
+    <Navbar.Group label="Resources">
+      <Navbar.Link href="/blog">Blog</Navbar.Link>
+      <Navbar.Link href="/guides">Guides</Navbar.Link>
+      <Navbar.Link href="/changelog">Changelog</Navbar.Link>
+    </Navbar.Group>
+  </Navbar.Links>
+${actions}
+</Navbar>`,
 
   sizes: `{/* size: "sm" | "md" (default) | "lg". The bar is as tall as an IconButton of the same step plus room. */}
 ${navbar('size="lg"')}`,
@@ -156,19 +184,26 @@ ${links}
 </Navbar>`,
 
   contained: `{/* contained keeps the content to the page's reading width, centred; the bar itself still spans the page. */}
-${navbar("contained")}`,
+${navbar('contained variant="filled"')}`,
 
   collapse: `{/* collapseBelow: "sm" | "md" (default) | "lg" | "xl" | "2xl" | "3xl" | "never". Below the width the links
     leave the bar for a menu button. The switch is a stylesheet's, so a server-rendered page is right at first paint. */}
 ${navbar('collapseBelow="lg"')}`,
 
   menu: `{/* Below the collapse width the same Navbar.Link items fill a menu panel (a Drawer) behind a button. menuSide is
-    "start" (default) | "end" | "top" | "bottom", and start and end swap in right-to-left. */}
-${navbar('menuSide="end"')}`,
+    "start" (default) | "end" | "top" | "bottom", and start and end swap in right-to-left. This demo collapses below the widest
+    step ("3xl") so the panel shows on any window narrower than 1920px; an app picks the step that suits its links (the default
+    is "md"). */}
+${navbar('collapseBelow="3xl"')}`,
 
-  sticky: `{/* sticky keeps the bar at the top as the page scrolls, with a shadow while it is stuck. In a scrolling box of your
-    own, scrollContainerRef names it (const boxRef = useRef<HTMLDivElement>(null)). */}
-${navbar("sticky")}`,
+  onAPhone: `{/* The default collapseBelow is "md": on a window narrower than 768px the links leave the bar and the menu button
+    opens them in a panel. */}
+${navbar("")}`,
+
+  sticky: `{/* sticky keeps the bar at the top as the page scrolls, with a shadow while it is stuck. In a scrolling box of your own,
+    scrollContainerRef names it: const boxRef = useRef<HTMLDivElement>(null), on the box with <div ref={boxRef} …>. Without
+    one the bar sticks to the page. */}
+${navbar("sticky scrollContainerRef={boxRef}")}`,
 
   current: `{/* current marks the page the reader is on (aria-current="page"). You decide which one it is, from the router. */}
 <Navbar>
@@ -177,6 +212,7 @@ ${navbar("sticky")}`,
       Products
     </Navbar.Link>
     <Navbar.Link href="/pricing">Pricing</Navbar.Link>
+    <Navbar.Link href="/docs">Docs</Navbar.Link>
     <Navbar.Link href="/beta" disabled>
       Beta
     </Navbar.Link>
@@ -198,14 +234,22 @@ ${navbar("sticky")}`,
   </Navbar.Links>
 </Navbar>`,
 
-  controlledMenu: `{/* const [open, setOpen] = useState(false); */}
-<Navbar menuOpen={open} onMenuOpenChange={(next, { reason }) => setOpen(next)}>
+  controlledMenu: `{/* const [open, setOpen] = useState(false); and the reason for the last change: const [reason, setReason] = useState(""); */}
+<Navbar
+  collapseBelow="3xl"
+  menuOpen={open}
+  onMenuOpenChange={(next, details) => {
+    setOpen(next);
+    setReason(details.reason);
+  }}
+>
 ${brand}
 ${links}
 </Navbar>`,
 
-  rightToLeft: `{/* dir="rtl": the brand sits at the right, and menuSide="start" is the right edge. */}
-${navbar('dir="rtl" labels={{ menu: "القائمة", navigation: "الرئيسية", close: "إغلاق" }}')}`,
+  rightToLeft: `{/* dir="rtl": the brand sits at the right, and menuSide="start" is the right edge. This demo collapses below the widest step
+    ("3xl") so the panel shows on any window narrower than 1920px. */}
+${navbar('dir="rtl" collapseBelow="3xl" labels={{ menu: "القائمة", navigation: "الرئيسية", close: "إغلاق" }}')}`,
 } as const;
 
 /** The Playground's live controls, as far as the snippet cares. */
@@ -214,18 +258,23 @@ export interface NavbarPlaygroundSnippetArgs {
   currentVariant?: NavbarCurrentVariant;
   rounded?: boolean;
   size?: NavbarSize;
+  contained?: boolean;
   collapseBelow?: NavbarCollapseBelow;
   menuSide?: "start" | "end" | "top" | "bottom";
   closeMenuOnNavigate?: boolean;
-  contained?: boolean;
+  defaultMenuOpen?: boolean;
   sticky?: boolean;
   hideOnScroll?: boolean;
+  stickyOffset?: number;
   dir?: "ltr" | "rtl";
+  "aria-label"?: string;
+  id?: string;
 }
 
 /**
- * The Playground's snippet, built from its current controls: only the props that differ from their defaults,
- * around a small real bar.
+ * The Playground's snippet, built from its current controls: only the props that differ from their defaults, in the order the
+ * controls and the Properties table list them, around a small real bar. `hideOnScroll` and `stickyOffset` are written only while
+ * the bar is `sticky`, since they do nothing otherwise.
  */
 export function navbarPlaygroundSnippet(args: NavbarPlaygroundSnippetArgs): string {
   const attributes: string[] = [];
@@ -233,12 +282,18 @@ export function navbarPlaygroundSnippet(args: NavbarPlaygroundSnippetArgs): stri
   if (args.currentVariant && args.currentVariant !== "underline") attributes.push(`currentVariant="${args.currentVariant}"`);
   if (args.rounded) attributes.push("rounded");
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
+  if (args.contained) attributes.push("contained");
   if (args.collapseBelow && args.collapseBelow !== "md") attributes.push(`collapseBelow="${args.collapseBelow}"`);
   if (args.menuSide && args.menuSide !== "start") attributes.push(`menuSide="${args.menuSide}"`);
   if (args.closeMenuOnNavigate === false) attributes.push("closeMenuOnNavigate={false}");
-  if (args.contained) attributes.push("contained");
-  if (args.sticky) attributes.push("sticky");
-  if (args.hideOnScroll) attributes.push("hideOnScroll");
+  if (args.defaultMenuOpen) attributes.push("defaultMenuOpen");
+  if (args.sticky) {
+    attributes.push("sticky");
+    if (args.hideOnScroll) attributes.push("hideOnScroll");
+    if (args.stickyOffset) attributes.push(`stickyOffset={${args.stickyOffset}}`);
+  }
   if (args.dir === "rtl") attributes.push('dir="rtl"');
+  if (args["aria-label"]) attributes.push(`aria-label=${quote(args["aria-label"])}`);
+  if (args.id) attributes.push(`id=${quote(args.id)}`);
   return navbar(attributes.join(" "));
 }

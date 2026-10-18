@@ -1732,6 +1732,8 @@ describe("Playground snippet for Navbar", () => {
     { variant: "filled", size: "lg" },
     { currentVariant: "underline" },
     { sticky: true, hideOnScroll: true },
+    { sticky: true, hideOnScroll: true, stickyOffset: 6, defaultMenuOpen: true, "aria-label": 'Site "header" & more', id: "top" },
+    { hideOnScroll: true, stickyOffset: 6 },
     { rounded: true, currentVariant: "subtle" },
     { currentVariant: "solid", collapseBelow: "never", contained: true },
     { collapseBelow: "3xl", menuSide: "end", closeMenuOnNavigate: false },
@@ -1752,6 +1754,15 @@ describe("Playground snippet for Navbar", () => {
     expect(navbarPlaygroundSnippet({ dir: "rtl" })).toContain('<Navbar dir="rtl">');
     expect(navbarPlaygroundSnippet({ rounded: true })).toContain("<Navbar rounded>");
     expect(navbarPlaygroundSnippet({ sticky: true, hideOnScroll: true })).toContain("<Navbar sticky hideOnScroll>");
+    // `hideOnScroll` and `stickyOffset` need `sticky`, so they are written only with it
+    expect(navbarPlaygroundSnippet({ hideOnScroll: true, stickyOffset: 6 })).toMatch(/^<Navbar>\n/);
+    expect(navbarPlaygroundSnippet({ sticky: true, stickyOffset: 6 })).toContain("<Navbar sticky stickyOffset={6}>");
+    expect(navbarPlaygroundSnippet({ defaultMenuOpen: true, id: "top", "aria-label": "Site" })).toContain(
+      '<Navbar defaultMenuOpen aria-label="Site" id="top">',
+    );
+    // text with a quote or an ampersand is written as an expression, and an empty control writes nothing
+    expect(navbarPlaygroundSnippet({ "aria-label": 'A "b"' })).toContain('aria-label={"A \\"b\\""}');
+    expect(navbarPlaygroundSnippet({ "aria-label": "", id: "" })).toMatch(/^<Navbar>\n/);
     expect(navbarPlaygroundSnippet({ rounded: false })).toMatch(/^<Navbar>\n/);
     expect(navbarPlaygroundSnippet({ currentVariant: "underline" })).toMatch(/^<Navbar>\n/);
     expect(navbarPlaygroundSnippet({ currentVariant: "solid" })).toContain('<Navbar currentVariant="solid">');

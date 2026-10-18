@@ -1,26 +1,43 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
-import { useRef, useState } from "react";
-import type { ReactNode } from "react";
+import { Fragment, useRef, useState } from "react";
+import type { CSSProperties, ReactNode, RefObject } from "react";
+import type { SpaceValue } from "@dbm-design-system/primitives";
 import { navbarPlaygroundSnippet, navbarSnippets } from "./Navbar.snippets";
-import type { NavbarCollapseBelow, NavbarCurrentVariant, NavbarSize, NavbarVariant } from "./Navbar.types";
+import type { NavbarCollapseBelow, NavbarCurrentVariant, NavbarProps, NavbarSize, NavbarVariant } from "./Navbar.types";
 import { DemoNavbar, GalleryBar, NavbarStage, RouterDemoNavbar, NavbarViewModeContext, StickyDemo } from "./NavbarStoryKit";
 
-// Combines Navbar's root-level args in one Playground. Each sub-part gets its own Properties table from a hidden,
-// docs-only stories file (guidelines/adr/0013).
+// Navbar's root-level args in one Playground, every prop listed in the one order the Docs table uses: the ones a person can
+// edit have a control, and the rest (children, callbacks, refs, objects, the standard attributes) show as "–". Each sub-part
+// gets its own Properties table from a hidden, docs-only stories file (guidelines/adr/0013).
 interface PlaygroundArgs {
+  children?: ReactNode;
   variant: NavbarVariant;
   currentVariant: NavbarCurrentVariant;
   rounded: boolean;
   size: NavbarSize;
+  contained: boolean;
   collapseBelow: NavbarCollapseBelow;
   menuSide: "start" | "end" | "top" | "bottom";
   closeMenuOnNavigate: boolean;
-  contained: boolean;
+  menuOpen?: boolean;
+  defaultMenuOpen: boolean;
+  onMenuOpenChange: (open: boolean) => void;
+  onMenuOpenChangeComplete: (open: boolean) => void;
+  menuContainer?: HTMLElement | null;
   sticky: boolean;
   hideOnScroll: boolean;
+  stickyOffset: SpaceValue;
+  scrollContainerRef?: RefObject<HTMLElement | null>;
   dir: "ltr" | "rtl";
-  onMenuOpenChange: (open: boolean) => void;
+  labels?: NavbarProps["labels"];
+  "aria-label": string;
+  "aria-labelledby"?: string;
+  "aria-describedby"?: string;
+  id: string;
+  className?: string;
+  style?: CSSProperties;
+  "data-testid"?: string;
 }
 
 const playgroundSource = {
@@ -28,20 +45,29 @@ const playgroundSource = {
   transform: (_code: string, context: StoryContext) => navbarPlaygroundSnippet(context.args),
 };
 
-const noControls = {
-  variant: { control: false },
-  currentVariant: { control: false },
-  rounded: { control: false },
-  size: { control: false },
-  collapseBelow: { control: false },
-  menuSide: { control: false },
-  closeMenuOnNavigate: { control: false },
-  contained: { control: false },
-  sticky: { control: false },
-  hideOnScroll: { control: false },
-  dir: { control: false },
-  onMenuOpenChange: { control: false },
-} as const;
+/** The Playground's editable props, which every other story switches off (each shows one fixed arrangement). */
+const editableArgs = [
+  "variant",
+  "currentVariant",
+  "rounded",
+  "size",
+  "contained",
+  "collapseBelow",
+  "menuSide",
+  "closeMenuOnNavigate",
+  "defaultMenuOpen",
+  "sticky",
+  "hideOnScroll",
+  "stickyOffset",
+  "dir",
+  "aria-label",
+  "id",
+] as const;
+
+const noControls = Object.fromEntries(editableArgs.map((name) => [name, { control: false }])) as Record<
+  (typeof editableArgs)[number],
+  { control: false }
+>;
 
 // The stage is a box with a transform, so the menu panel and its scrim stay inside it (every Canvas on a Docs page shares
 // one document); the bar sits at the top of it, as it does in a page.
@@ -49,17 +75,26 @@ function Top({ children }: { children: ReactNode }) {
   return <div style={{ inlineSize: "100%", alignSelf: "start" }}>{children}</div>;
 }
 
+// Controls with no live editing, listed so the panel names every prop the bar takes.
+const readOnly = (description: string) => ({ control: false as const, description });
+
 const meta: Meta<PlaygroundArgs> = {
   title: "Organisms/Navigation/Navbar",
   parameters: { layout: "padded" },
   decorators: [
+    // `defaultMenuOpen` is only read when the bar mounts, so changing its control remounts the bar.
     (Story, context) => (
-      <NavbarViewModeContext.Provider value={context.viewMode === "docs" ? "docs" : "story"}>
-        <Story />
-      </NavbarViewModeContext.Provider>
+      <Fragment key={String(context.args.defaultMenuOpen)}>
+        <NavbarViewModeContext.Provider value={context.viewMode === "docs" ? "docs" : "story"}>
+          <Story />
+        </NavbarViewModeContext.Provider>
+      </Fragment>
     ),
   ],
   argTypes: {
+    children: readOnly(
+      "Navbar.Brand, Navbar.Links, Navbar.Actions and optionally Navbar.MenuButton, in reading order. The Playground draws a fixed bar.",
+    ),
     variant: {
       control: "select",
       options: ["outlined", "filled", "ghost"],
@@ -70,7 +105,7 @@ const meta: Meta<PlaygroundArgs> = {
       control: "select",
       options: ["underline", "subtle", "solid"],
       description:
-        "How the current page's link is marked: a tinted pill, a brand line under it, or a brand fill. aria-current is set whichever it is, and the look is the same in the phone panel.",
+        "How the current page's link is marked: a brand line under it, a tinted pill, or a brand fill. aria-current is set whichever it is, and the look is the same in the phone panel.",
       table: { defaultValue: { summary: '"underline"' } },
     },
     rounded: {
@@ -84,6 +119,11 @@ const meta: Meta<PlaygroundArgs> = {
       options: ["sm", "md", "lg"],
       description: "The bar's height: as tall as an IconButton of the same step plus room above and below.",
       table: { defaultValue: { summary: '"md"' } },
+    },
+    contained: {
+      control: "boolean",
+      description: "Keeps the content to the page's reading width with Container, centred.",
+      table: { defaultValue: { summary: "false" } },
     },
     collapseBelow: {
       control: "select",
@@ -103,11 +143,17 @@ const meta: Meta<PlaygroundArgs> = {
       description: "Closes the menu panel when a link in it is chosen.",
       table: { defaultValue: { summary: "true" } },
     },
-    contained: {
+    menuOpen: readOnly("The controlled open state of the menu panel. The Playground lets the bar manage it (see defaultMenuOpen)."),
+    defaultMenuOpen: {
       control: "boolean",
-      description: "Keeps the content to the page's reading width with Container, centred.",
+      description: "Starts with the menu panel open. Only read when the bar mounts, so changing it redraws the bar.",
       table: { defaultValue: { summary: "false" } },
     },
+    onMenuOpenChange: readOnly("Called with the new open state of the menu panel, and { reason }."),
+    onMenuOpenChangeComplete: readOnly("Called with true once the menu panel has finished opening and with false once it has finished closing."),
+    menuContainer: readOnly(
+      "The element the bar's overlays are drawn into instead of document.body. The Playground gives it its own frame.",
+    ),
     sticky: {
       control: "boolean",
       description:
@@ -116,40 +162,78 @@ const meta: Meta<PlaygroundArgs> = {
     },
     hideOnScroll: {
       control: "boolean",
+      if: { arg: "sticky" },
       description:
         "Hides a sticky bar while the reader scrolls down and brings it back on a scroll up. Needs sticky. The Playground's frame doesn't scroll, so see the Hides on scroll story.",
       table: { defaultValue: { summary: "false" } },
     },
+    stickyOffset: {
+      control: "select",
+      options: [0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32],
+      if: { arg: "sticky" },
+      description: "How far from the top a sticky bar sticks, from the spacing scale. No effect without sticky.",
+      table: { defaultValue: { summary: "0" } },
+    },
+    scrollContainerRef: readOnly(
+      "The scrollable container a sticky bar sticks within, if it isn't the page. The Sticky stories give it a box of their own.",
+    ),
     dir: {
       control: "radio",
       options: ["ltr", "rtl"],
       description: "The reading direction, passed to the bar and the menu panel. Not read from the page.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
-    onMenuOpenChange: {
-      control: false,
-      description: "Called with the new open state of the menu panel, and { reason }.",
+    labels: readOnly("The text the bar supplies itself: menu, navigation, close, skipLink and externalLink."),
+    "aria-label": {
+      control: "text",
+      description: "Names the banner landmark, for a page with more than one header. Empty leaves it unnamed.",
     },
+    "aria-labelledby": readOnly("The id of a visible element that names the banner landmark, in place of aria-label."),
+    "aria-describedby": readOnly("The id of a description for the bar."),
+    id: { control: "text", description: "Standard DOM id. Empty leaves it out." },
+    className: readOnly("Additional CSS classes, on the <header> element."),
+    style: readOnly("Inline styles, merged onto the component's own internal styles."),
+    "data-testid": readOnly(
+      "Test identifier for automated testing (e.g. Testing Library's getByTestId, Playwright/Cypress selectors). Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
+    ),
   },
+  // Storybook lists a Controls panel's props in the order of `args` first and the rest after, so every prop has an entry here, in the
+  // order the Docs table uses; the ones with no live control (`undefined`) still sit where the table puts them.
   args: {
+    children: undefined,
     variant: "outlined",
     currentVariant: "underline",
     rounded: false,
     size: "md",
+    contained: false,
     collapseBelow: "md",
     menuSide: "start",
     closeMenuOnNavigate: true,
-    contained: false,
+    menuOpen: undefined,
+    defaultMenuOpen: false,
+    onMenuOpenChange: fn(),
+    onMenuOpenChangeComplete: fn(),
+    menuContainer: undefined,
     sticky: false,
     hideOnScroll: false,
+    stickyOffset: 0,
+    scrollContainerRef: undefined,
     dir: "ltr",
-    onMenuOpenChange: fn(),
+    labels: undefined,
+    "aria-label": "",
+    "aria-labelledby": undefined,
+    "aria-describedby": undefined,
+    id: "",
+    className: undefined,
+    style: undefined,
+    "data-testid": undefined,
   },
-  render: (args) => (
+  // (an empty text control means "not set": it must not reach the bar as `aria-label=""` or `id=""`)
+  render: ({ "aria-label": ariaLabel, id, ...args }) => (
     <NavbarStage minBlockSize="22rem">
       {(menuContainer) => (
         <Top>
-          <DemoNavbar {...args} menuContainer={menuContainer} />
+          <DemoNavbar {...args} aria-label={ariaLabel || undefined} id={id || undefined} menuContainer={menuContainer} />
         </Top>
       )}
     </NavbarStage>
@@ -606,7 +690,7 @@ export const OnAPhone: Story = {
   // wide page like every other story, so narrow the window there.
   globals: { viewport: { value: "mobile1", isRotated: false } },
   argTypes: { ...noControls },
-  parameters: { docs: { source: { code: navbarSnippets.menu } } },
+  parameters: { docs: { source: { code: navbarSnippets.onAPhone } } },
   render: () => (
     <NavbarStage minBlockSize="26rem">
       {(menuContainer) => (

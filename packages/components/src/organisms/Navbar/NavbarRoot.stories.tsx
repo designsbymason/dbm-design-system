@@ -10,7 +10,8 @@ const meta: Meta<typeof Navbar> = {
   argTypes: {
     children: {
       control: false,
-      description: "Navbar.Brand, Navbar.Links, Navbar.Actions and optionally Navbar.MenuButton, in reading order.",
+      description:
+        "Navbar.SkipLink first if there is one, then Navbar.Brand, Navbar.Links, Navbar.Actions, and optionally Navbar.PanelActions (drawn only in the menu panel's footer) and Navbar.MenuButton, in reading order. Direct children: a part in a fragment isn't noticed for the automatic menu button or the panel's footer.",
     },
     variant: {
       control: "select",
@@ -22,7 +23,7 @@ const meta: Meta<typeof Navbar> = {
       control: "select",
       options: ["underline", "subtle", "solid"],
       description:
-        "How the current page's link is marked: a tinted pill, a brand line under it (a bar at the start edge in the phone panel), or a brand fill. One look for the whole bar, not overridable per link; aria-current is set whichever it is.",
+        "How the current page's link is marked: a brand line under it (a bar at the start edge in the phone panel), a tinted pill, or a brand fill. One look for the whole bar, not overridable per link; aria-current is set whichever it is.",
       table: { defaultValue: { summary: '"underline"' } },
     },
     rounded: {
@@ -37,12 +38,28 @@ const meta: Meta<typeof Navbar> = {
       description: "The bar's height: as tall as an IconButton of the same step plus room above and below.",
       table: { defaultValue: { summary: '"md"' } },
     },
+    contained: {
+      control: "boolean",
+      description: "Keeps the content to the page's reading width with Container, centred, instead of edge to edge.",
+      table: { defaultValue: { summary: "false" } },
+    },
     collapseBelow: {
       control: "select",
       options: ["sm", "md", "lg", "xl", "2xl", "3xl", "never"],
       description:
         "The width below which Navbar.Links leaves the bar and is offered in a menu behind a button. Decided by the stylesheet, so a server-rendered page is right at first paint.",
       table: { defaultValue: { summary: '"md"' } },
+    },
+    menuSide: {
+      control: "select",
+      options: ["start", "end", "top", "bottom"],
+      description: "Which edge the menu panel slides in from. start and end are logical and swap in right-to-left.",
+      table: { defaultValue: { summary: '"start"' } },
+    },
+    closeMenuOnNavigate: {
+      control: "boolean",
+      description: "Closes the menu panel when a link in it is chosen.",
+      table: { defaultValue: { summary: "true" } },
     },
     menuOpen: {
       control: "boolean",
@@ -63,30 +80,20 @@ const meta: Meta<typeof Navbar> = {
       description:
         "Called with true once the menu panel has finished opening and with false once it has finished closing and is out of the page. onMenuOpenChange says a change started; this says it is over.",
     },
-    menuSide: {
-      control: "select",
-      options: ["start", "end", "top", "bottom"],
-      description: "Which edge the menu panel slides in from. start and end are logical and swap in right-to-left.",
-      table: { defaultValue: { summary: '"start"' } },
-    },
     menuContainer: {
       control: false,
       description:
         "The element the bar's overlays are drawn into instead of the end of document.body: the menu panel with its scrim, and a group's floating menu. For a shadow root, or a frame.",
     },
-    closeMenuOnNavigate: {
-      control: "boolean",
-      description: "Closes the menu panel when a link in it is chosen.",
-      table: { defaultValue: { summary: "true" } },
-    },
-    contained: {
-      control: "boolean",
-      description: "Keeps the content to the page's reading width with Container, centred, instead of edge to edge.",
-      table: { defaultValue: { summary: "false" } },
-    },
     sticky: {
       control: "boolean",
       description: "Keeps the bar at the top of the page as it scrolls, with a surface behind it and a shadow while stuck.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    hideOnScroll: {
+      control: "boolean",
+      description:
+        "Hides a sticky bar while the reader scrolls down, and brings it back on a scroll up or near the top. It stays shown while anything in it has keyboard focus. Needs sticky; without it a development warning says so.",
       table: { defaultValue: { summary: "false" } },
     },
     stickyOffset: {
@@ -98,12 +105,6 @@ const meta: Meta<typeof Navbar> = {
     scrollContainerRef: {
       control: false,
       description: "The scrollable container a sticky bar sticks within, if it isn't the page. No effect without sticky.",
-    },
-    hideOnScroll: {
-      control: "boolean",
-      description:
-        "Hides a sticky bar while the reader scrolls down, and brings it back on a scroll up or near the top. It stays shown while anything in it has keyboard focus. Needs sticky; without it a development warning says so.",
-      table: { defaultValue: { summary: "false" } },
     },
     dir: {
       control: "radio",

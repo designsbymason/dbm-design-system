@@ -8,6 +8,7 @@ const meta: Meta<typeof Navbar.Brand> = {
   component: Navbar.Brand,
   tags: ["!dev"],
   argTypes: {
+    children: { control: "text", description: "The brand: a logo and a name. A logo that is an image needs its own alt." },
     href: {
       control: "text",
       description: "Where the brand links to, usually home. With an href the brand is an <a>; without one (and without asChild) a plain <div>.",
@@ -17,7 +18,6 @@ const meta: Meta<typeof Navbar.Brand> = {
       description: "Renders as a single provided child element (Radix Slot) instead of the built-in <a>/<div>, to use a router's link.",
       table: { defaultValue: { summary: "false" } },
     },
-    children: { control: "text", description: "The brand: a logo and a name. A logo that is an image needs its own alt." },
     "aria-label": { control: "text", description: "Names the brand for assistive tech when its content is only a logo." },
     id: { control: "text", description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },

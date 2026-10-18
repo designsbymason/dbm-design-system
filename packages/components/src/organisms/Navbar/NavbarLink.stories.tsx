@@ -8,7 +8,11 @@ const meta: Meta<typeof Navbar.Link> = {
   component: Navbar.Link,
   tags: ["!dev"],
   argTypes: {
-    children: { control: "text", description: "The link's text, and an icon if it has one." },
+    children: {
+      control: "text",
+      description:
+        "The link's text. With asChild, the child's own content instead (and then icon, badge and external are not drawn).",
+    },
     href: { control: "text", description: "Where the link goes. With asChild, put it on the child instead." },
     icon: {
       control: false,

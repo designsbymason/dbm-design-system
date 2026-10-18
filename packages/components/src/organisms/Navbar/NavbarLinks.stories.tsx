@@ -8,17 +8,17 @@ const meta: Meta<typeof Navbar.Links> = {
   component: Navbar.Links,
   tags: ["!dev"],
   argTypes: {
+    children: {
+      control: false,
+      description:
+        "Navbar.Link items. The same items are drawn in the bar and, below the collapse width, in the menu panel, so give them no id.",
+    },
     align: {
       control: "select",
       options: ["start", "center", "end"],
       description:
         "Where the links sit between the brand and the actions: next to the brand, centred in the room between them, or against the actions. Follows the reading direction; no effect in the menu panel.",
       table: { defaultValue: { summary: '"start"' } },
-    },
-    children: {
-      control: false,
-      description:
-        "Navbar.Link items. The same items are drawn in the bar and, below the collapse width, in the menu panel, so give them no id.",
     },
     "aria-label": {
       control: "text",

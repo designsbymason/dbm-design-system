@@ -55,9 +55,11 @@ export interface NavbarLabels {
 
 export interface NavbarProps extends Omit<ComponentPropsWithoutRef<"header">, "dir" | "children"> {
   /**
-   * The bar's contents, in reading order: `Navbar.Brand`, `Navbar.Links`, `Navbar.Actions`, and optionally
-   * `Navbar.MenuButton` to place the phone menu's button yourself. Parts are found among the direct children; a part
-   * wrapped in a fragment or another component still draws, but isn't noticed for the automatic menu button.
+   * The bar's contents, in reading order: `Navbar.SkipLink` first if there is one, then `Navbar.Brand`, `Navbar.Links`,
+   * `Navbar.Actions`, and optionally `Navbar.PanelActions` (drawn only in the menu panel's footer) and `Navbar.MenuButton` to place
+   * the phone menu's button yourself. `Navbar.Links` and `Navbar.PanelActions` and the menu button are found among the direct
+   * children; one wrapped in a fragment or another component still draws, but isn't noticed for the automatic menu button or
+   * the panel's footer.
    */
   children?: ReactNode;
   /**
@@ -84,12 +86,28 @@ export interface NavbarProps extends Omit<ComponentPropsWithoutRef<"header">, "d
    */
   size?: NavbarSize;
   /**
+   * Keeps the content to the page's reading width with `Container`, centred, instead of running edge to edge.
+   * @default false
+   */
+  contained?: boolean;
+  /**
    * The width below which `Navbar.Links` leaves the bar and is offered in a menu behind a button — see
    * {@link NavbarCollapseBelow}. The choice is a stylesheet's, not JavaScript's, so the first paint on a server-rendered
    * page is already right.
    * @default 'md'
    */
   collapseBelow?: NavbarCollapseBelow;
+  /**
+   * Which edge the phone menu slides in from. `"start"` and `"end"` are logical, so they swap in right-to-left text.
+   * @default 'start'
+   */
+  menuSide?: DrawerSide;
+  /**
+   * Closes the phone menu when a link in it is chosen, which is what a single-page app that doesn't reload needs. Turn it
+   * off for a menu whose links open a submenu or stay put.
+   * @default true
+   */
+  closeMenuOnNavigate?: boolean;
   /** The controlled open state of the phone menu. Omit (with `defaultMenuOpen`) to let the bar manage it. */
   menuOpen?: boolean;
   /**
@@ -109,21 +127,16 @@ export interface NavbarProps extends Omit<ComponentPropsWithoutRef<"header">, "d
    */
   onMenuOpenChangeComplete?: (open: boolean) => void;
   /**
-   * Which edge the phone menu slides in from. `"start"` and `"end"` are logical, so they swap in right-to-left text.
-   * @default 'start'
-   */
-  menuSide?: DrawerSide;
-  /**
-   * Closes the phone menu when a link in it is chosen, which is what a single-page app that doesn't reload needs. Turn it
-   * off for a menu whose links open a submenu or stay put.
-   * @default true
-   */
-  closeMenuOnNavigate?: boolean;
-  /**
    * The element the bar's overlays are drawn into instead of the end of `document.body`: the menu panel with its scrim, and the
    * floating menu of a `Navbar.Group`. For a shadow root, or a frame that should hold them. Leave it out for the usual page.
    */
   menuContainer?: HTMLElement | null;
+  /**
+   * Keeps the bar at the top of the page (or of `scrollContainerRef`) as the reader scrolls, with a surface behind it
+   * and a shadow while it is stuck. Built on `Affix`, the same as `Toolbar`'s and `Alert`'s `sticky`.
+   * @default false
+   */
+  sticky?: boolean;
   /**
    * Hides a sticky bar while the reader scrolls down, and brings it back as soon as they scroll up or are near the top, so it
    * costs no room while reading. It stays shown while anything in it has keyboard focus, so a keyboard user never loses it.
@@ -131,17 +144,6 @@ export interface NavbarProps extends Omit<ComponentPropsWithoutRef<"header">, "d
    * @default false
    */
   hideOnScroll?: boolean;
-  /**
-   * Keeps the content to the page's reading width with `Container`, centred, instead of running edge to edge.
-   * @default false
-   */
-  contained?: boolean;
-  /**
-   * Keeps the bar at the top of the page (or of `scrollContainerRef`) as the reader scrolls, with a surface behind it
-   * and a shadow while it is stuck. Built on `Affix`, the same as `Toolbar`'s and `Alert`'s `sticky`.
-   * @default false
-   */
-  sticky?: boolean;
   /**
    * How far from the top a sticky bar sticks, from the spacing token scale — for a page with a banner above it that is
    * also sticky. Has no effect without `sticky`.
@@ -187,6 +189,8 @@ export interface NavbarProps extends Omit<ComponentPropsWithoutRef<"header">, "d
 export type NavbarLinksAlign = "start" | "center" | "end";
 
 export interface NavbarBrandProps extends HTMLAttributes<HTMLElement> {
+  /** The brand: a logo and a name. A logo that is an image needs its own `alt`. */
+  children?: ReactNode;
   /**
    * Where the brand links to, usually the home page. With an `href` the brand is an `<a>`; without one (and without
    * `asChild`) it is a plain `<div>`.
@@ -198,8 +202,8 @@ export interface NavbarBrandProps extends HTMLAttributes<HTMLElement> {
    * @default false
    */
   asChild?: boolean;
-  /** The brand: a logo and a name. A logo that is an image needs its own `alt`. */
-  children?: ReactNode;
+  /** Names the brand for assistive tech when its content is only a logo. */
+  "aria-label"?: string;
   /** Standard DOM id. */
   id?: string;
   /** Additional CSS classes for customization. */
@@ -211,22 +215,20 @@ export interface NavbarBrandProps extends HTMLAttributes<HTMLElement> {
    * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
    */
   "data-testid"?: string;
-  /** Names the brand for assistive tech when its content is only a logo. */
-  "aria-label"?: string;
 }
 
 export interface NavbarLinksProps extends Omit<ComponentPropsWithoutRef<"nav">, "children" | "align"> {
+  /**
+   * `Navbar.Link` items. The same items are drawn in the bar and, below the `collapseBelow` width, in the menu panel, so
+   * give them no `id`: an id would be on the page twice while the menu is open.
+   */
+  children?: ReactNode;
   /**
    * Where the links sit between the brand and the actions: `"start"` (next to the brand), `"center"` (centred in the room
    * between them) or `"end"` (against the actions). Follows the reading direction. Has no effect in the menu panel.
    * @default 'start'
    */
   align?: NavbarLinksAlign;
-  /**
-   * `Navbar.Link` items. The same items are drawn in the bar and, below the `collapseBelow` width, in the menu panel, so
-   * give them no `id`: an id would be on the page twice while the menu is open.
-   */
-  children?: ReactNode;
   /** Names the navigation landmark. Defaults to `labels.navigation` ("Main"). */
   "aria-label"?: string;
   /** The `id` of a visible element that names the navigation, in place of `aria-label`. */
@@ -277,6 +279,8 @@ export interface NavbarLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEle
    * @default false
    */
   asChild?: boolean;
+  /** Names the link when its content is only an icon. */
+  "aria-label"?: string;
   /** Standard DOM id. Avoid it inside `Navbar.Links`, whose items can be on the page twice. */
   id?: string;
   /** Additional CSS classes, on the link element. */
@@ -288,8 +292,6 @@ export interface NavbarLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEle
    * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
    */
   "data-testid"?: string;
-  /** Names the link when its content is only an icon. */
-  "aria-label"?: string;
 }
 
 export interface NavbarGroupProps extends Omit<ComponentPropsWithoutRef<"button">, "children" | "type"> {

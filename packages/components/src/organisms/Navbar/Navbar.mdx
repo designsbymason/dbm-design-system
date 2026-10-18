@@ -20,19 +20,19 @@ export const propOrder = [
   "currentVariant",
   "rounded",
   "size",
+  "contained",
   "collapseBelow",
+  "menuSide",
+  "closeMenuOnNavigate",
   "menuOpen",
   "defaultMenuOpen",
   "onMenuOpenChange",
   "onMenuOpenChangeComplete",
-  "menuSide",
   "menuContainer",
-  "closeMenuOnNavigate",
-  "contained",
   "sticky",
+  "hideOnScroll",
   "stickyOffset",
   "scrollContainerRef",
-  "hideOnScroll",
   "dir",
   "labels",
   "aria-label",
@@ -48,16 +48,19 @@ export const playgroundOrder = [
   "currentVariant",
   "rounded",
   "size",
+  "contained",
   "collapseBelow",
   "menuSide",
   "closeMenuOnNavigate",
-  "contained",
+  "defaultMenuOpen",
   "sticky",
   "hideOnScroll",
+  "stickyOffset",
   "dir",
-  "onMenuOpenChange",
+  "aria-label",
+  "id",
 ];
-export const brandPropOrder = ["href", "asChild", "children", "aria-label", "id", "className", "style", "data-testid"];
+export const brandPropOrder = ["children", "href", "asChild", "aria-label", "id", "className", "style", "data-testid"];
 export const linksPropOrder = ["children", "align", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
 export const linkPropOrder = ["children", "href", "icon", "badge", "external", "current", "disabled", "asChild", "aria-label", "id", "className", "style", "data-testid"];
 export const groupPropOrder = ["label", "children", "current", "defaultOpen", "disabled", "align", "aria-label", "id", "className", "style", "data-testid"];
@@ -366,8 +369,8 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 
 ## Best practices
 
-- The bar is a `<header>` (a banner landmark) holding a `<nav>`. Your page's skip link belongs before
-  it, pointing at the `main` landmark; the bar doesn't own that target (see the recipe below).
+- The bar is a `<header>` (a banner landmark) holding a `<nav>`. Its skip link, `Navbar.SkipLink`, goes first in the bar and
+  points at the `main` landmark, which the bar doesn't own (see the examples below).
 - Links are ordinary tab stops, in reading order: brand, links, actions, then the menu button.
 - The collapse follows the window width, so a narrow window on a desktop gets the same menu a phone does.
   If the panel is open when the window grows past the step, it closes.
@@ -427,6 +430,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 
 ```tsx
 <Navbar sticky>
+  <Navbar.SkipLink href="#main" />
   <Navbar.Brand href="/">dbM</Navbar.Brand>
   <Navbar.Links>
     <Navbar.Link href="/products" current>
@@ -439,9 +443,10 @@ This story is shown at a phone's width when opened on its own; on this page, nar
     <Button size="sm">Sign in</Button>
   </Navbar.Actions>
 </Navbar>
+<main id="main" tabIndex={-1}>…</main>
 
-{/* Collapse later, and keep the page's own width */}
-<Navbar collapseBelow="lg" contained>
+{/* Collapse later, keep the page's own width, and mark the current link with a pill */}
+<Navbar collapseBelow="lg" contained rounded currentVariant="subtle">
   …
 </Navbar>
 
@@ -459,18 +464,50 @@ This story is shown at a phone's width when opened on its own; on this page, nar
   </Navbar.Group>
 </Navbar.Links>
 
+{/* An icon, a count in the link's name, and an external destination */}
+<Navbar.Link href="/inbox" icon={BellIcon} badge="3">Inbox</Navbar.Link>
+<Navbar.Link href="https://status.example.com">Status</Navbar.Link>
+
 {/* A button drawn as a link: it leaves the phone panel open, where a link closes it */}
 <Navbar.Link asChild>
   <button type="button" onClick={openSearch}>Search</button>
 </Navbar.Link>
 
-{/* A skip link, before the bar: it jumps to the page's main landmark */}
-<a href="#main" className="skip-link">Skip to content</a>
-<Navbar>…</Navbar>
-<main id="main">…</main>
+{/* An action that leaves the bar on a phone and comes back at the foot of the menu panel */}
+<Navbar>
+  <Navbar.Links>…</Navbar.Links>
+  <Navbar.Actions>
+    <Navbar.Action hideBelow="md">
+      <Button size="sm">Sign in</Button>
+    </Navbar.Action>
+  </Navbar.Actions>
+  <Navbar.PanelActions>
+    <Button>Sign in</Button>
+  </Navbar.PanelActions>
+</Navbar>
 
-{/* Open the menu from your own state */}
-<Navbar menuOpen={open} onMenuOpenChange={(next, { reason }) => setOpen(next)}>
+{/* Links centred between the brand and the actions */}
+<Navbar.Links align="center">…</Navbar.Links>
+
+{/* Transparent over a hero until it sticks, and out of the way while reading */}
+<Navbar sticky variant="ghost" hideOnScroll>
+  …
+</Navbar>
+
+{/* Open the menu from your own state, and say when it has finished */}
+<Navbar
+  menuOpen={open}
+  onMenuOpenChange={(next, { reason }) => {
+    setOpen(next);
+    track(reason);
+  }}
+  onMenuOpenChangeComplete={(isOpen) => !isOpen && resetSearch()}
+>
+  …
+</Navbar>
+
+{/* Translate what the bar writes itself */}
+<Navbar labels={{ menu: "Menu", navigation: "Main", close: "Close", skipLink: "Skip to content", externalLink: "(opens in a new tab)" }}>
   …
 </Navbar>
 
