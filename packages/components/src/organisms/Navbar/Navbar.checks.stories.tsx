@@ -1405,6 +1405,61 @@ export const ColumnsStoryButtonsAreMedium: Story = {
   },
 };
 
+// A real pointer, through the Chrome DevTools Protocol: Storybook's `userEvent` sends synthetic events, which never set `:hover`.
+// The test page scales its iframe, so a point inside the story is mapped to the page it is drawn on.
+async function pointAt(element: Element | null) {
+  const rect = element?.getBoundingClientRect();
+  const frame = window.frameElement?.getBoundingClientRect();
+  const scale = frame ? frame.width / window.innerWidth : 1;
+  const x = (frame?.left ?? 0) + (rect ? rect.left + rect.width / 2 : -10) * scale;
+  const y = (frame?.top ?? 0) + (rect ? rect.top + rect.height / 2 : -10) * scale;
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
+}
+
+export const LinkHoverIsBrand: Story = {
+  name: "A hovered link's text and icon turn brand-coloured on the brand tint, with the contrast text needs",
+  render: () => (
+    <NavbarStage minBlockSize="14rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+          <DemoNavbar menuContainer={menuContainer} extras />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const brandText = tokenColorOf("--dbm-text-brand");
+    const links = ["Pricing", "Docs"].map((name) => canvas.getByRole("link", { name: new RegExp(name) }));
+    for (const link of links) {
+      const resting = getComputedStyle(link).color;
+      expect(resting).not.toBe(brandText);
+      await pointAt(link);
+      await waitFor(() => expect(getComputedStyle(link).color).toBe(brandText));
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      const style = getComputedStyle(link);
+      expect(style.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+      expect(contrast(style.color, style.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+      // the icon takes the link's colour, so it is brand-coloured too
+      const icon = link.querySelector("svg");
+      if (icon) expect(getComputedStyle(icon).color).toBe(brandText);
+      await pointAt(null);
+      await waitFor(() => expect(getComputedStyle(link).color).toBe(resting));
+    }
+    // the current link (Products, drawn in the underline look by default) turns brand-coloured under the pointer as well
+    const current = canvas.getByRole("link", { name: "Products" });
+    expect(current).toHaveAttribute("aria-current", "page");
+    expect(getComputedStyle(current).color).not.toBe(brandText);
+    await pointAt(current);
+    await waitFor(() => expect(getComputedStyle(current).color).toBe(brandText));
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(contrast(getComputedStyle(current).color, getComputedStyle(current).backgroundColor)).toBeGreaterThanOrEqual(4.5);
+    await pointAt(null);
+    // the Docs link has an icon in this bar, so the loop above read one at least once
+    expect(canvas.getByRole("link", { name: /Docs/ }).querySelector("svg")).not.toBeNull();
+  },
+};
+
 export const ColumnsAreFlowAboveTheStep: Story = {
   name: "Above the step the parts flow as they do without columns",
   render: () => <ColumnsBar columns="balanced" />,
