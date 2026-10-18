@@ -183,10 +183,10 @@ ${navbar('currentVariant="solid"')}`,
 <Navbar>
   <Navbar.Row columns="balanced">
     <Navbar.Brand href="/">dbM</Navbar.Brand>
-    <Navbar.Search aria-label="Search products" size="sm" buttonVariant="tertiary" />
+    <Navbar.Search aria-label="Search products" size="sm" buttonVariant="tertiary" buttonSize="md" />
     <Navbar.Actions>
-      <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="sm" />
-      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="sm" />
+      <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="md" />
+      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="md" />
     </Navbar.Actions>
   </Navbar.Row>
 </Navbar>
@@ -198,7 +198,7 @@ ${navbar('currentVariant="solid"')}`,
     <Navbar.Brand href="/" column="start">dbM</Navbar.Brand>
     <Navbar.Search aria-label="Search help" column="center" size="sm" collapseBelow="never" />
     <Navbar.Actions>
-      <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="sm" />
+      <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="md" />
     </Navbar.Actions>
   </Navbar.Row>
 </Navbar>`,
@@ -207,7 +207,8 @@ ${navbar('currentVariant="solid"')}`,
     line between sets; a row that held only links goes with them. This demo collapses below the widest step ("3xl") so the panel shows
     on any window narrower than 1920px; an app picks the step that suits its links. Put Navbar.MenuButton where you want it (here
     after the buttons, drawn first in its column with the search button beside it and the logo centred between them and the buttons); without one, the button goes at the
-    end of the row with the brand. */}
+    end of the row with the brand. The icon buttons keep the brand tone here (tone="neutral" would grey them). current marks the page the
+    reader is on, from your router (here a page variable): choosing a link makes it current, in the bar and in the panel. */}
 <Navbar collapseBelow="3xl">
   <Navbar.Row size="xs" variant="outlined" sticky={false}>
     <Navbar.Links aria-label="Help" quiet align="end">
@@ -220,18 +221,18 @@ ${navbar('currentVariant="solid"')}`,
     <Navbar.Brand href="/">
       dbM
     </Navbar.Brand>
-    <Navbar.Search size="sm" buttonVariant="tertiary" buttonTone="neutral" buttonSize="md" collapseBelow="3xl" style={{ marginInline: "auto" }} />
+    <Navbar.Search size="sm" buttonVariant="tertiary" buttonSize="md" collapseBelow="3xl" style={{ marginInline: "auto" }} />
     <Navbar.Actions style={{ marginInlineStart: 0 }}>
       <span className="labelled">
-        <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" tone="neutral" size="md" />
+        <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="md" />
         <span className="caption" aria-hidden="true">Account</span>
       </span>
       <span className="labelled">
-        <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" tone="neutral" size="md" />
+        <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="md" />
         <span className="caption" aria-hidden="true">Cart</span>
       </span>
     </Navbar.Actions>
-    <Navbar.MenuButton variant="tertiary" tone="neutral" size="md" />
+    <Navbar.MenuButton variant="tertiary" size="md" />
   </Navbar.Row>
   <Navbar.Row size="sm" variant="outlined">
     <Navbar.Links
@@ -239,31 +240,52 @@ ${navbar('currentVariant="solid"')}`,
       align="center"
       style={{ fontSize: "var(--dbm-font-size-sm)", fontWeight: "var(--dbm-font-weight-bold)", textTransform: "uppercase" }}
     >
-      <Navbar.Link href="/women">Women</Navbar.Link>
-      <Navbar.Link href="/men">Men</Navbar.Link>
-      <Navbar.Link href="/kids">Kids</Navbar.Link>
-      <Navbar.Link href="/sale">Sale</Navbar.Link>
+      <Navbar.Link href="/women" current={page === "women"}>Women</Navbar.Link>
+      <Navbar.Link href="/men" current={page === "men"}>Men</Navbar.Link>
+      <Navbar.Link href="/kids" current={page === "kids"}>Kids</Navbar.Link>
+      <Navbar.Link href="/sale" current={page === "sale"}>Sale</Navbar.Link>
     </Navbar.Links>
   </Navbar.Row>
 </Navbar>`,
 
   search: `{/* Navbar.Search is a role="search" landmark around a SearchInput; it takes the room between its neighbours. Below collapseBelow
     ("md" by default) it is a button that opens the field in a sheet from the top, with a small heading and a field. This demo uses the
-    widest step ("3xl"). buttonVariant is the button's look, to match the icon buttons beside it. The bar's field and the sheet's are two
-    inputs, so pass value and onChange to keep them in step. */}
+    widest step ("3xl"), and puts the button in the same group as the account and cart buttons (inside Navbar.Actions), each with a
+    caption under it: your own markup and CSS, as IconButton has no visible label (a column, the caption aria-hidden since the
+    button's own name says it, and the search wrapper's flex set to none so it sits as the others do). With no links there is
+    no menu button and no courtesy or primary row. buttonVariant, buttonTone and buttonSize are the button's look, to match the icon
+    buttons beside it. The bar's field and the sheet's are two inputs, so pass value and onChange to keep them in step. */}
 <Navbar>
-  <Navbar.Brand href="/">dbM</Navbar.Brand>
-  <Navbar.Search
-    size="sm"
-    buttonVariant="tertiary"
-    collapseBelow="3xl"
-    placeholder="Search products"
-    onSearch={(query) => search(query)}
-  />
+  <Navbar.Row size="lg" variant="outlined">
+    <Navbar.Brand href="/">dbM</Navbar.Brand>
+    <Navbar.Actions>
+      <span className="labelled">
+        <Navbar.Search
+          size="sm"
+          buttonVariant="tertiary"
+          buttonSize="md"
+          collapseBelow="3xl"
+          placeholder="Search products"
+          style={{ flex: "none" }}
+          onSearch={(query) => search(query)}
+        />
+        <span className="caption" aria-hidden="true">Search</span>
+      </span>
+      <span className="labelled">
+        <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="md" />
+        <span className="caption" aria-hidden="true">Account</span>
+      </span>
+      <span className="labelled">
+        <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="md" />
+        <span className="caption" aria-hidden="true">Cart</span>
+      </span>
+    </Navbar.Actions>
+  </Navbar.Row>
 </Navbar>`,
 
   rowsSticky: `{/* In a sticky bar, a leading row with sticky={false} scrolls away while the rest stays at the top. Only leading rows can: the bar
-    sticks as one box. boxRef is the scrolling box, as in the sticky example. */}
+    sticks as one box. boxRef is the scrolling box, as in the sticky example. The icon buttons have no captions here, and the primary links are current as
+    the reader moves between pages (page is yours, from your router). */}
 <Navbar sticky scrollContainerRef={boxRef}>
   <Navbar.Row size="xs" variant="outlined" sticky={false}>
     <Navbar.Links aria-label="Help" quiet align="end">
@@ -277,17 +299,14 @@ ${navbar('currentVariant="solid"')}`,
     </Navbar.Brand>
     <Navbar.Search size="sm" buttonVariant="tertiary" buttonTone="neutral" buttonSize="md" style={{ marginInline: "auto" }} />
     <Navbar.Actions style={{ marginInlineStart: 0 }}>
-      <span className="labelled">
-        <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" tone="neutral" size="md" />
-        <span className="caption" aria-hidden="true">Account</span>
-      </span>
+      <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" tone="neutral" size="md" />
     </Navbar.Actions>
     <Navbar.MenuButton variant="tertiary" tone="neutral" size="md" />
   </Navbar.Row>
   <Navbar.Row size="sm" variant="outlined">
     <Navbar.Links aria-label="Categories" align="center">
-      <Navbar.Link href="/women">Women</Navbar.Link>
-      <Navbar.Link href="/men">Men</Navbar.Link>
+      <Navbar.Link href="/women" current={page === "women"}>Women</Navbar.Link>
+      <Navbar.Link href="/men" current={page === "men"}>Men</Navbar.Link>
     </Navbar.Links>
   </Navbar.Row>
 </Navbar>`,

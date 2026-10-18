@@ -921,7 +921,9 @@ export const RowsLayout: Story = {
     expect(field.getBoundingClientRect().left - icon.getBoundingClientRect().right).toBeGreaterThanOrEqual(4);
     // and with room to spare it takes the most it is allowed, centred in the room between the brand and the buttons
     expect(Math.abs(search.width - tokenPx("--dbm-navbar-search-max-width") * 16)).toBeLessThan(2);
-    expect(Math.abs(search.left - brand.right - (actions.left - search.right))).toBeLessThan(2);
+    // measured to the actions' own box: a caption wider than its button (a wider font, as on Linux) centres the button in a wider cell
+    const actionsBox = within(main).getByRole("button", { name: "Account" }).closest("div")!.getBoundingClientRect();
+    expect(Math.abs(search.left - brand.right - (actionsBox.left - search.right))).toBeLessThan(2);
     // the courtesy links sit at the end of their row, quieter than the categories
     const help = within(courtesy).getByRole("navigation", { name: "Help" }).getBoundingClientRect();
     expect(courtesy.getBoundingClientRect().right - help.right).toBeLessThan(40);
@@ -1223,6 +1225,147 @@ export const ColumnsStayInTheirTracks: Story = {
     // the field's room is the free track, which at this width is narrower than the field's usual minimum, so it gives way
     expect(field.left - brand.right).toBeGreaterThanOrEqual(gap - 1);
     expect(account.left - field.right).toBeGreaterThanOrEqual(gap - 1);
+  },
+};
+
+/** A colour token as the browser computes it, to compare with what an element is drawn in. */
+function tokenColorOf(name: string): string {
+  const probe = document.createElement("span");
+  probe.style.color = `var(${name})`;
+  document.body.append(probe);
+  const color = getComputedStyle(probe).color;
+  probe.remove();
+  return color;
+}
+
+export const PanelStoryIsBrandAndFollowsClicks: Story = {
+  name: "The panel story's icon buttons are brand-coloured, and the primary link last clicked is the current one, in the panel",
+  render: () => (
+    <NavbarStage minBlockSize="34rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+          <DemoRowsNavbar collapseBelow="3xl" searchCollapseBelow="3xl" iconTone="brand" navigable menuContainer={menuContainer} />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const brand = tokenColorOf("--dbm-icon-brand");
+    expect(brand).not.toBe(tokenColorOf("--dbm-icon-default"));
+    for (const selector of ['button[aria-label="Menu"]', 'button[aria-label="Search"]', 'button[aria-label="Account"]', 'button[aria-label^="Cart"]']) {
+      expect(getComputedStyle(canvasElement.querySelector<HTMLElement>(selector)!).color).toBe(brand);
+    }
+    const open = async () => {
+      await userEvent.click(canvasElement.querySelector<HTMLButtonElement>('button[aria-label="Menu"]')!);
+      const panel = await canvas.findByRole("dialog", { name: "Menu" });
+      await waitFor(() => expect(panel.getAnimations().every((animation) => animation.playState === "finished")).toBe(true));
+      return panel;
+    };
+    // none is current to begin with, as on a home page; choosing one makes it current and the panel closes, and the mark is still there when it reopens
+    let panel = await open();
+    expect(panel.querySelector('[aria-current="page"]')).toBeNull();
+    await userEvent.click(within(panel).getByRole("link", { name: "Men" }));
+    await waitFor(() => expect(canvas.queryByRole("dialog")).not.toBeInTheDocument());
+    panel = await open();
+    expect(within(panel).getByRole("link", { name: "Men" })).toHaveAttribute("aria-current", "page");
+    expect(panel.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
+    // and choosing another moves it
+    await userEvent.click(within(panel).getByRole("link", { name: "Kids" }));
+    await waitFor(() => expect(canvas.queryByRole("dialog")).not.toBeInTheDocument());
+    panel = await open();
+    expect(within(panel).getByRole("link", { name: "Kids" })).toHaveAttribute("aria-current", "page");
+    expect(within(panel).getByRole("link", { name: "Men" })).not.toHaveAttribute("aria-current");
+    await userEvent.keyboard("{Escape}");
+    // end with the panel gone: an accessibility check run mid-exit sees the page still hidden behind it
+    await waitFor(() => expect(canvas.queryByRole("dialog")).not.toBeInTheDocument());
+  },
+};
+
+export const SearchSheetStoryLayout: Story = {
+  name: "The search story is one row, the search button grouped with the account and cart buttons, each with a caption, all brand-coloured",
+  render: () => (
+    <NavbarStage minBlockSize="24rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+          <DemoRowsNavbar
+            searchCollapseBelow="3xl"
+            collapseBelow="never"
+            iconTone="brand"
+            courtesyRow={false}
+            primaryRow={false}
+            searchWithActions
+            menuContainer={menuContainer}
+          />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const header = canvas.getByRole("banner");
+    // no courtesy row, no row of primary links, and so no menu button either
+    expect(rows(header)).toHaveLength(1);
+    expect(canvasElement.querySelector('button[aria-label="Menu"]')).toBeNull();
+    const search = canvas.getByLabelText("Search", { selector: "button" });
+    const account = canvas.getByRole("button", { name: "Account" });
+    const cart = canvas.getByRole("button", { name: /^Cart/ });
+    // the three buttons are in the one group, in order, and are drawn in the brand's icon colour
+    const group = account.closest("div")!;
+    expect(group.contains(search)).toBe(true);
+    expect(group.contains(cart)).toBe(true);
+    const [searchBox, accountBox, cartBox] = [search, account, cart].map((button) => button.getBoundingClientRect()) as [DOMRect, DOMRect, DOMRect];
+    expect(searchBox.right).toBeLessThanOrEqual(accountBox.left);
+    expect(accountBox.right).toBeLessThanOrEqual(cartBox.left);
+    for (const button of [search, account, cart]) expect(getComputedStyle(button).color).toBe(tokenColorOf("--dbm-icon-brand"));
+    // each has a caption under it, for the eye only
+    for (const [name, button] of [["Search", search], ["Account", account], ["Cart", cart]] as const) {
+      const caption = within(group).getByText(name);
+      expect(caption).toHaveAttribute("aria-hidden", "true");
+      expect(getComputedStyle(caption).display).not.toBe("none");
+      expect(caption.getBoundingClientRect().top).toBeGreaterThan(button.getBoundingClientRect().top + button.getBoundingClientRect().height / 2);
+    }
+    // the search button opens the sheet
+    await userEvent.click(search);
+    expect(await canvas.findByRole("dialog", { name: "Search" })).toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(canvas.queryByRole("dialog")).not.toBeInTheDocument());
+  },
+};
+
+export const ScrollAwayStoryHasNoCaptionsAndFollowsClicks: Story = {
+  name: "The scroll-away story's icon buttons have no captions, and the primary link last clicked is the current one",
+  render: function Render() {
+    const boxRef = useRef<HTMLDivElement | null>(null);
+    return (
+      <StickyDemo boxRef={boxRef}>
+        {(ref) => <DemoRowsNavbar sticky labels={false} navigable scrollContainerRef={ref} />}
+      </StickyDemo>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const header = canvas.getByRole("banner");
+    expect(canvas.queryByText("Account")).toBeNull();
+    expect(canvas.queryByText("Cart")).toBeNull();
+    expect(header.querySelector('[aria-current="page"]')).toBeNull();
+    await userEvent.click(within(header).getByRole("link", { name: "Men" }));
+    expect(within(header).getByRole("link", { name: "Men" })).toHaveAttribute("aria-current", "page");
+    await userEvent.click(within(header).getByRole("link", { name: "Sale" }));
+    expect(within(header).getByRole("link", { name: "Sale" })).toHaveAttribute("aria-current", "page");
+    expect(within(header).getByRole("link", { name: "Men" })).not.toHaveAttribute("aria-current");
+    expect(header.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
+  },
+};
+
+export const ColumnsStoryButtonsAreMedium: Story = {
+  name: "The columns story's icon buttons are the medium size, one step up",
+  render: () => <NavbarStage minBlockSize="16rem">{(menuContainer) => <DemoColumnsBars menuContainer={menuContainer} />}</NavbarStage>,
+  play: async ({ canvasElement }) => {
+    const medium = Math.round(tokenPx("--dbm-icon-button-size-md"));
+    const buttons = [...canvasElement.querySelectorAll<HTMLElement>("header button")];
+    expect(buttons.length).toBeGreaterThanOrEqual(4);
+    for (const button of buttons) expect(Math.round(button.getBoundingClientRect().height)).toBe(medium);
   },
 };
 

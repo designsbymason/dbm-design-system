@@ -450,7 +450,7 @@ export const RowsInThePanel: Story = {
     <NavbarStage minBlockSize="32rem">
       {(menuContainer) => (
         <Top>
-          <DemoRowsNavbar collapseBelow="3xl" searchCollapseBelow="3xl" menuContainer={menuContainer} />
+          <DemoRowsNavbar collapseBelow="3xl" searchCollapseBelow="3xl" iconTone="brand" navigable menuContainer={menuContainer} />
         </Top>
       )}
     </NavbarStage>
@@ -465,7 +465,15 @@ export const SearchOnAPhone: Story = {
     <NavbarStage minBlockSize="24rem">
       {(menuContainer) => (
         <Top>
-          <DemoRowsNavbar searchCollapseBelow="3xl" collapseBelow="never" menuContainer={menuContainer} />
+          <DemoRowsNavbar
+            searchCollapseBelow="3xl"
+            collapseBelow="never"
+            iconTone="brand"
+            courtesyRow={false}
+            primaryRow={false}
+            searchWithActions
+            menuContainer={menuContainer}
+          />
         </Top>
       )}
     </NavbarStage>
@@ -480,7 +488,7 @@ export const RowsScrollAway: Story = {
     const boxRef = useRef<HTMLDivElement | null>(null);
     return (
       <StickyDemo boxRef={boxRef}>
-        {(ref) => <DemoRowsNavbar sticky scrollContainerRef={ref} />}
+        {(ref) => <DemoRowsNavbar sticky labels={false} navigable scrollContainerRef={ref} />}
       </StickyDemo>
     );
   },

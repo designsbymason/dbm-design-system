@@ -3,6 +3,7 @@ import { cx } from "@dbm-design-system/primitives";
 import { useState } from "react";
 import type { MouseEvent, ReactNode, RefObject } from "react";
 import { Button } from "../../atoms/Button";
+import type { ButtonTone } from "../../atoms/Button";
 import { IconButton } from "../../atoms/IconButton";
 import { Text } from "../../atoms/Text";
 import { SearchInput } from "../../molecules/SearchInput";
@@ -160,16 +161,28 @@ const captionClass = {
   never: styles.captionAlways,
 } as const;
 
-/** An icon button with a short caption under it, drawn at and above `step` (the width the demo's row leaves its columns at). */
-function LabelledButton({ caption, step, ...props }: React.ComponentProps<typeof IconButton> & { caption: string; step: keyof typeof captionClass }) {
+type CaptionStep = keyof typeof captionClass;
+
+/** A control with a short caption under it, drawn at and above `step` (the width the demo's row leaves its columns at). The caption is for the eye only: the control's own name says it. */
+function Captioned({ caption, step, children }: { caption: string; step: CaptionStep; children: ReactNode }) {
   return (
     <span className={styles.labelled}>
-      <IconButton {...props} />
-      {/* the button's own name says it, so the caption is for the eye only */}
+      {children}
       <span aria-hidden="true" className={cx(styles.caption, captionClass[step])}>
         {caption}
       </span>
     </span>
+  );
+}
+
+/** An icon button, with a caption under it when `caption` is given. */
+function DemoIconButton({ caption, step, ...props }: React.ComponentProps<typeof IconButton> & { caption?: string; step: CaptionStep }) {
+  return caption === undefined ? (
+    <IconButton {...props} />
+  ) : (
+    <Captioned caption={caption} step={step}>
+      <IconButton {...props} />
+    </Captioned>
   );
 }
 
@@ -187,10 +200,10 @@ export function DemoColumnsBars({ menuContainer }: { menuContainer?: HTMLElement
             <Navbar.Brand href="#" onClick={preventNavigation}>
               dbM
             </Navbar.Brand>
-            <Navbar.Search aria-label="Search products" size="sm" buttonVariant="tertiary" collapseBelow="3xl" />
+            <Navbar.Search aria-label="Search products" size="sm" buttonVariant="tertiary" buttonSize="md" collapseBelow="3xl" />
             <Navbar.Actions>
-              <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="sm" />
-              <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="sm" />
+              <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="md" />
+              <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="md" />
             </Navbar.Actions>
           </Navbar.Row>
         </Navbar>
@@ -203,7 +216,7 @@ export function DemoColumnsBars({ menuContainer }: { menuContainer?: HTMLElement
             </Navbar.Brand>
             <Navbar.Search aria-label="Search help" column="center" size="sm" collapseBelow="never" />
             <Navbar.Actions>
-              <IconButton icon={UserCircleIcon} aria-label="Help account" variant="tertiary" size="sm" />
+              <IconButton icon={UserCircleIcon} aria-label="Help account" variant="tertiary" size="md" />
             </Navbar.Actions>
           </Navbar.Row>
         </Navbar>
@@ -212,79 +225,119 @@ export function DemoColumnsBars({ menuContainer }: { menuContainer?: HTMLElement
   );
 }
 
+/** What a story of the rows demo sets, beyond the bar's own props. Each story passes its own, so none changes another. */
+export interface DemoRowsOptions {
+  /** Where the search field gives way to a button, as `Navbar.Search`'s `collapseBelow`. */
+  searchCollapseBelow?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "never";
+  /** The colour family of the icon buttons (the menu, search, account and cart buttons). @default 'neutral' */
+  iconTone?: ButtonTone;
+  /** A caption under the account and cart buttons (and the search button, with `searchWithActions`). @default true */
+  labels?: boolean;
+  /** The courtesy strip, the first row. @default true */
+  courtesyRow?: boolean;
+  /** The row of primary links, the third. @default true */
+  primaryRow?: boolean;
+  /** Draws the search as a button in the same group as the account and cart buttons, instead of between the logo and them. @default false */
+  searchWithActions?: boolean;
+  /** Marks a primary link current when it is clicked, as a router would on moving between pages; with this off none is current, as on a home page. @default false */
+  navigable?: boolean;
+}
+
 /**
  * A multi-row header, laid out the way a shop's is: a thin courtesy strip (which scrolls away when the bar is sticky); a taller row with the
- * logo, a small search field centred between them and the brand and medium tertiary icon buttons with a caption under each on a wide window, which on a phone (`columns`) puts the menu button and the search button at the
- * start, the logo in the centre and the other buttons at the end; and a smaller row of primary links, centred, in bold capitals, with none marked current (the
- * visitor is on the home page). The sets of links are named so each landmark has its own name.
+ * logo, a small search field centred between them and the brand and medium icon buttons with a caption under each on a wide window, which on
+ * a phone (`columns`) puts the menu button and the search button at the start, the logo in the centre and the other buttons at the end; and a
+ * smaller row of primary links, centred, in bold capitals, with none marked current (the visitor is on the home page) unless `navigable`.
+ * The sets of links are named so each landmark has its own name. The options let a story show a variation of it without changing the others.
  */
 export function DemoRowsNavbar({
   menuContainer,
   searchCollapseBelow,
   collapseBelow = "md",
+  iconTone = "neutral",
+  labels = true,
+  courtesyRow = true,
+  primaryRow = true,
+  searchWithActions = false,
+  navigable = false,
   ...props
-}: NavbarProps & {
-  /** Where the search field gives way to a button, as `Navbar.Search`'s `collapseBelow`. */
-  searchCollapseBelow?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "never";
-}) {
+}: NavbarProps & DemoRowsOptions) {
+  const demo = useDemoCurrent("");
+  // A primary link goes nowhere. With `navigable` the one clicked is current, as if each link were another page.
+  const primary = (id: string) => (navigable ? demo.link(id) : { href: `#${id}`, onClick: preventNavigation });
+  const step: CaptionStep = collapseBelow;
+  const captionFor = (caption: string) => (labels ? caption : undefined);
+  const search = (
+    <Navbar.Search
+      size="sm"
+      buttonVariant="tertiary"
+      buttonTone={iconTone}
+      buttonSize="md"
+      collapseBelow={searchCollapseBelow}
+      placeholder="Search products"
+      // The field is centred in the room between the logo and the buttons by an auto margin; grouped with the buttons it is one of them
+      style={searchWithActions ? { flex: "none" } : { marginInline: "auto" }}
+    />
+  );
   return (
     <Navbar menuContainer={menuContainer} collapseBelow={collapseBelow} {...props}>
-      <Navbar.Row size="xs" variant="outlined" sticky={false}>
-        <Navbar.Links aria-label="Help" quiet align="end">
-          <Navbar.Link href="#help" onClick={preventNavigation}>
-            Help
-          </Navbar.Link>
-          <Navbar.Link href="#orders" onClick={preventNavigation}>
-            Track an order
-          </Navbar.Link>
-          <Navbar.Link href="#stores" onClick={preventNavigation}>
-            Find a store
-          </Navbar.Link>
-        </Navbar.Links>
-      </Navbar.Row>
-      <Navbar.Row size="lg" variant="outlined" columns={collapseBelow === "never" ? undefined : "balanced"} columnsBelow={collapseBelow === "never" ? undefined : collapseBelow}>
+      {courtesyRow && (
+        <Navbar.Row size="xs" variant="outlined" sticky={false}>
+          <Navbar.Links aria-label="Help" quiet align="end">
+            <Navbar.Link href="#help" onClick={preventNavigation}>
+              Help
+            </Navbar.Link>
+            <Navbar.Link href="#orders" onClick={preventNavigation}>
+              Track an order
+            </Navbar.Link>
+            <Navbar.Link href="#stores" onClick={preventNavigation}>
+              Find a store
+            </Navbar.Link>
+          </Navbar.Links>
+        </Navbar.Row>
+      )}
+      <Navbar.Row
+        size="lg"
+        variant="outlined"
+        columns={collapseBelow === "never" ? undefined : "balanced"}
+        columnsBelow={collapseBelow === "never" ? undefined : collapseBelow}
+      >
         <Navbar.Brand href="#" onClick={preventNavigation}>
           dbM
         </Navbar.Brand>
-        <Navbar.Search
-          size="sm"
-          buttonVariant="tertiary"
-          buttonTone="neutral"
-          buttonSize="md"
-          collapseBelow={searchCollapseBelow}
-          placeholder="Search products"
-          style={{ marginInline: "auto" }}
-        />
-        <Navbar.Actions style={{ marginInlineStart: 0 }}>
-          <LabelledButton caption="Account" step={collapseBelow} icon={UserCircleIcon} aria-label="Account" variant="tertiary" tone="neutral" size="md" />
-          <LabelledButton caption="Cart" step={collapseBelow} icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" tone="neutral" size="md" />
+        {!searchWithActions && search}
+        <Navbar.Actions style={{ marginInlineStart: searchWithActions ? undefined : 0 }}>
+          {searchWithActions &&
+            (labels ? (
+              <Captioned caption="Search" step={step}>
+                {search}
+              </Captioned>
+            ) : (
+              search
+            ))}
+          <DemoIconButton caption={captionFor("Account")} step={step} icon={UserCircleIcon} aria-label="Account" variant="tertiary" tone={iconTone} size="md" />
+          <DemoIconButton caption={captionFor("Cart")} step={step} icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" tone={iconTone} size="md" />
         </Navbar.Actions>
-        <Navbar.MenuButton variant="tertiary" tone="neutral" size="md" />
+        {(courtesyRow || primaryRow) && <Navbar.MenuButton variant="tertiary" tone={iconTone} size="md" />}
       </Navbar.Row>
-      <Navbar.Row size="sm" variant="outlined">
-        <Navbar.Links
-          aria-label="Categories"
-          align="center"
-          style={{
-            fontSize: "var(--dbm-font-size-sm)",
-            fontWeight: "var(--dbm-font-weight-bold)",
-            textTransform: "uppercase",
-          }}
-        >
-          <Navbar.Link href="#women" onClick={preventNavigation}>
-            Women
-          </Navbar.Link>
-          <Navbar.Link href="#men" onClick={preventNavigation}>
-            Men
-          </Navbar.Link>
-          <Navbar.Link href="#kids" onClick={preventNavigation}>
-            Kids
-          </Navbar.Link>
-          <Navbar.Link href="#sale" onClick={preventNavigation}>
-            Sale
-          </Navbar.Link>
-        </Navbar.Links>
-      </Navbar.Row>
+      {primaryRow && (
+        <Navbar.Row size="sm" variant="outlined">
+          <Navbar.Links
+            aria-label="Categories"
+            align="center"
+            style={{
+              fontSize: "var(--dbm-font-size-sm)",
+              fontWeight: "var(--dbm-font-weight-bold)",
+              textTransform: "uppercase",
+            }}
+          >
+            <Navbar.Link {...primary("women")}>Women</Navbar.Link>
+            <Navbar.Link {...primary("men")}>Men</Navbar.Link>
+            <Navbar.Link {...primary("kids")}>Kids</Navbar.Link>
+            <Navbar.Link {...primary("sale")}>Sale</Navbar.Link>
+          </Navbar.Links>
+        </Navbar.Row>
+      )}
     </Navbar>
   );
 }

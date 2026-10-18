@@ -230,7 +230,7 @@ The menu button is drawn first in its column wherever it is written. A side with
 
 ### A row in columns
 
-Two rows in columns. The first has one button at the start and two at the end, and the logo is still central. The second sets the widths itself
+Two rows in columns, with medium icon buttons. The first has one button at the start and two at the end, and the logo is still central. The second sets the widths itself
 (`columns="auto 1fr auto"`) and puts the field in the middle track with its `column`. Both apply below the widest step, so narrow the window to
 see them in columns, or widen it past 1920px to see the same rows flow.
 
@@ -240,7 +240,7 @@ see them in columns, or widen it past 1920px to see the same rows flow.
 
 Below the collapse width, every `Navbar.Links` puts its links into the one menu panel, in the order written, with a line between the sets.
 The `quiet` ones, a courtesy row's, come last. Without a `Navbar.MenuButton` of your own, the button goes at the end of the row with the brand; here it is placed first,
-beside the search button. A row that held only links goes with them, so the bar is not left with empty bands. This demo collapses below the widest step so the panel shows on any window narrower than 1920px.
+beside the search button. A row that held only links goes with them, so the bar is not left with empty bands. This demo collapses below the widest step so the panel shows on any window narrower than 1920px. Its icon buttons keep the default brand tone (the rows story greys them with `tone="neutral"`), and choosing a primary link makes it current, in the panel when it is reopened as it would be after moving to another page.
 
 <Canvas of={NavbarStories.RowsInThePanel} />
 
@@ -248,14 +248,14 @@ beside the search button. A row that held only links goes with them, so the bar 
 
 `Navbar.Search` takes the room between its neighbours. Below its `collapseBelow` width the field leaves the bar for a button that
 opens it in a sheet from the top of the screen, so a phone isn't left with a squeezed field and the tab order stays the one the bar
-is written in. Press Enter in the sheet's field and it closes.
+is written in. Press Enter in the sheet's field and it closes. Here the bar is the logo row alone, with no courtesy row, no row of links and so no menu button, and the search button sits in the same group as the account and cart buttons, each with a caption under it (your own markup, as `IconButton` has no visible label) and all in the brand tone.
 
 <Canvas of={NavbarStories.SearchOnAPhone} />
 
 ### A strip that scrolls away
 
 In a sticky bar, a leading row with `sticky={false}` scrolls away while the rest stays at the top. Only leading rows can: the bar sticks
-as one box, so a row that scrolls away can't sit below one that sticks.
+as one box, so a row that scrolls away can't sit below one that sticks. The icon buttons have no captions here, and choosing a primary link makes it current, as if each were another page.
 
 <Canvas of={NavbarStories.RowsScrollAway} />
 
