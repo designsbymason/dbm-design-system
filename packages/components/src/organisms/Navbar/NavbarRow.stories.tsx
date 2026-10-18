@@ -11,7 +11,7 @@ const meta: Meta<typeof Navbar.Row> = {
     children: { control: false, description: "The row's parts: Navbar.Brand, Navbar.Links, Navbar.Search, Navbar.Actions, Navbar.MenuButton." },
     variant: {
       control: "select",
-      options: ["outlined", "filled", "ghost"],
+      options: ["outlined", "filled", "ghost", "frosted"],
       description: "How this row is drawn, in place of the bar's variant.",
     },
     size: {

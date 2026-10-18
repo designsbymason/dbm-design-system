@@ -1308,7 +1308,7 @@ export const SearchSheetStoryLayout: Story = {
     expect(rows(header)).toHaveLength(1);
     expect(getComputedStyle(canvasElement.querySelector<HTMLElement>('button[aria-label="Menu"]')!).display).toBe("none");
     const brand = canvas.getByRole("link", { name: "dbM" }).getBoundingClientRect();
-    const nav = canvas.getByRole("navigation", { name: "Categories" }).getBoundingClientRect();
+    const nav = canvas.getByRole("navigation", { name: "Main" }).getBoundingClientRect();
     const search = canvas.getByLabelText("Search", { selector: "button" });
     const account = canvas.getByRole("button", { name: "Account" });
     const cart = canvas.getByRole("button", { name: /^Cart/ });
@@ -1329,9 +1329,11 @@ export const SearchSheetStoryLayout: Story = {
     expect(canvas.queryByText("Cart")).toBeNull();
     expect(within(group).queryByText("Search")).toBeNull();
     // choosing a link makes it current
-    expect(header.querySelector('[aria-current="page"]')).toBeNull();
-    await userEvent.click(within(header).getByRole("link", { name: "Kids" }));
-    expect(within(header).getByRole("link", { name: "Kids" })).toHaveAttribute("aria-current", "page");
+    // the default links, with Products the current page to begin with
+    expect(within(header).getByRole("link", { name: "Products" })).toHaveAttribute("aria-current", "page");
+    await userEvent.click(within(header).getByRole("link", { name: "Docs" }));
+    expect(within(header).getByRole("link", { name: "Docs" })).toHaveAttribute("aria-current", "page");
+    expect(within(header).getByRole("link", { name: "Products" })).not.toHaveAttribute("aria-current");
     // the search button opens the sheet
     await userEvent.click(search);
     expect(await canvas.findByRole("dialog", { name: "Search" })).toBeInTheDocument();
@@ -1356,7 +1358,7 @@ export const SearchSheetStoryOnAPhone: Story = {
     const search = canvas.getByLabelText("Search", { selector: "button" }).getBoundingClientRect();
     // the links have gone into the menu panel
     // (a hidden element has no accessible name, so it is found by its attribute)
-    expect(getComputedStyle(canvasElement.querySelector<HTMLElement>("header nav[aria-label=\"Categories\"]")!).display).toBe("none");
+    expect(getComputedStyle(canvasElement.querySelector<HTMLElement>("header nav[aria-label=\"Main\"]")!).display).toBe("none");
     expect(menu.right).toBeLessThanOrEqual(brand.left);
     expect(brand.right).toBeLessThanOrEqual(account.left);
     expect(account.right).toBeLessThanOrEqual(cart.left);
@@ -1542,6 +1544,131 @@ export const BarSizeScalesLinksAndActions: Story = {
     steps.forEach((step, i) => {
       expect(Math.abs(button[i]! - tokenPx(`--dbm-icon-button-size-${step}`))).toBeLessThan(1.5);
     });
+  },
+};
+
+export const LinkExtrasFollowTheLinkSize: Story = {
+  name: "A link's icon, trailing arrow and badge grow with the link size, and the badge looks like a badge",
+  render: () => (
+    <NavbarStage minBlockSize="40rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", display: "grid", gap: "1rem", alignSelf: "start" }}>
+          {(["xs", "sm", "md", "lg", "xl"] as const).map((linkSize) => (
+            <GalleryBar key={linkSize} name={`${linkSize} links`}>
+              <DemoNavbar linkSize={linkSize} linksLabel={`${linkSize} links`} menuContainer={menuContainer} collapseBelow="never" extras />
+            </GalleryBar>
+          ))}
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const steps = ["xs", "sm", "md", "lg", "xl"] as const;
+    const widthOf = (element: Element | null) => element!.getBoundingClientRect().width;
+    const measured = steps.map((step) => {
+      const nav = canvas.getByRole("navigation", { name: `${step} links` });
+      const docs = within(nav).getByRole("link", { name: "Docs" });
+      const status = within(nav).getByRole("link", { name: /Status/ });
+      const pricing = within(nav).getByRole("link", { name: /Pricing/ });
+      return { leading: widthOf(docs.querySelector("svg")), trailing: widthOf(status.querySelector("svg")), badge: pricing.querySelector<HTMLElement>("[class*=badge], span")! };
+    });
+    // the leading icon and the trailing arrow both scale (the arrow a step behind, so it is never the larger)
+    expect(measured[4]!.leading).toBeGreaterThan(measured[0]!.leading);
+    expect(measured[4]!.trailing).toBeGreaterThan(measured[0]!.trailing);
+    for (let i = 1; i < steps.length; i++) {
+      expect(measured[i]!.leading).toBeGreaterThanOrEqual(measured[i - 1]!.leading);
+      expect(measured[i]!.trailing).toBeGreaterThanOrEqual(measured[i - 1]!.trailing);
+    }
+    for (const m of measured) expect(m.trailing).toBeLessThanOrEqual(m.leading);
+    // a badge: its own fill, round ends, and padding, not plain text beside the link's
+    for (const step of steps) {
+      const nav = canvas.getByRole("navigation", { name: `${step} links` });
+      const badge = [...within(nav).getByRole("link", { name: /Pricing/ }).querySelectorAll<HTMLElement>("span")].find((span) => span.textContent === "New")!;
+      const style = getComputedStyle(badge);
+      expect(style.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+      expect(px(style.borderTopLeftRadius)).toBeGreaterThanOrEqual(badge.getBoundingClientRect().height / 2 - 1);
+      expect(px(style.paddingInlineStart)).toBeGreaterThan(0);
+    }
+    // its text is held to 4.5:1 on its own fill
+    const sample = [...within(canvas.getByRole("navigation", { name: "md links" })).getByRole("link", { name: /Pricing/ }).querySelectorAll<HTMLElement>("span")].find((span) => span.textContent === "New")!;
+    expect(contrast(getComputedStyle(sample).color, getComputedStyle(sample).backgroundColor)).toBeGreaterThanOrEqual(4.5);
+  },
+};
+
+export const StyleOnLinksSetsTheTextStyle: Story = {
+  name: "A style on Navbar.Links sets the weight and case of its links, in the bar only",
+  render: function Render() {
+    return (
+      <NavbarStage minBlockSize="24rem">
+        {(menuContainer) => (
+          <div style={{ inlineSize: "100%", display: "grid", gap: "1rem", alignSelf: "start" }}>
+            <GalleryBar name="default">
+              <Navbar menuContainer={menuContainer}>
+                <Navbar.Links aria-label="default">
+                  <Navbar.Link href="#a">Products</Navbar.Link>
+                </Navbar.Links>
+              </Navbar>
+            </GalleryBar>
+            <GalleryBar name="styled">
+              <Navbar menuContainer={menuContainer}>
+                <Navbar.Links aria-label="styled" style={{ fontWeight: "var(--dbm-font-weight-bold)", textTransform: "uppercase" }}>
+                  <Navbar.Link href="#b">Products</Navbar.Link>
+                </Navbar.Links>
+              </Navbar>
+            </GalleryBar>
+          </div>
+        )}
+      </NavbarStage>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const link = (name: string) => getComputedStyle(within(canvas.getByRole("navigation", { name })).getByRole("link", { name: "Products" }));
+    expect(link("default").fontWeight).toBe("500");
+    expect(link("default").textTransform).toBe("none");
+    expect(link("styled").fontWeight).toBe("700");
+    expect(link("styled").textTransform).toBe("uppercase");
+  },
+};
+
+export const FrostedBar: Story = {
+  name: "A frosted bar is translucent and blurs what is behind it, with a line under it, and keeps 4.5:1 over the worst case",
+  render: () => (
+    <NavbarStage minBlockSize="14rem">
+      {(menuContainer) => (
+        <div style={{ position: "relative", inlineSize: "100%", alignSelf: "start", background: "var(--dbm-bg-brand)" }}>
+          <DemoNavbar variant="frosted" menuContainer={menuContainer} collapseBelow="never" />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const header = within(canvasElement).getByRole("banner");
+    const row = header.firstElementChild as HTMLElement;
+    const style = getComputedStyle(row);
+    expect(style.backdropFilter).toMatch(/blur\(/);
+    // translucent: some of what is behind shows (the alpha is under 1), but mostly surface
+    const alpha = style.backgroundColor.match(/\/\s*([\d.]+)\s*\)|rgba\([^)]*,\s*([\d.]+)\)/);
+    const value = Number(alpha?.[1] ?? alpha?.[2]);
+    expect(value).toBeGreaterThan(0.5);
+    expect(value).toBeLessThan(1);
+    expect(px(style.borderBottomWidth)).toBeGreaterThan(0);
+    // the worst case for a light surface is black behind it: the link text still meets 4.5:1 on that blend
+    const surface = tokenColorOf("--dbm-bg-surface");
+    const [r, g, b] = [0, 1, 2].map((i) => {
+      const probe = document.createElement("canvas");
+      probe.width = probe.height = 1;
+      const context = probe.getContext("2d", { willReadFrequently: true })!;
+      context.fillStyle = "#000";
+      context.fillRect(0, 0, 1, 1);
+      context.fillStyle = surface;
+      context.globalAlpha = value;
+      context.fillRect(0, 0, 1, 1);
+      return context.getImageData(0, 0, 1, 1).data[i]!;
+    }) as [number, number, number];
+    const link = within(header).getByRole("link", { name: "Pricing" });
+    expect(contrast(getComputedStyle(link).color, `rgb(${r}, ${g}, ${b})`)).toBeGreaterThanOrEqual(4.5);
   },
 };
 

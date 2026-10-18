@@ -231,17 +231,20 @@ export function DemoRowsNavbar({
   navigable = false,
   ...props
 }: NavbarProps & DemoRowsOptions) {
-  const demo = useDemoCurrent("");
+  const demo = useDemoCurrent(linksInLogoRow ? "products" : "");
   // A primary link goes nowhere. With `navigable` the one clicked is current, as if each link were another page.
   const primary = (id: string) => (navigable ? demo.link(id) : { href: `#${id}`, onClick: preventNavigation });
   // A caption under the account and cart buttons from the width the bar leaves its columns at, and always when it never does
   const showLabelFrom = collapseBelow === "never" ? undefined : collapseBelow;
+  // The links in the logo row are the default demo links, with Products the current page until another is chosen
   const categories = (
-    <Navbar.Links aria-label="Categories" align="center">
-      <Navbar.Link {...primary("women")}>Women</Navbar.Link>
-      <Navbar.Link {...primary("men")}>Men</Navbar.Link>
-      <Navbar.Link {...primary("kids")}>Kids</Navbar.Link>
-      <Navbar.Link {...primary("sale")}>Sale</Navbar.Link>
+    <Navbar.Links align="center">
+      <Navbar.Link {...primary("products")}>Products</Navbar.Link>
+      <Navbar.Link {...primary("pricing")}>Pricing</Navbar.Link>
+      <Navbar.Link {...primary("docs")}>Docs</Navbar.Link>
+      <Navbar.Link href="#beta" disabled>
+        Beta
+      </Navbar.Link>
     </Navbar.Links>
   );
   const search = (
@@ -296,10 +299,7 @@ export function DemoRowsNavbar({
           <Navbar.Links
             aria-label="Categories"
             align="center"
-            style={{
-              fontWeight: "var(--dbm-font-weight-bold)",
-              textTransform: "uppercase",
-            }}
+            style={{ fontWeight: "var(--dbm-font-weight-bold)", textTransform: "uppercase" }}
           >
             <Navbar.Link {...primary("women")}>Women</Navbar.Link>
             <Navbar.Link {...primary("men")}>Men</Navbar.Link>

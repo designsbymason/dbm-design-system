@@ -79,8 +79,9 @@ const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DataTable: 26, DatePicker: 18, Na
 // with the resize handle, the pinned columns, the expand column and the detail row.
 //
 // `Navbar`'s bundle holds the `Drawer` its menu panel is and the `Menu` its groups open, with the `SearchInput` and the second `Drawer` of its search sheet (and the `IconButton`, `Container` and `Affix`
-// it draws with): 17.48KB of JS and 8.35KB of CSS measured, the CSS being mostly the `Drawer`'s seven-breakpoint side classes.
-const CSS_BUDGET_OVERRIDES_KB = { DataTable: 9, Navbar: 10 };
+// it draws with, and the `Badge` of its links' badges): 17.48KB of JS and 8.35KB of CSS first measured, 19.60KB and 10.00KB with the link
+// sizes, weights and cases, the columns, the frosted variant and the badge, the CSS being mostly the `Drawer`'s seven-breakpoint side classes. CSS budget 11KB.
+const CSS_BUDGET_OVERRIDES_KB = { DataTable: 9, Navbar: 11 };
 
 // Words only an opt-in extra's code contains, and the component whose bundle must not contain them: `CodeBlock`
 // ships Python, Go and Java as separate exports an app registers (ADR-0027). If a change makes the component

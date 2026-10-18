@@ -31,14 +31,15 @@ ${inner}
 </Navbar>`;
 
 export const navbarSnippets = {
-  variants: `{/* variant: "outlined" (default) | "filled" | "ghost" */}
-${navbar('variant="filled"')}`,
+  variants: `{/* variant: "outlined" (default) | "filled" | "ghost" | "frosted". frosted is a translucent surface that blurs what is behind it
+    (a sticky bar over a page, a hero); it falls back to a plain surface where backdrop-filter isn't supported, and in forced colours. */}
+${navbar('variant="frosted"')}`,
 
   linkSizes: `{/* linkSize sets the links' text size, icon size and padding, on Menu's five steps ("xs" | "sm" | "md" | "lg" | "xl"), apart from
-    the bar's size (its height). Left out it follows size, so nothing changes. It can be set on the bar, a Navbar.Row or one
-    Navbar.Links (the nearest wins); a quiet set reads one step below it; a Navbar.Group's dropdown takes the same step for its items. The
-    menu panel's links keep their own size. Here a tall bar with small links. */}
-<Navbar size="lg" linkSize="xs">
+    the bar's size (its height). Left out it follows size (xs, sm, md, lg), so a taller bar has larger links. It can be set on the bar, a
+    Navbar.Row or one Navbar.Links (the nearest wins); a quiet set reads one step below it; a Navbar.Group's dropdown takes the same step
+    for its items. The menu panel's links keep their own size. A tall bar can have small links: size="lg" linkSize="xs". */}
+<Navbar linkSize="lg">
   <Navbar.Brand href="/">dbM</Navbar.Brand>
   <Navbar.Links>
     <Navbar.Link href="/products" current>
@@ -53,6 +54,15 @@ ${navbar('variant="filled"')}`,
   <Navbar.Brand href="/">dbM</Navbar.Brand>
   <Navbar.Links linkSize="lg">
     <Navbar.Link href="/products">Products</Navbar.Link>
+  </Navbar.Links>
+</Navbar>
+
+{/* The links' weight and case are not props: a style on Navbar.Links sets them for the set (on the tokens), and the menu panel keeps its own text */}
+<Navbar>
+  <Navbar.Brand href="/">dbM</Navbar.Brand>
+  <Navbar.Links style={{ fontWeight: "var(--dbm-font-weight-bold)", textTransform: "uppercase" }}>
+    <Navbar.Link href="/products">Products</Navbar.Link>
+    <Navbar.Link href="/pricing">Pricing</Navbar.Link>
   </Navbar.Links>
 </Navbar>`,
 
@@ -268,11 +278,11 @@ ${navbar('currentVariant="solid"')}`,
 <Navbar>
   <Navbar.Row size="lg" variant="outlined" columns="auto 1fr auto">
     <Navbar.Brand href="/">dbM</Navbar.Brand>
-    <Navbar.Links aria-label="Categories" align="center">
-      <Navbar.Link href="/women" current={page === "women"}>Women</Navbar.Link>
-      <Navbar.Link href="/men" current={page === "men"}>Men</Navbar.Link>
-      <Navbar.Link href="/kids" current={page === "kids"}>Kids</Navbar.Link>
-      <Navbar.Link href="/sale" current={page === "sale"}>Sale</Navbar.Link>
+    <Navbar.Links align="center">
+      <Navbar.Link href="/products" current={page === "products"}>Products</Navbar.Link>
+      <Navbar.Link href="/pricing" current={page === "pricing"}>Pricing</Navbar.Link>
+      <Navbar.Link href="/docs" current={page === "docs"}>Docs</Navbar.Link>
+      <Navbar.Link href="/beta" disabled>Beta</Navbar.Link>
     </Navbar.Links>
     <Navbar.Actions>
       <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="md" />

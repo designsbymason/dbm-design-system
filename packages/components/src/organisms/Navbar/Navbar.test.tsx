@@ -536,6 +536,40 @@ describe("Navbar linkSize", () => {
   });
 });
 
+describe("Navbar link extras and the frosted variant", () => {
+  const nav = (name: string) => screen.getByRole("navigation", { name, hidden: true });
+
+  it("draws a link's badge with the Badge atom, sized by the link, and a trailing arrow a step behind its icon", () => {
+    render(
+      <Navbar linkSize="xl" collapseBelow="never">
+        <Navbar.Links aria-label="Main">
+          <Navbar.Link href="/a" badge="New" icon={HouseIcon} external>
+            Pricing
+          </Navbar.Link>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    const link = nav("Main").querySelector("a")!;
+    const badge = [...link.querySelectorAll("span")].find((span) => span.textContent === "New")!;
+    expect(badge.className).toMatch(/sizeMd/);
+    const [leading, trailing] = [...link.querySelectorAll("svg")];
+    expect(leading!.getAttribute("class")).toMatch(/sizeLg/);
+    expect(trailing!.getAttribute("class")).toMatch(/sizeMd/);
+  });
+
+  it("draws the frosted variant's class on a row and its bar", () => {
+    render(
+      <Navbar variant="frosted" sticky>
+        <Navbar.Row data-testid="row">
+          <Navbar.Brand href="/">dbM</Navbar.Brand>
+        </Navbar.Row>
+      </Navbar>,
+    );
+    expect(screen.getByTestId("row")).toHaveClass(styles.frosted!);
+    expect(screen.getByRole("banner")).toHaveClass(styles.frostedBar!);
+  });
+});
+
 describe("Navbar.Actions and the bar's size", () => {
   const actions = (props: Partial<React.ComponentProps<typeof Navbar>> = {}, rowSize?: "xs" | "sm" | "md" | "lg") => (
     <Navbar {...props}>
@@ -994,7 +1028,9 @@ describe("Navbar.Link icon, badge and external", () => {
     );
     const link = screen.getByRole("link", { name: "Inbox 3" });
     expect(link.querySelector("svg")).not.toBeNull();
-    expect(link.querySelector(`.${styles.badge}`)).toHaveTextContent("3");
+    const badge = [...link.querySelectorAll("span")].find((span) => span.textContent === "3");
+    expect(badge).toBeDefined();
+    expect(link.lastElementChild).toBe(badge);
     expect(link.firstElementChild?.tagName.toLowerCase()).toBe("svg");
   });
 

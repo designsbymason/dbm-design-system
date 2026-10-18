@@ -24,3 +24,21 @@ export const linkIconSize: Record<NavbarLinkSize, Extract<IconSize, "xs" | "sm" 
   lg: "md",
   xl: "lg",
 };
+
+/** A link's trailing icon (the external-link arrow, a group's caret): a step smaller than its leading icon, never below `xs`. */
+export const linkTrailingIconSize: Record<NavbarLinkSize, Extract<IconSize, "xs" | "sm" | "md">> = {
+  xs: "xs",
+  sm: "xs",
+  md: "xs",
+  lg: "sm",
+  xl: "md",
+};
+
+/** A link's badge, on `Badge`'s own scale: its text is a little under the link's. */
+export const linkBadgeSize: Record<NavbarLinkSize, "xs" | "sm" | "md"> = {
+  xs: "xs",
+  sm: "xs",
+  md: "sm",
+  lg: "md",
+  xl: "md",
+};

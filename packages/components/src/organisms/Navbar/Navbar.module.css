@@ -47,6 +47,33 @@
   background-color: var(--dbm-bg-neutral-subtle);
 }
 
+/* `frosted`: a translucent surface (90% of `bg.surface`) that blurs what is behind it, with the outlined bar's line under it. The
+   surface stays mostly opaque so the text keeps 4.5:1 over any content, black included (`text.secondary` is 5.5:1 over the worst
+   case, black, in light mode); the blur is what tells it from a plain surface. Without `backdrop-filter`, and in forced colours, it is
+   a plain surface. A sticky one keeps its own surface (the bar's, below, would otherwise sit opaque behind the rows). */
+.frosted {
+  background-color: color-mix(in srgb, var(--dbm-bg-surface) calc(var(--dbm-opacity-90) * 100%), transparent);
+  backdrop-filter: blur(var(--dbm-space-3));
+  border-block-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .frosted {
+    background-color: var(--dbm-bg-surface);
+  }
+}
+
+@media (forced-colors: active) {
+  .frosted {
+    background-color: Canvas;
+    backdrop-filter: none;
+  }
+}
+
+.frostedBar.sticky {
+  background-color: transparent;
+}
+
 /* A sticky `ghost` bar is transparent over the page (a hero, say) until it is stuck, then takes a surface and a shadow, so what
    scrolls beneath it never shows through the links. */
 .ghostBar.sticky {
@@ -604,12 +631,6 @@ a.brand:focus-visible,
   }
 }
 
-/* A count or dot after a link's text. */
-.badge {
-  display: inline-flex;
-  align-items: center;
-}
-
 /* Where the links sit between the brand and the actions. The actions' own push to the end is cancelled when the links take the
    free space, so the free space is the links' margins and not shared with the actions'. In the menu panel the links aren't in this
    row at all. */
@@ -652,35 +673,41 @@ a.brand:focus-visible,
   font-weight: var(--dbm-font-weight-medium);
 }
 
+
 /* `linkSize`: the text size, icon size (in the component) and padding of the links in a set, apart from the bar's height. The text steps
    are `Menu`'s own (xs, sm, base, md, lg); the padding is a link bar's, a little wider than a list row's. A set the menu panel copies
    keeps the panel's own sizing: these properties are set on the bar's `<nav>`, which the panel's copy is not inside. The defaults
    `sm` and `md` are today's two text sizes, so a bar that sets none is as it was. */
 .linkSizeXs {
+  --navbar-link-badge: var(--dbm-space-4);
   --navbar-link-font: var(--dbm-font-size-xs);
   --navbar-link-pad-block: var(--dbm-space-1);
   --navbar-link-pad-inline: var(--dbm-space-2);
 }
 
 .linkSizeSm {
+  --navbar-link-badge: var(--dbm-space-5);
   --navbar-link-font: var(--dbm-font-size-sm);
   --navbar-link-pad-block: var(--dbm-space-2);
   --navbar-link-pad-inline: var(--dbm-space-3);
 }
 
 .linkSizeMd {
+  --navbar-link-badge: var(--dbm-space-5);
   --navbar-link-font: var(--dbm-font-size-base);
   --navbar-link-pad-block: var(--dbm-space-2);
   --navbar-link-pad-inline: var(--dbm-space-3);
 }
 
 .linkSizeLg {
+  --navbar-link-badge: var(--dbm-space-6);
   --navbar-link-font: var(--dbm-font-size-md);
   --navbar-link-pad-block: var(--dbm-space-3);
   --navbar-link-pad-inline: var(--dbm-space-4);
 }
 
 .linkSizeXl {
+  --navbar-link-badge: var(--dbm-space-6);
   --navbar-link-font: var(--dbm-font-size-lg);
   --navbar-link-pad-block: var(--dbm-space-3);
   --navbar-link-pad-inline: var(--dbm-space-4);
@@ -710,11 +737,19 @@ a.brand:focus-visible,
   color: var(--dbm-text-secondary);
   font-size: inherit;
   font-weight: inherit;
+  text-transform: inherit;
   text-decoration: none;
   white-space: nowrap;
   transition:
     background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
     color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+/* A badge in a link is `Badge`'s subtle brand look, kept to the link's own height: the atom's boxes are taller than a line of link text, so
+   its height (and the least width it keeps, so a single character is still a round pill) follow the link size instead. */
+.link .linkBadge {
+  block-size: var(--navbar-link-badge, var(--dbm-space-5));
+  min-inline-size: var(--navbar-link-badge, var(--dbm-space-5));
 }
 
 /* Hovering a link tints it and turns its text, and its icon (which takes the link's colour), to the brand colour: `text.brand` on

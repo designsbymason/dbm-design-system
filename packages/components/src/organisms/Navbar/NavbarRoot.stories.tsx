@@ -15,7 +15,7 @@ const meta: Meta<typeof Navbar> = {
     },
     variant: {
       control: "select",
-      options: ["outlined", "filled", "ghost"],
+      options: ["outlined", "filled", "ghost", "frosted"],
       description: "How the bar itself is drawn: a surface with a line under it, a tinted surface, or nothing of its own.",
       table: { defaultValue: { summary: '"outlined"' } },
     },

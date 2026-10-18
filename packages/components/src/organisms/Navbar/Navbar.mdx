@@ -205,7 +205,9 @@ place one yourself to put it elsewhere or give it another icon.
 ### Variants
 
 `outlined` is a surface with a line under it, `filled` a tinted surface, and `ghost` nothing of its own,
-for a bar that sits over a hero or a coloured page.
+for a bar that sits over a hero or a coloured page. `frosted` is a translucent surface (90% of `bg.surface`) that blurs what is behind it,
+with a line under it: a sticky bar over a page, a hero or an image. It stays mostly opaque so the text keeps 4.5:1 over any content,
+and is a plain surface where `backdrop-filter` isn't supported and in forced colours.
 
 <Canvas of={NavbarStories.Variants} />
 
@@ -270,6 +272,18 @@ Set it on the bar, on a `Navbar.Row` or on one `Navbar.Links`; the nearest wins.
 floor that a taller link still grows.
 
 <Canvas of={NavbarStories.LinkSizes} />
+
+A link's `icon`, its trailing arrow and its `badge` follow the link size too: the arrow is a step behind the icon, and the badge is
+`Badge`'s subtle brand look at the step that goes with the text.
+
+The links' weight and case are not props: a link takes its text style from its set, so one `style` on `Navbar.Links` sets them for the
+whole set, on the tokens:
+
+```tsx
+<Navbar.Links style={{ fontWeight: "var(--dbm-font-weight-bold)", textTransform: "uppercase" }}>…</Navbar.Links>
+```
+
+The menu panel draws its own copy of the links and keeps its own text, so this styles the bar's links only.
 
 ### Marking the current page
 
@@ -660,6 +674,8 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 <TokenRow token="shadow.light.md / shadow.dark.md" usage="a sticky bar's elevation while it is stuck" />
 <TokenRow token="font-family.primary" usage="the bar's typography" />
 <TokenRow token="font-size.sm / font-size.base" usage="a link's text, at the default sizes and at large" />
+<TokenRow token="opacity.90" usage="the frosted variant's surface, mixed with `bg.surface`" />
+<TokenRow token="space.3" usage="the frosted variant's blur radius, as `Backdrop` draws its own" />
 <TokenRow token="font-size.md / font-size.lg" usage="a link's text at the `lg` and `xl` link sizes (`linkSize`)" />
 <TokenRow token="font-weight.bold" usage="the brand" />
 <TokenRow token="font-weight.medium" usage="a link" />
@@ -672,6 +688,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 <TokenRow token="space.2" usage="the gap inside a link and between actions; the room above and below a bar; a link's vertical padding" />
 <TokenRow token="space.3" usage="a link's inline padding" />
 <TokenRow token="space.4" usage="the gap between the bar's zones, and its inline padding" />
+<TokenRow token="space.5" usage="the height of a badge in a link, at the `sm` and `md` link sizes (`space.4` at `xs`, `space.6` at `lg` and `xl`)" />
 <TokenRow token="space.6" usage="a link's smallest height, which keeps it a 24 pixel target" />
 <TokenRow token="opacity.40" usage="a disabled link" />
 <TokenRow token="motion.duration.fast" usage="a link's colour change" />

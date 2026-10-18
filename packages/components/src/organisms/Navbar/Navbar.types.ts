@@ -24,10 +24,11 @@ export type NavbarSize = "xs" | "sm" | "md" | "lg";
 export type NavbarLinkSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 /**
- * How the bar itself is drawn: `outlined` (a surface with a line under it), `filled` (a tinted surface) or `ghost`
- * (nothing of its own, the content sits on the page). The same names `Card` and `EmptyState` use for their `variant`.
+ * How the bar itself is drawn: `outlined` (a surface with a line under it), `filled` (a tinted surface), `ghost`
+ * (nothing of its own, the content sits on the page) or `frosted` (a translucent surface that blurs what is behind it, with a
+ * line under it). `outlined`, `filled` and `ghost` are the names `Card` and `EmptyState` use for their `variant`.
  */
-export type NavbarVariant = "outlined" | "filled" | "ghost";
+export type NavbarVariant = "outlined" | "filled" | "ghost" | "frosted";
 
 /**
  * How the current page's link (and a group that holds it) is marked, beyond `aria-current="page"`, which is always set:
@@ -370,7 +371,11 @@ export interface NavbarLinksProps extends Omit<ComponentPropsWithoutRef<"nav">, 
   id?: string;
   /** Additional CSS classes, on the `<nav>` element. */
   className?: string;
-  /** Inline styles, merged onto the component's own internal styles. */
+  /**
+   * Inline styles, merged onto the component's own internal styles. The links inherit their text style from the set, so this is also
+   * where their weight and case go (there are no props for them): `style={{ fontWeight: "var(--dbm-font-weight-bold)", textTransform:
+   * "uppercase" }}`. The menu panel draws its own copy of the links and keeps its own text.
+   */
   style?: CSSProperties;
   /**
    * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).

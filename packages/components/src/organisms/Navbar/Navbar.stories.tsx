@@ -99,7 +99,7 @@ const meta: Meta<PlaygroundArgs> = {
     ),
     variant: {
       control: "select",
-      options: ["outlined", "filled", "ghost"],
+      options: ["outlined", "filled", "ghost", "frosted"],
       description: "How the bar itself is drawn: a surface with a line under it, a tinted surface, or nothing of its own.",
       table: { defaultValue: { summary: '"outlined"' } },
     },
@@ -266,17 +266,31 @@ export const Variants: Story = {
   parameters: { docs: { source: { code: navbarSnippets.variants } } },
   argTypes: { ...noControls },
   render: (args) => (
-    <NavbarStage minBlockSize="16rem">
+    <NavbarStage minBlockSize="22rem">
       {(menuContainer) => (
         <div style={{ inlineSize: "100%", display: "grid", gap: "var(--dbm-space-4)", alignSelf: "start" }}>
-          {(["outlined", "filled", "ghost"] as const).map((variant) => (
+          {(["outlined", "filled", "ghost", "frosted"] as const).map((variant) => (
             <GalleryBar key={variant} name={`${variant} bar`}>
-              <DemoNavbar
-                variant={variant}
-                linksLabel={`${variant} navigation`}
-                menuContainer={menuContainer}
-                collapseBelow={args.collapseBelow}
-              />
+              {variant === "frosted" ? (
+                // A frosted bar blurs what is behind it, so it sits over a few shapes in the brand's colours to show it.
+                <div style={{ position: "relative", overflow: "hidden", borderRadius: "var(--dbm-radius-md)", background: "var(--dbm-bg-brand-subtle)" }}>
+                  <div aria-hidden="true" style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", gap: "var(--dbm-space-8)", paddingInline: "var(--dbm-space-8)" }}>
+                    {["var(--dbm-bg-brand)", "var(--dbm-bg-danger)", "var(--dbm-bg-brand)", "var(--dbm-bg-danger)", "var(--dbm-bg-brand)"].map((color, index) => (
+                      <span key={index} style={{ flex: "none", inlineSize: "var(--dbm-space-12)", blockSize: "var(--dbm-space-12)", borderRadius: "var(--dbm-radius-full)", background: color }} />
+                    ))}
+                  </div>
+                  <div style={{ position: "relative" }}>
+                    <DemoNavbar variant={variant} linksLabel={`${variant} navigation`} menuContainer={menuContainer} collapseBelow={args.collapseBelow} />
+                  </div>
+                </div>
+              ) : (
+                <DemoNavbar
+                  variant={variant}
+                  linksLabel={`${variant} navigation`}
+                  menuContainer={menuContainer}
+                  collapseBelow={args.collapseBelow}
+                />
+              )}
             </GalleryBar>
           ))}
         </div>
@@ -298,9 +312,6 @@ export const LinkSizes: Story = {
               <DemoNavbar linkSize={linkSize} linksLabel={`${linkSize} links`} menuContainer={menuContainer} collapseBelow={args.collapseBelow} extras />
             </GalleryBar>
           ))}
-          <GalleryBar name="A tall bar with small links">
-            <DemoNavbar size="lg" linkSize="xs" linksLabel="tall bar, small links" menuContainer={menuContainer} collapseBelow={args.collapseBelow} />
-          </GalleryBar>
         </div>
       )}
     </NavbarStage>

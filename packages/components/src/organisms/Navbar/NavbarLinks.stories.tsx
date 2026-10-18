@@ -45,7 +45,11 @@ const meta: Meta<typeof Navbar.Links> = {
     "aria-labelledby": { control: "text", description: "The id of a visible element that names the navigation, in place of aria-label." },
     id: { control: "text", description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes, on the <nav> element." },
-    style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
+    style: {
+      control: false,
+      description:
+        'Inline styles, merged onto the component\'s own internal styles. The links inherit their text style from the set, so this is also where their weight and case go (there are no props for them): style={{ fontWeight: "var(--dbm-font-weight-bold)", textTransform: "uppercase" }}. The menu panel draws its own copy of the links and keeps its own text.',
+    },
     "data-testid": {
       control: false,
       description:

@@ -25,7 +25,8 @@ import {
   useNavbarContext,
 } from "./NavbarContext";
 import type { NavbarContextValue } from "./NavbarContext";
-import { defaultLinkSize, linkIconSize, stepDown } from "./linkSizes";
+import { defaultLinkSize, linkBadgeSize, linkIconSize, linkTrailingIconSize, stepDown } from "./linkSizes";
+import { Badge } from "../../atoms/Badge";
 import { NavbarRow } from "./NavbarRow";
 import { NavbarSearch } from "./NavbarSearch";
 import { useHideOnScroll } from "./useHideOnScroll";
@@ -337,6 +338,7 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
         className={cx(
           styles.root,
           variant === "ghost" && styles.ghostBar,
+          variant === "frosted" && styles.frostedBar,
           collapseClass[collapseBelow],
           sticky && styles.sticky,
           hasLeading && styles.hasLeading,
@@ -503,7 +505,10 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
     const inMenu = closeGroupMenu !== null;
     // The icon follows the set's link size in the bar; in the panel and in a group's list it keeps its own.
     const linkSize = useContext(NavbarLinkSizeContext);
-    const iconSize = linkSize && !inPanel && !inMenu ? linkIconSize[linkSize.size] : "sm";
+    const sized = linkSize && !inPanel && !inMenu ? linkSize.size : undefined;
+    const iconSize = sized ? linkIconSize[sized] : "sm";
+    const trailingIconSize = sized ? linkTrailingIconSize[sized] : "xs";
+    const badgeSize = sized ? linkBadgeSize[sized] : "sm";
     const grows = useBecameCurrent(current);
     const Component = asChild ? Slot : "a";
 
@@ -552,10 +557,14 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
           <>
             {icon && <Icon icon={icon} size={iconSize} />}
             {children}
-            {badge !== undefined && badge !== null && <span className={styles.badge}>{badge}</span>}
+            {badge !== undefined && badge !== null && (
+              <Badge tone="brand" variant="subtle" size={badgeSize} className={styles.linkBadge}>
+                {badge}
+              </Badge>
+            )}
             {isExternal && (
               <>
-                <Icon icon={ArrowSquareOutIcon} size="xs" />
+                <Icon icon={ArrowSquareOutIcon} size={trailingIconSize} />
                 <VisuallyHidden> {labels.externalLink}</VisuallyHidden>
               </>
             )}
@@ -604,7 +613,7 @@ const NavbarGroup = forwardRef<HTMLButtonElement, NavbarGroupProps>(
     const trigger = (
       <>
         {label}
-        <Icon icon={CaretDownIcon} size="xs" className={styles.caret} />
+        <Icon icon={CaretDownIcon} size={linkSize && !inPanel ? linkTrailingIconSize[linkSize.size] : "xs"} className={styles.caret} />
       </>
     );
     const triggerClass = cx(
