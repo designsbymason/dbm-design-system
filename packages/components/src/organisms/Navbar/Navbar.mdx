@@ -24,6 +24,7 @@ export const propOrder = [
   "menuOpen",
   "defaultMenuOpen",
   "onMenuOpenChange",
+  "onMenuOpenChangeComplete",
   "menuSide",
   "menuContainer",
   "closeMenuOnNavigate",
@@ -76,8 +77,9 @@ The application header: a named banner at the top of the page holding the brand,
 and a place for the actions that belong to the whole app (search, an account menu, a call to action).
 Below a width you choose, the navigation leaves the bar and is offered in a side panel behind a menu
 button, so a phone gets a list it can reach with a thumb. A compound component, meaning it is made of
-named sub-parts you compose together: `Navbar.Brand`, `Navbar.Links` holding `Navbar.Link` items,
-`Navbar.Actions`, and `Navbar.MenuButton`, which is drawn for you whenever there are links.
+named sub-parts you compose together: `Navbar.Brand`, `Navbar.Links` holding `Navbar.Link` items and
+`Navbar.Group`s of them, `Navbar.Actions` holding `Navbar.Action`s, `Navbar.PanelActions` for what the menu panel shows
+at its foot, `Navbar.SkipLink`, and `Navbar.MenuButton`, which is drawn for you whenever there are links.
 
 ### Import
 

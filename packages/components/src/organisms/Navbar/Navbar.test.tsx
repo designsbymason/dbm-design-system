@@ -978,3 +978,54 @@ describe("Navbar hideOnScroll", () => {
     expect(remove).toHaveBeenCalledWith("scroll", expect.any(Function));
   });
 });
+
+describe("Navbar review fixes", () => {
+  it("hands a sticky bar's offset to the stylesheet so a hidden bar leaves by it too, and not when it isn't sticky", () => {
+    vi.stubGlobal("IntersectionObserver", class { observe() {} unobserve() {} disconnect() {} takeRecords() { return []; } });
+    const { rerender } = render(<Basic sticky stickyOffset={6} />);
+    expect(screen.getByRole("banner").style.getPropertyValue("--navbar-sticky-offset")).toBe("var(--dbm-space-6)");
+    rerender(<Basic />);
+    expect(screen.getByRole("banner").style.getPropertyValue("--navbar-sticky-offset")).toBe("");
+    vi.unstubAllGlobals();
+  });
+
+  it("keeps a caller's own style over the bar's, and the property too if they set it", () => {
+    vi.stubGlobal("IntersectionObserver", class { observe() {} unobserve() {} disconnect() {} takeRecords() { return []; } });
+    render(<Basic sticky style={{ color: "red" }} />);
+    expect(screen.getByRole("banner").style.color).toBe("red");
+    expect(screen.getByRole("banner").style.getPropertyValue("--navbar-sticky-offset")).toBe("var(--dbm-space-0)");
+    vi.unstubAllGlobals();
+  });
+
+  it("marks the current item of a group's menu, and only it", async () => {
+    const user = userEvent.setup();
+    render(<WithGroup collapseBelow="never" groupCurrent />);
+    await user.click(screen.getByRole("button", { name: "Resources" }));
+    const menu = await screen.findByRole("menu");
+    expect(within(menu).getByRole("menuitem", { name: "Blog" })).toHaveClass(styles.menuCurrent!);
+    expect(within(menu).getByRole("menuitem", { name: "Guides" })).not.toHaveClass(styles.menuCurrent!);
+  });
+
+  it("reports when the menu panel has finished opening and closing", async () => {
+    const user = userEvent.setup();
+    const done = vi.fn();
+    render(<Basic onMenuOpenChangeComplete={done} />);
+    await user.click(screen.getByRole("button", { name: "Menu" }));
+    await screen.findByRole("dialog");
+    await waitFor(() => expect(done).toHaveBeenCalledWith(true));
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(done).toHaveBeenCalledWith(false));
+  });
+
+  it("draws a group's floating menu in the menuContainer, as it does the panel", async () => {
+    const user = userEvent.setup();
+    const container = document.createElement("div");
+    container.setAttribute("data-testid", "frame");
+    document.body.appendChild(container);
+    render(<WithGroup collapseBelow="never" menuContainer={container} />);
+    await user.click(screen.getByRole("button", { name: "Resources" }));
+    const menu = await screen.findByRole("menu");
+    expect(container.contains(menu)).toBe(true);
+    container.remove();
+  });
+});

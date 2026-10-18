@@ -14,7 +14,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { MouseEvent } from "react";
+import type { CSSProperties, MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { Affix } from "../../atoms/Affix";
 import { Container } from "../../atoms/Container";
@@ -50,6 +50,9 @@ const defaultLabels: NavbarLabels = {
   skipLink: "Skip to content",
   externalLink: "(opens in a new tab)",
 };
+
+/** The custom property the stylesheet reads to move a hidden sticky bar out by its offset as well as its height. */
+const stickyOffsetProperty = "--navbar-sticky-offset";
 
 const EXTERNAL_HREF_PATTERN = /^(https?:)?\/\//i;
 
@@ -157,14 +160,18 @@ function useNavbarContext(part: string): NavbarContextValue {
  * the navigation leaves the bar and is offered in a `Drawer` behind a menu button, so a phone gets a list it can reach
  * with a thumb and the first paint of a server-rendered page is already right (the switch is a stylesheet's).
  *
- * A compound component, meaning it is made of named sub-parts you compose together: `Navbar.Brand`, `Navbar.Links` with
- * `Navbar.Link` items, `Navbar.Actions`, and `Navbar.MenuButton` (drawn for you when `Navbar.Links` is present, unless you
+ * A compound component, meaning it is made of named sub-parts you compose together: `Navbar.Brand`, `Navbar.Links` holding
+ * `Navbar.Link` items (and `Navbar.Group`s of them), `Navbar.Actions` holding `Navbar.Action`s, `Navbar.PanelActions` (what the menu
+ * panel shows at its foot), `Navbar.SkipLink`, and `Navbar.MenuButton` (drawn for you when `Navbar.Links` is present, unless you
  * place one yourself). It is a `<header>`; `Navbar.Links` is a named `<nav>` holding a list, and the current page is
- * `aria-current="page"`. Links are ordinary tab stops, not a roving group: this is the disclosure-navigation pattern, not a
- * toolbar.
+ * `aria-current="page"`, marked by `currentVariant` (`underline`, `subtle` or `solid`) and, with `rounded`, as a pill. Links are
+ * ordinary tab stops, not a roving group: this is the disclosure-navigation pattern, not a toolbar.
  *
- * The same `Navbar.Link` items are drawn in the bar and in the menu panel, so give them no `id`. A link that opens a list of
- * actions or pages is a `Menu` whose trigger is a `Navbar.Link`; a mega-menu of panels is `NavigationMenu`.
+ * The same `Navbar.Link` items are drawn in the bar and in the menu panel, so give them no `id`. A link that opens more links is a
+ * `Navbar.Group`: a floating menu in the bar and an expandable group in the panel. An action can leave the bar below a width
+ * (`Navbar.Action`'s `hideBelow`) and come back in `Navbar.PanelActions`. A sticky bar can be transparent until it is stuck
+ * (`variant="ghost"`) and can slide away while the reader scrolls down (`hideOnScroll`). A wide panel of grouped links is
+ * `NavigationMenu`.
  *
  * Does not cover a persistent navigation column (`Sidebar`), a bar of editing actions (`Toolbar`), or a whole page layout (a
  * template).
@@ -195,6 +202,7 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
       menuOpen,
       defaultMenuOpen = false,
       onMenuOpenChange,
+      onMenuOpenChangeComplete,
       menuSide = "start",
       menuContainer,
       closeMenuOnNavigate = true,
@@ -312,7 +320,7 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
           awayFromView && styles.awayFromView,
           className,
         )}
-        style={style}
+        style={sticky ? ({ [stickyOffsetProperty]: `var(--dbm-space-${stickyOffset})`, ...style } as CSSProperties) : style}
       >
         {contained ? (
           <Container className={styles.inner}>{content}</Container>
@@ -324,7 +332,7 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
 
     return (
       <NavbarContext.Provider value={contextValue}>
-        <Drawer open={open} onOpenChange={changeMenu}>
+        <Drawer open={open} onOpenChange={changeMenu} onOpenChangeComplete={onMenuOpenChangeComplete}>
           {sticky ? (
             <Affix asChild offset={stickyOffset} scrollContainerRef={scrollContainerRef}>
               {header}
@@ -407,7 +415,9 @@ NavbarLinks.displayName = "Navbar.Links";
 
 /**
  * One link of the navigation. `current` marks the page the reader is on (`aria-current="page"`); `disabled` blocks the click
- * and keeps the link in the tab order, as `Link` does; `asChild` puts the look on a router's link.
+ * and keeps the link in the tab order, as `Link` does; `asChild` puts the look on a router's link. It takes an `icon` before its
+ * text, a `badge` (a count or dot, part of the link's name) after it, and an `external` mark (worked out from `href`: a new tab, a
+ * trailing icon and a hidden cue). Inside a `Navbar.Group` it is an item of that group's floating menu.
  */
 const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
   (
@@ -471,6 +481,7 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
           !inMenu && current && styles.current,
           !inMenu && current && currentVariantClass[currentVariant],
           !inMenu && current && grows && styles.currentGrow,
+          inMenu && current && styles.menuCurrent,
           disabled && styles.disabled,
           className,
         )}
@@ -521,7 +532,7 @@ NavbarLink.displayName = "Navbar.Link";
  */
 const NavbarGroup = forwardRef<HTMLButtonElement, NavbarGroupProps>(
   ({ label, current = false, disabled = false, defaultOpen, align = "start", className, children, ...props }, ref) => {
-    const { dir, currentVariant, rounded } = useNavbarContext("Navbar.Group");
+    const { dir, currentVariant, rounded, menuContainer } = useNavbarContext("Navbar.Group");
     const inPanel = useContext(NavbarPanelContext);
     const [open, setOpen] = useState(defaultOpen ?? current);
     const [menuOpen, setMenuOpen] = useState(false);
@@ -578,7 +589,7 @@ const NavbarGroup = forwardRef<HTMLButtonElement, NavbarGroupProps>(
               {trigger}
             </button>
           </Menu.Trigger>
-          <Menu.Content align={align}>
+          <Menu.Content align={align} container={menuContainer}>
             <NavbarMenuContext.Provider value={closeGroupMenu}>{children}</NavbarMenuContext.Provider>
           </Menu.Content>
         </Menu>

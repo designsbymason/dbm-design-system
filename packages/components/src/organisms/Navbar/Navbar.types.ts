@@ -103,6 +103,12 @@ export interface NavbarProps extends Omit<ComponentPropsWithoutRef<"header">, "d
    */
   onMenuOpenChange?: (open: boolean, details: NavbarMenuChangeDetails) => void;
   /**
+   * Called with `true` once the menu panel has finished opening (its entrance is over) and with `false` once it has finished
+   * closing and is out of the page. `onMenuOpenChange` says a change *started*; this says it is *over*: the place to collapse a
+   * group or clear a field in the panel without guessing the animation's length.
+   */
+  onMenuOpenChangeComplete?: (open: boolean) => void;
+  /**
    * Which edge the phone menu slides in from. `"start"` and `"end"` are logical, so they swap in right-to-left text.
    * @default 'start'
    */
@@ -114,8 +120,8 @@ export interface NavbarProps extends Omit<ComponentPropsWithoutRef<"header">, "d
    */
   closeMenuOnNavigate?: boolean;
   /**
-   * The element the menu panel is drawn into instead of the end of `document.body`: a shadow root, or a frame that should
-   * hold the panel and its scrim. Leave it out for the usual page.
+   * The element the bar's overlays are drawn into instead of the end of `document.body`: the menu panel with its scrim, and the
+   * floating menu of a `Navbar.Group`. For a shadow root, or a frame that should hold them. Leave it out for the usual page.
    */
   menuContainer?: HTMLElement | null;
   /**

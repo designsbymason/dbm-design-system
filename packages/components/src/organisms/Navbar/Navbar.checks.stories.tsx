@@ -791,13 +791,14 @@ export const HidesWhileScrollingDown: Story = {
     const boxRef = useRef<HTMLDivElement | null>(null);
     return (
       <StickyDemo boxRef={boxRef}>
-        {(ref) => <DemoNavbar sticky hideOnScroll currentVariant="subtle" scrollContainerRef={ref} />}
+        {(ref) => <DemoNavbar sticky hideOnScroll stickyOffset={6} currentVariant="subtle" scrollContainerRef={ref} />}
       </StickyDemo>
     );
   },
   play: async ({ canvasElement }) => {
     const header = within(canvasElement).getByRole("banner");
     const scroller = header.parentElement!;
+    // "out of view" is nothing of the bar below the scroller's top edge, though it sticks 24px (`stickyOffset={6}`) below it
     const outside = () => header.getBoundingClientRect().bottom <= scroller.getBoundingClientRect().top + 1;
     const settle = async () => {
       await waitFor(() => expect(header.getAnimations().every((animation) => animation.playState === "finished")).toBe(true));
@@ -823,5 +824,51 @@ export const HidesWhileScrollingDown: Story = {
     await waitFor(() => expect(getComputedStyle(header).translate).toBe("none"), { timeout: 3000 });
     await settle();
     expect(outside()).toBe(false);
+  },
+};
+
+export const GroupMenuMarksTheCurrentItem: Story = {
+  name: "The current item of a group's menu is marked in colour and by a bar, and the menu is drawn in the container",
+  render: () => (
+    <NavbarStage minBlockSize="24rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+          <DemoNavbar withGroup actions="none" collapseBelow="never" menuContainer={menuContainer} />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Resources" }));
+    await userEvent.click(await within(document.body).findByRole("menuitem", { name: "Guides" }));
+    await waitFor(() => expect(within(document.body).queryByRole("menu")).not.toBeInTheDocument());
+    await userEvent.click(canvas.getByRole("button", { name: "Resources" }));
+    const menu = await within(document.body).findByRole("menu");
+    // the menu is drawn inside the container the bar was given, as the panel is
+    expect(canvasElement.contains(menu)).toBe(true);
+    await waitFor(() => expect(menu.getAnimations().every((animation) => animation.playState === "finished")).toBe(true));
+    const current = within(menu).getByRole("menuitem", { name: "Guides" });
+    const other = within(menu).getByRole("menuitem", { name: "Blog" });
+    const style = getComputedStyle(current);
+    // a different colour from the others, which clears 4.5:1 on the menu's own surface, and a bar at the start edge
+    expect(style.color).not.toBe(getComputedStyle(other).color);
+    expect(contrast(style.color, getComputedStyle(menu).backgroundColor)).toBeGreaterThanOrEqual(4.5);
+    expect(style.backgroundImage).toContain("linear-gradient");
+    expect(getComputedStyle(other).backgroundImage).toBe("none");
+    expect(style.backgroundPosition.startsWith("0%") || style.backgroundPosition.startsWith("0px") || style.backgroundPosition.startsWith("left")).toBe(true);
+    // forced colours replace the bar, so an outline marks it instead
+    const emulate = (value: "active" | "none") =>
+      send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
+    await emulate("active");
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await expect(getComputedStyle(current).outlineStyle).toBe("solid");
+      await expect(getComputedStyle(other).outlineStyle).not.toBe("solid");
+    } finally {
+      await emulate("none");
+    }
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(within(document.body).queryByRole("menu")).not.toBeInTheDocument());
   },
 };

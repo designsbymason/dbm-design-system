@@ -56,8 +56,10 @@
   transition: translate var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
 }
 
+/* It leaves by its own height plus the distance it sticks from the top (`--navbar-sticky-offset`, set from `stickyOffset`), so no strip
+   of it is left on screen below that line. */
 .awayFromView:not(:focus-within) {
-  translate: 0 -100%;
+  translate: 0 calc(-100% - var(--navbar-sticky-offset, 0px));
 }
 
 /* --- Layout --- */
@@ -203,6 +205,22 @@ a.brand:focus-visible,
 
 [data-theme$="-dark"] .skipLink:focus-visible {
   box-shadow: var(--dbm-shadow-dark-md);
+}
+
+/* The current link as an item of a group's floating menu: the menu draws the item itself, so the look is a brand text colour and a
+   bar at the item's start edge (two cues, since colour alone can't be the only one). The attribute selector raises the specificity
+   over the menu's own item colour, whichever stylesheet loads first. The bar is a background gradient, which has no logical form,
+   so right-to-left names the other edge. */
+.menuCurrent[role="menuitem"] {
+  color: var(--dbm-text-brand);
+  background-image: linear-gradient(var(--dbm-bg-brand), var(--dbm-bg-brand));
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: var(--dbm-border-width-2) 60%;
+}
+
+.menuCurrent[role="menuitem"]:dir(rtl) {
+  background-position: right center;
 }
 
 /* A count or dot after a link's text. */
@@ -582,6 +600,13 @@ a.brand:focus-visible,
      by itself, so the outline the other looks use is not drawn unless the link has focus. */
   .currentUnderline::after {
     background-color: Highlight;
+  }
+
+  /* A background gradient is replaced in forced colours, so the current menu item gets an outline inside its box instead. */
+  .menuCurrent[role="menuitem"] {
+    background-image: none;
+    outline: var(--dbm-border-width-1) solid Highlight;
+    outline-offset: calc(-1 * var(--dbm-border-width-1));
   }
 
   .currentUnderline:not(:focus-visible) {

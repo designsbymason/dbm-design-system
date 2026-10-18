@@ -58,6 +58,11 @@ const meta: Meta<typeof Navbar> = {
       description:
         "Called with the new open state of the menu panel, and { reason }: trigger, escape, outside, close-button or close (a link chosen).",
     },
+    onMenuOpenChangeComplete: {
+      control: false,
+      description:
+        "Called with true once the menu panel has finished opening and with false once it has finished closing and is out of the page. onMenuOpenChange says a change started; this says it is over.",
+    },
     menuSide: {
       control: "select",
       options: ["start", "end", "top", "bottom"],
@@ -66,7 +71,8 @@ const meta: Meta<typeof Navbar> = {
     },
     menuContainer: {
       control: false,
-      description: "The element the menu panel is drawn into instead of the end of document.body (a shadow root, or a frame).",
+      description:
+        "The element the bar's overlays are drawn into instead of the end of document.body: the menu panel with its scrim, and a group's floating menu. For a shadow root, or a frame.",
     },
     closeMenuOnNavigate: {
       control: "boolean",
