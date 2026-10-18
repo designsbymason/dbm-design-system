@@ -259,6 +259,8 @@ export interface NavbarSearchProps extends Omit<SearchInputProps, "size" | "clas
    * @default 'ghost'
    */
   buttonVariant?: ButtonVariant;
+  /** The size of the search button the field becomes below `collapseBelow`, in place of the field's `size`, so the button can match the icon buttons beside it while the field stays smaller. */
+  buttonSize?: ButtonSize;
   /**
    * Closes the sheet when Enter is pressed in its field, so a phone returns to the page with the results. Has no effect in the bar.
    * @default true

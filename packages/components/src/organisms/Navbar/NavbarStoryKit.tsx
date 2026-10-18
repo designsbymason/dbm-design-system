@@ -189,8 +189,8 @@ export function DemoColumnsBars({ menuContainer }: { menuContainer?: HTMLElement
 
 /**
  * A multi-row header, laid out the way a shop's is: a thin courtesy strip (which scrolls away when the bar is sticky); a taller row with the
- * logo, the search field and small tertiary icon buttons, which on a phone (`columns`) puts the menu button and the search button at the
- * start, the logo in the centre and the other buttons at the end; and a smaller row of primary links, centred, in capitals, with none marked current (the
+ * logo, a small search field centred between them and the brand and medium tertiary icon buttons, which on a phone (`columns`) puts the menu button and the search button at the
+ * start, the logo in the centre and the other buttons at the end; and a smaller row of primary links, centred, in larger bold capitals, with none marked current (the
  * visitor is on the home page). The sets of links are named so each landmark has its own name.
  */
 export function DemoRowsNavbar({
@@ -221,20 +221,27 @@ export function DemoRowsNavbar({
         <Navbar.Brand href="#" onClick={preventNavigation}>
           dbM
         </Navbar.Brand>
-        <Navbar.Search size="sm" buttonVariant="tertiary" collapseBelow={searchCollapseBelow} placeholder="Search products" />
-        <Navbar.Actions>
-          <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="sm" />
-          <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="sm" />
+        <Navbar.Search
+          size="sm"
+          buttonVariant="tertiary"
+          buttonSize="md"
+          collapseBelow={searchCollapseBelow}
+          placeholder="Search products"
+          style={{ marginInline: "auto" }}
+        />
+        <Navbar.Actions style={{ marginInlineStart: 0 }}>
+          <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="md" />
+          <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="md" />
         </Navbar.Actions>
-        <Navbar.MenuButton variant="tertiary" size="sm" />
+        <Navbar.MenuButton variant="tertiary" size="md" />
       </Navbar.Row>
       <Navbar.Row size="sm" variant="outlined">
         <Navbar.Links
           aria-label="Categories"
           align="center"
           style={{
-            fontSize: "var(--dbm-font-size-xs)",
-            fontWeight: "var(--dbm-font-weight-semibold)",
+            fontSize: "var(--dbm-font-size-md)",
+            fontWeight: "var(--dbm-font-weight-bold)",
             textTransform: "uppercase",
           }}
         >

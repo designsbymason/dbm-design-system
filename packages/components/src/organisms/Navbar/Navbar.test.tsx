@@ -1685,6 +1685,16 @@ describe("Navbar columns", () => {
     expect(button.className).toMatch(/sizeSm/);
   });
 
+  it("takes a size for the search button apart from the field's", () => {
+    render(
+      <Navbar>
+        <Navbar.Search size="sm" buttonSize="lg" />
+      </Navbar>,
+    );
+    expect(screen.getByLabelText("Search", { selector: "button" }).className).toMatch(/sizeLg/);
+    expect(screen.getByRole("searchbox", { hidden: true }).parentElement!.className).toMatch(/sizeSm/);
+  });
+
   it("draws the search sheet with a small heading and a medium field", async () => {
     const user = userEvent.setup();
     render(

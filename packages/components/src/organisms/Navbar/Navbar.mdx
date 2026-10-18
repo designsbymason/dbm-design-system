@@ -64,7 +64,7 @@ export const playgroundOrder = [
 ];
 export const brandPropOrder = ["children", "href", "asChild", "column", "aria-label", "id", "className", "style", "data-testid"];
 export const rowPropOrder = ["children", "variant", "size", "contained", "columns", "columnsBelow", "sticky", "id", "className", "style", "data-testid"];
-export const searchPropOrder = ["value", "collapseBelow", "size", "buttonVariant", "closeOnSubmit", "column", "aria-label", "id", "className", "style", "data-testid"];
+export const searchPropOrder = ["value", "collapseBelow", "size", "buttonVariant", "buttonSize", "closeOnSubmit", "column", "aria-label", "id", "className", "style", "data-testid"];
 export const linksPropOrder = ["children", "align", "quiet", "column", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
 export const linkPropOrder = ["children", "href", "icon", "badge", "external", "current", "disabled", "asChild", "aria-label", "id", "className", "style", "data-testid"];
 export const groupPropOrder = ["label", "children", "current", "defaultOpen", "disabled", "align", "aria-label", "id", "className", "style", "data-testid"];
@@ -210,12 +210,12 @@ for a bar that sits over a hero or a coloured page.
 ### A header of several rows
 
 A `Navbar.Row` is a band of the one `<header>`, and each can set its own `variant`, `size` and `contained`. Here: a thin courtesy strip
-(`size="xs"`, with `quiet` links); a taller row (`size="lg"`) with the logo, a smaller search field (`size="sm"`) and small tertiary icon buttons;
-and a smaller row (`size="sm"`) of primary links, centred (`align="center"`), in capitals and semibold (a `style` on `Navbar.Links` sets the text of every
+(`size="xs"`, with `quiet` links); a taller row (`size="lg"`) with the logo, a smaller search field (`size="sm"`), centred between the logo and the buttons, and medium tertiary icon buttons;
+and a smaller row (`size="sm"`) of primary links, centred (`align="center"`), in larger, bold capitals (a `style` on `Navbar.Links` sets the text of every
 link in it), with none marked current, as on a home page. Give each `Navbar.Links` its own name, since they are separate landmarks.
 
 On a phone the same header lays itself out differently: the logo row is drawn in three columns (`columns="balanced"` on the `Navbar.Row`), with the menu
-button and the search button at the start, the logo in the centre and the other buttons at the end. The logo is central however many buttons are on each side. `Navbar.MenuButton` takes a `variant` and a `size` and `Navbar.Search` a `buttonVariant`
+button and the search button at the start, the logo in the centre and the other buttons at the end. The logo is central however many buttons are on each side. `Navbar.MenuButton` takes a `variant` and a `size` and `Navbar.Search` a `buttonVariant` and a `buttonSize`
 so they can match the icon buttons beside them. Narrow the window to see it.
 
 `columns` gathers the row's parts into a group for the start, the centre and the end, and below `columnsBelow` (`"md"` unless set) draws the three as
@@ -576,17 +576,17 @@ This story is shown at a phone's width when opened on its own; on this page, nar
   </Navbar.Row>
   <Navbar.Row size="lg" variant="outlined" columns="balanced">
     <Navbar.Brand href="/">dbM</Navbar.Brand>
-    <Navbar.Search size="sm" buttonVariant="tertiary" placeholder="Search products" onSearch={(query) => search(query)} />
-    <Navbar.Actions>
-      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="sm" />
+    <Navbar.Search size="sm" buttonVariant="tertiary" buttonSize="md" placeholder="Search products" style={{ marginInline: "auto" }} onSearch={(query) => search(query)} />
+    <Navbar.Actions style={{ marginInlineStart: 0 }}>
+      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="md" />
     </Navbar.Actions>
-    <Navbar.MenuButton variant="tertiary" size="sm" />
+    <Navbar.MenuButton variant="tertiary" size="md" />
   </Navbar.Row>
   <Navbar.Row size="sm" variant="outlined">
     <Navbar.Links
       aria-label="Categories"
       align="center"
-      style={{ fontSize: "var(--dbm-font-size-xs)", fontWeight: "var(--dbm-font-weight-semibold)", textTransform: "uppercase" }}
+      style={{ fontSize: "var(--dbm-font-size-md)", fontWeight: "var(--dbm-font-weight-bold)", textTransform: "uppercase" }}
     >
       <Navbar.Link href="/women">Women</Navbar.Link>
       <Navbar.Link href="/men">Men</Navbar.Link>

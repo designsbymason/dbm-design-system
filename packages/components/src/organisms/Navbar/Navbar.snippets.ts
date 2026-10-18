@@ -127,12 +127,13 @@ ${navbar('currentVariant="solid"')}`,
 </Navbar>`,
 
   rows: `{/* A multi-row header is still one <header>. Each Navbar.Row is a band, with its own variant, size and contained (they start from
-    the bar's): here a thin strip (xs), a taller logo row (lg) and a small row of links (sm), none of them current, as on a home page.
+    the bar's): here a thin strip (xs), a taller logo row (lg) and a row of links (sm), none of them current, as on a home page. The search field is centred in the room
+    between the logo and the buttons (an auto margin on it, and the actions' own push to the end cancelled).
     Several Navbar.Links are allowed: give each its own aria-label, and quiet for a courtesy row's. On a phone (columns) the row is
     three columns: the menu and search buttons at the start, the logo in the centre, the other buttons at the end, so the logo stays
     central however many are on each side. Write the brand first (the page and a wide window read it first); the menu button is drawn
-    first in its column wherever it is. They are small tertiary icon buttons here (variant and size on Navbar.MenuButton, buttonVariant
-    on Navbar.Search). A style on Navbar.Links sets the text of all its links. */}
+    first in its column wherever it is. They are medium tertiary icon buttons here (variant and size on Navbar.MenuButton, buttonVariant and buttonSize on
+    Navbar.Search, which keeps its field small). A style on Navbar.Links sets the text of all its links. */}
 <Navbar>
   <Navbar.Row size="xs" variant="outlined" sticky={false}>
     <Navbar.Links aria-label="Help" quiet align="end">
@@ -145,18 +146,18 @@ ${navbar('currentVariant="solid"')}`,
     <Navbar.Brand href="/">
       dbM
     </Navbar.Brand>
-    <Navbar.Search size="sm" buttonVariant="tertiary" placeholder="Search products" />
-    <Navbar.Actions>
-      <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="sm" />
-      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="sm" />
+    <Navbar.Search size="sm" buttonVariant="tertiary" buttonSize="md" placeholder="Search products" style={{ marginInline: "auto" }} />
+    <Navbar.Actions style={{ marginInlineStart: 0 }}>
+      <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="md" />
+      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="md" />
     </Navbar.Actions>
-    <Navbar.MenuButton variant="tertiary" size="sm" />
+    <Navbar.MenuButton variant="tertiary" size="md" />
   </Navbar.Row>
   <Navbar.Row size="sm" variant="outlined">
     <Navbar.Links
       aria-label="Categories"
       align="center"
-      style={{ fontSize: "var(--dbm-font-size-xs)", fontWeight: "var(--dbm-font-weight-semibold)", textTransform: "uppercase" }}
+      style={{ fontSize: "var(--dbm-font-size-md)", fontWeight: "var(--dbm-font-weight-bold)", textTransform: "uppercase" }}
     >
       <Navbar.Link href="/women">Women</Navbar.Link>
       <Navbar.Link href="/men">Men</Navbar.Link>
@@ -210,18 +211,18 @@ ${navbar('currentVariant="solid"')}`,
     <Navbar.Brand href="/">
       dbM
     </Navbar.Brand>
-    <Navbar.Search size="sm" buttonVariant="tertiary" collapseBelow="3xl" />
-    <Navbar.Actions>
-      <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="sm" />
-      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="sm" />
+    <Navbar.Search size="sm" buttonVariant="tertiary" buttonSize="md" collapseBelow="3xl" style={{ marginInline: "auto" }} />
+    <Navbar.Actions style={{ marginInlineStart: 0 }}>
+      <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="md" />
+      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="md" />
     </Navbar.Actions>
-    <Navbar.MenuButton variant="tertiary" size="sm" />
+    <Navbar.MenuButton variant="tertiary" size="md" />
   </Navbar.Row>
   <Navbar.Row size="sm" variant="outlined">
     <Navbar.Links
       aria-label="Categories"
       align="center"
-      style={{ fontSize: "var(--dbm-font-size-xs)", fontWeight: "var(--dbm-font-weight-semibold)", textTransform: "uppercase" }}
+      style={{ fontSize: "var(--dbm-font-size-md)", fontWeight: "var(--dbm-font-weight-bold)", textTransform: "uppercase" }}
     >
       <Navbar.Link href="/women">Women</Navbar.Link>
       <Navbar.Link href="/men">Men</Navbar.Link>
@@ -259,11 +260,11 @@ ${navbar('currentVariant="solid"')}`,
     <Navbar.Brand href="/">
       dbM
     </Navbar.Brand>
-    <Navbar.Search size="sm" buttonVariant="tertiary" />
-    <Navbar.Actions>
-      <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="sm" />
+    <Navbar.Search size="sm" buttonVariant="tertiary" buttonSize="md" style={{ marginInline: "auto" }} />
+    <Navbar.Actions style={{ marginInlineStart: 0 }}>
+      <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="md" />
     </Navbar.Actions>
-    <Navbar.MenuButton variant="tertiary" size="sm" />
+    <Navbar.MenuButton variant="tertiary" size="md" />
   </Navbar.Row>
   <Navbar.Row size="sm" variant="outlined">
     <Navbar.Links aria-label="Categories" align="center">

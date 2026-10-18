@@ -919,15 +919,16 @@ export const RowsLayout: Story = {
     const field = within(main).getByRole("searchbox");
     const icon = field.parentElement!.querySelector("svg")!;
     expect(field.getBoundingClientRect().left - icon.getBoundingClientRect().right).toBeGreaterThanOrEqual(4);
-    // and with room to spare it takes the most it is allowed
+    // and with room to spare it takes the most it is allowed, centred in the room between the brand and the buttons
     expect(Math.abs(search.width - tokenPx("--dbm-navbar-search-max-width") * 16)).toBeLessThan(2);
+    expect(Math.abs(search.left - brand.right - (actions.left - search.right))).toBeLessThan(2);
     // the courtesy links sit at the end of their row, quieter than the categories
     const help = within(courtesy).getByRole("navigation", { name: "Help" }).getBoundingClientRect();
     expect(courtesy.getBoundingClientRect().right - help.right).toBeLessThan(40);
     const quiet = getComputedStyle(within(courtesy).getByRole("link", { name: "Help" }));
     const loud = getComputedStyle(within(categories).getByRole("link", { name: "Men" }));
     expect(px(quiet.fontSize)).toBeLessThanOrEqual(px(loud.fontSize));
-    // the primary links: centred in their row, in capitals, semibold and small, and none is marked as the current page
+    // the primary links: centred in their row, in capitals, bold and larger than the courtesy links, and none is marked as the current page
     const nav = within(categories).getByRole("navigation", { name: "Categories" });
     const navBox = nav.getBoundingClientRect();
     const centre = (navBox.left + navBox.right) / 2;
@@ -935,12 +936,12 @@ export const RowsLayout: Story = {
     expect(Math.abs(centre - (rowBox.left + rowBox.right) / 2)).toBeLessThan(2);
     const link = getComputedStyle(within(categories).getByRole("link", { name: "Men" }));
     expect(link.textTransform).toBe("uppercase");
-    expect(link.fontWeight).toBe("600");
-    expect(px(link.fontSize)).toBeLessThan(px(getComputedStyle(within(courtesy).getByRole("link", { name: "Help" })).fontSize) + 1.5);
+    expect(link.fontWeight).toBe("700");
+    expect(px(link.fontSize)).toBeGreaterThan(px(getComputedStyle(within(courtesy).getByRole("link", { name: "Help" })).fontSize));
     expect(canvasElement.querySelector('[aria-current="page"]')).toBeNull();
-    // the buttons in the logo row are small tertiary icon buttons, the search field a size down
+    // the buttons in the logo row are medium tertiary icon buttons, the search field a size down
     const buttons = within(main).getAllByRole("button", { name: /Account|Cart/ });
-    for (const button of buttons) expect(Math.round(button.getBoundingClientRect().height)).toBe(Math.round(tokenPx("--dbm-icon-button-size-sm")));
+    for (const button of buttons) expect(Math.round(button.getBoundingClientRect().height)).toBe(Math.round(tokenPx("--dbm-icon-button-size-md")));
     expect(within(main).getByRole("searchbox").parentElement!.getBoundingClientRect().height).toBeLessThan(tokenPx("--dbm-icon-button-size-md"));
     // only the first row scrolls away, and the categories' line is the one under the bar
     expect(courtesy).toHaveAttribute("data-scroll-away");
@@ -1263,9 +1264,9 @@ export const RowsOnAPhone: Story = {
       expect(menu.left - row.left).toBeLessThan(24);
       expect(row.right - cart.right).toBeLessThan(24);
     });
-    await step("all four buttons are small tertiary icon buttons", async () => {
+    await step("all four buttons are medium tertiary icon buttons", async () => {
       for (const button of [menu, search, account, cart]) {
-        expect(Math.round(button.height)).toBe(Math.round(tokenPx("--dbm-icon-button-size-sm")));
+        expect(Math.round(button.height)).toBe(Math.round(tokenPx("--dbm-icon-button-size-md")));
       }
     });
     await step("the logo is first in the page, as on a wide window", async () => {
