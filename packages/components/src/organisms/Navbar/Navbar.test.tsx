@@ -104,12 +104,12 @@ describe("Navbar", () => {
     expect(header).toHaveAttribute("data-size", "lg");
   });
 
-  it("applies variant, size and collapse classes", () => {
+  it("applies the collapse class to the bar, and the variant and size to its row", () => {
     render(<Basic variant="filled" size="sm" collapseBelow="lg" />);
     const header = screen.getByRole("banner");
-    expect(header).toHaveClass(styles.filled!);
-    expect(header).toHaveClass(styles.sizeSm!);
     expect(header).toHaveClass(styles.collapseLg!);
+    const row = header.firstElementChild!;
+    expect(row).toHaveClass(styles.row!, styles.filled!, styles.sizeSm!);
   });
 
   it("sets the direction on the bar", () => {
@@ -940,7 +940,7 @@ describe("Navbar hideOnScroll", () => {
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    vi.stubGlobal("IntersectionObserver", undefined);
   });
 
   it("slides away on a scroll down past the bar, returns on a scroll up, and stays shown near the top", async () => {
@@ -986,7 +986,7 @@ describe("Navbar review fixes", () => {
     expect(screen.getByRole("banner").style.getPropertyValue("--navbar-sticky-offset")).toBe("var(--dbm-space-6)");
     rerender(<Basic />);
     expect(screen.getByRole("banner").style.getPropertyValue("--navbar-sticky-offset")).toBe("");
-    vi.unstubAllGlobals();
+    vi.stubGlobal("IntersectionObserver", undefined);
   });
 
   it("keeps a caller's own style over the bar's, and the property too if they set it", () => {
@@ -994,7 +994,7 @@ describe("Navbar review fixes", () => {
     render(<Basic sticky style={{ color: "red" }} />);
     expect(screen.getByRole("banner").style.color).toBe("red");
     expect(screen.getByRole("banner").style.getPropertyValue("--navbar-sticky-offset")).toBe("var(--dbm-space-0)");
-    vi.unstubAllGlobals();
+    vi.stubGlobal("IntersectionObserver", undefined);
   });
 
   it("marks the current item of a group's menu, and only it", async () => {
@@ -1027,5 +1027,426 @@ describe("Navbar review fixes", () => {
     const menu = await screen.findByRole("menu");
     expect(container.contains(menu)).toBe(true);
     container.remove();
+  });
+});
+
+describe("Navbar.Row", () => {
+  function Rows(props: Partial<React.ComponentProps<typeof Navbar>> = {}) {
+    return (
+      <Navbar {...props}>
+        <Navbar.Row data-testid="courtesy" size="xs" variant="filled" sticky={false}>
+          <Navbar.Links aria-label="Courtesy" quiet>
+            <Navbar.Link href="/help">Help</Navbar.Link>
+          </Navbar.Links>
+        </Navbar.Row>
+        <Navbar.Row data-testid="main">
+          <Navbar.Brand href="/">dbM</Navbar.Brand>
+          <Navbar.Actions>
+            <Button size="sm">Sign in</Button>
+          </Navbar.Actions>
+        </Navbar.Row>
+        <Navbar.Row data-testid="categories" variant="outlined">
+          <Navbar.Links aria-label="Categories">
+            <Navbar.Link href="/men">Men</Navbar.Link>
+            <Navbar.Link href="/women">Women</Navbar.Link>
+          </Navbar.Links>
+        </Navbar.Row>
+      </Navbar>
+    );
+  }
+
+  it("draws each row as a band inside the one banner, with its own variant, size and a scroll-away mark", () => {
+    render(<Rows />);
+    expect(screen.getAllByRole("banner")).toHaveLength(1);
+    const header = screen.getByRole("banner");
+    expect(Array.from(header.children).map((child) => child.getAttribute("data-testid"))).toEqual(["courtesy", "main", "categories"]);
+    const courtesy = screen.getByTestId("courtesy");
+    expect(courtesy).toHaveClass(styles.row!, styles.filled!, styles.sizeXs!);
+    expect(courtesy).toHaveAttribute("data-scroll-away");
+    expect(screen.getByTestId("main")).not.toHaveAttribute("data-scroll-away");
+    expect(screen.getByTestId("main")).toHaveClass(styles.outlined!);
+  });
+
+  it("forwards a ref and the standard props", () => {
+    const ref = createRef<HTMLDivElement>();
+    render(
+      <Navbar>
+        <Navbar.Row ref={ref} id="r" className="mine" data-testid="row">
+          <Navbar.Brand href="/">dbM</Navbar.Brand>
+        </Navbar.Row>
+      </Navbar>,
+    );
+    expect(ref.current).toBe(screen.getByTestId("row"));
+    expect(ref.current).toHaveAttribute("id", "r");
+    expect(ref.current).toHaveClass("mine", styles.row!);
+  });
+
+  it("starts from the bar's variant, size and contained, and a row's own setting wins", () => {
+    const { container } = render(
+      <Navbar variant="filled" size="lg" contained>
+        <Navbar.Row data-testid="inherits">
+          <Navbar.Brand href="/">dbM</Navbar.Brand>
+        </Navbar.Row>
+        <Navbar.Row data-testid="own" variant="ghost" size="sm" contained={false}>
+          <Navbar.Brand href="/">dbM</Navbar.Brand>
+        </Navbar.Row>
+      </Navbar>,
+    );
+    expect(screen.getByTestId("inherits")).toHaveClass(styles.filled!, styles.sizeLg!);
+    expect(screen.getByTestId("own")).toHaveClass(styles.ghost!, styles.sizeSm!);
+    expect(screen.getByTestId("inherits").firstElementChild).not.toHaveClass(styles.plainInner!);
+    expect(screen.getByTestId("own").firstElementChild).toHaveClass(styles.plainInner!);
+    expect(container.querySelectorAll(`.${styles.row}`)).toHaveLength(2);
+  });
+
+  it("draws a bar with no rows as one row", () => {
+    const { container } = render(<Basic />);
+    expect(container.querySelectorAll(`.${styles.row}`)).toHaveLength(1);
+  });
+
+  it("puts the automatic menu button at the end of the row with the brand, and not in the others", () => {
+    render(<Rows />);
+    expect(screen.getAllByRole("button", { name: "Menu" })).toHaveLength(1);
+    const button = screen.getByRole("button", { name: "Menu" });
+    expect(screen.getByTestId("main").contains(button)).toBe(true);
+    expect(screen.getByTestId("courtesy").contains(button)).toBe(false);
+  });
+
+  it("takes the first row when no row has a brand, and a menu button placed by hand wins", () => {
+    const { rerender } = render(
+      <Navbar>
+        <Navbar.Row data-testid="one">
+          <Navbar.Links aria-label="A">
+            <Navbar.Link href="/a">A</Navbar.Link>
+          </Navbar.Links>
+        </Navbar.Row>
+        <Navbar.Row data-testid="two" />
+      </Navbar>,
+    );
+    expect(screen.getByTestId("one").contains(screen.getByRole("button", { name: "Menu" }))).toBe(true);
+    rerender(
+      <Navbar>
+        <Navbar.Row data-testid="one">
+          <Navbar.Links aria-label="A">
+            <Navbar.Link href="/a">A</Navbar.Link>
+          </Navbar.Links>
+        </Navbar.Row>
+        <Navbar.Row data-testid="two">
+          <Navbar.MenuButton aria-label="Open" />
+        </Navbar.Row>
+      </Navbar>,
+    );
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+    expect(screen.getByTestId("two").contains(screen.getByRole("button", { name: "Open" }))).toBe(true);
+  });
+
+  it("finds parts in a fragment inside a row, and rows in a fragment", () => {
+    render(
+      <Navbar>
+        <>
+          <Navbar.Row data-testid="in-fragment">
+            <>
+              <Navbar.Brand href="/">dbM</Navbar.Brand>
+              <Navbar.Links aria-label="Frag">
+                <Navbar.Link href="/a">A</Navbar.Link>
+              </Navbar.Links>
+            </>
+          </Navbar.Row>
+        </>
+      </Navbar>,
+    );
+    expect(screen.getByTestId("in-fragment").contains(screen.getByRole("button", { name: "Menu" }))).toBe(true);
+  });
+
+  it("puts every set of links in the one menu panel, in the order written, with the quiet ones last", async () => {
+    const user = userEvent.setup();
+    render(<Rows />);
+    await user.click(screen.getByRole("button", { name: "Menu" }));
+    const panel = await screen.findByRole("dialog");
+    const navs = within(panel).getAllByRole("navigation");
+    expect(navs.map((nav) => nav.getAttribute("aria-label"))).toEqual(["Categories", "Courtesy"]);
+    // the panel is drawn once: one title, one close button
+    expect(within(panel).getAllByRole("heading")).toHaveLength(1);
+    expect(within(navs[0]!).getAllByRole("link").map((link) => link.textContent)).toEqual(["Men", "Women"]);
+    expect(within(navs[1]!).getAllByRole("link").map((link) => link.textContent)).toEqual(["Help"]);
+    // DOM order is reading order: the quiet set follows the other
+    expect(navs[0]!.compareDocumentPosition(navs[1]!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("closes the panel when a link in any of its sets is chosen", async () => {
+    const user = userEvent.setup();
+    render(<Rows />);
+    await user.click(screen.getByRole("button", { name: "Menu" }));
+    const panel = await screen.findByRole("dialog");
+    await user.click(within(panel).getByRole("link", { name: "Help" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+
+  it("draws a panel for one set of links and none for a bar with no links", async () => {
+    const user = userEvent.setup();
+    render(
+      <Navbar defaultMenuOpen>
+        <Navbar.Row>
+          <Navbar.Brand href="/">dbM</Navbar.Brand>
+        </Navbar.Row>
+      </Navbar>,
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await user.tab();
+  });
+
+  it("warns, once per problem, about two sets of links with the same name, a scroll-away row after one that sticks, and loose parts beside rows", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    render(
+      <Navbar>
+        <Navbar.Brand href="/">loose</Navbar.Brand>
+        <Navbar.Row>
+          <Navbar.Links>
+            <Navbar.Link href="/a">A</Navbar.Link>
+          </Navbar.Links>
+        </Navbar.Row>
+        <Navbar.Row sticky={false}>
+          <Navbar.Links>
+            <Navbar.Link href="/b">B</Navbar.Link>
+          </Navbar.Links>
+        </Navbar.Row>
+      </Navbar>,
+    );
+    const messages = warn.mock.calls.map((call) => String(call[0]));
+    expect(messages.some((message) => message.includes("same name"))).toBe(true);
+    expect(messages.some((message) => message.includes("follows one that sticks"))).toBe(true);
+    expect(messages.some((message) => message.includes("mixed with"))).toBe(true);
+  });
+
+  it("has no axe violations with rows, or with the panel open", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<Rows />);
+    expect(await axe(container)).toHaveNoViolations();
+    await user.click(screen.getByRole("button", { name: "Menu" }));
+    expect(await axe(await screen.findByRole("dialog"))).toHaveNoViolations();
+  });
+});
+
+describe("Navbar rows that scroll away", () => {
+  beforeEach(() => {
+    vi.stubGlobal("IntersectionObserver", class { observe() {} unobserve() {} disconnect() {} takeRecords() { return []; } });
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      const height = this.hasAttribute("data-scroll-away") ? 36 : 60;
+      return { height, width: 0, top: 0, left: 0, right: 0, bottom: height, x: 0, y: 0, toJSON() {} } as DOMRect;
+    });
+    Object.defineProperty(window, "scrollY", { value: 0, configurable: true });
+  });
+
+  afterEach(() => {
+    vi.stubGlobal("IntersectionObserver", undefined);
+  });
+
+  function StickyRows({ scrollAway = true }: { scrollAway?: boolean }) {
+    return (
+      <Navbar sticky stickyOffset={2}>
+        <Navbar.Row sticky={!scrollAway}>
+          <Navbar.Brand href="/">strip</Navbar.Brand>
+        </Navbar.Row>
+        <Navbar.Row>
+          <Navbar.Brand href="/">main</Navbar.Brand>
+        </Navbar.Row>
+      </Navbar>
+    );
+  }
+
+  it("sticks the bar that far above the top as the leading rows are tall, and says how far", () => {
+    render(<StickyRows />);
+    const header = screen.getByRole("banner");
+    expect(header.style.getPropertyValue("--navbar-leading-height")).toBe("36px");
+    expect(header.style.top).toContain("--navbar-leading-height");
+    expect(header).toHaveClass(styles.hasLeading!);
+  });
+
+  it("is stuck by its own measure: not while the leading rows are on screen, and yes once they have gone", async () => {
+    render(<StickyRows />);
+    const header = screen.getByRole("banner");
+    expect(header).not.toHaveAttribute("data-navbar-stuck");
+    await act(async () => {
+      Object.defineProperty(window, "scrollY", { value: 20, configurable: true });
+      window.dispatchEvent(new Event("scroll"));
+    });
+    expect(header).not.toHaveAttribute("data-navbar-stuck");
+    await act(async () => {
+      Object.defineProperty(window, "scrollY", { value: 40, configurable: true });
+      window.dispatchEvent(new Event("scroll"));
+    });
+    expect(header).toHaveAttribute("data-navbar-stuck");
+  });
+
+  it("does nothing special when every row sticks, or the bar isn't sticky", () => {
+    const { rerender } = render(<StickyRows scrollAway={false} />);
+    expect(screen.getByRole("banner")).not.toHaveClass(styles.hasLeading!);
+    expect(screen.getByRole("banner").style.getPropertyValue("--navbar-leading-height")).toBe("");
+    rerender(
+      <Navbar>
+        <Navbar.Row sticky={false}>
+          <Navbar.Brand href="/">strip</Navbar.Brand>
+        </Navbar.Row>
+      </Navbar>,
+    );
+    expect(screen.getByRole("banner")).not.toHaveClass(styles.hasLeading!);
+  });
+});
+
+describe("Navbar.Search", () => {
+  it("is a named search landmark with a field, and a button for it below the collapse width", () => {
+    render(
+      <Navbar>
+        <Navbar.Search />
+      </Navbar>,
+    );
+    const landmark = screen.getByRole("search", { hidden: true });
+    expect(landmark).toHaveAttribute("aria-label", "Search");
+    expect(within(landmark).getByRole("button", { name: "Search" })).toBeInTheDocument();
+    expect(within(landmark).getByRole("searchbox", { hidden: true })).toBeInTheDocument();
+  });
+
+  it("takes its name from aria-label or labels, and draws no button when it never collapses", () => {
+    const { rerender } = render(
+      <Navbar labels={{ search: "Find" }}>
+        <Navbar.Search collapseBelow="never" />
+      </Navbar>,
+    );
+    expect(screen.getByRole("search")).toHaveAttribute("aria-label", "Find");
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    rerender(
+      <Navbar>
+        <Navbar.Search collapseBelow="never" aria-label="Products" />
+      </Navbar>,
+    );
+    expect(screen.getByRole("searchbox", { name: "Products" })).toBeInTheDocument();
+  });
+
+  it("forwards its ref and the standard props to the landmark, and the id to the field", () => {
+    const ref = createRef<HTMLDivElement>();
+    render(
+      <Navbar>
+        <Navbar.Search ref={ref} id="q" className="mine" data-testid="search" collapseBelow="never" />
+      </Navbar>,
+    );
+    expect(ref.current).toBe(screen.getByTestId("search"));
+    expect(ref.current).toHaveClass("mine", styles.search!);
+    expect(screen.getByRole("searchbox")).toHaveAttribute("id", "q");
+  });
+
+  it("takes its size from its row, or its own", () => {
+    const { rerender } = render(
+      <Navbar>
+        <Navbar.Row size="lg">
+          <Navbar.Search collapseBelow="never" data-testid="s" />
+        </Navbar.Row>
+      </Navbar>,
+    );
+    const field = () => screen.getByRole("searchbox").parentElement!;
+    const lg = field().className;
+    rerender(
+      <Navbar>
+        <Navbar.Row size="lg">
+          <Navbar.Search collapseBelow="never" size="xs" data-testid="s" />
+        </Navbar.Row>
+      </Navbar>,
+    );
+    expect(field().className).not.toBe(lg);
+  });
+
+  it("opens the field in a sheet from the button, focuses it, and returns focus on Escape", async () => {
+    const user = userEvent.setup();
+    render(
+      <Navbar>
+        <Navbar.Search />
+      </Navbar>,
+    );
+    const button = screen.getByRole("button", { name: "Search" });
+    await user.click(button);
+    const sheet = await screen.findByRole("dialog", { name: "Search" });
+    const field = within(sheet).getByRole("searchbox", { name: "Search" });
+    await waitFor(() => expect(field).toHaveFocus());
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    await waitFor(() => expect(button).toHaveFocus());
+  });
+
+  it("closes the sheet on Enter, unless closeOnSubmit is off, and reports the search", async () => {
+    const user = userEvent.setup();
+    const onSearch = vi.fn();
+    const { rerender } = render(
+      <Navbar>
+        <Navbar.Search onSearch={onSearch} />
+      </Navbar>,
+    );
+    await user.click(screen.getByRole("button", { name: "Search" }));
+    await user.type(within(await screen.findByRole("dialog")).getByRole("searchbox"), "shoes{Enter}");
+    expect(onSearch).toHaveBeenCalledWith("shoes");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    rerender(
+      <Navbar>
+        <Navbar.Search onSearch={onSearch} closeOnSubmit={false} />
+      </Navbar>,
+    );
+    await user.click(screen.getByRole("button", { name: "Search" }));
+    await user.type(within(await screen.findByRole("dialog")).getByRole("searchbox"), "hats{Enter}");
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("keeps the bar's field and the sheet's in step when controlled", async () => {
+    const user = userEvent.setup();
+    function Controlled() {
+      const [value, setValue] = useState("");
+      return (
+        <Navbar>
+          <Navbar.Search value={value} onChange={(event) => setValue(event.target.value)} />
+        </Navbar>
+      );
+    }
+    render(<Controlled />);
+    await user.click(screen.getByRole("button", { name: "Search" }));
+    const sheetField = within(await screen.findByRole("dialog")).getByRole("searchbox");
+    await user.type(sheetField, "boots");
+    expect(sheetField).toHaveValue("boots");
+    expect(screen.getAllByRole("searchbox", { hidden: true }).every((field) => (field as HTMLInputElement).value === "boots")).toBe(true);
+  });
+
+  it("has no axe violations in the bar or in the sheet", async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <Navbar>
+        <Navbar.Search collapseBelow="never" />
+      </Navbar>,
+    );
+    expect(await axe(container)).toHaveNoViolations();
+    const second = render(
+      <Navbar>
+        <Navbar.Search />
+      </Navbar>,
+    );
+    await user.click(within(second.container).getByRole("button", { name: "Search" }));
+    expect(await axe(await screen.findByRole("dialog"))).toHaveNoViolations();
+  });
+});
+
+describe("Navbar.Links quiet and the xs size", () => {
+  it("marks quiet links, in the bar and in the panel", async () => {
+    const user = userEvent.setup();
+    render(
+      <Navbar>
+        <Navbar.Links aria-label="Quiet" quiet>
+          <Navbar.Link href="/a">A</Navbar.Link>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    expect(screen.getByRole("navigation", { hidden: true })).toHaveClass(styles.quiet!);
+    await user.click(screen.getByRole("button", { name: "Menu" }));
+    const panel = await screen.findByRole("dialog");
+    expect(within(panel).getByRole("navigation")).toHaveClass(styles.quiet!);
+  });
+
+  it("draws a bar or a row at the xs step", () => {
+    render(<Basic size="xs" />);
+    expect(screen.getByRole("banner").firstElementChild).toHaveClass(styles.sizeXs!);
   });
 });

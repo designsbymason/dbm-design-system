@@ -1,23 +1,10 @@
 import { ArrowSquareOutIcon, CaretDownIcon, ListIcon } from "@dbm-design-system/icons";
 import { cx, mergeDefined, mergeRefs } from "@dbm-design-system/primitives";
 import { Slot } from "@radix-ui/react-slot";
-import {
-  Children,
-  createContext,
-  forwardRef,
-  isValidElement,
-  useCallback,
-  useContext,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { forwardRef, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { CSSProperties, MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { Affix } from "../../atoms/Affix";
-import { Container } from "../../atoms/Container";
 import { Icon } from "../../atoms/Icon";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { IconButton } from "../../atoms/IconButton";
@@ -25,7 +12,21 @@ import { Drawer } from "../Drawer";
 import { Menu } from "../Menu";
 import type { DrawerOpenChangeDetails } from "../Drawer";
 import styles from "./Navbar.module.css";
+import { childrenOf, flattenParts } from "./collectParts";
+import {
+  NavbarContext,
+  NavbarMenuContext,
+  NavbarPanelContext,
+  NavbarRowContext,
+  NavbarRowIndexContext,
+  defaultLabels,
+  useNavbarContext,
+} from "./NavbarContext";
+import type { NavbarContextValue } from "./NavbarContext";
+import { NavbarRow } from "./NavbarRow";
+import { NavbarSearch } from "./NavbarSearch";
 import { useHideOnScroll } from "./useHideOnScroll";
+import { useLeadingRowsHeight, useScrolledPast } from "./useLeadingRows";
 import type {
   NavbarActionProps,
   NavbarActionsProps,
@@ -33,26 +34,19 @@ import type {
   NavbarCollapseBelow,
   NavbarCurrentVariant,
   NavbarGroupProps,
-  NavbarLabels,
   NavbarLinkProps,
   NavbarLinksProps,
   NavbarMenuButtonProps,
   NavbarPanelActionsProps,
   NavbarProps,
-  NavbarSize,
   NavbarSkipLinkProps,
 } from "./Navbar.types";
 
-const defaultLabels: NavbarLabels = {
-  menu: "Menu",
-  navigation: "Main",
-  close: "Close",
-  skipLink: "Skip to content",
-  externalLink: "(opens in a new tab)",
-};
-
 /** The custom property the stylesheet reads to move a hidden sticky bar out by its offset as well as its height. */
 const stickyOffsetProperty = "--navbar-sticky-offset";
+
+/** The custom property holding how far the leading rows that scroll away take the bar above the top of the page. */
+const leadingHeightProperty = "--navbar-leading-height";
 
 const EXTERNAL_HREF_PATTERN = /^(https?:)?\/\//i;
 
@@ -75,12 +69,6 @@ const collapseClass: Record<NavbarCollapseBelow, string | undefined> = {
   never: styles.collapseNever,
 };
 
-const sizeClass: Record<NavbarSize, string | undefined> = {
-  sm: styles.sizeSm,
-  md: undefined,
-  lg: styles.sizeLg,
-};
-
 const currentVariantClass: Record<NavbarCurrentVariant, string | undefined> = {
   subtle: undefined,
   underline: styles.currentUnderline,
@@ -99,37 +87,6 @@ const collapseQuery: Record<Exclude<NavbarCollapseBelow, "never">, string> = {
   "3xl": "(min-width: 120rem)",
 };
 
-interface NavbarContextValue {
-  labels: NavbarLabels;
-  size: NavbarSize;
-  closeMenuOnNavigate: boolean;
-  currentVariant: NavbarCurrentVariant;
-  rounded: boolean;
-  menuSide: NonNullable<NavbarProps["menuSide"]>;
-  dir: NonNullable<NavbarProps["dir"]>;
-  menuContainer: HTMLElement | null | undefined;
-  /** The menu panel's footer element once it is drawn, where `Navbar.PanelActions` puts its children. */
-  panelFooter: HTMLElement | null;
-  setPanelFooter: (footer: HTMLElement | null) => void;
-  /** Whether a `Navbar.PanelActions` is among the bar's children, so the panel draws a footer for it. */
-  hasPanelActions: boolean;
-  /** The labels, for the parts that supply text of their own. */
-  /** Closes the phone menu from inside it (a link chosen). */
-  closeMenu: () => void;
-}
-
-const NavbarContext = createContext<NavbarContextValue | null>(null);
-
-/** True for the links drawn in the menu panel, which close it when chosen. */
-const NavbarPanelContext = createContext(false);
-
-/**
- * Set inside the floating list a `Navbar.Group` opens in the bar, where its links are menu items and not list items; the value
- * closes that list. `Menu` closes itself when an item is chosen, but not when the item's own click handler called
- * `preventDefault` (the way a router's link does), so a link closes it by hand then.
- */
-const NavbarMenuContext = createContext<(() => void) | null>(null);
-
 /**
  * Whether a link has become the current one since it was drawn, and still is: true from the render in which `current` turns
  * on until it turns off, so a marker that grows in plays once, isn't cut short by an unrelated re-render, and doesn't play
@@ -146,22 +103,17 @@ function useBecameCurrent(current: boolean): boolean {
   return became;
 }
 
-function useNavbarContext(part: string): NavbarContextValue {
-  const context = useContext(NavbarContext);
-  if (context === null) {
-    throw new Error(`${part} must be used inside <Navbar>.`);
-  }
-  return context;
-}
-
 /**
  * The application header: a named banner at the top of the page holding the brand, the primary navigation and a place for
  * the actions that belong to the whole app (search, an account menu, a call to action). Below the `collapseBelow` width
  * the navigation leaves the bar and is offered in a `Drawer` behind a menu button, so a phone gets a list it can reach
  * with a thumb and the first paint of a server-rendered page is already right (the switch is a stylesheet's).
  *
- * A compound component, meaning it is made of named sub-parts you compose together: `Navbar.Brand`, `Navbar.Links` holding
- * `Navbar.Link` items (and `Navbar.Group`s of them), `Navbar.Actions` holding `Navbar.Action`s, `Navbar.PanelActions` (what the menu
+ * A compound component, meaning it is made of named sub-parts you compose together: `Navbar.Row`s (optional bands of the one header: a
+ * courtesy strip, the logo and search row, a row of categories), `Navbar.Brand`, `Navbar.Links` (several are allowed, each its own named
+ * `<nav>`, and all in the one menu panel) holding
+ * `Navbar.Link` items (and `Navbar.Group`s of them), `Navbar.Search` (a `role="search"` field that becomes a button and a sheet on a
+ * phone), `Navbar.Actions` holding `Navbar.Action`s, `Navbar.PanelActions` (what the menu
  * panel shows at its foot), `Navbar.SkipLink`, and `Navbar.MenuButton` (drawn for you when `Navbar.Links` is present, unless you
  * place one yourself). It is a `<header>`; `Navbar.Links` is a named `<nav>` holding a list, and the current page is
  * `aria-current="page"`, marked by `currentVariant` (`underline`, `subtle` or `solid`) and, with `rounded`, as a pill. Links are
@@ -170,7 +122,8 @@ function useNavbarContext(part: string): NavbarContextValue {
  * The same `Navbar.Link` items are drawn in the bar and in the menu panel, so give them no `id`. A link that opens more links is a
  * `Navbar.Group`: a floating menu in the bar and an expandable group in the panel. An action can leave the bar below a width
  * (`Navbar.Action`'s `hideBelow`) and come back in `Navbar.PanelActions`. A sticky bar can be transparent until it is stuck
- * (`variant="ghost"`) and can slide away while the reader scrolls down (`hideOnScroll`). A wide panel of grouped links is
+ * (`variant="ghost"`), can slide away while the reader scrolls down (`hideOnScroll`), and can lead with rows that scroll away
+ * (`Navbar.Row`'s `sticky={false}`). A wide panel of grouped links is
  * `NavigationMenu`.
  *
  * Does not cover a persistent navigation column (`Sidebar`), a bar of editing actions (`Toolbar`), or a whole page layout (a
@@ -245,38 +198,79 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
       return () => query.removeEventListener("change", handleChange);
     }, [open, collapseBelow, closeMenu]);
 
+    const [panelBody, setPanelBody] = useState<HTMLElement | null>(null);
+    const [panelQuietBody, setPanelQuietBody] = useState<HTMLElement | null>(null);
     const [panelFooter, setPanelFooter] = useState<HTMLElement | null>(null);
     const barRef = useRef<HTMLElement | null>(null);
     const headerRef = useMemo(() => mergeRefs(ref, barRef), [ref]);
+
+    // What the bar is made of: its direct children, with fragments looked through, and the parts inside any rows.
+    const children_ = flattenParts(children);
+    const rows = children_.filter((child) => child.type === NavbarRow);
+    const hasRows = rows.length > 0;
+    const everyPart = [...children_, ...rows.flatMap((row) => flattenParts(childrenOf(row)))];
+    const linksParts = everyPart.filter((part) => part.type === NavbarLinks);
+    const hasLinks = linksParts.length > 0;
+    const hasMenuButton = everyPart.some((part) => part.type === NavbarMenuButton);
+    const hasPanelActions = everyPart.some((part) => part.type === NavbarPanelActions);
+    const showAutomaticMenuButton = hasLinks && !hasMenuButton && collapseBelow !== "never";
+    // The automatic menu button goes at the end of the first row with the brand in it, or the first row.
+    const brandRow = rows.findIndex((row) => flattenParts(childrenOf(row)).some((part) => part.type === NavbarBrand));
+    const menuButtonRow = showAutomaticMenuButton ? (hasRows ? Math.max(brandRow, 0) : 0) : null;
+
+    // The rows at the start that scroll away. A sticky bar sticks as one box, so these can only be the first ones.
+    let leadingCount = 0;
+    while (leadingCount < rows.length && (rows[leadingCount]?.props as { sticky?: boolean }).sticky === false) leadingCount += 1;
+    const hasLeading = sticky && leadingCount > 0;
+    const leadingHeight = useLeadingRowsHeight(hasLeading, barRef, leadingCount);
+    const pastLeading = useScrolledPast(leadingHeight, scrollContainerRef);
     const awayFromView = useHideOnScroll(sticky && hideOnScroll, barRef, scrollContainerRef);
+
     useEffect(() => {
-      if (process.env.NODE_ENV !== "production" && hideOnScroll && !sticky) {
+      if (process.env.NODE_ENV === "production") return;
+      if (hideOnScroll && !sticky) {
         console.warn("Navbar: `hideOnScroll` needs `sticky`; without it the bar scrolls away with the page and nothing is hidden.");
       }
-    }, [hideOnScroll, sticky]);
+      if (hasRows && children_.some((child) => child.type !== NavbarRow && child.type !== NavbarSkipLink && child.type !== NavbarPanelActions)) {
+        console.warn("Navbar: parts are mixed with `Navbar.Row`s. Put every part in a row (only the skip link and the panel actions go beside them); the loose ones are drawn above the rows.");
+      }
+      if (rows.slice(leadingCount).some((row) => (row.props as { sticky?: boolean }).sticky === false)) {
+        console.warn("Navbar: a `Navbar.Row` with `sticky={false}` follows one that sticks. Only leading rows can scroll away, so it sticks.");
+      }
+      const names = linksParts
+        .filter((part) => (part.props as { "aria-labelledby"?: string })["aria-labelledby"] === undefined)
+        .map((part) => (part.props as { "aria-label"?: string })["aria-label"] ?? resolvedLabels.navigation);
+      if (new Set(names).size !== names.length) {
+        console.warn("Navbar: two `Navbar.Links` have the same name. Give each its own `aria-label` so they are told apart.");
+      }
+    });
 
-    const parts = Children.toArray(children);
-    const hasLinks = parts.some((child) => isValidElement(child) && child.type === NavbarLinks);
-    const hasMenuButton = parts.some((child) => isValidElement(child) && child.type === NavbarMenuButton);
-    const hasPanelActions = parts.some((child) => isValidElement(child) && child.type === NavbarPanelActions);
-    const showAutomaticMenuButton = hasLinks && !hasMenuButton && collapseBelow !== "never";
-
+    const autoMenuButton = showAutomaticMenuButton ? <NavbarMenuButton /> : null;
     const contextValue = useMemo<NavbarContextValue>(
       () => ({
         labels: resolvedLabels,
+        variant,
         size,
+        contained,
         closeMenuOnNavigate,
         currentVariant,
         rounded,
         menuSide,
         menuContainer,
+        panelBody,
+        setPanelBody,
+        panelQuietBody,
+        setPanelQuietBody,
         panelFooter,
         setPanelFooter,
         hasPanelActions,
+        menuButtonRow,
+        autoMenuButton,
         dir,
         closeMenu,
       }),
-      // `mergeDefined` returns a fresh object each render; its three strings are what the value really depends on.
+      // `mergeDefined` returns a fresh object each render; its strings are what the value really depends on, and the automatic
+      // menu button is the same element whenever it is drawn.
       // eslint-disable-next-line react-hooks/exhaustive-deps
       [
         resolvedLabels.menu,
@@ -284,25 +278,38 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
         resolvedLabels.close,
         resolvedLabels.skipLink,
         resolvedLabels.externalLink,
+        resolvedLabels.search,
+        variant,
         size,
+        contained,
         closeMenuOnNavigate,
         currentVariant,
         rounded,
         menuSide,
         menuContainer,
+        panelBody,
+        panelQuietBody,
         panelFooter,
         hasPanelActions,
+        menuButtonRow,
+        showAutomaticMenuButton,
         dir,
         closeMenu,
       ],
     );
 
-    const content = (
-      <>
-        {children}
-        {showAutomaticMenuButton && <NavbarMenuButton />}
-      </>
-    );
+    const headerStyle: CSSProperties | undefined = sticky
+      ? ({
+          [stickyOffsetProperty]: `var(--dbm-space-${stickyOffset})`,
+          ...(hasLeading
+            ? {
+                [leadingHeightProperty]: `${leadingHeight}px`,
+                top: `calc(var(--dbm-space-${stickyOffset}) - var(${leadingHeightProperty}))`,
+              }
+            : {}),
+          ...style,
+        } as CSSProperties)
+      : style;
 
     const header = (
       <header
@@ -311,22 +318,33 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
         dir={dir}
         data-variant={variant}
         data-size={size}
+        data-navbar-stuck={hasLeading && pastLeading ? "" : undefined}
         className={cx(
           styles.root,
-          styles[variant],
-          sizeClass[size],
+          variant === "ghost" && styles.ghostBar,
           collapseClass[collapseBelow],
           sticky && styles.sticky,
+          hasLeading && styles.hasLeading,
           awayFromView && styles.awayFromView,
           className,
         )}
-        style={sticky ? ({ [stickyOffsetProperty]: `var(--dbm-space-${stickyOffset})`, ...style } as CSSProperties) : style}
+        style={headerStyle}
       >
-        {contained ? (
-          <Container className={styles.inner}>{content}</Container>
-        ) : (
-          <div className={cx(styles.inner, styles.plainInner)}>{content}</div>
-        )}
+        {hasRows
+          ? children_.map((child, position) =>
+              child.type === NavbarRow ? (
+                <NavbarRowIndexContext.Provider key={child.key ?? position} value={rows.indexOf(child)}>
+                  {child}
+                </NavbarRowIndexContext.Provider>
+              ) : (
+                child
+              ),
+            )
+          : (
+            <NavbarRowIndexContext.Provider value={0}>
+              <NavbarRow>{children}</NavbarRow>
+            </NavbarRowIndexContext.Provider>
+          )}
       </header>
     );
 
@@ -339,6 +357,25 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
             </Affix>
           ) : (
             header
+          )}
+          {hasLinks && (
+            <Drawer.Content
+              side={menuSide}
+              size="sm"
+              dir={dir}
+              container={menuContainer}
+              labels={{ close: resolvedLabels.close }}
+              aria-describedby={undefined}
+            >
+              <Drawer.Header>
+                <Drawer.Title>{resolvedLabels.menu}</Drawer.Title>
+              </Drawer.Header>
+              <Drawer.Body>
+                <div ref={setPanelBody} className={styles.panelSections} />
+                <div ref={setPanelQuietBody} className={styles.panelQuietSections} />
+              </Drawer.Body>
+              {hasPanelActions && <Drawer.Footer ref={setPanelFooter} align="stretch" />}
+            </Drawer.Content>
           )}
         </Drawer>
       </NavbarContext.Provider>
@@ -373,8 +410,9 @@ NavbarBrand.displayName = "Navbar.Brand";
  * width, and, below it, as the body of the menu panel the menu button opens. Its children are drawn in both places.
  */
 const NavbarLinks = forwardRef<HTMLElement, NavbarLinksProps>(
-  ({ children, className, align = "start", "aria-label": ariaLabel, "aria-labelledby": ariaLabelledBy, ...props }, ref) => {
-    const { labels, menuSide, menuContainer, dir, hasPanelActions, setPanelFooter } = useNavbarContext("Navbar.Links");
+  ({ children, className, align = "start", quiet = false, "aria-label": ariaLabel, "aria-labelledby": ariaLabelledBy, ...props }, ref) => {
+    const { labels, panelBody, panelQuietBody } = useNavbarContext("Navbar.Links");
+    const panelTarget = quiet ? panelQuietBody : panelBody;
     const name = ariaLabelledBy === undefined ? (ariaLabel ?? labels.navigation) : ariaLabel;
 
     return (
@@ -385,7 +423,7 @@ const NavbarLinks = forwardRef<HTMLElement, NavbarLinksProps>(
           aria-label={name}
           aria-labelledby={ariaLabelledBy}
           data-align={align}
-          className={cx(styles.links, className)}
+          className={cx(styles.links, quiet && styles.quiet, className)}
         >
           {/* `role="list"` and `role="listitem"` are redundant on paper; Safari with VoiceOver drops list semantics under `list-style: none`. */}
           {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}
@@ -393,20 +431,17 @@ const NavbarLinks = forwardRef<HTMLElement, NavbarLinksProps>(
             {children}
           </ul>
         </nav>
-        <Drawer.Content side={menuSide} size="sm" dir={dir} container={menuContainer} labels={{ close: labels.close }} aria-describedby={undefined}>
-          <Drawer.Header>
-            <Drawer.Title>{labels.menu}</Drawer.Title>
-          </Drawer.Header>
-          <Drawer.Body>
-            <nav aria-label={name} aria-labelledby={ariaLabelledBy} className={styles.panelNav}>
+        {/* The menu panel is drawn by the bar, once; each set of links puts its copy into it, in the order they are written. */}
+        {panelTarget !== null &&
+          createPortal(
+            <nav aria-label={name} aria-labelledby={ariaLabelledBy} className={cx(styles.panelNav, quiet && styles.quiet)}>
               {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}
               <ul role="list" className={cx(styles.list, styles.panelList)}>
                 <NavbarPanelContext.Provider value>{children}</NavbarPanelContext.Provider>
               </ul>
-            </nav>
-          </Drawer.Body>
-          {hasPanelActions && <Drawer.Footer ref={setPanelFooter} align="stretch" />}
-        </Drawer.Content>
+            </nav>,
+            panelTarget,
+          )}
       </>
     );
   },
@@ -650,7 +685,8 @@ NavbarSkipLink.displayName = "Navbar.SkipLink";
  */
 const NavbarMenuButton = forwardRef<HTMLButtonElement, NavbarMenuButtonProps>(
   ({ icon = ListIcon, className, "aria-label": ariaLabel, ...props }, ref) => {
-    const { labels, size } = useNavbarContext("Navbar.MenuButton");
+    const { labels, size: barSize } = useNavbarContext("Navbar.MenuButton");
+    const size = useContext(NavbarRowContext)?.size ?? barSize;
     return (
       <Drawer.Trigger asChild>
         <IconButton
@@ -669,7 +705,9 @@ const NavbarMenuButton = forwardRef<HTMLButtonElement, NavbarMenuButtonProps>(
 NavbarMenuButton.displayName = "Navbar.MenuButton";
 
 type NavbarComponent = typeof NavbarRoot & {
+  Row: typeof NavbarRow;
   Brand: typeof NavbarBrand;
+  Search: typeof NavbarSearch;
   Links: typeof NavbarLinks;
   Link: typeof NavbarLink;
   Group: typeof NavbarGroup;
@@ -681,7 +719,9 @@ type NavbarComponent = typeof NavbarRoot & {
 };
 
 export const Navbar: NavbarComponent = Object.assign(NavbarRoot, {
+  Row: NavbarRow,
   Brand: NavbarBrand,
+  Search: NavbarSearch,
   Links: NavbarLinks,
   Link: NavbarLink,
   Group: NavbarGroup,

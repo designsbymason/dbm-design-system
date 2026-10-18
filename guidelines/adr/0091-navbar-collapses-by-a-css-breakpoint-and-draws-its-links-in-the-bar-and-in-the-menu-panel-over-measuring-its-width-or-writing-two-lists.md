@@ -1,6 +1,6 @@
 # 0091 — `Navbar` collapses by a CSS breakpoint and draws its links in the bar and in the menu panel, over measuring its width or writing two lists
 
-**Status:** Accepted · **Date:** 2026-10-17
+**Status:** Accepted, the clause that `Navbar.Links` draws the panel superseded by [0094](./0094-navbar-rows-share-one-header-and-one-menu-panel-the-root-draws-the-panel-and-links-portal-into-it-and-a-sticky-bar-sticks-above-its-leading-rows.md) · **Date:** 2026-10-17
 
 ## Context
 `Navbar` is the application header: a brand, the primary links and a place for app-wide actions. On a phone the links don't fit and move into a panel behind a menu button, which is `Drawer` ([ADR-0061](./0061-drawer-is-attached-to-a-logical-side-that-can-change-with-the-screen-with-its-own-size-tokens-and-no-swipe-yet.md) names it as the intended consumer). Two questions have more than one reasonable answer:

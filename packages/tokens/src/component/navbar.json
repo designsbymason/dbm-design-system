@@ -1,0 +1,14 @@
+{
+  "navbar": {
+    "search-min-width": {
+      "$type": "dimension",
+      "$value": "12rem",
+      "$description": "New token (2026-10-18), added for Navbar.Search — the width its field wants in the bar before the neighbouring parts crowd it (its flex-basis), so on a middling screen the field keeps a usable width instead of being squeezed to nothing. No home on any existing primitive scale (the spacing scale tops out at 8rem)."
+    },
+    "search-max-width": {
+      "$type": "dimension",
+      "$value": "32rem",
+      "$description": "New token (2026-10-18), added for Navbar.Search — the widest the field grows when the row has room to spare, so a wide bar doesn't stretch it across the page. A content-measure cap with no home on any existing primitive scale."
+    }
+  }
+}

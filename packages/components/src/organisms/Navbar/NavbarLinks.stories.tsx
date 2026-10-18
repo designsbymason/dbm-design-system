@@ -20,6 +20,12 @@ const meta: Meta<typeof Navbar.Links> = {
         "Where the links sit between the brand and the actions: next to the brand, centred in the room between them, or against the actions. Follows the reading direction; no effect in the menu panel.",
       table: { defaultValue: { summary: '"start"' } },
     },
+    quiet: {
+      control: "boolean",
+      description:
+        "A quieter look for secondary links (a courtesy row): smaller text in the secondary colour. The current link is still marked.",
+      table: { defaultValue: { summary: "false" } },
+    },
     "aria-label": {
       control: "text",
       description: "Names the navigation landmark. Defaults to labels.navigation (\"Main\").",

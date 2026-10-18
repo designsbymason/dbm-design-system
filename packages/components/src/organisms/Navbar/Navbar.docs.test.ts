@@ -54,6 +54,8 @@ function argTypeKeys(file: string): string[] {
 
 const parts: Array<[string, string, string]> = [
   ["NavbarProps", "propOrder", "NavbarRoot.stories.tsx"],
+  ["NavbarRowProps", "rowPropOrder", "NavbarRow.stories.tsx"],
+  ["NavbarSearchProps", "searchPropOrder", "NavbarSearch.stories.tsx"],
   ["NavbarBrandProps", "brandPropOrder", "NavbarBrand.stories.tsx"],
   ["NavbarLinksProps", "linksPropOrder", "NavbarLinks.stories.tsx"],
   ["NavbarLinkProps", "linkPropOrder", "NavbarLink.stories.tsx"],

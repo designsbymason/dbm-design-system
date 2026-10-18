@@ -34,8 +34,9 @@ const meta: Meta<typeof Navbar> = {
     },
     size: {
       control: "select",
-      options: ["sm", "md", "lg"],
-      description: "The bar's height: as tall as an IconButton of the same step plus room above and below.",
+      options: ["xs", "sm", "md", "lg"],
+      description:
+        "The bar's height, and the default for its rows: as tall as an IconButton of the same step plus room above and below.",
       table: { defaultValue: { summary: '"md"' } },
     },
     contained: {

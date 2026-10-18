@@ -5,7 +5,13 @@
   color: var(--dbm-text-primary);
 }
 
-/* --- Variants: how the bar itself is drawn --- */
+/* --- Rows and their variants: how each band of the bar is drawn --- (the bar is a box around its rows and draws nothing itself,
+   but the sticky surface and shadow below) */
+
+.row {
+  box-sizing: border-box;
+  inline-size: 100%;
+}
 
 .outlined {
   background-color: var(--dbm-bg-surface);
@@ -25,11 +31,15 @@
   margin-block-start: calc(var(--dbm-space-px) * -1);
 }
 
-.sticky[data-stuck] {
+/* A bar with rows that scroll away is stuck only once they have gone, which `Affix` can't tell (it reports stuck from the first
+   pixel), so such a bar (`hasLeading`) is stuck by the bar's own measure (`data-navbar-stuck`). */
+.sticky[data-stuck]:not(.hasLeading),
+.sticky.hasLeading[data-navbar-stuck] {
   box-shadow: var(--dbm-shadow-light-md);
 }
 
-[data-theme$="-dark"] .sticky[data-stuck] {
+[data-theme$="-dark"] .sticky[data-stuck]:not(.hasLeading),
+[data-theme$="-dark"] .sticky.hasLeading[data-navbar-stuck] {
   box-shadow: var(--dbm-shadow-dark-md);
 }
 
@@ -39,14 +49,15 @@
 
 /* A sticky `ghost` bar is transparent over the page (a hero, say) until it is stuck, then takes a surface and a shadow, so what
    scrolls beneath it never shows through the links. */
-.ghost.sticky {
+.ghostBar.sticky {
   background-color: transparent;
   transition:
     background-color var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard),
     translate var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
 }
 
-.ghost.sticky[data-stuck] {
+.ghostBar.sticky[data-stuck]:not(.hasLeading),
+.ghostBar.sticky.hasLeading[data-navbar-stuck] {
   background-color: var(--dbm-bg-surface);
 }
 
@@ -79,6 +90,11 @@
 /* Inside `Container` the padding is the container's; without it the bar pads its own ends. */
 .plainInner {
   padding-inline: var(--dbm-space-4);
+}
+
+.sizeXs .inner {
+  --navbar-button-size: var(--dbm-icon-button-size-xs);
+  --navbar-room: var(--dbm-space-1);
 }
 
 .sizeSm .inner {
@@ -221,6 +237,140 @@ a.brand:focus-visible,
 
 .menuCurrent[role="menuitem"]:dir(rtl) {
   background-position: right center;
+}
+
+/* --- The search field --- */
+
+/* Between its neighbours, never narrower than a usable field or wider than a measure. Below its collapse step (`searchCollapse*`) the
+   field is out of the bar and a button stands in for it; each step is the literal width of the matching breakpoint token, as the
+   collapse steps below are. */
+.search {
+  flex: 1 1 var(--dbm-navbar-search-min-width);
+  min-inline-size: 0;
+  max-inline-size: var(--dbm-navbar-search-max-width);
+}
+
+.searchField {
+  inline-size: 100%;
+}
+
+.searchButton {
+  display: none;
+}
+
+.sheetField {
+  inline-size: 100%;
+}
+
+.searchCollapseSm,
+.searchCollapseMd,
+.searchCollapseLg,
+.searchCollapseXl,
+.searchCollapse2xl,
+.searchCollapse3xl {
+  flex: 0 0 auto;
+}
+
+.searchCollapseSm .searchField,
+.searchCollapseMd .searchField,
+.searchCollapseLg .searchField,
+.searchCollapseXl .searchField,
+.searchCollapse2xl .searchField,
+.searchCollapse3xl .searchField {
+  display: none;
+}
+
+.searchCollapseSm .searchButton,
+.searchCollapseMd .searchButton,
+.searchCollapseLg .searchButton,
+.searchCollapseXl .searchButton,
+.searchCollapse2xl .searchButton,
+.searchCollapse3xl .searchButton {
+  display: inline-flex;
+}
+
+@media (min-width: 40rem) {
+  .searchCollapseSm {
+    flex: 1 1 var(--dbm-navbar-search-min-width);
+  }
+
+  .searchCollapseSm .searchField {
+    display: block;
+  }
+
+  .searchCollapseSm .searchButton {
+    display: none;
+  }
+}
+
+@media (min-width: 48rem) {
+  .searchCollapseMd {
+    flex: 1 1 var(--dbm-navbar-search-min-width);
+  }
+
+  .searchCollapseMd .searchField {
+    display: block;
+  }
+
+  .searchCollapseMd .searchButton {
+    display: none;
+  }
+}
+
+@media (min-width: 64rem) {
+  .searchCollapseLg {
+    flex: 1 1 var(--dbm-navbar-search-min-width);
+  }
+
+  .searchCollapseLg .searchField {
+    display: block;
+  }
+
+  .searchCollapseLg .searchButton {
+    display: none;
+  }
+}
+
+@media (min-width: 80rem) {
+  .searchCollapseXl {
+    flex: 1 1 var(--dbm-navbar-search-min-width);
+  }
+
+  .searchCollapseXl .searchField {
+    display: block;
+  }
+
+  .searchCollapseXl .searchButton {
+    display: none;
+  }
+}
+
+@media (min-width: 96rem) {
+  .searchCollapse2xl {
+    flex: 1 1 var(--dbm-navbar-search-min-width);
+  }
+
+  .searchCollapse2xl .searchField {
+    display: block;
+  }
+
+  .searchCollapse2xl .searchButton {
+    display: none;
+  }
+}
+
+@media (min-width: 120rem) {
+  .searchCollapse3xl {
+    flex: 1 1 var(--dbm-navbar-search-min-width);
+  }
+
+  .searchCollapse3xl .searchField {
+    display: block;
+  }
+
+  .searchCollapse3xl .searchButton {
+    display: none;
+  }
 }
 
 /* A count or dot after a link's text. */
@@ -479,6 +629,46 @@ a.brand:focus-visible,
 
 /* --- The menu panel --- */
 
+/* Each set of links (`Navbar.Links`) puts its copy here, in the order they are written; a line between them tells one from the next. */
+.panelSections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbm-space-4);
+}
+
+.panelNav + .panelNav,
+.panelQuietSections:not(:empty) {
+  padding-block-start: var(--dbm-space-4);
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+/* The quiet links' own container sits after the others, so a courtesy row's links come last, in the DOM and on screen; it is
+   spaced from them by the panel's own gap, and is a column of its own when there is more than one set. */
+.panelQuietSections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbm-space-4);
+  margin-block-start: var(--dbm-space-4);
+}
+
+.panelQuietSections:empty {
+  display: none;
+}
+
+/* Quieter links (`quiet`): smaller text in the secondary colour, for a courtesy row; a target is still 24 pixels. */
+.quiet .link {
+  font-size: var(--dbm-font-size-xs);
+}
+
+.quiet .link:not(.current) {
+  color: var(--dbm-text-secondary);
+}
+
+.quiet .link:not(.current):hover {
+  color: var(--dbm-text-primary);
+}
+
+
 .panelNav {
   display: block;
 }
@@ -493,6 +683,11 @@ a.brand:focus-visible,
   min-block-size: var(--dbm-icon-button-size-md);
   font-size: var(--dbm-font-size-base);
   white-space: normal;
+}
+
+/* A quiet set in the panel is a step smaller than the others there (declared after the rule above, which would otherwise win). */
+.quiet .panelList .link {
+  font-size: var(--dbm-font-size-sm);
 }
 
 /* --- Collapsing: one class per step, set on the root ---
@@ -577,7 +772,8 @@ a.brand:focus-visible,
    alone (a filled bar, a stuck one) gets a one-pixel outline instead, drawn inside the box so nothing moves; the outlined
    bar's line is a border, which forced colours keeps. The current link is told apart by fill alone, so it gets one too. */
 @media (forced-colors: active) {
-  .sticky[data-stuck] {
+  .sticky[data-stuck]:not(.hasLeading),
+  .sticky.hasLeading[data-navbar-stuck] {
     outline: var(--dbm-border-width-1) solid CanvasText;
   }
 
@@ -623,7 +819,7 @@ a.brand:focus-visible,
   .link,
   .caret,
   .sticky,
-  .ghost.sticky {
+  .ghostBar.sticky {
     transition: none;
   }
 

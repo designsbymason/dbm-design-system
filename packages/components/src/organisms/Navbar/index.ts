@@ -15,6 +15,8 @@ export type {
   NavbarMenuChangeDetails,
   NavbarPanelActionsProps,
   NavbarProps,
+  NavbarRowProps,
+  NavbarSearchProps,
   NavbarSize,
   NavbarSkipLinkProps,
   NavbarVariant,

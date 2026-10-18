@@ -9,10 +9,14 @@ import type {
   RefObject,
 } from "react";
 import type { DrawerOpenChangeDetails, DrawerSide } from "../Drawer";
+import type { SearchInputProps } from "../../molecules/SearchInput";
 import type { MenuAlign } from "../Menu";
 
-/** The bar's height step: its block size is the height of an `IconButton` of the same step plus a little room. */
-export type NavbarSize = "sm" | "md" | "lg";
+/**
+ * A row's height step: its block size is the height of an `IconButton` of the same step plus a little room. `xs` is for a thin
+ * strip above the bar (a courtesy or notice row).
+ */
+export type NavbarSize = "xs" | "sm" | "md" | "lg";
 
 /**
  * How the bar itself is drawn: `outlined` (a surface with a line under it), `filled` (a tinted surface) or `ghost`
@@ -51,15 +55,17 @@ export interface NavbarLabels {
   skipLink: string;
   /** Read out after an external `Navbar.Link`'s text, in place of a visible cue. @default '(opens in a new tab)' */
   externalLink: string;
+  /** The name of `Navbar.Search`'s field (and, on a phone, of its button and sheet) when it is given no `aria-label`. @default 'Search' */
+  search: string;
 }
 
 export interface NavbarProps extends Omit<ComponentPropsWithoutRef<"header">, "dir" | "children"> {
   /**
-   * The bar's contents, in reading order: `Navbar.SkipLink` first if there is one, then `Navbar.Brand`, `Navbar.Links`,
-   * `Navbar.Actions`, and optionally `Navbar.PanelActions` (drawn only in the menu panel's footer) and `Navbar.MenuButton` to place
-   * the phone menu's button yourself. `Navbar.Links` and `Navbar.PanelActions` and the menu button are found among the direct
-   * children; one wrapped in a fragment or another component still draws, but isn't noticed for the automatic menu button or
-   * the panel's footer.
+   * The bar's contents, in reading order: either the parts directly (`Navbar.SkipLink` first if there is one, then `Navbar.Brand`,
+   * `Navbar.Links`, `Navbar.Search`, `Navbar.Actions`), which are drawn as one row, or one or more `Navbar.Row`s holding them. The
+   * bar also looks for `Navbar.Links`, `Navbar.PanelActions` and `Navbar.MenuButton` (directly, in a fragment, or in a row) to draw
+   * the menu panel and its button; one wrapped in any other component still draws, but isn't noticed. Don't mix loose parts and
+   * rows: a development warning says so.
    */
   children?: ReactNode;
   /**
@@ -188,6 +194,66 @@ export interface NavbarProps extends Omit<ComponentPropsWithoutRef<"header">, "d
 /** Where `Navbar.Links` sits along the bar, between the brand and the actions. `"center"` centres it in the room between them. */
 export type NavbarLinksAlign = "start" | "center" | "end";
 
+export interface NavbarRowProps extends HTMLAttributes<HTMLDivElement> {
+  /** The row's parts: `Navbar.Brand`, `Navbar.Links`, `Navbar.Search`, `Navbar.Actions`, `Navbar.MenuButton`. */
+  children?: ReactNode;
+  /** How this row is drawn, in place of the bar's `variant` — see {@link NavbarVariant}. */
+  variant?: NavbarVariant;
+  /** This row's height step, in place of the bar's `size`. `"xs"` suits a courtesy strip. */
+  size?: NavbarSize;
+  /** Keeps this row's content to the page's reading width, in place of the bar's `contained`. */
+  contained?: boolean;
+  /**
+   * Whether the row sticks with the bar (when the bar is `sticky`). Set it to `false` for a courtesy strip that should scroll away
+   * while the rest stays. Only leading rows can scroll away (a row that sticks can't have one above it that doesn't: the bar
+   * sticks as one), so a `false` after a sticking row warns in development and sticks anyway.
+   * @default true
+   */
+  sticky?: boolean;
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface NavbarSearchProps extends Omit<SearchInputProps, "size" | "className" | "style"> {
+  /** The field's text when controlled. The bar's field and the sheet's are two inputs, so pass this with `onChange` to keep them in step. */
+  value?: SearchInputProps["value"];
+  /**
+   * The width below which the field leaves the bar for a button that opens it in a sheet from the top of the screen, a breakpoint
+   * step, or `"never"` to keep it in the bar at every width. Decided by the stylesheet, so a server render is right at first paint.
+   * @default 'md'
+   */
+  collapseBelow?: Exclude<Breakpoint, "base"> | "never";
+  /** This field's size, in place of its row's. */
+  size?: NavbarSize;
+  /**
+   * Closes the sheet when Enter is pressed in its field, so a phone returns to the page with the results. Has no effect in the bar.
+   * @default true
+   */
+  closeOnSubmit?: boolean;
+  /** Names the field. Defaults to `labels.search` ("Search"). */
+  "aria-label"?: string;
+  /** Standard DOM id, on the bar's field. */
+  id?: string;
+  /** Additional CSS classes, on the search landmark. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
 export interface NavbarBrandProps extends HTMLAttributes<HTMLElement> {
   /** The brand: a logo and a name. A logo that is an image needs its own `alt`. */
   children?: ReactNode;
@@ -229,6 +295,11 @@ export interface NavbarLinksProps extends Omit<ComponentPropsWithoutRef<"nav">, 
    * @default 'start'
    */
   align?: NavbarLinksAlign;
+  /**
+   * A quieter look for secondary links (a courtesy row): smaller text in the secondary colour. The current link is still marked.
+   * @default false
+   */
+  quiet?: boolean;
   /** Names the navigation landmark. Defaults to `labels.navigation` ("Main"). */
   "aria-label"?: string;
   /** The `id` of a visible element that names the navigation, in place of `aria-label`. */

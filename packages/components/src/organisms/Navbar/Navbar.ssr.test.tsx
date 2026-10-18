@@ -107,3 +107,82 @@ describe("Navbar hydrating", () => {
     warn.mockRestore();
   });
 });
+
+function RowsTree(props: NavbarProps) {
+  return (
+    <Navbar {...props}>
+      <Navbar.Row size="xs" variant="filled" sticky={false}>
+        <Navbar.Links aria-label="Courtesy" quiet align="end">
+          <Navbar.Link href="/help">Help</Navbar.Link>
+        </Navbar.Links>
+      </Navbar.Row>
+      <Navbar.Row>
+        <Navbar.Brand href="/">dbM</Navbar.Brand>
+        <Navbar.Search />
+        <Navbar.Actions>
+          <button type="button">Sign in</button>
+        </Navbar.Actions>
+      </Navbar.Row>
+      <Navbar.Row variant="outlined">
+        <Navbar.Links aria-label="Categories">
+          <Navbar.Link href="/men" current>
+            Men
+          </Navbar.Link>
+        </Navbar.Links>
+      </Navbar.Row>
+      <Navbar.PanelActions>
+        <button type="button">Sign in</button>
+      </Navbar.PanelActions>
+    </Navbar>
+  );
+}
+
+const rowVariants: Array<[string, NavbarProps]> = [
+  ["with rows", {}],
+  ["with rows, sticky, with the first row scrolling away", { sticky: true, stickyOffset: 2 }],
+  ["with rows, the menu open by default", { defaultMenuOpen: true }],
+  ["with rows, right to left", { dir: "rtl", size: "lg", contained: true }],
+];
+
+describe("Navbar with rows on the server", () => {
+  it.each(rowVariants)("renders %s without touching window or document, and draws the search landmark and every row", (_name, props) => {
+    const html = onTheServer(() => renderToString(<RowsTree {...props} />));
+    expect(html.match(/<header/g)).toHaveLength(1);
+    expect(html).toContain('role="search"');
+    expect(html).toContain("Categories");
+    expect(html).toContain("Courtesy");
+    expect(html).not.toContain('role="dialog"');
+  });
+});
+
+describe("Navbar with rows hydrating", () => {
+  it.each(rowVariants)("hydrates %s without a mismatch", async (_name, props) => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const html = onTheServer(() => renderToString(<RowsTree {...props} />));
+    const container = document.createElement("div");
+    container.innerHTML = html;
+    document.body.appendChild(container);
+    vi.stubGlobal("IntersectionObserver", StubIntersectionObserver);
+    let root!: ReturnType<typeof hydrateRoot>;
+    const recoverable: string[] = [];
+    await act(async () => {
+      root = hydrateRoot(container, <RowsTree {...props} />, {
+        onRecoverableError: (caught) => recoverable.push(String((caught as Error).message).slice(0, 400)),
+      });
+    });
+    try {
+      if (props.defaultMenuOpen) {
+        expect(await screen.findByRole("dialog", { hidden: true })).toBeInTheDocument();
+      }
+      expect(recoverable).toEqual([]);
+      expect(error).not.toHaveBeenCalled();
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+    }
+    error.mockRestore();
+    warn.mockRestore();
+  });
+});

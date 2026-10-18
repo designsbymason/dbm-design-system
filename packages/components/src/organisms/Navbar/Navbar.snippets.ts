@@ -126,6 +126,86 @@ ${navbar('currentVariant="solid"')}`,
   </Navbar.Links>
 </Navbar>`,
 
+  rows: `{/* A multi-row header is still one <header>. Each Navbar.Row is a band, with its own variant, size and contained (they start from
+    the bar's). Several Navbar.Links are allowed: give each its own aria-label, and quiet for a courtesy row's. */}
+<Navbar>
+  <Navbar.Row size="xs" variant="filled" sticky={false}>
+    <Navbar.Links aria-label="Help" quiet align="end">
+      <Navbar.Link href="/help">Help</Navbar.Link>
+      <Navbar.Link href="/orders">Track an order</Navbar.Link>
+    </Navbar.Links>
+  </Navbar.Row>
+  <Navbar.Row variant="ghost">
+    <Navbar.Brand href="/">dbM</Navbar.Brand>
+    <Navbar.Search placeholder="Search products" />
+    <Navbar.Actions>
+      <IconButton icon={UserCircleIcon} aria-label="Account" variant="ghost" />
+      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="ghost" />
+    </Navbar.Actions>
+  </Navbar.Row>
+  <Navbar.Row variant="outlined">
+    <Navbar.Links aria-label="Categories">
+      <Navbar.Link href="/women" current>
+        Women
+      </Navbar.Link>
+      <Navbar.Link href="/men">Men</Navbar.Link>
+      <Navbar.Link href="/sale">Sale</Navbar.Link>
+    </Navbar.Links>
+  </Navbar.Row>
+</Navbar>`,
+
+  rowsPanel: `{/* Below the collapse width every set of links goes into the one menu panel, in the order written, with the quiet ones last and a
+    line between sets. This demo collapses below the widest step ("3xl") so the panel shows on any window narrower than 1920px; an
+    app picks the step that suits its links. The automatic menu button goes at the end of the row with the brand. */}
+<Navbar collapseBelow="3xl">
+  <Navbar.Row size="xs" variant="filled" sticky={false}>
+    <Navbar.Links aria-label="Help" quiet align="end">
+      <Navbar.Link href="/help">Help</Navbar.Link>
+    </Navbar.Links>
+  </Navbar.Row>
+  <Navbar.Row variant="ghost">
+    <Navbar.Brand href="/">dbM</Navbar.Brand>
+    <Navbar.Search collapseBelow="3xl" />
+  </Navbar.Row>
+  <Navbar.Row variant="outlined">
+    <Navbar.Links aria-label="Categories">
+      <Navbar.Link href="/women" current>
+        Women
+      </Navbar.Link>
+      <Navbar.Link href="/men">Men</Navbar.Link>
+    </Navbar.Links>
+  </Navbar.Row>
+</Navbar>`,
+
+  search: `{/* Navbar.Search is a role="search" landmark around a SearchInput; it takes the room between its neighbours. Below collapseBelow
+    ("md" by default) it is a button that opens the field in a sheet from the top. This demo uses the widest step ("3xl"). The bar's
+    field and the sheet's are two inputs, so pass value and onChange to keep them in step. */}
+<Navbar>
+  <Navbar.Brand href="/">dbM</Navbar.Brand>
+  <Navbar.Search collapseBelow="3xl" placeholder="Search products" onSearch={(query) => search(query)} />
+</Navbar>`,
+
+  rowsSticky: `{/* In a sticky bar, a leading row with sticky={false} scrolls away while the rest stays at the top. Only leading rows can: the bar
+    sticks as one box. boxRef is the scrolling box, as in the sticky example. */}
+<Navbar sticky scrollContainerRef={boxRef}>
+  <Navbar.Row size="xs" variant="filled" sticky={false}>
+    <Navbar.Links aria-label="Help" quiet align="end">
+      <Navbar.Link href="/help">Help</Navbar.Link>
+    </Navbar.Links>
+  </Navbar.Row>
+  <Navbar.Row variant="ghost">
+    <Navbar.Brand href="/">dbM</Navbar.Brand>
+    <Navbar.Search />
+  </Navbar.Row>
+  <Navbar.Row variant="outlined">
+    <Navbar.Links aria-label="Categories">
+      <Navbar.Link href="/women" current>
+        Women
+      </Navbar.Link>
+    </Navbar.Links>
+  </Navbar.Row>
+</Navbar>`,
+
   rounded: `{/* rounded makes each link and group button a pill; the bar itself keeps its shape. It is the same prop Button,
     IconButton and Toolbar have. */}
 <Navbar rounded currentVariant="subtle">

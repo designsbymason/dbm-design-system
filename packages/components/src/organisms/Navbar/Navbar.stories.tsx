@@ -5,7 +5,7 @@ import type { CSSProperties, ReactNode, RefObject } from "react";
 import type { SpaceValue } from "@dbm-design-system/primitives";
 import { navbarPlaygroundSnippet, navbarSnippets } from "./Navbar.snippets";
 import type { NavbarCollapseBelow, NavbarCurrentVariant, NavbarProps, NavbarSize, NavbarVariant } from "./Navbar.types";
-import { DemoNavbar, GalleryBar, NavbarStage, RouterDemoNavbar, NavbarViewModeContext, StickyDemo } from "./NavbarStoryKit";
+import { DemoNavbar, DemoRowsNavbar, GalleryBar, NavbarStage, RouterDemoNavbar, NavbarViewModeContext, StickyDemo } from "./NavbarStoryKit";
 
 // Navbar's root-level args in one Playground, every prop listed in the one order the Docs table uses: the ones a person can
 // edit have a control, and the rest (children, callbacks, refs, objects, the standard attributes) show as "–". Each sub-part
@@ -116,8 +116,9 @@ const meta: Meta<PlaygroundArgs> = {
     },
     size: {
       control: "select",
-      options: ["sm", "md", "lg"],
-      description: "The bar's height: as tall as an IconButton of the same step plus room above and below.",
+      options: ["xs", "sm", "md", "lg"],
+      description:
+        "The bar's height, and the default for its rows: as tall as an IconButton of the same step plus room above and below.",
       table: { defaultValue: { summary: '"md"' } },
     },
     contained: {
@@ -413,6 +414,66 @@ export const GroupCurrentInteraction: Story = {
     await userEvent.keyboard("{Escape}");
     // end with the menu gone: an accessibility check run mid-exit sees the page still hidden behind it
     await waitFor(() => expect(within(document.body).queryByRole("menu")).not.toBeInTheDocument());
+  },
+};
+
+export const Rows: Story = {
+  name: "A header of several rows",
+  parameters: { docs: { source: { code: navbarSnippets.rows } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <NavbarStage minBlockSize="22rem">
+      {(menuContainer) => (
+        <Top>
+          <DemoRowsNavbar menuContainer={menuContainer} />
+        </Top>
+      )}
+    </NavbarStage>
+  ),
+};
+
+export const RowsInThePanel: Story = {
+  name: "Several sets of links in the menu panel",
+  parameters: { docs: { source: { code: navbarSnippets.rowsPanel } } },
+  argTypes: { ...noControls },
+  render: () => (
+    // `3xl` is the widest step, so the links and the search field are in the panel and the sheet on any window narrower than 1920px.
+    <NavbarStage minBlockSize="32rem">
+      {(menuContainer) => (
+        <Top>
+          <DemoRowsNavbar collapseBelow="3xl" searchCollapseBelow="3xl" menuContainer={menuContainer} />
+        </Top>
+      )}
+    </NavbarStage>
+  ),
+};
+
+export const SearchOnAPhone: Story = {
+  name: "Search as a sheet",
+  parameters: { docs: { source: { code: navbarSnippets.search } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <NavbarStage minBlockSize="24rem">
+      {(menuContainer) => (
+        <Top>
+          <DemoRowsNavbar searchCollapseBelow="3xl" collapseBelow="never" menuContainer={menuContainer} />
+        </Top>
+      )}
+    </NavbarStage>
+  ),
+};
+
+export const RowsScrollAway: Story = {
+  name: "A strip that scrolls away",
+  parameters: { docs: { source: { code: navbarSnippets.rowsSticky } } },
+  argTypes: { ...noControls },
+  render: function Render() {
+    const boxRef = useRef<HTMLDivElement | null>(null);
+    return (
+      <StickyDemo boxRef={boxRef}>
+        {(ref) => <DemoRowsNavbar sticky scrollContainerRef={ref} />}
+      </StickyDemo>
+    );
   },
 };
 

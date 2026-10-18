@@ -4,7 +4,9 @@ import { Button } from "../../atoms/Button";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import * as NavbarStories from "./Navbar.stories";
 import * as NavbarRootStories from "./NavbarRoot.stories";
+import * as NavbarRowStories from "./NavbarRow.stories";
 import * as NavbarBrandStories from "./NavbarBrand.stories";
+import * as NavbarSearchStories from "./NavbarSearch.stories";
 import * as NavbarLinksStories from "./NavbarLinks.stories";
 import * as NavbarLinkStories from "./NavbarLink.stories";
 import * as NavbarGroupStories from "./NavbarGroup.stories";
@@ -61,7 +63,9 @@ export const playgroundOrder = [
   "id",
 ];
 export const brandPropOrder = ["children", "href", "asChild", "aria-label", "id", "className", "style", "data-testid"];
-export const linksPropOrder = ["children", "align", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
+export const rowPropOrder = ["children", "variant", "size", "contained", "sticky", "id", "className", "style", "data-testid"];
+export const searchPropOrder = ["value", "collapseBelow", "size", "closeOnSubmit", "aria-label", "id", "className", "style", "data-testid"];
+export const linksPropOrder = ["children", "align", "quiet", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
 export const linkPropOrder = ["children", "href", "icon", "badge", "external", "current", "disabled", "asChild", "aria-label", "id", "className", "style", "data-testid"];
 export const groupPropOrder = ["label", "children", "current", "defaultOpen", "disabled", "align", "aria-label", "id", "className", "style", "data-testid"];
 export const actionPropOrder = ["hideBelow", "children", "id", "className", "style", "data-testid"];
@@ -80,8 +84,8 @@ The application header: a named banner at the top of the page holding the brand,
 and a place for the actions that belong to the whole app (search, an account menu, a call to action).
 Below a width you choose, the navigation leaves the bar and is offered in a side panel behind a menu
 button, so a phone gets a list it can reach with a thumb. A compound component, meaning it is made of
-named sub-parts you compose together: `Navbar.Brand`, `Navbar.Links` holding `Navbar.Link` items and
-`Navbar.Group`s of them, `Navbar.Actions` holding `Navbar.Action`s, `Navbar.PanelActions` for what the menu panel shows
+named sub-parts you compose together: `Navbar.Row`s (optional bands of the one header), `Navbar.Brand`, `Navbar.Links`
+(several are allowed) holding `Navbar.Link` items and `Navbar.Group`s of them, `Navbar.Search`, `Navbar.Actions` holding `Navbar.Action`s, `Navbar.PanelActions` for what the menu panel shows
 at its foot, `Navbar.SkipLink`, and `Navbar.MenuButton`, which is drawn for you whenever there are links.
 
 ### Import
@@ -113,6 +117,13 @@ another component still draws, but isn't noticed.
 
 <PropertiesTable of={NavbarRootStories} order={propOrder} />
 
+### Navbar.Row properties
+
+One band of the bar. Every row starts from the bar's `variant`, `size` and `contained` and can set its own. Also accepts any other
+native `<div>` attribute beyond what's listed here. A bar with no rows draws its parts as one row, so a single-row bar needs none.
+
+<PropertiesTable of={NavbarRowStories} order={rowPropOrder} />
+
 ### Navbar.Brand properties
 
 The logo and name, linking home. Also accepts any other native `<a>` attribute beyond what's listed
@@ -142,6 +153,13 @@ other native `<button>` attribute beyond what's listed here (e.g. `onFocus`, `ti
 through to its button. Its children are `Navbar.Link`s.
 
 <PropertiesTable of={NavbarGroupStories} order={groupPropOrder} />
+
+### Navbar.Search properties
+
+The bar's search field, in a `role="search"` landmark. It also accepts any other `SearchInput` prop (`onSearch`, `debounceMs`,
+`onClear`, `placeholder`, `isLoading`, `name`, `disabled`…), passed to both the bar's field and the sheet's.
+
+<PropertiesTable of={NavbarSearchStories} order={searchPropOrder} />
 
 ### Navbar.Action properties
 
@@ -188,6 +206,37 @@ place one yourself to put it elsewhere or give it another icon.
 for a bar that sits over a hero or a coloured page.
 
 <Canvas of={NavbarStories.Variants} />
+
+### A header of several rows
+
+A `Navbar.Row` is a band of the one `<header>`: here a courtesy strip, the row with the logo, the search field and the account
+buttons, and a row of categories. Each row can set its own `variant`, `size` and `contained`. Give each `Navbar.Links` its own name, since
+they are separate landmarks.
+
+<Canvas of={NavbarStories.Rows} />
+
+### Several sets of links in the menu panel
+
+Below the collapse width, every `Navbar.Links` puts its links into the one menu panel, in the order written, with a line between the sets.
+The `quiet` ones, a courtesy row's, come last. The automatic menu button goes at the end of the row with the brand. This demo
+collapses below the widest step so the panel shows on any window narrower than 1920px.
+
+<Canvas of={NavbarStories.RowsInThePanel} />
+
+### Search as a sheet
+
+`Navbar.Search` takes the room between its neighbours. Below its `collapseBelow` width the field leaves the bar for a button that
+opens it in a sheet from the top of the screen, so a phone isn't left with a squeezed field and the tab order stays the one the bar
+is written in. Press Enter in the sheet's field and it closes.
+
+<Canvas of={NavbarStories.SearchOnAPhone} />
+
+### A strip that scrolls away
+
+In a sticky bar, a leading row with `sticky={false}` scrolls away while the rest stays at the top. Only leading rows can: the bar sticks
+as one box, so a row that scrolls away can't sit below one that sticks.
+
+<Canvas of={NavbarStories.RowsScrollAway} />
 
 ### Marking the current page
 
@@ -379,6 +428,8 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 - `menuSide="start"` is the right edge in right-to-left text. Pass `dir` on the bar and it reaches the
   panel too, which is drawn in a portal and would otherwise follow the page.
 - Use `labels` to translate the menu button, the navigation's name, the panel's close button, the skip link and the external-link cue.
+- Rows are for a header with more than one band: the courtesy strip scrolls away when the bar is sticky (`sticky={false}`), the rest sticks as one, and
+  the automatic menu button goes at the end of the row with the brand. Put every part in a row once there are rows.
 - Only the links collapse by themselves. A bar with a search field, an account menu and a button can overflow a phone: wrap the ones that
   should leave in `Navbar.Action hideBelow` and repeat them in `Navbar.PanelActions`.
 - Put a skip link first in the bar and the bar first on the page; the main element needs `tabIndex={-1}`.
@@ -406,6 +457,10 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 - Keys: `Tab` and `Shift+Tab` move through the brand, the links, the actions and the menu button in order;
   there are no arrow-key shortcuts, because this is a navigation and not a toolbar. `Enter` follows a
   link.
+- `Navbar.Search` is a `role="search"` landmark named by `labels.search` or its own `aria-label`; below its step it is a button with that name, and
+  the sheet it opens is a modal dialog with the field focused, closed by `Escape` or `Enter`, returning focus to the button.
+- Every `Navbar.Links` is its own `<nav>`, so give each a different name (a development warning says when two match); in the menu panel they are
+  separate named navigations in the order written, the `quiet` ones last, and rows are plain bands with no role of their own, so the page has one banner.
 - A `Navbar.Group` in the bar is a button with `aria-haspopup="menu"` and `aria-expanded` that opens a menu: `Enter`, `Space` and
   `ArrowDown` open it, the arrow keys and typeahead move through the links, `Escape` closes it and focus returns to the button. In the
   menu panel it is a disclosure button with `aria-expanded` and `aria-controls` pointing at its list of links, which are out of the tab
@@ -540,7 +595,9 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 <TokenRow token="font-size.sm / font-size.base" usage="a link's text, at the default sizes and at large" />
 <TokenRow token="font-weight.bold" usage="the brand" />
 <TokenRow token="font-weight.medium" usage="a link" />
-<TokenRow token="icon-button.size.sm / icon-button.size.md / icon-button.size.lg" usage="the bar's height at each size: its menu button's height, plus room, and the panel's link height" />
+<TokenRow token="navbar.search-min-width / navbar.search-max-width" usage="the width the search field wants in the bar, and the widest it grows" />
+<TokenRow token="font-size.xs" usage="a quiet link's text" />
+<TokenRow token="icon-button.size.xs / icon-button.size.sm / icon-button.size.md / icon-button.size.lg" usage="the bar's height at each size: its menu button's height, plus room, and the panel's link height" />
 <TokenRow token="z-index.fixed" usage="the skip link, drawn over the top corner of the page while it has focus" />
 <TokenRow token="space.px" usage="the marker that tells a sticky bar it is stuck is cancelled by this much" />
 <TokenRow token="space.1" usage="the gap between links; the room above and below a small bar; the focus ring's offset" />

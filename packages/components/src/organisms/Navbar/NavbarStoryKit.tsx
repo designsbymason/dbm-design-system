@@ -1,4 +1,4 @@
-import { BellIcon, BookOpenIcon, UserCircleIcon } from "@dbm-design-system/icons";
+import { BellIcon, BookOpenIcon, ShoppingCartIcon, UserCircleIcon } from "@dbm-design-system/icons";
 import { useState } from "react";
 import type { MouseEvent, ReactNode, RefObject } from "react";
 import { Button } from "../../atoms/Button";
@@ -146,6 +146,50 @@ export function DemoNavbar({
  */
 export function GalleryBar({ name, children }: { name: string; children: ReactNode }) {
   return <section aria-label={name}>{children}</section>;
+}
+
+/**
+ * A multi-row header: a courtesy strip (which scrolls away when the bar is sticky), the row with the logo, the search field and the
+ * account and cart buttons, and a row of categories. The sets of links are named so each landmark has its own name.
+ */
+export function DemoRowsNavbar({
+  menuContainer,
+  searchCollapseBelow,
+  ...props
+}: NavbarProps & {
+  /** Where the search field gives way to a button, as `Navbar.Search`'s `collapseBelow`. */
+  searchCollapseBelow?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "never";
+}) {
+  const demo = useDemoCurrent("women");
+  return (
+    <Navbar menuContainer={menuContainer} {...props}>
+      <Navbar.Row size="xs" variant="filled" sticky={false}>
+        <Navbar.Links aria-label="Help" quiet align="end">
+          <Navbar.Link {...demo.link("help")}>Help</Navbar.Link>
+          <Navbar.Link {...demo.link("orders")}>Track an order</Navbar.Link>
+          <Navbar.Link {...demo.link("stores")}>Find a store</Navbar.Link>
+        </Navbar.Links>
+      </Navbar.Row>
+      <Navbar.Row variant="ghost">
+        <Navbar.Brand href="#" onClick={preventNavigation}>
+          dbM
+        </Navbar.Brand>
+        <Navbar.Search collapseBelow={searchCollapseBelow} placeholder="Search products" />
+        <Navbar.Actions>
+          <IconButton icon={UserCircleIcon} aria-label="Account" variant="ghost" size="md" />
+          <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="ghost" size="md" />
+        </Navbar.Actions>
+      </Navbar.Row>
+      <Navbar.Row variant="outlined">
+        <Navbar.Links aria-label="Categories">
+          <Navbar.Link {...demo.link("women")}>Women</Navbar.Link>
+          <Navbar.Link {...demo.link("men")}>Men</Navbar.Link>
+          <Navbar.Link {...demo.link("kids")}>Kids</Navbar.Link>
+          <Navbar.Link {...demo.link("sale")}>Sale</Navbar.Link>
+        </Navbar.Links>
+      </Navbar.Row>
+    </Navbar>
+  );
 }
 
 /** The router-link bar: plain anchors stand in for a router's link, and choosing one moves the current mark. */

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
-import { DemoNavbar, GalleryBar, NavbarStage, NavbarViewModeContext, StickyDemo } from "./NavbarStoryKit";
+import { DemoNavbar, DemoRowsNavbar, GalleryBar, NavbarStage, NavbarViewModeContext, StickyDemo } from "./NavbarStoryKit";
 
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout, the cascade, a breakpoint, stacking, forced
 // colours). They run in the `storybook` (Chromium) project; the test window is 1200px wide unless a story pins another.
@@ -110,7 +110,8 @@ export const HeightsAndTargets: Story = {
       const rect = button.getBoundingClientRect();
       // the bar is the button's own height plus the room above and below
       const expected = tokenPx(buttonSize[size]) + 2 * room[size];
-      const inner = header.firstElementChild!.getBoundingClientRect();
+      // (the row holds the content in an inner box; the bar is that box's height, and the row's line under an outlined bar)
+      const inner = header.firstElementChild!.firstElementChild!.getBoundingClientRect();
       expect(Math.abs(inner.height - expected)).toBeLessThan(1);
       expect(rect.top - inner.top).toBeGreaterThanOrEqual(room[size] - 1);
       expect(inner.bottom - rect.bottom).toBeGreaterThanOrEqual(room[size] - 1);
@@ -176,7 +177,8 @@ export const ColoursAreReadable: Story = {
   play: async ({ canvasElement }) => {
     for (const variant of ["outlined", "filled"] as const) {
       const bar = within(canvasElement).getByRole("region", { name: `${variant} bar` });
-      const surface = getComputedStyle(bar.querySelector("header")!).backgroundColor;
+      // (the surface is the first row's)
+      const surface = getComputedStyle(bar.querySelector("header")!.firstElementChild!).backgroundColor;
       const pricing = within(bar).getByRole("link", { name: "Pricing" });
       expect(contrast(getComputedStyle(pricing).color, surface)).toBeGreaterThanOrEqual(4.5);
       const current = within(bar).getByRole("link", { name: "Products" });
@@ -419,7 +421,7 @@ export const CurrentLinkLooks: Story = {
   ),
   play: async ({ canvasElement }) => {
     const bar = (name: string) => within(canvasElement).getByRole("region", { name: `${name} bar` });
-    const surface = (name: string) => getComputedStyle(bar(name).querySelector("header")!).backgroundColor;
+    const surface = (name: string) => getComputedStyle(bar(name).querySelector("header")!.firstElementChild!).backgroundColor;
     const current = (name: string) => within(bar(name)).getByRole("link", { name: "Products" });
 
     // subtle: brand text on the tint
@@ -870,5 +872,221 @@ export const GroupMenuMarksTheCurrentItem: Story = {
     }
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(within(document.body).queryByRole("menu")).not.toBeInTheDocument());
+  },
+};
+
+const rows = (header: HTMLElement) => Array.from(header.children) as HTMLElement[];
+
+export const RowsLayout: Story = {
+  name: "Rows stack inside one banner, at their own heights, and the search field sits between the brand and the actions",
+  render: () => (
+    <NavbarStage minBlockSize="22rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+          <DemoRowsNavbar menuContainer={menuContainer} />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getAllByRole("banner")).toHaveLength(1);
+    const header = canvas.getByRole("banner");
+    const [courtesy, main, categories] = rows(header) as [HTMLElement, HTMLElement, HTMLElement];
+    // stacked in order, each under the one before, with no gap
+    expect(courtesy.getBoundingClientRect().bottom).toBeCloseTo(main.getBoundingClientRect().top, 0);
+    expect(main.getBoundingClientRect().bottom).toBeCloseTo(categories.getBoundingClientRect().top, 0);
+    // the strip is the xs height (an xs IconButton plus room), the main row the md one
+    const innerHeight = (row: HTMLElement) => row.firstElementChild!.getBoundingClientRect().height;
+    expect(Math.abs(innerHeight(courtesy) - (tokenPx("--dbm-icon-button-size-xs") + 2 * tokenPx("--dbm-space-1") * 16))).toBeLessThan(1);
+    expect(Math.abs(innerHeight(main) - (tokenPx("--dbm-icon-button-size-md") + 2 * tokenPx("--dbm-space-2") * 16))).toBeLessThan(1);
+    expect(innerHeight(courtesy)).toBeLessThan(innerHeight(main));
+    // the search landmark takes the room between the brand and the actions, within its token widths
+    const brand = within(main).getByRole("link", { name: "dbM" }).getBoundingClientRect();
+    const search = within(main).getByRole("search").getBoundingClientRect();
+    const actions = within(main).getByRole("button", { name: "Account" }).getBoundingClientRect();
+    expect(brand.right).toBeLessThanOrEqual(search.left);
+    expect(search.right).toBeLessThanOrEqual(actions.left);
+    expect(search.width).toBeGreaterThanOrEqual(tokenPx("--dbm-navbar-search-min-width") * 16 - 1);
+    expect(search.width).toBeLessThanOrEqual(tokenPx("--dbm-navbar-search-max-width") * 16 + 1);
+    // and with room to spare it takes the most it is allowed
+    expect(Math.abs(search.width - tokenPx("--dbm-navbar-search-max-width") * 16)).toBeLessThan(2);
+    // the courtesy links sit at the end of their row, quieter than the categories
+    const help = within(courtesy).getByRole("navigation", { name: "Help" }).getBoundingClientRect();
+    expect(courtesy.getBoundingClientRect().right - help.right).toBeLessThan(40);
+    const quiet = getComputedStyle(within(courtesy).getByRole("link", { name: "Help" }));
+    const loud = getComputedStyle(within(categories).getByRole("link", { name: "Men" }));
+    expect(px(quiet.fontSize)).toBeLessThan(px(loud.fontSize));
+    // only the first row scrolls away, and the categories' line is the one under the bar
+    expect(courtesy).toHaveAttribute("data-scroll-away");
+    expect(categories.getBoundingClientRect().height - innerHeight(categories)).toBeCloseTo(1, 0);
+  },
+};
+
+export const RowsPanelOrder: Story = {
+  name: "Every set of links is in the one menu panel, the quiet ones last under a line, and the panel is drawn once",
+  render: () => (
+    <NavbarStage minBlockSize="34rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+          <DemoRowsNavbar collapseBelow="3xl" searchCollapseBelow="3xl" menuContainer={menuContainer} />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const header = canvas.getByRole("banner");
+    // the bar's links are all out of sight at this width; the menu button is in the main row (the one with the brand)
+    const [courtesy, main] = rows(header) as [HTMLElement, HTMLElement];
+    const button = canvasElement.querySelector<HTMLButtonElement>('button[aria-label="Menu"]')!;
+    expect(main.contains(button)).toBe(true);
+    expect(courtesy.contains(button)).toBe(false);
+    await userEvent.click(button);
+    const panel = await canvas.findByRole("dialog", { name: "Menu" });
+    await waitFor(() => expect(panel.getAnimations().every((animation) => animation.playState === "finished")).toBe(true));
+    expect(canvas.getAllByRole("dialog")).toHaveLength(1);
+    const navs = within(panel).getAllByRole("navigation");
+    expect(navs.map((nav) => nav.getAttribute("aria-label"))).toEqual(["Categories", "Help"]);
+    // on screen as in the DOM: the categories above the help links, which are separated by a line and set smaller
+    const [categories, help] = navs as [HTMLElement, HTMLElement];
+    expect(categories.getBoundingClientRect().bottom).toBeLessThanOrEqual(help.getBoundingClientRect().top);
+    expect(getComputedStyle(help.parentElement!).borderTopWidth).toBe("1px");
+    expect(px(getComputedStyle(within(help).getAllByRole("link")[0]!).fontSize)).toBeLessThan(
+      px(getComputedStyle(within(categories).getAllByRole("link")[0]!).fontSize),
+    );
+    for (const link of within(panel).getAllByRole("link")) expect(link.getBoundingClientRect().height).toBeGreaterThanOrEqual(24);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(canvas.queryByRole("dialog")).not.toBeInTheDocument());
+  },
+};
+
+export const SearchSheet: Story = {
+  name: "The search field becomes a button below its step, and the button opens it in a sheet from the top, focused",
+  render: () => (
+    <NavbarStage minBlockSize="26rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+          <DemoRowsNavbar searchCollapseBelow="3xl" collapseBelow="never" menuContainer={menuContainer} />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement, step }) => {
+    const canvas = within(canvasElement);
+    const landmark = canvas.getByRole("search");
+    const button = within(landmark).getByRole("button", { name: "Search" });
+    const field = landmark.querySelector("input")!;
+    // the field is out of the bar and the button stands in, at a target size
+    expect(getComputedStyle(field.closest("[class*=searchField]") ?? field).display).toBe("none");
+    expect(button.getBoundingClientRect().width).toBeGreaterThanOrEqual(24);
+    expect(landmark.getBoundingClientRect().width).toBeLessThan(80);
+    await step("open the sheet", async () => {
+      await userEvent.click(button);
+      const sheet = await canvas.findByRole("dialog", { name: "Search" });
+      await waitFor(() => expect(sheet.getAnimations().every((animation) => animation.playState === "finished")).toBe(true));
+      const sheetField = within(sheet).getByRole("searchbox", { name: "Search" });
+      await waitFor(() => expect(sheetField).toHaveFocus());
+      // from the top of the container it was given, as wide as it, with a field a person can hit
+      const frame = sheet.offsetParent!.getBoundingClientRect();
+      expect(Math.abs(sheet.getBoundingClientRect().top - frame.top)).toBeLessThan(2);
+      expect(sheet.getBoundingClientRect().width).toBeGreaterThan(frame.width * 0.9);
+      // (the field a finger hits is its box, which holds the text input)
+      expect(sheetField.parentElement!.getBoundingClientRect().height).toBeGreaterThanOrEqual(24);
+      await userEvent.type(sheetField, "shoes{Enter}");
+    });
+    await step("Enter closes it and focus returns to the button", async () => {
+      await waitFor(() => expect(canvas.queryByRole("dialog")).not.toBeInTheDocument());
+      await waitFor(() => expect(button).toHaveFocus());
+    });
+  },
+};
+
+export const SearchGivesWayInACrowdedRow: Story = {
+  name: "The search field gives way, without overlapping its neighbour or vanishing, when the row is crowded",
+  render: () => (
+    <NavbarStage minBlockSize="16rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "22rem", maxInlineSize: "100%", alignSelf: "start" }}>
+          <DemoRowsNavbar menuContainer={menuContainer} />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const min = tokenPx("--dbm-navbar-search-min-width") * 16;
+    const bar = within(canvasElement).getByRole("banner");
+    const search = within(bar).getByRole("search").getBoundingClientRect();
+    const actions = within(bar).getByRole("button", { name: "Account" }).getBoundingClientRect();
+    // the minimum is the width it asks for, so a crowded row squeezes it, but never into its neighbour and never to nothing
+    expect(search.width).toBeLessThan(min);
+    expect(search.width).toBeGreaterThan(40);
+    expect(search.right).toBeLessThanOrEqual(actions.left + 0.5);
+  },
+};
+
+export const RowsScrollAwayCheck: Story = {
+  name: "The strip scrolls away while the rest sticks, and the bar is stuck only once it has gone",
+  render: function Render() {
+    const boxRef = useRef<HTMLDivElement | null>(null);
+    return (
+      <StickyDemo boxRef={boxRef}>{(ref) => <DemoRowsNavbar sticky scrollContainerRef={ref} />}</StickyDemo>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const header = within(canvasElement).getByRole("banner");
+    const scroller = header.parentElement!;
+    const [courtesy, main, categories] = rows(header) as [HTMLElement, HTMLElement, HTMLElement];
+    const top = () => scroller.getBoundingClientRect().top;
+    const strip = courtesy.getBoundingClientRect().height;
+    expect(strip).toBeGreaterThan(20);
+    // at the start the strip is on screen, and nothing is stuck
+    expect(courtesy.getBoundingClientRect().top).toBeCloseTo(top(), -1);
+    // a little scroll, less than the strip: still on screen in part, and not stuck (no shadow yet)
+    scroller.scrollTop = Math.floor(strip / 2);
+    await waitFor(() => expect(courtesy.getBoundingClientRect().bottom).toBeGreaterThan(top()));
+    await nextFrame();
+    expect(header).not.toHaveAttribute("data-navbar-stuck");
+    expect(getComputedStyle(header).boxShadow).toBe("none");
+    // past the strip: it is off the top, the main row is at the top, the categories follow, and the bar is stuck with its shadow
+    scroller.scrollTop = 300;
+    await waitFor(() => expect(header).toHaveAttribute("data-navbar-stuck"));
+    expect(courtesy.getBoundingClientRect().bottom).toBeLessThanOrEqual(top() + 1);
+    expect(Math.abs(main.getBoundingClientRect().top - top())).toBeLessThan(2);
+    expect(categories.getBoundingClientRect().top).toBeCloseTo(main.getBoundingClientRect().bottom, 0);
+    expect(getComputedStyle(header).boxShadow).not.toBe("none");
+    // back to the top and it is as it began
+    scroller.scrollTop = 0;
+    await waitFor(() => expect(header).not.toHaveAttribute("data-navbar-stuck"));
+    expect(courtesy.getBoundingClientRect().top).toBeCloseTo(top(), -1);
+  },
+};
+
+export const RowsHideOnScroll: Story = {
+  name: "A bar with a strip that scrolls away hides completely on a scroll down, with a sticky offset too",
+  render: function Render() {
+    const boxRef = useRef<HTMLDivElement | null>(null);
+    return (
+      <StickyDemo boxRef={boxRef}>
+        {(ref) => <DemoRowsNavbar sticky hideOnScroll stickyOffset={6} scrollContainerRef={ref} />}
+      </StickyDemo>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const header = within(canvasElement).getByRole("banner");
+    const scroller = header.parentElement!;
+    const settle = async () => {
+      await waitFor(() => expect(header.getAnimations().every((animation) => animation.playState === "finished")).toBe(true));
+      await nextFrame();
+    };
+    scroller.scrollTop = 300;
+    await waitFor(() => expect(getComputedStyle(header).translate).not.toBe("none"), { timeout: 3000 });
+    await settle();
+    expect(header.getBoundingClientRect().bottom).toBeLessThanOrEqual(scroller.getBoundingClientRect().top + 1);
+    scroller.scrollTop = 200;
+    await waitFor(() => expect(getComputedStyle(header).translate).toBe("none"), { timeout: 3000 });
+    await settle();
+    expect(header.getBoundingClientRect().top).toBeLessThan(scroller.getBoundingClientRect().top + 30);
+    expect(header.getBoundingClientRect().bottom).toBeGreaterThan(scroller.getBoundingClientRect().top + 40);
   },
 };
