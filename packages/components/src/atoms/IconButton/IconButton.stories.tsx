@@ -61,6 +61,18 @@ const meta: Meta<typeof IconButton> = {
         "The button's box, on the shared 5-step size scale. Its height and width match a Button of the same step, so an IconButton sits flush beside one; the icon scales with it.",
       table: { defaultValue: { summary: "md" } },
     },
+    label: {
+      control: "text",
+      description:
+        "A short caption under the icon, so the icon and the caption are one control: hover, pressed, focus and a click all cover both. The box is taller and as wide as the caption needs, never narrower than the plain square of its size. aria-label stays required, and should contain the caption. Not drawn with asChild; rounded is ignored while it shows.",
+    },
+    hideLabelBelow: {
+      control: "select",
+      options: ["none", "sm", "md", "lg", "xl", "2xl", "3xl"],
+      mapping: { none: undefined },
+      description:
+        "The width below which the caption is left out and the button is the plain icon-only square, a breakpoint step, so a bar can drop its captions on a phone. none shows the caption at every width. No effect without label.",
+    },
     isLoading: {
       control: "boolean",
       description:
@@ -187,6 +199,8 @@ const meta: Meta<typeof IconButton> = {
     variant: "primary",
     tone: "brand",
     size: "md",
+    label: "",
+    hideLabelBelow: "none" as unknown as IconButtonProps["hideLabelBelow"],
     isLoading: false,
     loadingLabel: "Favoriting…",
     asChild: false,
@@ -322,6 +336,50 @@ export const Tones: Story = {
         </div>
       ))}
     </div>
+  ),
+};
+
+export const WithCaption: Story = {
+  name: "With a caption",
+  parameters: { docs: { source: { code: iconButtonSnippets.labelled } } },
+  // `tone`, `variant` and `label` are the point of this grid: each row sets its own tone, and each button its variant and caption.
+  argTypes: { tone: { control: false }, variant: { control: false }, icon: { control: false }, label: { control: false }, "aria-label": { control: false } },
+  render: (args) => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-4)" }}>
+      {(["brand", "neutral"] as const).map((tone) => (
+        <div key={tone} style={{ display: "flex", gap: "var(--dbm-space-4)" }}>
+          {(["primary", "secondary", "tertiary", "ghost", "destructive"] as const).map((variant) => (
+            <IconButton
+              key={variant}
+              {...args}
+              icon={TrashIcon}
+              aria-label={`${variant} delete, ${tone}`}
+              label={variant}
+              tone={tone}
+              variant={variant}
+            />
+          ))}
+        </div>
+      ))}
+    </div>
+  ),
+};
+
+export const CaptionFromAWidth: Story = {
+  name: "A caption from a width",
+  parameters: { docs: { source: { code: iconButtonSnippets.labelFrom } } },
+  argTypes: { icon: { control: false }, label: { control: false }, hideLabelBelow: { control: false }, "aria-label": { control: false } },
+  render: (args) => (
+    <IconButton {...args} icon={HeartIcon} aria-label="Favorites" label="Favorites" hideLabelBelow="md" variant="tertiary" />
+  ),
+};
+
+export const CaptionedToggle: Story = {
+  name: "A toggle with a caption",
+  parameters: { docs: { source: { code: iconButtonSnippets.labelledToggle } } },
+  argTypes: { icon: { control: false }, label: { control: false }, "aria-label": { control: false } },
+  render: (args) => (
+    <IconButton {...args} icon={HeartIcon} aria-label="Favorite" label="Favorite" variant="ghost" defaultPressed={false} onPressedChange={fn()} />
   ),
 };
 

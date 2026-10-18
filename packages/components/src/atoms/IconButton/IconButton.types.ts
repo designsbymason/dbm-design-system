@@ -1,4 +1,5 @@
 import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type { Breakpoint } from "@dbm-design-system/primitives";
 import type {
   ComponentPropsWithoutRef,
   CSSProperties,
@@ -39,6 +40,22 @@ export interface IconButtonProps extends Omit<
    * @default 'md'
    */
   size?: ButtonSize;
+  /**
+   * A short caption under the icon, so the icon and the caption are one control: hover, pressed, focus and a click all cover
+   * both. The box is taller and as wide as the caption needs, never narrower than the plain square of its `size`; a pressed
+   * toggle draws the caption bold without changing the box's width. Keep it to a word or two (one line, never wrapped).
+   * `aria-label` stays required, since without the caption (below `hideLabelBelow`) the button is icon-only, and in
+   * development a warning fires if the caption isn't part of it (WCAG 2.5.3). Not drawn with `asChild` (Radix `Slot` takes
+   * one child), and `rounded` is ignored while it shows; both warn in development. The caption is a `text.*` colour,
+   * following the variant and `tone` as `Button`'s label does.
+   */
+  label?: string;
+  /**
+   * The width below which the caption is left out and the button is the plain icon-only square, a breakpoint step, so a bar
+   * can drop its captions on a phone. Left out, the caption shows at every width. Decided by the stylesheet, so a server
+   * render is right at first paint. Has no effect without `label`.
+   */
+  hideLabelBelow?: Exclude<Breakpoint, "base">;
   /**
    * Shows a spinner in place of the icon and disables interaction while
    * `true`. When `asChild` is also set, the slotted element can't take a

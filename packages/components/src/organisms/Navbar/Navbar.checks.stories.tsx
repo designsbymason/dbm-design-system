@@ -943,18 +943,16 @@ export const RowsLayout: Story = {
     expect(canvasElement.querySelector('[aria-current="page"]')).toBeNull();
     // the buttons in the logo row are medium tertiary icon buttons, the search field a size down
     const buttons = within(main).getAllByRole("button", { name: /Account|Cart/ });
-    for (const button of buttons) expect(Math.round(button.getBoundingClientRect().height)).toBe(Math.round(tokenPx("--dbm-icon-button-size-md")));
+    for (const button of buttons) expect(button.getBoundingClientRect().height).toBeGreaterThan(tokenPx("--dbm-icon-button-size-md"));
     expect(within(main).getByRole("searchbox").parentElement!.getBoundingClientRect().height).toBeLessThan(tokenPx("--dbm-icon-button-size-md"));
-    // on a wide window each of those buttons has a caption under it, for the eye only (the button's own name says it)
+    // on a wide window each of those buttons has a caption under its icon, inside the button, for the eye only
     for (const [name, label] of [["Account", /^Account$/], ["Cart", /^Cart/]] as const) {
-      const caption = within(main).getByText(name);
       const button = within(main).getByRole("button", { name: label });
+      const caption = within(button).getByText(name);
       expect(caption).toHaveAttribute("aria-hidden", "true");
       expect(getComputedStyle(caption).display).not.toBe("none");
-      const box = button.getBoundingClientRect();
-      // under the icon, drawn up into the button's own room, but not over the icon itself
-      expect(caption.getBoundingClientRect().top).toBeGreaterThan(box.top + box.height / 2);
-      expect(caption.getBoundingClientRect().top).toBeLessThanOrEqual(box.bottom);
+      expect(caption.getBoundingClientRect().top).toBeGreaterThanOrEqual(button.querySelector("svg")!.getBoundingClientRect().bottom - 1);
+      expect(caption.getBoundingClientRect().bottom).toBeLessThanOrEqual(button.getBoundingClientRect().bottom + 0.5);
     }
     // only the first row scrolls away, and the categories' line is the one under the bar
     expect(courtesy).toHaveAttribute("data-scroll-away");

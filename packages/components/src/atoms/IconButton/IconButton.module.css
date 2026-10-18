@@ -71,6 +71,10 @@
    change nothing. */
 
 .sizeXs {
+  --icon-button-box: var(--dbm-icon-button-size-xs);
+  --icon-button-label-font: var(--dbm-font-size-xs);
+  --icon-button-label-padding-block: var(--dbm-space-1);
+  --icon-button-label-padding-inline: var(--dbm-space-1);
   height: var(--dbm-icon-button-size-xs);
   min-height: var(--dbm-icon-button-size-xs);
   min-width: var(--dbm-icon-button-size-xs);
@@ -78,6 +82,10 @@
 }
 
 .sizeSm {
+  --icon-button-box: var(--dbm-icon-button-size-sm);
+  --icon-button-label-font: var(--dbm-font-size-xs);
+  --icon-button-label-padding-block: var(--dbm-space-1);
+  --icon-button-label-padding-inline: var(--dbm-space-2);
   height: var(--dbm-icon-button-size-sm);
   min-height: var(--dbm-icon-button-size-sm);
   min-width: var(--dbm-icon-button-size-sm);
@@ -85,6 +93,10 @@
 }
 
 .sizeMd {
+  --icon-button-box: var(--dbm-icon-button-size-md);
+  --icon-button-label-font: var(--dbm-font-size-xs);
+  --icon-button-label-padding-block: var(--dbm-space-2);
+  --icon-button-label-padding-inline: var(--dbm-space-2);
   height: var(--dbm-icon-button-size-md);
   min-height: var(--dbm-icon-button-size-md);
   min-width: var(--dbm-icon-button-size-md);
@@ -92,6 +104,10 @@
 }
 
 .sizeLg {
+  --icon-button-box: var(--dbm-icon-button-size-lg);
+  --icon-button-label-font: var(--dbm-font-size-sm);
+  --icon-button-label-padding-block: var(--dbm-space-2);
+  --icon-button-label-padding-inline: var(--dbm-space-3);
   height: var(--dbm-icon-button-size-lg);
   min-height: var(--dbm-icon-button-size-lg);
   min-width: var(--dbm-icon-button-size-lg);
@@ -99,6 +115,10 @@
 }
 
 .sizeXl {
+  --icon-button-box: var(--dbm-icon-button-size-xl);
+  --icon-button-label-font: var(--dbm-font-size-sm);
+  --icon-button-label-padding-block: var(--dbm-space-2);
+  --icon-button-label-padding-inline: var(--dbm-space-3);
   height: var(--dbm-icon-button-size-xl);
   min-height: var(--dbm-icon-button-size-xl);
   min-width: var(--dbm-icon-button-size-xl);
@@ -270,6 +290,197 @@
 .toneNeutral.variantTertiary.pressed:not(:disabled):not(.disabled):hover,
 .toneNeutral.variantGhost.pressed:not(:disabled):not(.disabled):hover {
   background-color: var(--dbm-bg-neutral-hover);
+}
+
+/* `label`: a caption under the icon, drawn at every width (`labelAlways`) or from a step up (`hideLabelBelow*`; below the step the
+   caption is `display: none` and the plain square above applies). The box keeps the square of its size as its minimum (the `min-*`
+   already on each size) and grows to fit the icon over the caption. Each step is the literal width of its breakpoint token, since a
+   media query can't read a custom property. The caption is text, so its colour is a `text.*` token that follows the variant, the
+   tone and the pressed state (below), and a pressed toggle draws it bold: the `::after` holds the width of the bold form (hidden,
+   zero high, and not read out), so the box doesn't change size when it is pressed. */
+.label {
+  display: none;
+  color: var(--icon-button-label-color);
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--icon-button-label-font);
+  font-weight: var(--dbm-font-weight-medium);
+  justify-items: center;
+  line-height: var(--dbm-line-height-tight);
+  white-space: nowrap;
+}
+
+.label::after {
+  block-size: 0;
+  content: attr(data-label) / "";
+  font-weight: var(--dbm-font-weight-bold);
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  visibility: hidden;
+}
+
+.pressed .label {
+  font-weight: var(--dbm-font-weight-bold);
+}
+
+.hasLabel.labelAlways {
+  flex-direction: column;
+  gap: var(--dbm-space-1);
+  height: auto;
+  padding-block: var(--icon-button-label-padding-block);
+  padding-inline: var(--icon-button-label-padding-inline);
+  width: auto;
+}
+
+.hasLabel.labelAlways .label {
+  display: inline-grid;
+}
+
+@media (min-width: 40rem) {
+  .hasLabel.hideLabelBelowSm {
+    flex-direction: column;
+    gap: var(--dbm-space-1);
+    height: auto;
+    padding-block: var(--icon-button-label-padding-block);
+    padding-inline: var(--icon-button-label-padding-inline);
+    width: auto;
+  }
+
+  .hasLabel.hideLabelBelowSm .label {
+    display: inline-grid;
+  }
+}
+
+@media (min-width: 48rem) {
+  .hasLabel.hideLabelBelowMd {
+    flex-direction: column;
+    gap: var(--dbm-space-1);
+    height: auto;
+    padding-block: var(--icon-button-label-padding-block);
+    padding-inline: var(--icon-button-label-padding-inline);
+    width: auto;
+  }
+
+  .hasLabel.hideLabelBelowMd .label {
+    display: inline-grid;
+  }
+}
+
+@media (min-width: 64rem) {
+  .hasLabel.hideLabelBelowLg {
+    flex-direction: column;
+    gap: var(--dbm-space-1);
+    height: auto;
+    padding-block: var(--icon-button-label-padding-block);
+    padding-inline: var(--icon-button-label-padding-inline);
+    width: auto;
+  }
+
+  .hasLabel.hideLabelBelowLg .label {
+    display: inline-grid;
+  }
+}
+
+@media (min-width: 80rem) {
+  .hasLabel.hideLabelBelowXl {
+    flex-direction: column;
+    gap: var(--dbm-space-1);
+    height: auto;
+    padding-block: var(--icon-button-label-padding-block);
+    padding-inline: var(--icon-button-label-padding-inline);
+    width: auto;
+  }
+
+  .hasLabel.hideLabelBelowXl .label {
+    display: inline-grid;
+  }
+}
+
+@media (min-width: 96rem) {
+  .hasLabel.hideLabelBelow2xl {
+    flex-direction: column;
+    gap: var(--dbm-space-1);
+    height: auto;
+    padding-block: var(--icon-button-label-padding-block);
+    padding-inline: var(--icon-button-label-padding-inline);
+    width: auto;
+  }
+
+  .hasLabel.hideLabelBelow2xl .label {
+    display: inline-grid;
+  }
+}
+
+@media (min-width: 120rem) {
+  .hasLabel.hideLabelBelow3xl {
+    flex-direction: column;
+    gap: var(--dbm-space-1);
+    height: auto;
+    padding-block: var(--icon-button-label-padding-block);
+    padding-inline: var(--icon-button-label-padding-inline);
+    width: auto;
+  }
+
+  .hasLabel.hideLabelBelow3xl .label {
+    display: inline-grid;
+  }
+}
+
+/* The caption's colour, a text token, by the same rules as the icon's: the variant's own, then the neutral tone's, then the
+   pressed state's (which inverts as the icon's does: `primary` goes quiet, the other three go solid). Specificity rises with each
+   so source order and the cascade agree. Contrast was computed for every pairing in all four themes (4.5:1 text floor); the one
+   that fell under it, `text.danger` on `bg.danger-subtle-hover` in light mode (4.44:1), is avoided by a labelled destructive
+   toggle keeping its pressed fill under the pointer. */
+.variantPrimary {
+  --icon-button-label-color: var(--dbm-text-on-brand);
+}
+
+.variantSecondary,
+.variantTertiary,
+.variantGhost {
+  --icon-button-label-color: var(--dbm-text-brand);
+}
+
+.variantDestructive {
+  --icon-button-label-color: var(--dbm-text-on-danger);
+}
+
+.toneNeutral.variantPrimary {
+  --icon-button-label-color: var(--dbm-text-on-neutral);
+}
+
+.toneNeutral.variantSecondary,
+.toneNeutral.variantTertiary,
+.toneNeutral.variantGhost {
+  --icon-button-label-color: var(--dbm-text-secondary);
+}
+
+.variantPrimary.pressed {
+  --icon-button-label-color: var(--dbm-text-brand);
+}
+
+.variantSecondary.pressed,
+.variantTertiary.pressed,
+.variantGhost.pressed {
+  --icon-button-label-color: var(--dbm-text-on-brand);
+}
+
+.variantDestructive.pressed {
+  --icon-button-label-color: var(--dbm-text-danger);
+}
+
+.toneNeutral.variantPrimary.pressed {
+  --icon-button-label-color: var(--dbm-text-secondary);
+}
+
+.toneNeutral.variantSecondary.pressed,
+.toneNeutral.variantTertiary.pressed,
+.toneNeutral.variantGhost.pressed {
+  --icon-button-label-color: var(--dbm-text-on-neutral);
+}
+
+.hasLabel.variantDestructive.pressed:not(:disabled):not(.disabled):hover {
+  background-color: var(--dbm-bg-danger-subtle);
 }
 
 .spinner {

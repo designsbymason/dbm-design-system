@@ -24,6 +24,27 @@ export const iconButtonSnippets = {
 <IconButton icon={TrashIcon} aria-label="Delete" tone="neutral" variant="tertiary" />
 <IconButton icon={TrashIcon} aria-label="Delete" tone="neutral" variant="ghost" />`,
 
+  labelled: `{/* label puts a short caption under the icon, so the icon and the caption are one control (hover, pressed, focus and a click
+    cover both). aria-label stays required and should contain the caption. tone: "brand" (default) | "neutral". TrashIcon comes from
+    @dbm-design-system/icons. */}
+<IconButton icon={TrashIcon} aria-label="Delete" label="Delete" variant="tertiary" />
+<IconButton icon={TrashIcon} aria-label="Delete" label="Delete" variant="tertiary" tone="neutral" />`,
+
+  labelFrom: `{/* hideLabelBelow leaves the caption out below a width, a breakpoint step, so a bar can drop its captions on a phone: below
+    "md" this is the plain icon-only square. A tooltip then serves the icon-only state. HeartIcon comes from @dbm-design-system/icons. */}
+<IconButton icon={HeartIcon} aria-label="Favorites" label="Favorites" hideLabelBelow="md" variant="tertiary" tooltip />`,
+
+  labelledToggle: `{/* A captioned toggle: the caption goes bold when pressed (without changing the box's width) and takes the colour of the new
+    fill. handlePressedChange is yours. HeartIcon comes from @dbm-design-system/icons. */}
+<IconButton
+  icon={HeartIcon}
+  aria-label="Favorite"
+  label="Favorite"
+  variant="ghost"
+  defaultPressed={false}
+  onPressedChange={handlePressedChange}
+/>`,
+
   allSizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl". HeartIcon comes from @dbm-design-system/icons. */}
 <IconButton icon={HeartIcon} aria-label="Favorite" size="lg" />`,
 
@@ -91,6 +112,8 @@ export interface IconButtonPlaygroundSnippetArgs {
   variant?: string;
   tone?: string;
   size?: string;
+  label?: string;
+  hideLabelBelow?: unknown;
   isLoading?: boolean;
   loadingLabel?: string;
   rounded?: boolean;
@@ -117,6 +140,8 @@ export function iconButtonPlaygroundSnippet(args: IconButtonPlaygroundSnippetArg
   if (args.variant && args.variant !== "primary") attributes.push(`variant="${args.variant}"`);
   if (args.tone && args.tone !== "brand") attributes.push(`tone="${args.tone}"`);
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
+  if (args.label) attributes.push(`label="${args.label}"`);
+  if (args.label && typeof args.hideLabelBelow === "string" && args.hideLabelBelow !== "none") attributes.push(`hideLabelBelow="${args.hideLabelBelow}"`);
   if (args.rounded) attributes.push("rounded");
   // The Playground's select hands the transform its option key; accept the mapped value too.
   if (args.tooltip === true || args.tooltip === "Label") attributes.push("tooltip");

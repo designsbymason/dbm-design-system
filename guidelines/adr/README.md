@@ -151,6 +151,7 @@ A superseded ADR's `Status` line becomes: `Status: Superseded by [NNNN](./NNNN-n
 | [0095](./0095-navbar-brand-can-centre-below-a-width-with-the-start-controls-drawn-before-it-and-link-text-comes-from-their-navigation.md) | `Navbar.Brand` can centre below a width with the start controls drawn before it, and link text comes from their navigation | Accepted |
 | [0096](./0096-navbar-rows-can-be-drawn-in-three-columns-with-parts-gathered-by-a-column-prop-over-centring-the-brand-by-free-space.md) | `Navbar.Row` can be drawn in three columns, with parts gathered by a `column` prop, over centring the brand by the free space | Accepted |
 | [0097](./0097-button-and-iconbutton-take-a-tone-brand-or-neutral-that-destructive-ignores-and-buttongroup-hands-down.md) | `Button` and `IconButton` take a `tone` (`brand` or `neutral`) that `destructive` ignores, and `ButtonGroup` hands it down | Accepted |
+| [0098](./0098-iconbutton-takes-an-optional-label-drawn-inside-the-button-and-hideLabelBelow-over-demo-only-captions-or-a-stacked-button.md) | `IconButton` takes an optional `label` drawn inside the button, with `hideLabelBelow`, over demo-only captions or a stacked `Button` | Accepted |
 
 *(Extracted from `01-vision-and-goals.md`/`02-tech-stack-and-structure.md`/`03-token-system-spec.md`/`04-component-inventory.md`/`05-component-api-conventions.md`/`06-engineering-standards.md` during the guidelines retrofit pass, 2026-08-31 — more get added the same way, file by file, as the retrofit continues.)*
 

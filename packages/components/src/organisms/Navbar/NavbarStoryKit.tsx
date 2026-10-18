@@ -1,5 +1,4 @@
 import { BellIcon, BookOpenIcon, ShoppingCartIcon, UserCircleIcon } from "@dbm-design-system/icons";
-import { cx } from "@dbm-design-system/primitives";
 import { useState } from "react";
 import type { MouseEvent, ReactNode, RefObject } from "react";
 import { Button } from "../../atoms/Button";
@@ -9,7 +8,6 @@ import { Text } from "../../atoms/Text";
 import { SearchInput } from "../../molecules/SearchInput";
 import { Menu } from "../Menu";
 import { Navbar } from "./Navbar";
-import styles from "./NavbarStoryKit.module.css";
 import type { NavbarProps } from "./Navbar.types";
 
 export { DrawerStage as NavbarStage, DrawerViewModeContext as NavbarViewModeContext } from "../Drawer/DrawerStoryKit";
@@ -151,41 +149,6 @@ export function GalleryBar({ name, children }: { name: string; children: ReactNo
   return <section aria-label={name}>{children}</section>;
 }
 
-const captionClass = {
-  sm: styles.captionFromSm,
-  md: styles.captionFromMd,
-  lg: styles.captionFromLg,
-  xl: styles.captionFromXl,
-  "2xl": styles.captionFrom2xl,
-  "3xl": styles.captionFrom3xl,
-  never: styles.captionAlways,
-} as const;
-
-type CaptionStep = keyof typeof captionClass;
-
-/** A control with a short caption under it, drawn at and above `step` (the width the demo's row leaves its columns at). The caption is for the eye only: the control's own name says it. */
-function Captioned({ caption, step, children }: { caption: string; step: CaptionStep; children: ReactNode }) {
-  return (
-    <span className={styles.labelled}>
-      {children}
-      <span aria-hidden="true" className={cx(styles.caption, captionClass[step])}>
-        {caption}
-      </span>
-    </span>
-  );
-}
-
-/** An icon button, with a caption under it when `caption` is given. */
-function DemoIconButton({ caption, step, ...props }: React.ComponentProps<typeof IconButton> & { caption?: string; step: CaptionStep }) {
-  return caption === undefined ? (
-    <IconButton {...props} />
-  ) : (
-    <Captioned caption={caption} step={step}>
-      <IconButton {...props} />
-    </Captioned>
-  );
-}
-
 /**
  * Two rows drawn in columns: unequal sides (a search button at the start, two buttons at the end) with `balanced` columns, so the logo is still
  * central; and a track list of the author's with the brand and the field each put in a column of their own. Both apply below the widest step, so
@@ -231,7 +194,7 @@ export interface DemoRowsOptions {
   searchCollapseBelow?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "never";
   /** The colour family of the icon buttons (the menu, search, account and cart buttons). @default 'neutral' */
   iconTone?: ButtonTone;
-  /** A caption under the account and cart buttons (and the search button, with `searchWithActions`). @default true */
+  /** A caption under the account and cart buttons, from the width the bar leaves its columns at. @default true */
   labels?: boolean;
   /** The courtesy strip, the first row. @default true */
   courtesyRow?: boolean;
@@ -271,8 +234,8 @@ export function DemoRowsNavbar({
   const demo = useDemoCurrent("");
   // A primary link goes nowhere. With `navigable` the one clicked is current, as if each link were another page.
   const primary = (id: string) => (navigable ? demo.link(id) : { href: `#${id}`, onClick: preventNavigation });
-  const step: CaptionStep = collapseBelow;
-  const captionFor = (caption: string) => (labels ? caption : undefined);
+  // A caption under the account and cart buttons from the width the bar leaves its columns at, and always when it never does
+  const showLabelFrom = collapseBelow === "never" ? undefined : collapseBelow;
   const categories = (
     <Navbar.Links aria-label="Categories" align="center">
       <Navbar.Link {...primary("women")}>Women</Navbar.Link>
@@ -322,16 +285,9 @@ export function DemoRowsNavbar({
         {linksInLogoRow && categories}
         {!searchWithActions && search}
         <Navbar.Actions style={{ marginInlineStart: searchWithActions ? undefined : 0 }}>
-          <DemoIconButton caption={captionFor("Account")} step={step} icon={UserCircleIcon} aria-label="Account" variant="tertiary" tone={iconTone} size="md" />
-          <DemoIconButton caption={captionFor("Cart")} step={step} icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" tone={iconTone} size="md" />
-          {searchWithActions &&
-            (labels ? (
-              <Captioned caption="Search" step={step}>
-                {search}
-              </Captioned>
-            ) : (
-              search
-            ))}
+          <IconButton icon={UserCircleIcon} aria-label="Account" label={labels ? "Account" : undefined} hideLabelBelow={showLabelFrom} variant="tertiary" tone={iconTone} size="md" />
+          <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" label={labels ? "Cart" : undefined} hideLabelBelow={showLabelFrom} variant="tertiary" tone={iconTone} size="md" />
+          {searchWithActions && search}
         </Navbar.Actions>
         {(courtesyRow || primaryRow || linksInLogoRow) && <Navbar.MenuButton variant="tertiary" tone={iconTone} size="md" />}
       </Navbar.Row>

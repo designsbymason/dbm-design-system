@@ -17,6 +17,15 @@ const variantClass: Record<ButtonVariant, string | undefined> = {
   destructive: styles.variantDestructive,
 };
 
+const hideLabelBelowClass: Record<NonNullable<IconButtonProps["hideLabelBelow"]>, string | undefined> = {
+  sm: styles.hideLabelBelowSm,
+  md: styles.hideLabelBelowMd,
+  lg: styles.hideLabelBelowLg,
+  xl: styles.hideLabelBelowXl,
+  "2xl": styles.hideLabelBelow2xl,
+  "3xl": styles.hideLabelBelow3xl,
+};
+
 const sizeClass: Record<ButtonSize, string | undefined> = {
   xs: styles.sizeXs,
   sm: styles.sizeSm,
@@ -45,6 +54,8 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       variant: variantProp,
       tone: toneProp,
       size: sizeProp,
+      label,
+      hideLabelBelow,
       isLoading = false,
       loadingLabel,
       rounded: roundedProp,
@@ -73,7 +84,11 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
     // `destructive` is always danger-coloured, so the tone (its own or the group's) has no effect on it.
     const neutral = (toneProp ?? group?.tone ?? "brand") === "neutral" && variant !== "destructive";
     const size = sizeProp ?? group?.size ?? "md";
-    const rounded = roundedProp ?? group?.rounded ?? false;
+    // A caption is drawn only on a real `<button>` (Radix `Slot` takes one child), and a pill or circle has no shape for it,
+    // so with one `rounded` has no effect.
+    const hasLabel = label !== undefined && label !== "";
+    const labelled = hasLabel && !asChild;
+    const rounded = (roundedProp ?? group?.rounded ?? false) && !labelled;
     // Naming/shape mirrors Radix `Toggle`'s own `pressed`/`defaultPressed`/
     // `onPressedChange` (this system's established convention for
     // controlled/uncontrolled state, `05-component-api-conventions.md`
@@ -107,6 +122,8 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
     const hasWarnedNoAccessibleNameRef = useRef(false);
     const hasWarnedAsChildIgnoredPropsRef = useRef(false);
     const hasWarnedAsChildPressedRef = useRef(false);
+    const hasWarnedLabelIgnoredRef = useRef(false);
+    const hasWarnedLabelNameRef = useRef(false);
     if (process.env.NODE_ENV !== "production") {
       if (
         !ariaLabel &&
@@ -122,6 +139,26 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         hasWarnedAsChildIgnoredPropsRef.current = true;
         console.warn(
           "IconButton: `icon` has no effect when `asChild` is set — Radix `Slot` always renders `children` directly, and `icon` has no fallback role in that mode (though it's still a required prop, since it's the only accessible-icon path outside `asChild`). `isLoading`'s spinner is skipped the same way, though its dimming/`aria-disabled` state still applies. Render the icon as part of the slotted child instead.",
+        );
+      }
+      if (hasLabel && !hasWarnedLabelIgnoredRef.current) {
+        const ignored =
+          asChild
+            ? "`label` has no effect when `asChild` is set — Radix `Slot` renders the one child you give it, so there is nowhere to draw a caption. Put the caption in the slotted child, or remove `asChild`."
+            : roundedProp ?? group?.rounded
+              ? "`rounded` has no effect while a `label` is shown — a pill or circle has no shape for an icon over a caption. Remove `rounded`, or `label`."
+              : tooltip !== undefined && tooltip !== false && hideLabelBelow === undefined
+                ? "`tooltip` repeats the visible `label`, which shows at every width. Remove `tooltip`, or set `hideLabelBelow` so the tooltip serves the icon-only state."
+                : undefined;
+        if (ignored) {
+          hasWarnedLabelIgnoredRef.current = true;
+          console.warn(`IconButton: ${ignored}`);
+        }
+      }
+      if (label && ariaLabel && !ariaLabel.toLowerCase().includes(label.toLowerCase()) && !hasWarnedLabelNameRef.current) {
+        hasWarnedLabelNameRef.current = true;
+        console.warn(
+          "IconButton: the visible `label` isn't part of the accessible name (`aria-label`) — a speech-control user says what they see, so the name must contain it (WCAG 2.5.3). Make `aria-label` contain the `label` text.",
         );
       }
       if (asChild && isToggle && !hasWarnedAsChildPressedRef.current) {
@@ -199,6 +236,8 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
           variantClass[variant],
           neutral && styles.toneNeutral,
           sizeClass[size],
+          labelled && styles.hasLabel,
+          labelled && (hideLabelBelow ? hideLabelBelowClass[hideLabelBelow] : styles.labelAlways),
           rounded && styles.rounded,
           isToggle && isPressed && styles.pressed,
           slottedDisabled && styles.disabled,
@@ -207,14 +246,26 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       >
         {asChild ? (
           children
-        ) : isLoading ? (
-          <span className={styles.spinner} aria-hidden="true" />
         ) : (
-          <Icon
-            icon={icon}
-            size={size}
-            weight={isToggle && isPressed ? "fill" : "bold"}
-          />
+          <>
+            {isLoading ? (
+              <span className={styles.spinner} aria-hidden="true" />
+            ) : (
+              <Icon
+                icon={icon}
+                size={size}
+                weight={isToggle && isPressed ? "fill" : "bold"}
+              />
+            )}
+            {labelled && (
+              // For the eye only: the button's own name says it. `data-label` is read by the stylesheet to reserve the
+              // width of the bold form a pressed toggle draws, so the box doesn't change size when it is pressed. It stays
+              // while loading, so the box doesn't shrink to the square.
+              <span className={styles.label} data-label={label} aria-hidden="true">
+                {label}
+              </span>
+            )}
+          </>
         )}
       </Component>
     );

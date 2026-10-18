@@ -14,6 +14,8 @@ export const propOrder = [
   "variant",
   "tone",
   "size",
+  "label",
+  "hideLabelBelow",
   "isLoading",
   "loadingLabel",
   "rounded",
@@ -79,6 +81,36 @@ element `asChild`'s slotted child renders).
 ### All variants
 
 <Canvas of={IconButtonStories.AllVariants} />
+
+### With a caption
+
+`label` puts a short caption under the icon, so the icon and the caption are **one control**: hover, pressed, focus and a click all cover
+both. Use it when an icon needs a word to be understood (a header's Account and Cart); keep it to a word or two, since it is one line.
+`IconButton` is icon-first with an optional caption, where `Button` is text-first with an icon: reach for `Button` when the text is the
+control and the icon decorates it.
+
+- The box is taller and as wide as the caption needs, but never narrower than the plain square of its `size`, and a caption is meant for
+  a control that stands on its own, not beside `Button`s, in a `ButtonGroup` or in a `Toolbar`, which line up on the square. Prefer `md`
+  or larger for touch.
+- `aria-label` stays required, because the button is icon-only wherever the caption is left out, and it should contain the caption
+  (a speech-control user says what they see). A development warning says when it doesn't.
+- The caption is text, so it takes a `text.*` colour that follows the variant, the tone and the pressed state (contrast checked in all
+  four themes); a pressed toggle draws it bold without changing the box's width.
+- Not drawn with `asChild` (the slotted child is yours), and `rounded` has no effect while it shows; both warn in development. A `tooltip`
+  would repeat an always-visible caption, so it warns too.
+
+<Canvas of={IconButtonStories.WithCaption} />
+
+#### A caption from a width
+
+`hideLabelBelow` leaves the caption out below a width, a breakpoint step, and the button goes back to the plain square: a header can show
+captions on a wide window and icons alone on a phone. It is decided by the stylesheet, so a server render is right at first paint.
+
+<Canvas of={IconButtonStories.CaptionFromAWidth} />
+
+#### A toggle with a caption
+
+<Canvas of={IconButtonStories.CaptionedToggle} />
 
 ### Neutral tone
 
@@ -256,6 +288,14 @@ convenience for sighted users, never the only name — and nothing opens on a di
 <TokenRow token="border.neutral-strong" usage="the neutral tone: `secondary` variant's border, at rest and pressed alike" />
 <TokenRow token="icon.on-neutral" usage="the neutral tone: `primary` variant's rest-state icon; also `secondary`/`tertiary`/`ghost` variants' pressed-state icon" />
 <TokenRow token="icon.default" usage="the neutral tone: `secondary`/`tertiary`/`ghost` variants' rest-state icon; also `primary` variant's pressed-state icon" />
+<TokenRow token="text.on-brand" usage="the caption on the `primary` fill, and on the solid pressed fill of the other variants (brand tone)" />
+<TokenRow token="text.brand" usage="the caption of `secondary`/`tertiary`/`ghost`, and of a pressed `primary` (brand tone)" />
+<TokenRow token="text.on-danger" usage="the caption on the `destructive` variant's fill" />
+<TokenRow token="text.danger" usage="the caption of a pressed `destructive` toggle" />
+<TokenRow token="text.on-neutral" usage="the caption on the neutral `primary` fill, and on the solid pressed fill of the other neutral variants" />
+<TokenRow token="text.secondary" usage="the caption of the neutral `secondary`/`tertiary`/`ghost`, and of a pressed neutral `primary`" />
+<TokenRow token="font-size.xs / font-size.sm" usage="the caption's size (xs for `xs`–`md`, sm for `lg` and `xl`)" />
+<TokenRow token="font-weight.medium / font-weight.bold" usage="the caption at rest and pressed" />
 <TokenRow token="border.focus" usage="focus-visible outline" />
 <TokenRow token="icon.on-brand" usage="`primary` variant's rest-state icon; also `secondary`/`tertiary`/`ghost` variants' pressed-state icon" />
 <TokenRow token="icon.on-danger" usage="`destructive` variant's rest-state icon" />

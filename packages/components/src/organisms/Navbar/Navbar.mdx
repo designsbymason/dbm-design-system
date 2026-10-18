@@ -210,7 +210,7 @@ for a bar that sits over a hero or a coloured page.
 ### A header of several rows
 
 A `Navbar.Row` is a band of the one `<header>`, and each can set its own `variant`, `size` and `contained`. Here: a thin courtesy strip
-(`size="xs"`, with `quiet` links); a taller row (`size="lg"`) with the logo, a smaller search field (`size="sm"`), centred between the logo and the buttons, and medium, neutral, tertiary icon buttons with a caption under each on a wide window (your own markup, as `IconButton` has no visible label);
+(`size="xs"`, with `quiet` links); a taller row (`size="lg"`) with the logo, a smaller search field (`size="sm"`), centred between the logo and the buttons, and medium, neutral, tertiary icon buttons with a caption under each on a wide window (`label` and `hideLabelBelow` on `IconButton`);
 and a smaller row (`size="sm"`) of primary links, centred (`align="center"`), in bold capitals (a `style` on `Navbar.Links` sets the text of every
 link in it), with none marked current, as on a home page. Give each `Navbar.Links` its own name, since they are separate landmarks.
 
@@ -578,10 +578,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
     <Navbar.Brand href="/">dbM</Navbar.Brand>
     <Navbar.Search size="sm" buttonVariant="tertiary" buttonTone="neutral" buttonSize="md" placeholder="Search products" style={{ marginInline: "auto" }} onSearch={(query) => search(query)} />
     <Navbar.Actions style={{ marginInlineStart: 0 }}>
-      <span className="labelled">
-        <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" tone="neutral" size="md" />
-        <span className="caption" aria-hidden="true">Cart</span>
-      </span>
+      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" tone="neutral" size="md" label="Cart" hideLabelBelow="md" />
     </Navbar.Actions>
     <Navbar.MenuButton variant="tertiary" tone="neutral" size="md" />
   </Navbar.Row>

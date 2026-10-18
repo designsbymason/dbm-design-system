@@ -132,10 +132,7 @@ ${navbar('currentVariant="solid"')}`,
     Several Navbar.Links are allowed: give each its own aria-label, and quiet for a courtesy row's. On a phone (columns) the row is
     three columns: the menu and search buttons at the start, the logo in the centre, the other buttons at the end, so the logo stays
     central however many are on each side. Write the brand first (the page and a wide window read it first); the menu button is drawn
-    first in its column wherever it is. Each icon button has a caption under it on a wide window: your own markup and CSS (IconButton has no visible label), a
-    column with the caption hidden below the step the row goes into columns at (.caption { display: none } @media (min-width: 48rem)
-    { .caption { display: block } }); the caption is aria-hidden as the button's own name says it, and has a negative margin-block-start (space-1) to sit close to the
-    icon, with pointer-events: none. They are medium, neutral, tertiary icon buttons here (variant, tone and size on Navbar.MenuButton, buttonVariant, buttonTone and
+    first in its column wherever it is. The account and cart buttons have a caption under the icon from the step the row goes into columns at (label and hideLabelBelow on IconButton: the caption is part of the button, so hover, pressed and a click cover both, and below the step it is the plain icon). They are medium, neutral, tertiary icon buttons here (variant, tone and size on Navbar.MenuButton, buttonVariant, buttonTone and
     buttonSize on Navbar.Search, which keeps its field small). A style on Navbar.Links sets the text of all its links. */}
 <Navbar>
   <Navbar.Row size="xs" variant="outlined" sticky={false}>
@@ -151,14 +148,8 @@ ${navbar('currentVariant="solid"')}`,
     </Navbar.Brand>
     <Navbar.Search size="sm" buttonVariant="tertiary" buttonTone="neutral" buttonSize="md" placeholder="Search products" style={{ marginInline: "auto" }} />
     <Navbar.Actions style={{ marginInlineStart: 0 }}>
-      <span className="labelled">
-        <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" tone="neutral" size="md" />
-        <span className="caption" aria-hidden="true">Account</span>
-      </span>
-      <span className="labelled">
-        <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" tone="neutral" size="md" />
-        <span className="caption" aria-hidden="true">Cart</span>
-      </span>
+      <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" tone="neutral" size="md" label="Account" hideLabelBelow="md" />
+      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" tone="neutral" size="md" label="Cart" hideLabelBelow="md" />
     </Navbar.Actions>
     <Navbar.MenuButton variant="tertiary" tone="neutral" size="md" />
   </Navbar.Row>
@@ -223,14 +214,8 @@ ${navbar('currentVariant="solid"')}`,
     </Navbar.Brand>
     <Navbar.Search size="sm" buttonVariant="tertiary" buttonSize="md" collapseBelow="3xl" style={{ marginInline: "auto" }} />
     <Navbar.Actions style={{ marginInlineStart: 0 }}>
-      <span className="labelled">
-        <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="md" />
-        <span className="caption" aria-hidden="true">Account</span>
-      </span>
-      <span className="labelled">
-        <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="md" />
-        <span className="caption" aria-hidden="true">Cart</span>
-      </span>
+      <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="md" label="Account" hideLabelBelow="3xl" />
+      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="md" label="Cart" hideLabelBelow="3xl" />
     </Navbar.Actions>
     <Navbar.MenuButton variant="tertiary" size="md" />
   </Navbar.Row>

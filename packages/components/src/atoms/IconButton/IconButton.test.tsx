@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { ButtonGroup } from "../../molecules/ButtonGroup";
 import { IconButton } from "./IconButton";
 import type { IconButtonProps } from "./IconButton.types";
 
@@ -245,6 +246,109 @@ describe("IconButton", () => {
       ?.className.baseVal;
 
     expect(xlIconClass).not.toBe(lgIconClass);
+  });
+
+  describe("label (a caption under the icon)", () => {
+    it("draws no caption and none of its classes without a label", () => {
+      render(<IconButton icon={HeartIcon} aria-label="Favorite" />);
+      const button = screen.getByRole("button");
+      expect(button.className).not.toMatch(/hasLabel|labelAlways/);
+      expect(button.querySelector("[data-label]")).toBeNull();
+    });
+
+    it("draws the caption inside the button, for the eye only, with the name still the aria-label", () => {
+      render(<IconButton icon={HeartIcon} aria-label="Favorite item" label="Favorite" />);
+      const button = screen.getByRole("button", { name: "Favorite item" });
+      const caption = button.querySelector("[data-label]")!;
+      expect(caption).toHaveTextContent("Favorite");
+      expect(caption).toHaveAttribute("aria-hidden", "true");
+      expect(caption).toHaveAttribute("data-label", "Favorite");
+      expect(button.className).toMatch(/hasLabel/);
+      expect(button.className).toMatch(/labelAlways/);
+    });
+
+    it("shows the caption from a step up with hideLabelBelow, one class per step", () => {
+      for (const step of ["sm", "md", "lg", "xl", "2xl", "3xl"] as const) {
+        const { unmount } = render(<IconButton icon={HeartIcon} aria-label="Favorite" label="Favorite" hideLabelBelow={step} />);
+        const className = screen.getByRole("button").className;
+        expect(className).toMatch(new RegExp(`hideLabelBelow${step === "2xl" ? "2xl" : step[0]!.toUpperCase() + step.slice(1)}`));
+        expect(className).not.toMatch(/labelAlways/);
+        unmount();
+      }
+    });
+
+    it("ignores an empty label", () => {
+      render(<IconButton icon={HeartIcon} aria-label="Favorite" label="" />);
+      expect(screen.getByRole("button").className).not.toMatch(/hasLabel/);
+    });
+
+    it("keeps the spinner in the icon's place and the caption while loading", () => {
+      render(<IconButton icon={HeartIcon} aria-label="Favorite" label="Favorite" isLoading />);
+      const button = screen.getByRole("button");
+      expect(button.querySelector('[aria-hidden="true"]:not([data-label])')).not.toBeNull();
+      expect(button.querySelector("[data-label]")).toHaveTextContent("Favorite");
+    });
+
+    it("marks a pressed captioned toggle, which draws its caption bold", () => {
+      render(<IconButton icon={HeartIcon} aria-label="Favorite" label="Favorite" defaultPressed />);
+      expect(screen.getByRole("button")).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByRole("button").className).toMatch(/pressed/);
+    });
+
+    describe("what it warns about, in development", () => {
+      it("does not draw a caption with asChild, and warns", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        render(
+          <IconButton asChild icon={HeartIcon} aria-label="Favorite" label="Favorite">
+            <a href="/favorites">Favorites</a>
+          </IconButton>,
+        );
+        expect(screen.getByRole("link").querySelector("[data-label]")).toBeNull();
+        expect(warn.mock.calls.some(([message]) => String(message).includes("`label` has no effect when `asChild`"))).toBe(true);
+        warn.mockRestore();
+      });
+
+      it("ignores rounded while the caption shows, and warns", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        render(<IconButton icon={HeartIcon} aria-label="Rounded favorite" label="Favorite" rounded />);
+        expect(screen.getByRole("button").className).not.toMatch(/rounded/);
+        expect(warn.mock.calls.some(([message]) => String(message).includes("`rounded` has no effect while a `label`"))).toBe(true);
+        warn.mockRestore();
+      });
+
+      it("ignores a group's rounded for a captioned button too", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        render(
+          <ButtonGroup aria-label="Actions" rounded>
+            <IconButton icon={HeartIcon} aria-label="Group favorite" label="Favorite" />
+          </ButtonGroup>,
+        );
+        expect(screen.getByRole("button").className).not.toMatch(/rounded/);
+        warn.mockRestore();
+      });
+
+      it("warns about a tooltip that repeats an always-visible caption, but not one with hideLabelBelow", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const { unmount } = render(<IconButton icon={HeartIcon} aria-label="Tooltip favorite" label="Favorite" tooltip />);
+        expect(warn.mock.calls.some(([message]) => String(message).includes("`tooltip` repeats the visible `label`"))).toBe(true);
+        unmount();
+        warn.mockClear();
+        render(<IconButton icon={HeartIcon} aria-label="Hidden favorite" label="Favorite" hideLabelBelow="md" tooltip />);
+        expect(warn.mock.calls.some(([message]) => String(message).includes("`tooltip` repeats"))).toBe(false);
+        warn.mockRestore();
+      });
+
+      it("warns when the caption isn't part of the accessible name, and not when it is", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const { unmount } = render(<IconButton icon={HeartIcon} aria-label="Like" label="Favorite" />);
+        expect(warn.mock.calls.some(([message]) => String(message).includes("isn't part of the accessible name"))).toBe(true);
+        unmount();
+        warn.mockClear();
+        render(<IconButton icon={HeartIcon} aria-label="Add to favorites" label="Favorite" />);
+        expect(warn.mock.calls.some(([message]) => String(message).includes("isn't part of the accessible name"))).toBe(false);
+        warn.mockRestore();
+      });
+    });
   });
 
   describe("tone", () => {
