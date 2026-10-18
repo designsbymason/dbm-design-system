@@ -946,6 +946,11 @@ export const RowsPanelOrder: Story = {
     const panel = await canvas.findByRole("dialog", { name: "Menu" });
     await waitFor(() => expect(panel.getAnimations().every((animation) => animation.playState === "finished")).toBe(true));
     expect(canvas.getAllByRole("dialog")).toHaveLength(1);
+    // the rows that held only links went with them: no empty bands above and below the row that has the brand
+    expect(getComputedStyle(courtesy).display).toBe("none");
+    expect(getComputedStyle(rows(header)[2]!).display).toBe("none");
+    expect(getComputedStyle(main).display).not.toBe("none");
+    expect(Math.round(header.getBoundingClientRect().height)).toBe(Math.round(main.getBoundingClientRect().height));
     const navs = within(panel).getAllByRole("navigation");
     expect(navs.map((nav) => nav.getAttribute("aria-label"))).toEqual(["Categories", "Help"]);
     // on screen as in the DOM: the categories above the help links, which are separated by a line and set smaller

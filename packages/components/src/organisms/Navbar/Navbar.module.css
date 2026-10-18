@@ -707,6 +707,45 @@ a.brand:focus-visible,
   display: none;
 }
 
+/* A row that holds nothing but links (a courtesy strip, a row of categories) has nothing left once they have moved into the menu panel, so
+   below the collapse step the row goes with them instead of staying as an empty band. A row with anything else in it (a brand, a field, a button,
+   the menu button) stays. (`:has()` can't hold another `:has()`, so this is `:not(:has())`: a row with no child that isn't the links.) Each step is the complement of its collapse width, as the media queries below are its own. */
+@media not all and (min-width: 40rem) {
+  .collapseSm .row:not(:has(> .inner > :not(.links))) {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 48rem) {
+  .collapseMd .row:not(:has(> .inner > :not(.links))) {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 64rem) {
+  .collapseLg .row:not(:has(> .inner > :not(.links))) {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 80rem) {
+  .collapseXl .row:not(:has(> .inner > :not(.links))) {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 96rem) {
+  .collapse2xl .row:not(:has(> .inner > :not(.links))) {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 120rem) {
+  .collapse3xl .row:not(:has(> .inner > :not(.links))) {
+    display: none;
+  }
+}
+
 @media (min-width: 40rem) {
   .collapseSm .links {
     display: block;
