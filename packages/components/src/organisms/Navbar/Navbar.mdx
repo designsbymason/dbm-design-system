@@ -248,7 +248,7 @@ beside the search button. A row that held only links goes with them, so the bar 
 
 `Navbar.Search` takes the room between its neighbours. Below its `collapseBelow` width the field leaves the bar for a button that
 opens it in a sheet from the top of the screen, so a phone isn't left with a squeezed field and the tab order stays the one the bar
-is written in. Press Enter in the sheet's field and it closes. Here the bar is the logo row alone, with no courtesy row, no row of links and so no menu button, and the search button sits in the same group as the account and cart buttons, each with a caption under it (your own markup, as `IconButton` has no visible label) and all in the brand tone.
+is written in. Press Enter in the sheet's field and it closes. Here the bar is the logo row alone, with the links in it, centred between the logo and the buttons (`align="center"`), and choosing one makes it current. The search button is last in the same group as the account and cart buttons, so it is the one at the end, and all three are in the brand tone. Below the collapse width the links go into the menu panel and the row is drawn in columns: the menu button at the start, the logo in the centre, the buttons at the end. The columns are `auto 1fr auto`, not `balanced`: three buttons are wider than a phone's equal side column, so the end takes the room it needs and the logo is centred in what is left.
 
 <Canvas of={NavbarStories.SearchOnAPhone} />
 

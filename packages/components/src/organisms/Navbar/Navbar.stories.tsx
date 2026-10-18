@@ -467,11 +467,14 @@ export const SearchOnAPhone: Story = {
         <Top>
           <DemoRowsNavbar
             searchCollapseBelow="3xl"
-            collapseBelow="never"
             iconTone="brand"
+            labels={false}
             courtesyRow={false}
             primaryRow={false}
+            linksInLogoRow
+            columns="auto 1fr auto"
             searchWithActions
+            navigable
             menuContainer={menuContainer}
           />
         </Top>

@@ -1282,54 +1282,92 @@ export const PanelStoryIsBrandAndFollowsClicks: Story = {
   },
 };
 
+const searchStory = (menuContainer?: HTMLElement | null) => (
+  <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+    <DemoRowsNavbar
+      searchCollapseBelow="3xl"
+      iconTone="brand"
+      labels={false}
+      courtesyRow={false}
+      primaryRow={false}
+      linksInLogoRow
+      columns="auto 1fr auto"
+      searchWithActions
+      navigable
+      menuContainer={menuContainer}
+    />
+  </div>
+);
+
 export const SearchSheetStoryLayout: Story = {
-  name: "The search story is one row, the search button grouped with the account and cart buttons, each with a caption, all brand-coloured",
-  render: () => (
-    <NavbarStage minBlockSize="24rem">
-      {(menuContainer) => (
-        <div style={{ inlineSize: "100%", alignSelf: "start" }}>
-          <DemoRowsNavbar
-            searchCollapseBelow="3xl"
-            collapseBelow="never"
-            iconTone="brand"
-            courtesyRow={false}
-            primaryRow={false}
-            searchWithActions
-            menuContainer={menuContainer}
-          />
-        </div>
-      )}
-    </NavbarStage>
-  ),
+  name: "The search story is one row: the links centred between the logo and the buttons, the search button last of them, all brand-coloured with no captions",
+  render: () => <NavbarStage minBlockSize="24rem">{searchStory}</NavbarStage>,
   play: async ({ canvasElement }) => {
+    expect(window.innerWidth).toBeGreaterThanOrEqual(768);
     const canvas = within(canvasElement);
     const header = canvas.getByRole("banner");
-    // no courtesy row, no row of primary links, and so no menu button either
+    // one row, with the links in it; the menu button is gone at this width
     expect(rows(header)).toHaveLength(1);
-    expect(canvasElement.querySelector('button[aria-label="Menu"]')).toBeNull();
+    expect(getComputedStyle(canvasElement.querySelector<HTMLElement>('button[aria-label="Menu"]')!).display).toBe("none");
+    const brand = canvas.getByRole("link", { name: "dbM" }).getBoundingClientRect();
+    const nav = canvas.getByRole("navigation", { name: "Categories" }).getBoundingClientRect();
     const search = canvas.getByLabelText("Search", { selector: "button" });
     const account = canvas.getByRole("button", { name: "Account" });
     const cart = canvas.getByRole("button", { name: /^Cart/ });
-    // the three buttons are in the one group, in order, and are drawn in the brand's icon colour
     const group = account.closest("div")!;
     expect(group.contains(search)).toBe(true);
     expect(group.contains(cart)).toBe(true);
-    const [searchBox, accountBox, cartBox] = [search, account, cart].map((button) => button.getBoundingClientRect()) as [DOMRect, DOMRect, DOMRect];
-    expect(searchBox.right).toBeLessThanOrEqual(accountBox.left);
+    // the links are centred in the room between the logo and the buttons
+    const groupBox = group.getBoundingClientRect();
+    expect(Math.abs(nav.left - brand.right - (groupBox.left - nav.right))).toBeLessThan(2);
+    // the search button is the last of the buttons, at the end of the row, in order after the account and the cart
+    const [accountBox, cartBox, searchBox] = [account, cart, search].map((button) => button.getBoundingClientRect()) as [DOMRect, DOMRect, DOMRect];
     expect(accountBox.right).toBeLessThanOrEqual(cartBox.left);
+    expect(cartBox.right).toBeLessThanOrEqual(searchBox.left);
+    expect(header.getBoundingClientRect().right - searchBox.right).toBeLessThan(40);
     for (const button of [search, account, cart]) expect(getComputedStyle(button).color).toBe(tokenColorOf("--dbm-icon-brand"));
-    // each has a caption under it, for the eye only
-    for (const [name, button] of [["Search", search], ["Account", account], ["Cart", cart]] as const) {
-      const caption = within(group).getByText(name);
-      expect(caption).toHaveAttribute("aria-hidden", "true");
-      expect(getComputedStyle(caption).display).not.toBe("none");
-      expect(caption.getBoundingClientRect().top).toBeGreaterThan(button.getBoundingClientRect().top + button.getBoundingClientRect().height / 2);
-    }
+    // no captions
+    expect(canvas.queryByText("Account")).toBeNull();
+    expect(canvas.queryByText("Cart")).toBeNull();
+    expect(within(group).queryByText("Search")).toBeNull();
+    // choosing a link makes it current
+    expect(header.querySelector('[aria-current="page"]')).toBeNull();
+    await userEvent.click(within(header).getByRole("link", { name: "Kids" }));
+    expect(within(header).getByRole("link", { name: "Kids" })).toHaveAttribute("aria-current", "page");
     // the search button opens the sheet
     await userEvent.click(search);
     expect(await canvas.findByRole("dialog", { name: "Search" })).toBeInTheDocument();
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(canvas.queryByRole("dialog")).not.toBeInTheDocument());
+  },
+};
+
+export const SearchSheetStoryOnAPhone: Story = {
+  name: "On a phone the search story is the menu button at the start, the logo central, and the account, cart and search buttons at the end",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => <NavbarStage minBlockSize="24rem">{searchStory}</NavbarStage>,
+  play: async ({ canvasElement }) => {
+    expect(window.innerWidth).toBeLessThan(768);
+    const canvas = within(canvasElement);
+    const header = canvas.getByRole("banner");
+    const row = rows(header)[0]!.getBoundingClientRect();
+    const menu = canvasElement.querySelector<HTMLElement>('button[aria-label="Menu"]')!.getBoundingClientRect();
+    const brand = canvas.getByRole("link", { name: "dbM" }).getBoundingClientRect();
+    const account = canvas.getByRole("button", { name: "Account" }).getBoundingClientRect();
+    const cart = canvas.getByRole("button", { name: /^Cart/ }).getBoundingClientRect();
+    const search = canvas.getByLabelText("Search", { selector: "button" }).getBoundingClientRect();
+    // the links have gone into the menu panel
+    // (a hidden element has no accessible name, so it is found by its attribute)
+    expect(getComputedStyle(canvasElement.querySelector<HTMLElement>("header nav[aria-label=\"Categories\"]")!).display).toBe("none");
+    expect(menu.right).toBeLessThanOrEqual(brand.left);
+    expect(brand.right).toBeLessThanOrEqual(account.left);
+    expect(account.right).toBeLessThanOrEqual(cart.left);
+    expect(cart.right).toBeLessThanOrEqual(search.left);
+    // one button at the start and three at the end, all inside the row, and the logo is centred in the room between them
+    expect(Math.abs((brand.left + brand.right) / 2 - (menu.right + account.left) / 2)).toBeLessThan(2);
+    expect(search.right).toBeLessThanOrEqual(row.right);
+    expect(row.right - search.right).toBeLessThan(24);
+    expect(menu.left).toBeGreaterThanOrEqual(row.left);
   },
 };
 

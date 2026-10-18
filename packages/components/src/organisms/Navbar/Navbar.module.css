@@ -621,8 +621,8 @@ a.brand:focus-visible,
   margin-inline-start: auto;
 }
 
-.links[data-align="center"] ~ .actions,
-.links[data-align="end"] ~ .actions {
+.inner:has(.links[data-align="center"]) .actions,
+.inner:has(.links[data-align="end"]) .actions {
   margin-inline-start: 0;
 }
 

@@ -250,36 +250,37 @@ ${navbar('currentVariant="solid"')}`,
 
   search: `{/* Navbar.Search is a role="search" landmark around a SearchInput; it takes the room between its neighbours. Below collapseBelow
     ("md" by default) it is a button that opens the field in a sheet from the top, with a small heading and a field. This demo uses the
-    widest step ("3xl"), and puts the button in the same group as the account and cart buttons (inside Navbar.Actions), each with a
-    caption under it: your own markup and CSS, as IconButton has no visible label (a column, the caption aria-hidden since the
-    button's own name says it, and the search wrapper's flex set to none so it sits as the others do). With no links there is
-    no menu button and no courtesy or primary row. buttonVariant, buttonTone and buttonSize are the button's look, to match the icon
-    buttons beside it. The bar's field and the sheet's are two inputs, so pass value and onChange to keep them in step. */}
+    widest step ("3xl"), and puts the button last in Navbar.Actions, after the account and cart buttons, so it is the one at the end.
+    flex: none on it makes the search wrapper sit as the other buttons do. The links are in the logo's own row, centred between the
+    logo and the buttons (align="center"); below the bar's collapse width ("md") they go into the menu panel and the row is drawn in
+    columns, the menu button at the start, the logo in the centre and the buttons at the end. The track list is "auto 1fr auto", not
+    "balanced": three buttons at the end are wider than a phone's equal side track, so the end takes what it needs and the logo is
+    centred in what is left. current marks the page the reader is on,
+    from your router (page is yours). buttonVariant, buttonTone and buttonSize are the button's look, to match the icon buttons beside
+    it. The bar's field and the sheet's are two inputs, so pass value and onChange to keep them in step. */}
 <Navbar>
-  <Navbar.Row size="lg" variant="outlined">
+  <Navbar.Row size="lg" variant="outlined" columns="auto 1fr auto">
     <Navbar.Brand href="/">dbM</Navbar.Brand>
+    <Navbar.Links aria-label="Categories" align="center">
+      <Navbar.Link href="/women" current={page === "women"}>Women</Navbar.Link>
+      <Navbar.Link href="/men" current={page === "men"}>Men</Navbar.Link>
+      <Navbar.Link href="/kids" current={page === "kids"}>Kids</Navbar.Link>
+      <Navbar.Link href="/sale" current={page === "sale"}>Sale</Navbar.Link>
+    </Navbar.Links>
     <Navbar.Actions>
-      <span className="labelled">
-        <Navbar.Search
-          size="sm"
-          buttonVariant="tertiary"
-          buttonSize="md"
-          collapseBelow="3xl"
-          placeholder="Search products"
-          style={{ flex: "none" }}
-          onSearch={(query) => search(query)}
-        />
-        <span className="caption" aria-hidden="true">Search</span>
-      </span>
-      <span className="labelled">
-        <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="md" />
-        <span className="caption" aria-hidden="true">Account</span>
-      </span>
-      <span className="labelled">
-        <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="md" />
-        <span className="caption" aria-hidden="true">Cart</span>
-      </span>
+      <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="md" />
+      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="md" />
+      <Navbar.Search
+        size="sm"
+        buttonVariant="tertiary"
+        buttonSize="md"
+        collapseBelow="3xl"
+        placeholder="Search products"
+        style={{ flex: "none" }}
+        onSearch={(query) => search(query)}
+      />
     </Navbar.Actions>
+    <Navbar.MenuButton variant="tertiary" size="md" />
   </Navbar.Row>
 </Navbar>`,
 

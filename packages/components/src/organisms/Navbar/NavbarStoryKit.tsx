@@ -237,8 +237,12 @@ export interface DemoRowsOptions {
   courtesyRow?: boolean;
   /** The row of primary links, the third. @default true */
   primaryRow?: boolean;
-  /** Draws the search as a button in the same group as the account and cart buttons, instead of between the logo and them. @default false */
+  /** Draws the search as a button last in the same group as the account and cart buttons, instead of between the logo and them. @default false */
   searchWithActions?: boolean;
+  /** The logo row's `columns` below the collapse width. `"balanced"` keeps the logo central; a track list gives the buttons the room they need. @default 'balanced' */
+  columns?: string;
+  /** Puts the primary links in the logo row, centred between the logo and the buttons, instead of in a row of their own (use with `primaryRow={false}`). @default false */
+  linksInLogoRow?: boolean;
   /** Marks a primary link current when it is clicked, as a router would on moving between pages; with this off none is current, as on a home page. @default false */
   navigable?: boolean;
 }
@@ -259,6 +263,8 @@ export function DemoRowsNavbar({
   courtesyRow = true,
   primaryRow = true,
   searchWithActions = false,
+  linksInLogoRow = false,
+  columns = "balanced",
   navigable = false,
   ...props
 }: NavbarProps & DemoRowsOptions) {
@@ -267,6 +273,14 @@ export function DemoRowsNavbar({
   const primary = (id: string) => (navigable ? demo.link(id) : { href: `#${id}`, onClick: preventNavigation });
   const step: CaptionStep = collapseBelow;
   const captionFor = (caption: string) => (labels ? caption : undefined);
+  const categories = (
+    <Navbar.Links aria-label="Categories" align="center">
+      <Navbar.Link {...primary("women")}>Women</Navbar.Link>
+      <Navbar.Link {...primary("men")}>Men</Navbar.Link>
+      <Navbar.Link {...primary("kids")}>Kids</Navbar.Link>
+      <Navbar.Link {...primary("sale")}>Sale</Navbar.Link>
+    </Navbar.Links>
+  );
   const search = (
     <Navbar.Search
       size="sm"
@@ -299,14 +313,17 @@ export function DemoRowsNavbar({
       <Navbar.Row
         size="lg"
         variant="outlined"
-        columns={collapseBelow === "never" ? undefined : "balanced"}
+        columns={collapseBelow === "never" ? undefined : columns}
         columnsBelow={collapseBelow === "never" ? undefined : collapseBelow}
       >
         <Navbar.Brand href="#" onClick={preventNavigation}>
           dbM
         </Navbar.Brand>
+        {linksInLogoRow && categories}
         {!searchWithActions && search}
         <Navbar.Actions style={{ marginInlineStart: searchWithActions ? undefined : 0 }}>
+          <DemoIconButton caption={captionFor("Account")} step={step} icon={UserCircleIcon} aria-label="Account" variant="tertiary" tone={iconTone} size="md" />
+          <DemoIconButton caption={captionFor("Cart")} step={step} icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" tone={iconTone} size="md" />
           {searchWithActions &&
             (labels ? (
               <Captioned caption="Search" step={step}>
@@ -315,10 +332,8 @@ export function DemoRowsNavbar({
             ) : (
               search
             ))}
-          <DemoIconButton caption={captionFor("Account")} step={step} icon={UserCircleIcon} aria-label="Account" variant="tertiary" tone={iconTone} size="md" />
-          <DemoIconButton caption={captionFor("Cart")} step={step} icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" tone={iconTone} size="md" />
         </Navbar.Actions>
-        {(courtesyRow || primaryRow) && <Navbar.MenuButton variant="tertiary" tone={iconTone} size="md" />}
+        {(courtesyRow || primaryRow || linksInLogoRow) && <Navbar.MenuButton variant="tertiary" tone={iconTone} size="md" />}
       </Navbar.Row>
       {primaryRow && (
         <Navbar.Row size="sm" variant="outlined">
