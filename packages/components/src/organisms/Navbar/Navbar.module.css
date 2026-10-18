@@ -43,8 +43,10 @@
   box-shadow: var(--dbm-shadow-dark-md);
 }
 
+/* `filled`: the plain surface with no line under it. The fill is the row's, not the `<header>`'s, so a different one is a `style` on the
+   `Navbar.Row` (an inline style beats this class), or on the bar for a `ghost` one, whose rows are transparent. */
 .filled {
-  background-color: var(--dbm-bg-neutral-subtle);
+  background-color: var(--dbm-bg-surface);
 }
 
 /* `frosted`: a translucent surface (90% of `bg.surface`) that blurs what is behind it, with the outlined bar's line under it. The

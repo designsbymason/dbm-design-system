@@ -24,9 +24,14 @@ export type NavbarSize = "xs" | "sm" | "md" | "lg";
 export type NavbarLinkSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 /**
- * How the bar itself is drawn: `outlined` (a surface with a line under it), `filled` (a tinted surface), `ghost`
+ * How the bar itself is drawn: `outlined` (a surface with a line under it), `filled` (the same surface with no line), `ghost`
  * (nothing of its own, the content sits on the page) or `frosted` (a translucent surface that blurs what is behind it, with a
  * line under it). `outlined`, `filled` and `ghost` are the names `Card` and `EmptyState` use for their `variant`.
+ *
+ * The fill is drawn by each `Navbar.Row`, not by the `<header>`, so there is no prop for a different colour: put a `style` on the
+ * row (`style={{ backgroundColor: "var(--dbm-bg-brand-subtle)" }}`, on a token, since an inline style beats the variant's class), or
+ * on the bar itself with `variant="ghost"`, whose rows are transparent. The text colours are checked against the standard
+ * surfaces, so check the contrast of a different fill.
  */
 export type NavbarVariant = "outlined" | "filled" | "ghost" | "frosted";
 

@@ -100,7 +100,7 @@ const meta: Meta<PlaygroundArgs> = {
     variant: {
       control: "select",
       options: ["outlined", "filled", "ghost", "frosted"],
-      description: "How the bar itself is drawn: a surface with a line under it, a tinted surface, or nothing of its own.",
+      description: "How the bar itself is drawn: a surface with a line under it, the same surface with no line, nothing of its own, or a translucent blurred surface. The fill is the row's, so a different colour is a style on the Navbar.Row (or on the bar with ghost), not a prop.",
       table: { defaultValue: { summary: '"outlined"' } },
     },
     currentVariant: {

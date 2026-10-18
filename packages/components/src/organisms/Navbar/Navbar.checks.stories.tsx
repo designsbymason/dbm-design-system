@@ -1632,6 +1632,58 @@ export const StyleOnLinksSetsTheTextStyle: Story = {
   },
 };
 
+export const FilledIsSurfaceAndBackgroundIsOverridable: Story = {
+  name: "A filled bar is the surface with no line, and a style on the row (or on a ghost bar) changes its fill",
+  render: () => (
+    <NavbarStage minBlockSize="22rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", display: "grid", gap: "1rem", alignSelf: "start" }}>
+          <GalleryBar name="filled">
+            <DemoNavbar variant="filled" linksLabel="filled" menuContainer={menuContainer} collapseBelow="never" />
+          </GalleryBar>
+          <GalleryBar name="row style">
+            <Navbar variant="filled" menuContainer={menuContainer}>
+              <Navbar.Row style={{ backgroundColor: "var(--dbm-bg-brand-subtle)" }} data-testid="row-style">
+                <Navbar.Brand href="#">dbM</Navbar.Brand>
+              </Navbar.Row>
+            </Navbar>
+          </GalleryBar>
+          <GalleryBar name="bar style">
+            <Navbar variant="ghost" style={{ backgroundColor: "var(--dbm-bg-brand-subtle)" }} menuContainer={menuContainer}>
+              <Navbar.Row data-testid="ghost-row">
+                <Navbar.Brand href="#">dbM</Navbar.Brand>
+              </Navbar.Row>
+            </Navbar>
+          </GalleryBar>
+          <GalleryBar name="header style only">
+            <Navbar variant="filled" style={{ backgroundColor: "var(--dbm-bg-brand-subtle)" }} menuContainer={menuContainer}>
+              <Navbar.Row data-testid="covered-row">
+                <Navbar.Brand href="#">dbM</Navbar.Brand>
+              </Navbar.Row>
+            </Navbar>
+          </GalleryBar>
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const surface = tokenColorOf("--dbm-bg-surface");
+    const tint = tokenColorOf("--dbm-bg-brand-subtle");
+    const rowOf = (name: string) => canvas.getByRole("region", { name }).querySelector("header")!.firstElementChild as HTMLElement;
+    // the filled bar is the surface, with no line under it
+    expect(getComputedStyle(rowOf("filled")).backgroundColor).toBe(surface);
+    expect(getComputedStyle(rowOf("filled")).borderBottomWidth).toBe("0px");
+    // a style on the row beats the variant's class
+    expect(getComputedStyle(canvas.getByTestId("row-style")).backgroundColor).toBe(tint);
+    // on a ghost bar the rows are transparent, so the header's style is what shows
+    expect(getComputedStyle(canvas.getByTestId("ghost-row")).backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    expect(getComputedStyle(canvas.getByRole("region", { name: "bar style" }).querySelector("header")!).backgroundColor).toBe(tint);
+    // and on a filled bar it does not: the row paints over the header (which is why the Docs say to style the row)
+    expect(getComputedStyle(canvas.getByTestId("covered-row")).backgroundColor).toBe(surface);
+  },
+};
+
 export const FrostedBar: Story = {
   name: "A frosted bar is translucent and blurs what is behind it, with a line under it, and keeps 4.5:1 over the worst case",
   render: () => (

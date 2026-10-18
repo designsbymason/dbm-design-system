@@ -33,7 +33,15 @@ ${inner}
 export const navbarSnippets = {
   variants: `{/* variant: "outlined" (default) | "filled" | "ghost" | "frosted". frosted is a translucent surface that blurs what is behind it
     (a sticky bar over a page, a hero); it falls back to a plain surface where backdrop-filter isn't supported, and in forced colours. */}
-${navbar('variant="frosted"')}`,
+${navbar('variant="frosted"')}
+
+{/* The fill is drawn by each Navbar.Row, so a different colour is a style on the row, on a token (an inline style beats the variant's
+    class). A style on Navbar itself shows only with variant="ghost", whose rows are transparent. */}
+<Navbar>
+  <Navbar.Row style={{ backgroundColor: "var(--dbm-bg-brand-subtle)" }}>
+    <Navbar.Brand href="/">dbM</Navbar.Brand>
+  </Navbar.Row>
+</Navbar>`,
 
   linkSizes: `{/* linkSize sets the links' text size, icon size and padding, on Menu's five steps ("xs" | "sm" | "md" | "lg" | "xl"), apart from
     the bar's size (its height). Left out it follows size (xs, sm, md, lg), so a taller bar has larger links. It can be set on the bar, a

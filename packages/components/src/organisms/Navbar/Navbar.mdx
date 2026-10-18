@@ -204,10 +204,25 @@ place one yourself to put it elsewhere or give it another icon.
 
 ### Variants
 
-`outlined` is a surface with a line under it, `filled` a tinted surface, and `ghost` nothing of its own,
+`outlined` is a surface with a line under it, `filled` the same surface with no line, and `ghost` nothing of its own,
 for a bar that sits over a hero or a coloured page. `frosted` is a translucent surface (90% of `bg.surface`) that blurs what is behind it,
 with a line under it: a sticky bar over a page, a hero or an image. It stays mostly opaque so the text keeps 4.5:1 over any content,
 and is a plain surface where `backdrop-filter` isn't supported and in forced colours.
+
+#### Changing the background
+
+There is no prop for the fill, because each `Navbar.Row` draws its own, not the `<header>` behind the rows. To use another colour, put a
+`style` on the row (an inline style beats the variant's class), on a token so it follows the theme:
+
+```tsx
+<Navbar>
+  <Navbar.Row style={{ backgroundColor: "var(--dbm-bg-brand-subtle)" }}>…</Navbar.Row>
+</Navbar>
+```
+
+A `style` on `Navbar` itself shows only with `variant="ghost"`, whose rows are transparent (and a stuck ghost bar keeps it, since an
+inline style outranks the surface it would otherwise take). A bar written without a `Navbar.Row` has no row to reach, so use `ghost` and
+the bar's `style`, or add the row. The links' colours are checked against the standard surfaces, so check the contrast of any other fill.
 
 <Canvas of={NavbarStories.Variants} />
 
@@ -655,8 +670,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 
 ## Design tokens used
 
-<TokenRow token="bg.surface" usage="an outlined or sticky bar's surface, so what scrolls beneath it doesn't show through" />
-<TokenRow token="bg.neutral-subtle" usage="a filled bar's surface" />
+<TokenRow token="bg.surface" usage="an outlined, filled or sticky bar's surface, so what scrolls beneath it doesn't show through" />
 <TokenRow token="bg.brand-subtle / bg.brand-subtle-hover" usage="a link's hover, and the current link's fill and its hover" />
 <TokenRow token="text.primary" usage="the bar's text and the brand" />
 <TokenRow token="text.secondary" usage="a link at rest, and a disabled one" />
