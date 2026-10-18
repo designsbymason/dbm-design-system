@@ -228,6 +228,14 @@ The menu button is drawn first in its column wherever it is written. A side with
 
 <Canvas of={NavbarStories.Rows} />
 
+### A row in columns
+
+Two rows in columns. The first has one button at the start and two at the end, and the logo is still central. The second sets the widths itself
+(`columns="auto 1fr auto"`) and puts the field in the middle track with its `column`. Both apply below the widest step, so narrow the window to
+see them in columns, or widen it past 1920px to see the same rows flow.
+
+<Canvas of={NavbarStories.Columns} />
+
 ### Several sets of links in the menu panel
 
 Below the collapse width, every `Navbar.Links` puts its links into the one menu panel, in the order written, with a line between the sets.

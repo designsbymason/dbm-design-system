@@ -166,6 +166,33 @@ ${navbar('currentVariant="solid"')}`,
   </Navbar.Row>
 </Navbar>`,
 
+  columns: `{/* columns draws a row below columnsBelow ("md" unless set) as three columns: the menu and search buttons at the start, the logo in
+    the centre, the other buttons at the end. "balanced" gives the sides equal room, so the logo is central however many are on each side
+    (here one button at the start and two at the end). Each part is in the column it belongs in unless column says otherwise. The parts
+    are in the page in the order written, grouped by column, so write the brand first. Above the step the row flows as without columns. */}
+<Navbar>
+  <Navbar.Row columns="balanced">
+    <Navbar.Brand href="/">dbM</Navbar.Brand>
+    <Navbar.Search aria-label="Search products" size="sm" buttonVariant="tertiary" />
+    <Navbar.Actions>
+      <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="sm" />
+      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="sm" />
+    </Navbar.Actions>
+  </Navbar.Row>
+</Navbar>
+
+{/* A track list sets the widths yourself, and column puts a part in another column than its own: the logo at the start, the field in the
+    middle track, which takes the free room, the account button at the end. */}
+<Navbar>
+  <Navbar.Row columns="auto 1fr auto">
+    <Navbar.Brand href="/" column="start">dbM</Navbar.Brand>
+    <Navbar.Search aria-label="Search help" column="center" size="sm" collapseBelow="never" />
+    <Navbar.Actions>
+      <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="sm" />
+    </Navbar.Actions>
+  </Navbar.Row>
+</Navbar>`,
+
   rowsPanel: `{/* Below the collapse width every set of links goes into the one menu panel, in the order written, with the quiet ones last and a
     line between sets; a row that held only links goes with them. This demo collapses below the widest step ("3xl") so the panel shows
     on any window narrower than 1920px; an app picks the step that suits its links. Put Navbar.MenuButton where you want it (here

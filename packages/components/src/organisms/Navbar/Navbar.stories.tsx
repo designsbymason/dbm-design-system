@@ -5,7 +5,7 @@ import type { CSSProperties, ReactNode, RefObject } from "react";
 import type { SpaceValue } from "@dbm-design-system/primitives";
 import { navbarPlaygroundSnippet, navbarSnippets } from "./Navbar.snippets";
 import type { NavbarCollapseBelow, NavbarCurrentVariant, NavbarProps, NavbarSize, NavbarVariant } from "./Navbar.types";
-import { DemoNavbar, DemoRowsNavbar, GalleryBar, NavbarStage, RouterDemoNavbar, NavbarViewModeContext, StickyDemo } from "./NavbarStoryKit";
+import { DemoColumnsBars, DemoNavbar, DemoRowsNavbar, GalleryBar, NavbarStage, RouterDemoNavbar, NavbarViewModeContext, StickyDemo } from "./NavbarStoryKit";
 
 // Navbar's root-level args in one Playground, every prop listed in the one order the Docs table uses: the ones a person can
 // edit have a control, and the rest (children, callbacks, refs, objects, the standard attributes) show as "–". Each sub-part
@@ -429,6 +429,15 @@ export const Rows: Story = {
         </Top>
       )}
     </NavbarStage>
+  ),
+};
+
+export const Columns: Story = {
+  name: "A row in columns",
+  parameters: { docs: { source: { code: navbarSnippets.columns } } },
+  argTypes: { ...noControls },
+  render: () => (
+    <NavbarStage minBlockSize="16rem">{(menuContainer) => <DemoColumnsBars menuContainer={menuContainer} />}</NavbarStage>
   ),
 };
 

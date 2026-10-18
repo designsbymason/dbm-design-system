@@ -5,7 +5,7 @@ import { UserCircleIcon, ShoppingCartIcon } from "@dbm-design-system/icons";
 import { IconButton } from "../../atoms/IconButton";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Navbar } from "./Navbar";
-import { DemoNavbar, DemoRowsNavbar, GalleryBar, NavbarStage, NavbarViewModeContext, StickyDemo } from "./NavbarStoryKit";
+import { DemoColumnsBars, DemoNavbar, DemoRowsNavbar, GalleryBar, NavbarStage, NavbarViewModeContext, StickyDemo } from "./NavbarStoryKit";
 
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout, the cascade, a breakpoint, stacking, forced
 // colours). They run in the `storybook` (Chromium) project; the test window is 1200px wide unless a story pins another.
@@ -1185,6 +1185,32 @@ export const ColumnsTakeTheWidthsGiven: Story = {
     const box = row.getBoundingClientRect();
     // the sides are not equal here, so the middle track, and the logo in it, is off the row's centre by half the difference
     expect(Math.abs((brand.left + brand.right) / 2 - (box.left + box.right) / 2)).toBeGreaterThan(10);
+  },
+};
+
+export const ColumnsStayInTheirTracks: Story = {
+  name: "In columns a group never grows past its track, so the field keeps a gap from its neighbours",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => (
+    // 17rem, narrower than a phone, so the free track (about 9.5rem) is narrower than the field's usual minimum (12rem) whatever the window
+    <NavbarStage minBlockSize="16rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "17rem", alignSelf: "start" }}>
+          <DemoColumnsBars menuContainer={menuContainer} />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    expect(window.innerWidth).toBeLessThan(768);
+    const bar = within(canvasElement).getByRole("region", { name: "Columns of your own widths" });
+    const brand = within(bar).getByRole("link", { name: "dbM" }).getBoundingClientRect();
+    const field = within(bar).getByRole("searchbox", { name: "Search help" }).getBoundingClientRect();
+    const account = within(bar).getByRole("button", { name: "Help account" }).getBoundingClientRect();
+    const gap = tokenPx("--dbm-space-2") * 16; // the token is in rem
+    // the field's room is the free track, which at this width is narrower than the field's usual minimum, so it gives way
+    expect(field.left - brand.right).toBeGreaterThanOrEqual(gap - 1);
+    expect(account.left - field.right).toBeGreaterThanOrEqual(gap - 1);
   },
 };
 

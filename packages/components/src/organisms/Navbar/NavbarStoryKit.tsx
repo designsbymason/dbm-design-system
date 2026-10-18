@@ -149,6 +149,45 @@ export function GalleryBar({ name, children }: { name: string; children: ReactNo
 }
 
 /**
+ * Two rows drawn in columns: unequal sides (a search button at the start, two buttons at the end) with `balanced` columns, so the logo is still
+ * central; and a track list of the author's with the brand and the field each put in a column of their own. Both apply below the widest step, so
+ * they are in columns on any window narrower than 1920px.
+ */
+export function DemoColumnsBars({ menuContainer }: { menuContainer?: HTMLElement | null }) {
+  return (
+    <div style={{ inlineSize: "100%", display: "grid", gap: "var(--dbm-space-4)", alignSelf: "start" }}>
+      <GalleryBar name="Balanced columns">
+        <Navbar menuContainer={menuContainer}>
+          <Navbar.Row columns="balanced" columnsBelow="3xl">
+            <Navbar.Brand href="#" onClick={preventNavigation}>
+              dbM
+            </Navbar.Brand>
+            <Navbar.Search aria-label="Search products" size="sm" buttonVariant="tertiary" collapseBelow="3xl" />
+            <Navbar.Actions>
+              <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="sm" />
+              <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="sm" />
+            </Navbar.Actions>
+          </Navbar.Row>
+        </Navbar>
+      </GalleryBar>
+      <GalleryBar name="Columns of your own widths">
+        <Navbar menuContainer={menuContainer}>
+          <Navbar.Row columns="auto 1fr auto" columnsBelow="3xl">
+            <Navbar.Brand href="#" column="start" onClick={preventNavigation}>
+              dbM
+            </Navbar.Brand>
+            <Navbar.Search aria-label="Search help" column="center" size="sm" collapseBelow="never" />
+            <Navbar.Actions>
+              <IconButton icon={UserCircleIcon} aria-label="Help account" variant="tertiary" size="sm" />
+            </Navbar.Actions>
+          </Navbar.Row>
+        </Navbar>
+      </GalleryBar>
+    </div>
+  );
+}
+
+/**
  * A multi-row header, laid out the way a shop's is: a thin courtesy strip (which scrolls away when the bar is sticky); a taller row with the
  * logo, the search field and small tertiary icon buttons, which on a phone (`columns`) puts the menu button and the search button at the
  * start, the logo in the centre and the other buttons at the end; and a smaller row of primary links, centred, in capitals, with none marked current (the

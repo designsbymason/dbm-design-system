@@ -263,6 +263,7 @@ a.brand:focus-visible,
     gap: var(--dbm-space-2);
     grid-row: 1;
     min-inline-size: 0;
+    max-inline-size: 100%;
   }
 
   .columnsSm > .columnStart {
@@ -303,6 +304,7 @@ a.brand:focus-visible,
     gap: var(--dbm-space-2);
     grid-row: 1;
     min-inline-size: 0;
+    max-inline-size: 100%;
   }
 
   .columnsMd > .columnStart {
@@ -343,6 +345,7 @@ a.brand:focus-visible,
     gap: var(--dbm-space-2);
     grid-row: 1;
     min-inline-size: 0;
+    max-inline-size: 100%;
   }
 
   .columnsLg > .columnStart {
@@ -383,6 +386,7 @@ a.brand:focus-visible,
     gap: var(--dbm-space-2);
     grid-row: 1;
     min-inline-size: 0;
+    max-inline-size: 100%;
   }
 
   .columnsXl > .columnStart {
@@ -423,6 +427,7 @@ a.brand:focus-visible,
     gap: var(--dbm-space-2);
     grid-row: 1;
     min-inline-size: 0;
+    max-inline-size: 100%;
   }
 
   .columns2xl > .columnStart {
@@ -463,6 +468,7 @@ a.brand:focus-visible,
     gap: var(--dbm-space-2);
     grid-row: 1;
     min-inline-size: 0;
+    max-inline-size: 100%;
   }
 
   .columns3xl > .columnStart {
