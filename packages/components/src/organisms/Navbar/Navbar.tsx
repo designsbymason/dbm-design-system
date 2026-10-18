@@ -59,15 +59,6 @@ const hideBelowClass: Record<NonNullable<NavbarActionProps["hideBelow"]>, string
   "3xl": styles.hideBelow3xl,
 };
 
-const brandCenterClass: Record<Exclude<NavbarCollapseBelow, "never">, string | undefined> = {
-  sm: styles.brandCenterSm,
-  md: styles.brandCenterMd,
-  lg: styles.brandCenterLg,
-  xl: styles.brandCenterXl,
-  "2xl": styles.brandCenter2xl,
-  "3xl": styles.brandCenter3xl,
-};
-
 const collapseClass: Record<NavbarCollapseBelow, string | undefined> = {
   sm: styles.collapseSm,
   md: styles.collapseMd,
@@ -398,14 +389,14 @@ NavbarRoot.displayName = "Navbar";
  * the brand's look on a router link.
  */
 const NavbarBrand = forwardRef<HTMLElement, NavbarBrandProps>(
-  ({ href, asChild = false, centerBelow = "never", className, children, ...props }, ref) => {
+  ({ href, asChild = false, column: _column, className, children, ...props }, ref) => {
     const Component = asChild ? Slot : href !== undefined ? "a" : "div";
     return (
       <Component
         {...props}
         {...(href !== undefined ? { href } : {})}
         ref={ref as never}
-        className={cx(styles.brand, centerBelow !== "never" && brandCenterClass[centerBelow], className)}
+        className={cx(styles.brand, className)}
       >
         {children}
       </Component>
@@ -419,7 +410,7 @@ NavbarBrand.displayName = "Navbar.Brand";
  * width, and, below it, as the body of the menu panel the menu button opens. Its children are drawn in both places.
  */
 const NavbarLinks = forwardRef<HTMLElement, NavbarLinksProps>(
-  ({ children, className, align = "start", quiet = false, "aria-label": ariaLabel, "aria-labelledby": ariaLabelledBy, ...props }, ref) => {
+  ({ children, className, align = "start", quiet = false, column: _column, "aria-label": ariaLabel, "aria-labelledby": ariaLabelledBy, ...props }, ref) => {
     const { labels, panelBody, panelQuietBody } = useNavbarContext("Navbar.Links");
     const panelTarget = quiet ? panelQuietBody : panelBody;
     const name = ariaLabelledBy === undefined ? (ariaLabel ?? labels.navigation) : ariaLabel;
@@ -644,7 +635,7 @@ const NavbarGroup = forwardRef<HTMLButtonElement, NavbarGroupProps>(
 NavbarGroup.displayName = "Navbar.Group";
 
 /** The bar's end: whatever belongs to the whole app, pushed to the far edge. */
-const NavbarActions = forwardRef<HTMLDivElement, NavbarActionsProps>(({ className, ...props }, ref) => (
+const NavbarActions = forwardRef<HTMLDivElement, NavbarActionsProps>(({ column: _column, className, ...props }, ref) => (
   <div {...props} ref={ref} className={cx(styles.actions, className)} />
 ));
 NavbarActions.displayName = "Navbar.Actions";
@@ -693,7 +684,7 @@ NavbarSkipLink.displayName = "Navbar.SkipLink";
  * place one yourself to put it elsewhere or give it another icon.
  */
 const NavbarMenuButton = forwardRef<HTMLButtonElement, NavbarMenuButtonProps>(
-  ({ icon = ListIcon, variant = "ghost", size: ownSize, className, "aria-label": ariaLabel, ...props }, ref) => {
+  ({ icon = ListIcon, variant = "ghost", size: ownSize, column: _column, className, "aria-label": ariaLabel, ...props }, ref) => {
     const { labels, size: barSize } = useNavbarContext("Navbar.MenuButton");
     const rowSize = useContext(NavbarRowContext)?.size;
     const size = ownSize ?? rowSize ?? barSize;

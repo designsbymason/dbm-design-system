@@ -1,8 +1,10 @@
 import { cx } from "@dbm-design-system/primitives";
 import { forwardRef, useContext, useMemo } from "react";
+import type { CSSProperties } from "react";
 import { Container } from "../../atoms/Container";
 import styles from "./Navbar.module.css";
-import type { NavbarRowProps, NavbarSize } from "./Navbar.types";
+import type { NavbarColumn, NavbarRowProps, NavbarSize } from "./Navbar.types";
+import { groupByColumn } from "./NavbarColumns";
 import { NavbarRowContext, NavbarRowIndexContext, useNavbarContext } from "./NavbarContext";
 
 export const rowSizeClass: Record<NavbarSize, string | undefined> = {
@@ -10,6 +12,21 @@ export const rowSizeClass: Record<NavbarSize, string | undefined> = {
   sm: styles.sizeSm,
   md: undefined,
   lg: styles.sizeLg,
+};
+
+const columnsClass: Record<NonNullable<NavbarRowProps["columnsBelow"]>, string | undefined> = {
+  sm: styles.columnsSm,
+  md: styles.columnsMd,
+  lg: styles.columnsLg,
+  xl: styles.columnsXl,
+  "2xl": styles.columns2xl,
+  "3xl": styles.columns3xl,
+};
+
+const columnGroupClass: Record<NavbarColumn, string | undefined> = {
+  start: styles.columnStart,
+  center: styles.columnCenter,
+  end: styles.columnEnd,
 };
 
 /**
@@ -20,19 +37,30 @@ export const rowSizeClass: Record<NavbarSize, string | undefined> = {
  * Without any rows the bar draws its parts as one row, so a single-row bar needs none of this.
  */
 export const NavbarRow = forwardRef<HTMLDivElement, NavbarRowProps>(
-  ({ variant, size, contained, sticky = true, className, children, ...props }, ref) => {
+  ({ variant, size, contained, columns, columnsBelow = "md", sticky = true, className, children, ...props }, ref) => {
     const bar = useNavbarContext("Navbar.Row");
     const index = useContext(NavbarRowIndexContext);
     const rowVariant = variant ?? bar.variant;
     const rowSize = size ?? bar.size;
     const rowContained = contained ?? bar.contained;
     const rowContext = useMemo(() => ({ size: rowSize }), [rowSize]);
-    const content = (
-      <>
-        {children}
-        {bar.menuButtonRow === index && bar.autoMenuButton}
-      </>
-    );
+    const autoMenuButton = bar.menuButtonRow === index ? bar.autoMenuButton : null;
+    const content =
+      columns === undefined ? (
+        <>
+          {children}
+          {autoMenuButton}
+        </>
+      ) : (
+        groupByColumn(children, autoMenuButton).map((group) => (
+          <div key={group.column} className={cx(styles.column, columnGroupClass[group.column])}>
+            {group.items}
+          </div>
+        ))
+      );
+    const innerClass = columns === undefined ? undefined : columnsClass[columnsBelow];
+    const innerStyle: CSSProperties | undefined =
+      columns === undefined || columns === "balanced" ? undefined : ({ "--navbar-columns": columns } as CSSProperties);
 
     return (
       <NavbarRowContext.Provider value={rowContext}>
@@ -43,9 +71,13 @@ export const NavbarRow = forwardRef<HTMLDivElement, NavbarRowProps>(
           className={cx(styles.row, styles[rowVariant], rowSizeClass[rowSize], className)}
         >
           {rowContained ? (
-            <Container className={styles.inner}>{content}</Container>
+            <Container className={cx(styles.inner, innerClass)} style={innerStyle}>
+              {content}
+            </Container>
           ) : (
-            <div className={cx(styles.inner, styles.plainInner)}>{content}</div>
+            <div className={cx(styles.inner, styles.plainInner, innerClass)} style={innerStyle}>
+              {content}
+            </div>
           )}
         </div>
       </NavbarRowContext.Provider>

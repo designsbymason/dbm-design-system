@@ -1,6 +1,6 @@
 # 0095 — `Navbar.Brand` can centre below a width with the start controls drawn before it, and link text comes from their navigation
 
-**Status:** Accepted · **Date:** 2026-10-18
+**Status:** Accepted, the clause that `Navbar.Brand` takes `centerBelow` superseded by [0096](./0096-navbar-rows-can-be-drawn-in-three-columns-with-parts-gathered-by-a-column-prop-over-centring-the-brand-by-free-space.md) · **Date:** 2026-10-18
 
 ## Context
 A shop's phone header is usually the menu and search buttons at the start, the logo in the centre and the other buttons at the end, while a wide window has the logo first and the search field after it. Authoring that needed the brand centred at one width and not another, and the controls on its two sides in a different visual order from the one a wide window reads. A header also wants its primary links in a smaller, semibold, capitalised style, and a courtesy strip thinner than the smallest row.

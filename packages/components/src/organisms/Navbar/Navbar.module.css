@@ -241,151 +241,252 @@ a.brand:focus-visible,
   background-position: right center;
 }
 
-/* `Navbar.Brand`'s `centerBelow`: below the step the brand sits centred between the controls on either side, and the controls that belong at the
-   start (the menu button, and the search field once it is a button) come before it. Only the order they are drawn in changes: the brand stays
-   first in the page, as on a wide window, so a keyboard meets it before the search. The actions follow it, and the free space is the brand's
-   own margins (the actions' push to the end is cancelled, as for `align`). The gap between controls is the actions' own, so the two sides match. */
+/* `Navbar.Row`'s `columns`: the row's parts are drawn in a group each for the start, the centre and the end. Above the step the groups are
+   `display: contents`, so the parts flow in the row as they would without them; below it the row is a grid of three tracks (`balanced` by
+   default: equal sides, so the centre is the row's own, or the author's `--navbar-columns`) with each group in its track. A group's own
+   `margin-inline-start: auto` (the actions', the menu button's) is cancelled so it doesn't push inside it. Each step is the complement of
+   its width, as the media queries elsewhere are. */
+.column {
+  display: contents;
+}
+
 @media not all and (min-width: 40rem) {
-  .inner:has(> .brandCenterSm) {
+  .columnsSm {
+    display: grid;
+    grid-template-columns: var(--navbar-columns, minmax(0, 1fr) auto minmax(0, 1fr));
     gap: var(--dbm-space-2);
   }
 
-  .inner:has(> .brandCenterSm) > .brandCenterSm {
-    margin-inline: auto;
+  .columnsSm > .column {
+    display: flex;
+    align-items: center;
+    gap: var(--dbm-space-2);
+    grid-row: 1;
+    min-inline-size: 0;
   }
 
-  .inner:has(> .brandCenterSm) > .menuButton {
-    order: -2;
+  .columnsSm > .columnStart {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .columnsSm > .columnCenter {
+    grid-column: 2;
+    justify-self: center;
+  }
+
+  .columnsSm > .columnEnd {
+    grid-column: 3;
+    justify-self: end;
+  }
+
+  .columnsSm > .column > .menuButton,
+  .columnsSm > .column > .actions {
     margin-inline-start: 0;
   }
 
-  .inner:has(> .brandCenterSm) > .search {
+  .columnsSm > .columnStart > .menuButton {
     order: -1;
-  }
-
-  .inner:has(> .brandCenterSm) > .actions {
-    order: 1;
-    margin-inline-start: 0;
   }
 }
 
 @media not all and (min-width: 48rem) {
-  .inner:has(> .brandCenterMd) {
+  .columnsMd {
+    display: grid;
+    grid-template-columns: var(--navbar-columns, minmax(0, 1fr) auto minmax(0, 1fr));
     gap: var(--dbm-space-2);
   }
 
-  .inner:has(> .brandCenterMd) > .brandCenterMd {
-    margin-inline: auto;
+  .columnsMd > .column {
+    display: flex;
+    align-items: center;
+    gap: var(--dbm-space-2);
+    grid-row: 1;
+    min-inline-size: 0;
   }
 
-  .inner:has(> .brandCenterMd) > .menuButton {
-    order: -2;
+  .columnsMd > .columnStart {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .columnsMd > .columnCenter {
+    grid-column: 2;
+    justify-self: center;
+  }
+
+  .columnsMd > .columnEnd {
+    grid-column: 3;
+    justify-self: end;
+  }
+
+  .columnsMd > .column > .menuButton,
+  .columnsMd > .column > .actions {
     margin-inline-start: 0;
   }
 
-  .inner:has(> .brandCenterMd) > .search {
+  .columnsMd > .columnStart > .menuButton {
     order: -1;
-  }
-
-  .inner:has(> .brandCenterMd) > .actions {
-    order: 1;
-    margin-inline-start: 0;
   }
 }
 
 @media not all and (min-width: 64rem) {
-  .inner:has(> .brandCenterLg) {
+  .columnsLg {
+    display: grid;
+    grid-template-columns: var(--navbar-columns, minmax(0, 1fr) auto minmax(0, 1fr));
     gap: var(--dbm-space-2);
   }
 
-  .inner:has(> .brandCenterLg) > .brandCenterLg {
-    margin-inline: auto;
+  .columnsLg > .column {
+    display: flex;
+    align-items: center;
+    gap: var(--dbm-space-2);
+    grid-row: 1;
+    min-inline-size: 0;
   }
 
-  .inner:has(> .brandCenterLg) > .menuButton {
-    order: -2;
+  .columnsLg > .columnStart {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .columnsLg > .columnCenter {
+    grid-column: 2;
+    justify-self: center;
+  }
+
+  .columnsLg > .columnEnd {
+    grid-column: 3;
+    justify-self: end;
+  }
+
+  .columnsLg > .column > .menuButton,
+  .columnsLg > .column > .actions {
     margin-inline-start: 0;
   }
 
-  .inner:has(> .brandCenterLg) > .search {
+  .columnsLg > .columnStart > .menuButton {
     order: -1;
-  }
-
-  .inner:has(> .brandCenterLg) > .actions {
-    order: 1;
-    margin-inline-start: 0;
   }
 }
 
 @media not all and (min-width: 80rem) {
-  .inner:has(> .brandCenterXl) {
+  .columnsXl {
+    display: grid;
+    grid-template-columns: var(--navbar-columns, minmax(0, 1fr) auto minmax(0, 1fr));
     gap: var(--dbm-space-2);
   }
 
-  .inner:has(> .brandCenterXl) > .brandCenterXl {
-    margin-inline: auto;
+  .columnsXl > .column {
+    display: flex;
+    align-items: center;
+    gap: var(--dbm-space-2);
+    grid-row: 1;
+    min-inline-size: 0;
   }
 
-  .inner:has(> .brandCenterXl) > .menuButton {
-    order: -2;
+  .columnsXl > .columnStart {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .columnsXl > .columnCenter {
+    grid-column: 2;
+    justify-self: center;
+  }
+
+  .columnsXl > .columnEnd {
+    grid-column: 3;
+    justify-self: end;
+  }
+
+  .columnsXl > .column > .menuButton,
+  .columnsXl > .column > .actions {
     margin-inline-start: 0;
   }
 
-  .inner:has(> .brandCenterXl) > .search {
+  .columnsXl > .columnStart > .menuButton {
     order: -1;
-  }
-
-  .inner:has(> .brandCenterXl) > .actions {
-    order: 1;
-    margin-inline-start: 0;
   }
 }
 
 @media not all and (min-width: 96rem) {
-  .inner:has(> .brandCenter2xl) {
+  .columns2xl {
+    display: grid;
+    grid-template-columns: var(--navbar-columns, minmax(0, 1fr) auto minmax(0, 1fr));
     gap: var(--dbm-space-2);
   }
 
-  .inner:has(> .brandCenter2xl) > .brandCenter2xl {
-    margin-inline: auto;
+  .columns2xl > .column {
+    display: flex;
+    align-items: center;
+    gap: var(--dbm-space-2);
+    grid-row: 1;
+    min-inline-size: 0;
   }
 
-  .inner:has(> .brandCenter2xl) > .menuButton {
-    order: -2;
+  .columns2xl > .columnStart {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .columns2xl > .columnCenter {
+    grid-column: 2;
+    justify-self: center;
+  }
+
+  .columns2xl > .columnEnd {
+    grid-column: 3;
+    justify-self: end;
+  }
+
+  .columns2xl > .column > .menuButton,
+  .columns2xl > .column > .actions {
     margin-inline-start: 0;
   }
 
-  .inner:has(> .brandCenter2xl) > .search {
+  .columns2xl > .columnStart > .menuButton {
     order: -1;
-  }
-
-  .inner:has(> .brandCenter2xl) > .actions {
-    order: 1;
-    margin-inline-start: 0;
   }
 }
 
 @media not all and (min-width: 120rem) {
-  .inner:has(> .brandCenter3xl) {
+  .columns3xl {
+    display: grid;
+    grid-template-columns: var(--navbar-columns, minmax(0, 1fr) auto minmax(0, 1fr));
     gap: var(--dbm-space-2);
   }
 
-  .inner:has(> .brandCenter3xl) > .brandCenter3xl {
-    margin-inline: auto;
+  .columns3xl > .column {
+    display: flex;
+    align-items: center;
+    gap: var(--dbm-space-2);
+    grid-row: 1;
+    min-inline-size: 0;
   }
 
-  .inner:has(> .brandCenter3xl) > .menuButton {
-    order: -2;
+  .columns3xl > .columnStart {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .columns3xl > .columnCenter {
+    grid-column: 2;
+    justify-self: center;
+  }
+
+  .columns3xl > .columnEnd {
+    grid-column: 3;
+    justify-self: end;
+  }
+
+  .columns3xl > .column > .menuButton,
+  .columns3xl > .column > .actions {
     margin-inline-start: 0;
   }
 
-  .inner:has(> .brandCenter3xl) > .search {
+  .columns3xl > .columnStart > .menuButton {
     order: -1;
-  }
-
-  .inner:has(> .brandCenter3xl) > .actions {
-    order: 1;
-    margin-inline-start: 0;
   }
 }
 
@@ -837,39 +938,39 @@ a.brand:focus-visible,
 
 /* A row that holds nothing but links (a courtesy strip, a row of categories) has nothing left once they have moved into the menu panel, so
    below the collapse step the row goes with them instead of staying as an empty band. A row with anything else in it (a brand, a field, a button,
-   the menu button) stays. (`:has()` can't hold another `:has()`, so this is `:not(:has())`: a row with no child that isn't the links.) Each step is the complement of its collapse width, as the media queries below are its own. */
+   the menu button) stays, and so does a row whose groups (`columns`) hold anything but links. (`:has()` can't hold another `:has()`, so this is `:not(:has())`: a row with no child that isn't the links.) Each step is the complement of its collapse width, as the media queries below are its own. */
 @media not all and (min-width: 40rem) {
-  .collapseSm .row:not(:has(> .inner > :not(.links))) {
+  .collapseSm .row:not(:has(> .inner > :not(.links):not(.column))):not(:has(> .inner > .column > :not(.links))) {
     display: none;
   }
 }
 
 @media not all and (min-width: 48rem) {
-  .collapseMd .row:not(:has(> .inner > :not(.links))) {
+  .collapseMd .row:not(:has(> .inner > :not(.links):not(.column))):not(:has(> .inner > .column > :not(.links))) {
     display: none;
   }
 }
 
 @media not all and (min-width: 64rem) {
-  .collapseLg .row:not(:has(> .inner > :not(.links))) {
+  .collapseLg .row:not(:has(> .inner > :not(.links):not(.column))):not(:has(> .inner > .column > :not(.links))) {
     display: none;
   }
 }
 
 @media not all and (min-width: 80rem) {
-  .collapseXl .row:not(:has(> .inner > :not(.links))) {
+  .collapseXl .row:not(:has(> .inner > :not(.links):not(.column))):not(:has(> .inner > .column > :not(.links))) {
     display: none;
   }
 }
 
 @media not all and (min-width: 96rem) {
-  .collapse2xl .row:not(:has(> .inner > :not(.links))) {
+  .collapse2xl .row:not(:has(> .inner > :not(.links):not(.column))):not(:has(> .inner > .column > :not(.links))) {
     display: none;
   }
 }
 
 @media not all and (min-width: 120rem) {
-  .collapse3xl .row:not(:has(> .inner > :not(.links))) {
+  .collapse3xl .row:not(:has(> .inner > :not(.links):not(.column))):not(:has(> .inner > .column > :not(.links))) {
     display: none;
   }
 }

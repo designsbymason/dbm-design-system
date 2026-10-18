@@ -1454,31 +1454,200 @@ describe("Navbar.Links quiet and the xs size", () => {
 });
 
 describe("Navbar layout options", () => {
-  it("marks a brand that centres below a step, and a brand that doesn't centre has no mark", () => {
+  it("draws a row's parts directly, with no columns, when the row has none", () => {
+    render(
+      <Navbar>
+        <Navbar.Row data-testid="row">
+          <Navbar.Brand href="/" data-testid="brand">
+            dbM
+          </Navbar.Brand>
+        </Navbar.Row>
+      </Navbar>,
+    );
+    const inner = screen.getByTestId("row").firstElementChild!;
+    expect(inner.className).not.toMatch(/columns/);
+    expect(screen.getByTestId("brand").parentElement).toBe(inner);
+  });
+});
+
+describe("Navbar columns", () => {
+  function groupsHost(testId: string) {
+    return screen.getByTestId(testId).firstElementChild!;
+  }
+
+  /** The groups of a row, as the columns they are and what is in each. */
+  function groupsOf(testId: string) {
+    const inner = screen.getByTestId(testId).firstElementChild!;
+    return [...inner.children].map((group) => ({
+      start: group.classList.contains(styles.columnStart!),
+      center: group.classList.contains(styles.columnCenter!),
+      end: group.classList.contains(styles.columnEnd!),
+      ids: [...group.children].map((child) => child.getAttribute("data-testid") ?? child.tagName),
+    }));
+  }
+
+  it("gathers the parts into the column each belongs in, the groups in the order their first part is written", () => {
+    render(
+      <Navbar>
+        <Navbar.Row columns="balanced" data-testid="row">
+          <Navbar.Brand href="/" data-testid="brand">
+            dbM
+          </Navbar.Brand>
+          <Navbar.Search data-testid="search" />
+          <Navbar.Actions data-testid="actions">
+            <Button>Cart</Button>
+          </Navbar.Actions>
+          <Navbar.MenuButton data-testid="menu" />
+        </Navbar.Row>
+      </Navbar>,
+    );
+    const groups = groupsOf("row");
+    expect(groups.map((group) => group.center && "center" || group.start && "start" || group.end && "end")).toEqual(["center", "start", "end"]);
+    expect(groups[0]!.ids).toEqual(["brand"]);
+    // the search landmark is a div around the field; the menu button follows it in the start group
+    expect(groups[1]!.ids).toHaveLength(2);
+    expect(groups[1]!.ids[1]).toBe("menu");
+    expect(groups[2]!.ids).toEqual(["actions"]);
+  });
+
+  it("puts the automatic menu button first in the start column, making one if no part belongs there", () => {
+    render(
+      <Navbar>
+        <Navbar.Row columns="balanced" data-testid="row">
+          <Navbar.Brand href="/" data-testid="brand">
+            dbM
+          </Navbar.Brand>
+          <Navbar.Links>
+            <Navbar.Link href="/a">A</Navbar.Link>
+          </Navbar.Links>
+        </Navbar.Row>
+      </Navbar>,
+    );
+    const groups = groupsOf("row");
+    // the automatic button is the row's last part, as it is without columns, so the start group made for it comes after the others
+    expect(groups.map((group) => group.start)).toEqual([false, true]);
+    expect(groups[1]!.ids).toEqual(["BUTTON"]);
+    expect(screen.getByRole("button", { name: "Menu", hidden: true }).parentElement).toBe(groupsHost("row").lastElementChild);
+  });
+
+  it("puts a part in the column it names, and a part that has none with the part before it", () => {
+    render(
+      <Navbar>
+        <Navbar.Row columns="balanced" data-testid="row">
+          <Navbar.Brand href="/" column="start" data-testid="brand">
+            dbM
+          </Navbar.Brand>
+          <Navbar.Actions column="center" data-testid="actions">
+            <Button>Cart</Button>
+          </Navbar.Actions>
+          <>
+            <span data-testid="loose">Free</span>
+            <Navbar.MenuButton column="end" data-testid="menu" />
+          </>
+        </Navbar.Row>
+      </Navbar>,
+    );
+    const groups = groupsOf("row");
+    expect(groups.map((group) => group.ids)).toEqual([["brand"], ["actions", "loose"], ["menu"]]);
+    expect(groups.map((group) => [group.start, group.center, group.end])).toEqual([
+      [true, false, false],
+      [false, true, false],
+      [false, false, true],
+    ]);
+  });
+
+  it("starts the first part with no column of its own in the start column", () => {
+    render(
+      <Navbar>
+        <Navbar.Row columns="balanced" data-testid="row">
+          <span data-testid="loose">Free</span>
+        </Navbar.Row>
+      </Navbar>,
+    );
+    expect(groupsOf("row").map((group) => [group.start, group.ids])).toEqual([[true, ["loose"]]]);
+  });
+
+  it("applies below the step named, `md` by default", () => {
     const { rerender } = render(
       <Navbar>
-        <Navbar.Brand href="/" centerBelow="md" data-testid="brand">
-          dbM
-        </Navbar.Brand>
+        <Navbar.Row columns="balanced" data-testid="row">
+          <Navbar.Brand href="/">dbM</Navbar.Brand>
+        </Navbar.Row>
       </Navbar>,
     );
-    expect(screen.getByTestId("brand")).toHaveClass(styles.brandCenterMd!);
+    expect(screen.getByTestId("row").firstElementChild).toHaveClass(styles.columnsMd!);
+    for (const [step, name] of [
+      ["sm", styles.columnsSm],
+      ["lg", styles.columnsLg],
+      ["xl", styles.columnsXl],
+      ["2xl", styles.columns2xl],
+      ["3xl", styles.columns3xl],
+    ] as const) {
+      rerender(
+        <Navbar>
+          <Navbar.Row columns="balanced" columnsBelow={step} data-testid="row">
+            <Navbar.Brand href="/">dbM</Navbar.Brand>
+          </Navbar.Row>
+        </Navbar>,
+      );
+      expect(screen.getByTestId("row").firstElementChild).toHaveClass(name!);
+    }
+  });
+
+  it("takes the widths from a track list, and leaves the stylesheet's own for `balanced`", () => {
+    const { rerender } = render(
+      <Navbar>
+        <Navbar.Row columns="auto 1fr auto" data-testid="row">
+          <Navbar.Brand href="/">dbM</Navbar.Brand>
+        </Navbar.Row>
+      </Navbar>,
+    );
+    expect((screen.getByTestId("row").firstElementChild as HTMLElement).style.getPropertyValue("--navbar-columns")).toBe("auto 1fr auto");
     rerender(
       <Navbar>
-        <Navbar.Brand href="/" data-testid="brand">
-          dbM
-        </Navbar.Brand>
+        <Navbar.Row columns="balanced" data-testid="row">
+          <Navbar.Brand href="/">dbM</Navbar.Brand>
+        </Navbar.Row>
       </Navbar>,
     );
-    expect(screen.getByTestId("brand").className).not.toMatch(/brandCenter/);
-    rerender(
+    expect((screen.getByTestId("row").firstElementChild as HTMLElement).style.getPropertyValue("--navbar-columns")).toBe("");
+  });
+
+  it("works on a bar's one implicit row only through a Navbar.Row, and keeps `column` off the page's elements", () => {
+    render(
       <Navbar>
-        <Navbar.Brand href="/" centerBelow="never" data-testid="brand">
-          dbM
-        </Navbar.Brand>
+        <Navbar.Row columns="balanced" data-testid="row">
+          <Navbar.Brand href="/" column="end" data-testid="brand">
+            dbM
+          </Navbar.Brand>
+          <Navbar.Actions column="start" data-testid="actions" />
+          <Navbar.MenuButton column="center" data-testid="menu" />
+          <Navbar.Search column="end" data-testid="search" />
+        </Navbar.Row>
       </Navbar>,
     );
-    expect(screen.getByTestId("brand").className).not.toMatch(/brandCenter/);
+    for (const id of ["brand", "actions", "menu"]) {
+      expect(screen.getByTestId(id)).not.toHaveAttribute("column");
+    }
+    expect(screen.getByRole("search").outerHTML).not.toMatch(/column=/);
+  });
+
+  it("has no accessibility violations in a row of columns", async () => {
+    const { container } = render(
+      <Navbar>
+        <Navbar.Row columns="balanced">
+          <Navbar.Brand href="/">dbM</Navbar.Brand>
+          <Navbar.Links>
+            <Navbar.Link href="/a">A</Navbar.Link>
+          </Navbar.Links>
+          <Navbar.Search />
+          <Navbar.Actions>
+            <Button>Cart</Button>
+          </Navbar.Actions>
+        </Navbar.Row>
+      </Navbar>,
+    );
+    expect(await axe(container)).toHaveNoViolations();
   });
 
   it("takes a variant and a size on the menu button, in place of the quiet one and its row's", () => {

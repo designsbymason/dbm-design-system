@@ -26,6 +26,12 @@ const meta: Meta<typeof Navbar.Links> = {
         "A quieter look for secondary links (a courtesy row): smaller text in the secondary colour. The current link is still marked.",
       table: { defaultValue: { summary: "false" } },
     },
+    column: {
+      control: "select",
+      options: ["start", "center", "end"],
+      description: "The column this part sits in when its row is drawn in columns, in place of the one it belongs in by default. Ignored otherwise.",
+      table: { defaultValue: { summary: '"center"' } },
+    },
     "aria-label": {
       control: "text",
       description: "Names the navigation landmark. Defaults to labels.navigation (\"Main\").",

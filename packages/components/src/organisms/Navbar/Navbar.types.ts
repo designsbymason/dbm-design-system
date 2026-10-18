@@ -196,6 +196,9 @@ export interface NavbarProps extends Omit<ComponentPropsWithoutRef<"header">, "d
 /** Where `Navbar.Links` sits along the bar, between the brand and the actions. `"center"` centres it in the room between them. */
 export type NavbarLinksAlign = "start" | "center" | "end";
 
+/** The column of a row drawn in columns that a part sits in: `"start"`, `"center"` or `"end"`. Follows the reading direction. */
+export type NavbarColumn = "start" | "center" | "end";
+
 export interface NavbarRowProps extends HTMLAttributes<HTMLDivElement> {
   /** The row's parts: `Navbar.Brand`, `Navbar.Links`, `Navbar.Search`, `Navbar.Actions`, `Navbar.MenuButton`. */
   children?: ReactNode;
@@ -205,6 +208,21 @@ export interface NavbarRowProps extends HTMLAttributes<HTMLDivElement> {
   size?: NavbarSize;
   /** Keeps this row's content to the page's reading width, in place of the bar's `contained`. */
   contained?: boolean;
+  /**
+   * Draws the row below `columnsBelow` as three columns (start, centre and end) so the centre is truly central however many controls are on
+   * each side, the layout of a phone's header: the menu and search buttons, the logo, the other buttons. `"balanced"` gives the two sides
+   * equal room and the centre only what it needs; any other value is a CSS `grid-template-columns` track list (`"auto 1fr auto"`) for
+   * other widths. Each part goes in the column its `column` prop names, or the one it belongs in by default (the menu button and the search
+   * start, the brand and the links centre, the actions end). Only the drawn layout changes: the parts stay in the order they are written.
+   * A side with more in it than its track holds spills over its neighbour, so widen the track. Above `columnsBelow` the row is as it is
+   * without this.
+   */
+  columns?: string;
+  /**
+   * The width below which `columns` applies, a breakpoint step. Decided by the stylesheet, so a server render is right at first paint.
+   * @default 'md'
+   */
+  columnsBelow?: Exclude<Breakpoint, "base">;
   /**
    * Whether the row sticks with the bar (when the bar is `sticky`). Set it to `false` for a courtesy strip that should scroll away
    * while the rest stays. Only leading rows can scroll away (a row that sticks can't have one above it that doesn't: the bar
@@ -246,6 +264,11 @@ export interface NavbarSearchProps extends Omit<SearchInputProps, "size" | "clas
    * @default true
    */
   closeOnSubmit?: boolean;
+  /**
+   * The column this part sits in when its row is drawn in `columns`; ignored otherwise.
+   * @default 'start'
+   */
+  column?: NavbarColumn;
   /** Names the field. Defaults to `labels.search` ("Search"). */
   "aria-label"?: string;
   /** Standard DOM id, on the bar's field. */
@@ -276,13 +299,10 @@ export interface NavbarBrandProps extends HTMLAttributes<HTMLElement> {
    */
   asChild?: boolean;
   /**
-   * Centres the brand below a width, a breakpoint step, or `"never"` to keep it at the start. Below the step the brand sits centred between
-   * the controls on either side: the menu button and the search button come before it, and the actions after, the usual layout of a phone's
-   * header. Only the order they are drawn in changes, so the brand stays first in the page. It is centred in the room between the controls, so
-   * it is truly central when there are as many on each side.
-   * @default 'never'
+   * The column this part sits in when its row is drawn in `columns`; ignored otherwise.
+   * @default 'center'
    */
-  centerBelow?: Exclude<Breakpoint, "base"> | "never";
+  column?: NavbarColumn;
   /** Names the brand for assistive tech when its content is only a logo. */
   "aria-label"?: string;
   /** Standard DOM id. */
@@ -315,6 +335,11 @@ export interface NavbarLinksProps extends Omit<ComponentPropsWithoutRef<"nav">, 
    * @default false
    */
   quiet?: boolean;
+  /**
+   * The column this part sits in when its row is drawn in `columns`; ignored otherwise.
+   * @default 'center'
+   */
+  column?: NavbarColumn;
   /** Names the navigation landmark. Defaults to `labels.navigation` ("Main"). */
   "aria-label"?: string;
   /** The `id` of a visible element that names the navigation, in place of `aria-label`. */
@@ -487,6 +512,11 @@ export interface NavbarSkipLinkProps extends Omit<AnchorHTMLAttributes<HTMLAncho
 export interface NavbarActionsProps extends HTMLAttributes<HTMLDivElement> {
   /** What sits at the bar's end: a search field, icon buttons, a `Menu` for the account, a call to action. */
   children?: ReactNode;
+  /**
+   * The column this part sits in when its row is drawn in `columns`; ignored otherwise.
+   * @default 'end'
+   */
+  column?: NavbarColumn;
   /** Standard DOM id. */
   id?: string;
   /** Additional CSS classes for customization. */
@@ -513,6 +543,11 @@ export interface NavbarMenuButtonProps extends Omit<ComponentPropsWithoutRef<"bu
   variant?: ButtonVariant;
   /** The button's size, in place of its row's: the same scale as `IconButton`. */
   size?: ButtonSize;
+  /**
+   * The column this part sits in when its row is drawn in `columns`; ignored otherwise.
+   * @default 'start'
+   */
+  column?: NavbarColumn;
   /** The button's accessible name. Defaults to `labels.menu` ("Menu"). */
   "aria-label"?: string;
   /** Standard DOM id. */

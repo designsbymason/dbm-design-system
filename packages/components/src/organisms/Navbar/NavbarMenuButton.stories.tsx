@@ -20,6 +20,12 @@ const meta: Meta<typeof Navbar.MenuButton> = {
       options: ["xs", "sm", "md", "lg", "xl"],
       description: "The button's size, in place of its row's: the same scale as IconButton.",
     },
+    column: {
+      control: "select",
+      options: ["start", "center", "end"],
+      description: "The column this part sits in when its row is drawn in columns, in place of the one it belongs in by default. Ignored otherwise.",
+      table: { defaultValue: { summary: '"start"' } },
+    },
     "aria-label": { control: "text", description: "The button's accessible name. Defaults to labels.menu (\"Menu\")." },
     id: { control: "text", description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },

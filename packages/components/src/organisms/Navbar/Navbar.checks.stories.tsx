@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
+import { UserCircleIcon, ShoppingCartIcon } from "@dbm-design-system/icons";
+import { IconButton } from "../../atoms/IconButton";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
+import { Navbar } from "./Navbar";
 import { DemoNavbar, DemoRowsNavbar, GalleryBar, NavbarStage, NavbarViewModeContext, StickyDemo } from "./NavbarStoryKit";
 
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout, the cascade, a breakpoint, stacking, forced
@@ -1115,6 +1118,85 @@ export const RowsHideOnScroll: Story = {
     await settle();
     expect(header.getBoundingClientRect().top).toBeLessThan(scroller.getBoundingClientRect().top + 30);
     expect(header.getBoundingClientRect().bottom).toBeGreaterThan(scroller.getBoundingClientRect().top + 40);
+  },
+};
+
+function ColumnsBar({ columns }: { columns: string }) {
+  return (
+    <NavbarStage minBlockSize="12rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+          <Navbar menuContainer={menuContainer}>
+            <Navbar.Row columns={columns} variant="outlined">
+              <Navbar.Brand href="#">dbM</Navbar.Brand>
+              <Navbar.Actions>
+                <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="sm" />
+                <IconButton icon={ShoppingCartIcon} aria-label="Cart" variant="tertiary" size="sm" />
+              </Navbar.Actions>
+              <Navbar.MenuButton variant="tertiary" size="sm" />
+              <Navbar.Links aria-label="Main" column="start">
+                <Navbar.Link href="#a">A</Navbar.Link>
+              </Navbar.Links>
+            </Navbar.Row>
+          </Navbar>
+        </div>
+      )}
+    </NavbarStage>
+  );
+}
+
+export const ColumnsKeepTheLogoCentral: Story = {
+  name: "In columns the logo stays central with one button at the start and two at the end",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => <ColumnsBar columns="balanced" />,
+  play: async ({ canvasElement, step }) => {
+    expect(window.innerWidth).toBeLessThan(768);
+    const canvas = within(canvasElement);
+    const row = canvas.getByRole("banner").firstElementChild as HTMLElement;
+    const menu = canvasElement.querySelector<HTMLElement>('button[aria-label="Menu"]')!.getBoundingClientRect();
+    const brand = within(row).getByRole("link", { name: "dbM" }).getBoundingClientRect();
+    const account = within(row).getByRole("button", { name: "Account" }).getBoundingClientRect();
+    const cart = within(row).getByRole("button", { name: "Cart" }).getBoundingClientRect();
+    const box = row.getBoundingClientRect();
+    await step("the logo is at the row's centre although the sides differ", async () => {
+      expect(Math.abs((brand.left + brand.right) / 2 - (box.left + box.right) / 2)).toBeLessThan(2);
+    });
+    await step("the one button is at the start and the two are at the end", async () => {
+      expect(menu.right).toBeLessThanOrEqual(brand.left);
+      expect(brand.right).toBeLessThanOrEqual(account.left);
+      expect(account.right).toBeLessThanOrEqual(cart.left);
+      expect(box.right - cart.right).toBeLessThan(24);
+    });
+    await step("the page has the groups in the order their first part is written: the logo, the end, then the start", async () => {
+      const order = [...row.querySelectorAll("a, button")].map((element) => element.getAttribute("aria-label") ?? element.textContent);
+      expect(order.slice(0, 4)).toEqual(["dbM", "Account", "Cart", "Menu"]);
+    });
+  },
+};
+
+export const ColumnsTakeTheWidthsGiven: Story = {
+  name: "In columns the widths come from the track list",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => <ColumnsBar columns="auto 1fr auto" />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const row = canvas.getByRole("banner").firstElementChild as HTMLElement;
+    const brand = within(row).getByRole("link", { name: "dbM" }).getBoundingClientRect();
+    const box = row.getBoundingClientRect();
+    // the sides are not equal here, so the middle track, and the logo in it, is off the row's centre by half the difference
+    expect(Math.abs((brand.left + brand.right) / 2 - (box.left + box.right) / 2)).toBeGreaterThan(10);
+  },
+};
+
+export const ColumnsAreFlowAboveTheStep: Story = {
+  name: "Above the step the parts flow as they do without columns",
+  render: () => <ColumnsBar columns="balanced" />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const row = canvas.getByRole("banner").firstElementChild as HTMLElement;
+    const inner = row.firstElementChild as HTMLElement;
+    expect(getComputedStyle(inner).display).toBe("flex");
+    expect(getComputedStyle(inner.firstElementChild as HTMLElement).display).toBe("contents");
   },
 };
 

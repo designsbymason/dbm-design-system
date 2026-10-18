@@ -128,9 +128,11 @@ ${navbar('currentVariant="solid"')}`,
 
   rows: `{/* A multi-row header is still one <header>. Each Navbar.Row is a band, with its own variant, size and contained (they start from
     the bar's): here a thin strip (xs), a taller logo row (lg) and a small row of links (sm), none of them current, as on a home page.
-    Several Navbar.Links are allowed: give each its own aria-label, and quiet for a courtesy row's. On a phone the menu and search
-    buttons come before the logo, which is centred (centerBelow), and the other buttons follow it; they are small tertiary icon buttons
-    here (variant and size on Navbar.MenuButton, buttonVariant on Navbar.Search). A style on Navbar.Links sets the text of all its links. */}
+    Several Navbar.Links are allowed: give each its own aria-label, and quiet for a courtesy row's. On a phone (columns) the row is
+    three columns: the menu and search buttons at the start, the logo in the centre, the other buttons at the end, so the logo stays
+    central however many are on each side. Write the brand first (the page and a wide window read it first); the menu button is drawn
+    first in its column wherever it is. They are small tertiary icon buttons here (variant and size on Navbar.MenuButton, buttonVariant
+    on Navbar.Search). A style on Navbar.Links sets the text of all its links. */}
 <Navbar>
   <Navbar.Row size="xs" variant="outlined" sticky={false}>
     <Navbar.Links aria-label="Help" quiet align="end">
@@ -139,9 +141,8 @@ ${navbar('currentVariant="solid"')}`,
       <Navbar.Link href="/stores">Find a store</Navbar.Link>
     </Navbar.Links>
   </Navbar.Row>
-  <Navbar.Row size="lg" variant="outlined">
-    <Navbar.MenuButton variant="tertiary" size="sm" />
-    <Navbar.Brand href="/" centerBelow="md">
+  <Navbar.Row size="lg" variant="outlined" columns="balanced">
+    <Navbar.Brand href="/">
       dbM
     </Navbar.Brand>
     <Navbar.Search size="sm" buttonVariant="tertiary" placeholder="Search products" />
@@ -149,6 +150,7 @@ ${navbar('currentVariant="solid"')}`,
       <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="sm" />
       <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="sm" />
     </Navbar.Actions>
+    <Navbar.MenuButton variant="tertiary" size="sm" />
   </Navbar.Row>
   <Navbar.Row size="sm" variant="outlined">
     <Navbar.Links
@@ -167,7 +169,7 @@ ${navbar('currentVariant="solid"')}`,
   rowsPanel: `{/* Below the collapse width every set of links goes into the one menu panel, in the order written, with the quiet ones last and a
     line between sets; a row that held only links goes with them. This demo collapses below the widest step ("3xl") so the panel shows
     on any window narrower than 1920px; an app picks the step that suits its links. Put Navbar.MenuButton where you want it (here
-    first, with the search button beside it and the logo centred between them and the buttons); without one, the button goes at the
+    after the buttons, drawn first in its column with the search button beside it and the logo centred between them and the buttons); without one, the button goes at the
     end of the row with the brand. */}
 <Navbar collapseBelow="3xl">
   <Navbar.Row size="xs" variant="outlined" sticky={false}>
@@ -177,9 +179,8 @@ ${navbar('currentVariant="solid"')}`,
       <Navbar.Link href="/stores">Find a store</Navbar.Link>
     </Navbar.Links>
   </Navbar.Row>
-  <Navbar.Row size="lg" variant="outlined">
-    <Navbar.MenuButton variant="tertiary" size="sm" />
-    <Navbar.Brand href="/" centerBelow="3xl">
+  <Navbar.Row size="lg" variant="outlined" columns="balanced" columnsBelow="3xl">
+    <Navbar.Brand href="/">
       dbM
     </Navbar.Brand>
     <Navbar.Search size="sm" buttonVariant="tertiary" collapseBelow="3xl" />
@@ -187,6 +188,7 @@ ${navbar('currentVariant="solid"')}`,
       <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="sm" />
       <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="sm" />
     </Navbar.Actions>
+    <Navbar.MenuButton variant="tertiary" size="sm" />
   </Navbar.Row>
   <Navbar.Row size="sm" variant="outlined">
     <Navbar.Links
@@ -226,15 +228,15 @@ ${navbar('currentVariant="solid"')}`,
       <Navbar.Link href="/orders">Track an order</Navbar.Link>
     </Navbar.Links>
   </Navbar.Row>
-  <Navbar.Row size="lg" variant="outlined">
-    <Navbar.MenuButton variant="tertiary" size="sm" />
-    <Navbar.Brand href="/" centerBelow="md">
+  <Navbar.Row size="lg" variant="outlined" columns="balanced">
+    <Navbar.Brand href="/">
       dbM
     </Navbar.Brand>
     <Navbar.Search size="sm" buttonVariant="tertiary" />
     <Navbar.Actions>
       <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="sm" />
     </Navbar.Actions>
+    <Navbar.MenuButton variant="tertiary" size="sm" />
   </Navbar.Row>
   <Navbar.Row size="sm" variant="outlined">
     <Navbar.Links aria-label="Categories" align="center">

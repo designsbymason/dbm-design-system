@@ -18,12 +18,11 @@ const meta: Meta<typeof Navbar.Brand> = {
       description: "Renders as a single provided child element (Radix Slot) instead of the built-in <a>/<div>, to use a router's link.",
       table: { defaultValue: { summary: "false" } },
     },
-    centerBelow: {
+    column: {
       control: "select",
-      options: ["sm", "md", "lg", "xl", "2xl", "3xl", "never"],
-      description:
-        "Centres the brand below a width, or never to keep it at the start. Below the step it sits centred between the controls on either side: the menu button and the search button come before it, and the actions after. Only the order they are drawn in changes, so the brand stays first in the page.",
-      table: { defaultValue: { summary: '"never"' } },
+      options: ["start", "center", "end"],
+      description: "The column this part sits in when its row is drawn in columns, in place of the one it belongs in by default. Ignored otherwise.",
+      table: { defaultValue: { summary: '"center"' } },
     },
     "aria-label": { control: "text", description: "Names the brand for assistive tech when its content is only a logo." },
     id: { control: "text", description: "Standard DOM id." },

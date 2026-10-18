@@ -150,8 +150,8 @@ export function GalleryBar({ name, children }: { name: string; children: ReactNo
 
 /**
  * A multi-row header, laid out the way a shop's is: a thin courtesy strip (which scrolls away when the bar is sticky); a taller row with the
- * logo, the search field and small tertiary icon buttons, which on a phone puts the menu button and the search button at the start, the logo
- * in the centre and the other buttons at the end; and a smaller row of primary links, centred, in capitals, with none marked current (the
+ * logo, the search field and small tertiary icon buttons, which on a phone (`columns`) puts the menu button and the search button at the
+ * start, the logo in the centre and the other buttons at the end; and a smaller row of primary links, centred, in capitals, with none marked current (the
  * visitor is on the home page). The sets of links are named so each landmark has its own name.
  */
 export function DemoRowsNavbar({
@@ -178,9 +178,8 @@ export function DemoRowsNavbar({
           </Navbar.Link>
         </Navbar.Links>
       </Navbar.Row>
-      <Navbar.Row size="lg" variant="outlined">
-        <Navbar.MenuButton variant="tertiary" size="sm" />
-        <Navbar.Brand href="#" centerBelow={collapseBelow} onClick={preventNavigation}>
+      <Navbar.Row size="lg" variant="outlined" columns={collapseBelow === "never" ? undefined : "balanced"} columnsBelow={collapseBelow === "never" ? undefined : collapseBelow}>
+        <Navbar.Brand href="#" onClick={preventNavigation}>
           dbM
         </Navbar.Brand>
         <Navbar.Search size="sm" buttonVariant="tertiary" collapseBelow={searchCollapseBelow} placeholder="Search products" />
@@ -188,6 +187,7 @@ export function DemoRowsNavbar({
           <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="sm" />
           <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="sm" />
         </Navbar.Actions>
+        <Navbar.MenuButton variant="tertiary" size="sm" />
       </Navbar.Row>
       <Navbar.Row size="sm" variant="outlined">
         <Navbar.Links

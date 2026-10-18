@@ -31,6 +31,7 @@ export const NavbarSearch = forwardRef<HTMLDivElement, NavbarSearchProps>(
     {
       collapseBelow = "md",
       closeOnSubmit = true,
+      column: _column,
       size,
       buttonVariant = "ghost",
       "aria-label": ariaLabel,

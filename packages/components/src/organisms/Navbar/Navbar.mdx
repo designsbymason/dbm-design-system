@@ -62,17 +62,17 @@ export const playgroundOrder = [
   "aria-label",
   "id",
 ];
-export const brandPropOrder = ["children", "href", "asChild", "centerBelow", "aria-label", "id", "className", "style", "data-testid"];
-export const rowPropOrder = ["children", "variant", "size", "contained", "sticky", "id", "className", "style", "data-testid"];
-export const searchPropOrder = ["value", "collapseBelow", "size", "buttonVariant", "closeOnSubmit", "aria-label", "id", "className", "style", "data-testid"];
-export const linksPropOrder = ["children", "align", "quiet", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
+export const brandPropOrder = ["children", "href", "asChild", "column", "aria-label", "id", "className", "style", "data-testid"];
+export const rowPropOrder = ["children", "variant", "size", "contained", "columns", "columnsBelow", "sticky", "id", "className", "style", "data-testid"];
+export const searchPropOrder = ["value", "collapseBelow", "size", "buttonVariant", "closeOnSubmit", "column", "aria-label", "id", "className", "style", "data-testid"];
+export const linksPropOrder = ["children", "align", "quiet", "column", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
 export const linkPropOrder = ["children", "href", "icon", "badge", "external", "current", "disabled", "asChild", "aria-label", "id", "className", "style", "data-testid"];
 export const groupPropOrder = ["label", "children", "current", "defaultOpen", "disabled", "align", "aria-label", "id", "className", "style", "data-testid"];
 export const actionPropOrder = ["hideBelow", "children", "id", "className", "style", "data-testid"];
 export const panelActionsPropOrder = ["children", "id", "className", "style", "data-testid"];
 export const skipLinkPropOrder = ["href", "children", "id", "className", "style", "data-testid"];
-export const actionsPropOrder = ["children", "id", "className", "style", "data-testid"];
-export const menuButtonPropOrder = ["icon", "variant", "size", "aria-label", "id", "className", "style", "data-testid"];
+export const actionsPropOrder = ["children", "column", "id", "className", "style", "data-testid"];
+export const menuButtonPropOrder = ["icon", "variant", "size", "column", "aria-label", "id", "className", "style", "data-testid"];
 
 <Meta of={NavbarStories} />
 
@@ -214,9 +214,17 @@ A `Navbar.Row` is a band of the one `<header>`, and each can set its own `varian
 and a smaller row (`size="sm"`) of primary links, centred (`align="center"`), in capitals and semibold (a `style` on `Navbar.Links` sets the text of every
 link in it), with none marked current, as on a home page. Give each `Navbar.Links` its own name, since they are separate landmarks.
 
-On a phone the same header lays itself out differently: the menu button and the search button come first, the logo (`Navbar.Brand`'s
-`centerBelow`) is centred, and the other buttons are at the end. `Navbar.MenuButton` takes a `variant` and a `size` and `Navbar.Search` a `buttonVariant`
+On a phone the same header lays itself out differently: the logo row is drawn in three columns (`columns="balanced"` on the `Navbar.Row`), with the menu
+button and the search button at the start, the logo in the centre and the other buttons at the end. The logo is central however many buttons are on each side. `Navbar.MenuButton` takes a `variant` and a `size` and `Navbar.Search` a `buttonVariant`
 so they can match the icon buttons beside them. Narrow the window to see it.
+
+`columns` gathers the row's parts into a group for the start, the centre and the end, and below `columnsBelow` (`"md"` unless set) draws the three as
+a grid. `"balanced"` gives the two sides equal room, so the logo is central whatever is on each side; a track list such as `columns="auto 1fr auto"` sets
+the widths yourself. Each part is in the column it belongs in (the menu button and the search at the start, the brand and the links in the centre, the actions
+at the end) unless its `column` says otherwise. Above the step nothing changes: the parts flow in the row as without `columns`.
+
+The page has the groups in the order their first part is written, and the parts of each in the order written, so write the brand first to keep it first in the page.
+The menu button is drawn first in its column wherever it is written. A side with more in it than its track holds spills over its neighbour, so give it a wider track.
 
 <Canvas of={NavbarStories.Rows} />
 
@@ -549,7 +557,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 {/* Links centred between the brand and the actions */}
 <Navbar.Links align="center">…</Navbar.Links>
 
-{/* A header of several rows: a thin strip that scrolls away, a taller logo row (on a phone: menu and search buttons, a centred logo, the other
+{/* A header of several rows: a thin strip that scrolls away, a taller logo row (on a phone, in columns: menu and search buttons, a centred logo, the other
     buttons), and a small row of links, centred, in capitals, none current (a home page) */}
 <Navbar sticky>
   <Navbar.Row size="xs" variant="outlined" sticky={false}>
@@ -558,13 +566,13 @@ This story is shown at a phone's width when opened on its own; on this page, nar
       <Navbar.Link href="/orders">Track an order</Navbar.Link>
     </Navbar.Links>
   </Navbar.Row>
-  <Navbar.Row size="lg" variant="outlined">
-    <Navbar.MenuButton variant="tertiary" size="sm" />
-    <Navbar.Brand href="/" centerBelow="md">dbM</Navbar.Brand>
+  <Navbar.Row size="lg" variant="outlined" columns="balanced">
+    <Navbar.Brand href="/">dbM</Navbar.Brand>
     <Navbar.Search size="sm" buttonVariant="tertiary" placeholder="Search products" onSearch={(query) => search(query)} />
     <Navbar.Actions>
       <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="sm" />
     </Navbar.Actions>
+    <Navbar.MenuButton variant="tertiary" size="sm" />
   </Navbar.Row>
   <Navbar.Row size="sm" variant="outlined">
     <Navbar.Links

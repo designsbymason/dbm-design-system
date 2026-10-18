@@ -9,6 +9,12 @@ const meta: Meta<typeof Navbar.Actions> = {
   tags: ["!dev"],
   argTypes: {
     children: { control: false, description: "What sits at the bar's end: a search field, icon buttons, a Menu for the account, a call to action." },
+    column: {
+      control: "select",
+      options: ["start", "center", "end"],
+      description: "The column this part sits in when its row is drawn in columns, in place of the one it belongs in by default. Ignored otherwise.",
+      table: { defaultValue: { summary: '"end"' } },
+    },
     id: { control: "text", description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },
     style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },

@@ -37,6 +37,12 @@ const meta: Meta<typeof Navbar.Search> = {
       description: "Closes the sheet when Enter is pressed in its field, so a phone returns to the page. No effect in the bar.",
       table: { defaultValue: { summary: "true" } },
     },
+    column: {
+      control: "select",
+      options: ["start", "center", "end"],
+      description: "The column this part sits in when its row is drawn in columns, in place of the one it belongs in by default. Ignored otherwise.",
+      table: { defaultValue: { summary: '"start"' } },
+    },
     "aria-label": { control: "text", description: 'Names the field. Defaults to labels.search ("Search").' },
     id: { control: "text", description: "Standard DOM id, on the bar's field." },
     className: { control: false, description: "Additional CSS classes, on the search landmark." },

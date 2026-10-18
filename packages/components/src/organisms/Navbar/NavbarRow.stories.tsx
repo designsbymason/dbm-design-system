@@ -23,6 +23,17 @@ const meta: Meta<typeof Navbar.Row> = {
       control: "boolean",
       description: "Keeps this row's content to the page's reading width, in place of the bar's contained.",
     },
+    columns: {
+      control: "text",
+      description:
+        'Draws the row below columnsBelow as three columns (start, centre and end), so the centre is truly central however many controls are on each side. "balanced" gives the sides equal room; any other value is a CSS grid-template-columns track list, such as "auto 1fr auto". Each part goes in the column its column prop names, or the one it belongs in by default.',
+    },
+    columnsBelow: {
+      control: "select",
+      options: ["sm", "md", "lg", "xl", "2xl", "3xl"],
+      description: "The width below which columns applies, a breakpoint step.",
+      table: { defaultValue: { summary: '"md"' } },
+    },
     sticky: {
       control: "boolean",
       description:
