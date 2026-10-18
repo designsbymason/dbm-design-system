@@ -1,4 +1,5 @@
 import { BellIcon, BookOpenIcon, ShoppingCartIcon, UserCircleIcon } from "@dbm-design-system/icons";
+import { cx } from "@dbm-design-system/primitives";
 import { useState } from "react";
 import type { MouseEvent, ReactNode, RefObject } from "react";
 import { Button } from "../../atoms/Button";
@@ -7,6 +8,7 @@ import { Text } from "../../atoms/Text";
 import { SearchInput } from "../../molecules/SearchInput";
 import { Menu } from "../Menu";
 import { Navbar } from "./Navbar";
+import styles from "./NavbarStoryKit.module.css";
 import type { NavbarProps } from "./Navbar.types";
 
 export { DrawerStage as NavbarStage, DrawerViewModeContext as NavbarViewModeContext } from "../Drawer/DrawerStoryKit";
@@ -148,6 +150,29 @@ export function GalleryBar({ name, children }: { name: string; children: ReactNo
   return <section aria-label={name}>{children}</section>;
 }
 
+const captionClass = {
+  sm: styles.captionFromSm,
+  md: styles.captionFromMd,
+  lg: styles.captionFromLg,
+  xl: styles.captionFromXl,
+  "2xl": styles.captionFrom2xl,
+  "3xl": styles.captionFrom3xl,
+  never: styles.captionAlways,
+} as const;
+
+/** An icon button with a short caption under it, drawn at and above `step` (the width the demo's row leaves its columns at). */
+function LabelledButton({ caption, step, ...props }: React.ComponentProps<typeof IconButton> & { caption: string; step: keyof typeof captionClass }) {
+  return (
+    <span className={styles.labelled}>
+      <IconButton {...props} />
+      {/* the button's own name says it, so the caption is for the eye only */}
+      <span aria-hidden="true" className={cx(styles.caption, captionClass[step])}>
+        {caption}
+      </span>
+    </span>
+  );
+}
+
 /**
  * Two rows drawn in columns: unequal sides (a search button at the start, two buttons at the end) with `balanced` columns, so the logo is still
  * central; and a track list of the author's with the brand and the field each put in a column of their own. Both apply below the widest step, so
@@ -189,8 +214,8 @@ export function DemoColumnsBars({ menuContainer }: { menuContainer?: HTMLElement
 
 /**
  * A multi-row header, laid out the way a shop's is: a thin courtesy strip (which scrolls away when the bar is sticky); a taller row with the
- * logo, a small search field centred between them and the brand and medium tertiary icon buttons, which on a phone (`columns`) puts the menu button and the search button at the
- * start, the logo in the centre and the other buttons at the end; and a smaller row of primary links, centred, in larger bold capitals, with none marked current (the
+ * logo, a small search field centred between them and the brand and medium tertiary icon buttons with a caption under each on a wide window, which on a phone (`columns`) puts the menu button and the search button at the
+ * start, the logo in the centre and the other buttons at the end; and a smaller row of primary links, centred, in bold capitals, with none marked current (the
  * visitor is on the home page). The sets of links are named so each landmark has its own name.
  */
 export function DemoRowsNavbar({
@@ -230,8 +255,8 @@ export function DemoRowsNavbar({
           style={{ marginInline: "auto" }}
         />
         <Navbar.Actions style={{ marginInlineStart: 0 }}>
-          <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="md" />
-          <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="md" />
+          <LabelledButton caption="Account" step={collapseBelow} icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="md" />
+          <LabelledButton caption="Cart" step={collapseBelow} icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="md" />
         </Navbar.Actions>
         <Navbar.MenuButton variant="tertiary" size="md" />
       </Navbar.Row>
@@ -240,7 +265,7 @@ export function DemoRowsNavbar({
           aria-label="Categories"
           align="center"
           style={{
-            fontSize: "var(--dbm-font-size-md)",
+            fontSize: "var(--dbm-font-size-sm)",
             fontWeight: "var(--dbm-font-weight-bold)",
             textTransform: "uppercase",
           }}

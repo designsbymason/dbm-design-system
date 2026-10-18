@@ -943,6 +943,17 @@ export const RowsLayout: Story = {
     const buttons = within(main).getAllByRole("button", { name: /Account|Cart/ });
     for (const button of buttons) expect(Math.round(button.getBoundingClientRect().height)).toBe(Math.round(tokenPx("--dbm-icon-button-size-md")));
     expect(within(main).getByRole("searchbox").parentElement!.getBoundingClientRect().height).toBeLessThan(tokenPx("--dbm-icon-button-size-md"));
+    // on a wide window each of those buttons has a caption under it, for the eye only (the button's own name says it)
+    for (const [name, label] of [["Account", /^Account$/], ["Cart", /^Cart/]] as const) {
+      const caption = within(main).getByText(name);
+      const button = within(main).getByRole("button", { name: label });
+      expect(caption).toHaveAttribute("aria-hidden", "true");
+      expect(getComputedStyle(caption).display).not.toBe("none");
+      const box = button.getBoundingClientRect();
+      // under the icon, drawn up into the button's own room, but not over the icon itself
+      expect(caption.getBoundingClientRect().top).toBeGreaterThan(box.top + box.height / 2);
+      expect(caption.getBoundingClientRect().top).toBeLessThanOrEqual(box.bottom);
+    }
     // only the first row scrolls away, and the categories' line is the one under the bar
     expect(courtesy).toHaveAttribute("data-scroll-away");
     expect(categories.getBoundingClientRect().height - innerHeight(categories)).toBeCloseTo(1, 0);
@@ -1263,6 +1274,9 @@ export const RowsOnAPhone: Story = {
       expect(Math.abs((brand.left + brand.right) / 2 - (row.left + row.right) / 2)).toBeLessThan(2);
       expect(menu.left - row.left).toBeLessThan(24);
       expect(row.right - cart.right).toBeLessThan(24);
+    });
+    await step("the captions under the buttons are not drawn on a phone", async () => {
+      for (const name of ["Account", "Cart"]) expect(getComputedStyle(within(main).getByText(name)).display).toBe("none");
     });
     await step("all four buttons are medium tertiary icon buttons", async () => {
       for (const button of [menu, search, account, cart]) {

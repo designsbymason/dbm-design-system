@@ -1,0 +1,58 @@
+/* Story-only: a small caption under an icon button, drawn at and above the step the demo's row leaves its columns at. (A media query can't read a
+   custom property, so each step is the literal width of its breakpoint, as in Navbar.module.css.) */
+.labelled {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* The button's box has room around its icon, so the caption is drawn up into it to sit close to the icon; it takes no clicks, so the
+   bottom of the button stays the button's own. */
+.caption {
+  display: none;
+  margin-block-start: calc(var(--dbm-space-1) * -1);
+  pointer-events: none;
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-xs);
+  line-height: var(--dbm-line-height-tight);
+}
+
+.captionAlways {
+  display: block;
+}
+
+@media (min-width: 40rem) {
+  .captionFromSm {
+    display: block;
+  }
+}
+
+@media (min-width: 48rem) {
+  .captionFromMd {
+    display: block;
+  }
+}
+
+@media (min-width: 64rem) {
+  .captionFromLg {
+    display: block;
+  }
+}
+
+@media (min-width: 80rem) {
+  .captionFromXl {
+    display: block;
+  }
+}
+
+@media (min-width: 96rem) {
+  .captionFrom2xl {
+    display: block;
+  }
+}
+
+@media (min-width: 120rem) {
+  .captionFrom3xl {
+    display: block;
+  }
+}
