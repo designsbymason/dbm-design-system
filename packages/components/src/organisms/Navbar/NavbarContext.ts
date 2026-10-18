@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 import type { ReactNode } from "react";
-import type { NavbarCurrentVariant, NavbarLabels, NavbarProps, NavbarSize, NavbarVariant } from "./Navbar.types";
+import type { NavbarCurrentVariant, NavbarLabels, NavbarLinkSize, NavbarProps, NavbarSize, NavbarVariant } from "./Navbar.types";
 
 export const defaultLabels: NavbarLabels = {
   menu: "Menu",
@@ -16,6 +16,8 @@ export interface NavbarContextValue {
   /** The bar's own settings, which every row starts from. */
   variant: NavbarVariant;
   size: NavbarSize;
+  /** The bar's own `linkSize`, when it sets one. */
+  linkSize: NavbarLinkSize | undefined;
   contained: boolean;
   closeMenuOnNavigate: boolean;
   currentVariant: NavbarCurrentVariant;
@@ -47,7 +49,10 @@ export const NavbarContext = createContext<NavbarContextValue | null>(null);
 export const NavbarRowIndexContext = createContext(0);
 
 /** The size of the row a part is in, which a menu button or a search button takes as its own. */
-export const NavbarRowContext = createContext<{ size: NavbarSize } | null>(null);
+export const NavbarRowContext = createContext<{ size: NavbarSize; linkSize: NavbarLinkSize | undefined } | null>(null);
+
+/** What a set of links resolved its link size to (`explicit` when someone set one), for the links and a group inside it to read. */
+export const NavbarLinkSizeContext = createContext<{ size: NavbarLinkSize; explicit: boolean } | null>(null);
 
 /** True for the links drawn in the menu panel, which close it when chosen. */
 export const NavbarPanelContext = createContext(false);

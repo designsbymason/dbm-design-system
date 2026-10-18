@@ -410,6 +410,121 @@ describe("Navbar in the menu panel", () => {
   });
 });
 
+describe("Navbar linkSize", () => {
+  const nav = (name: string) => screen.getByRole("navigation", { name, hidden: true });
+
+  it("follows the bar's height step when none is set, reading today's text sizes", () => {
+    const expected = { xs: styles.linkSizeXs, sm: styles.linkSizeSm, md: styles.linkSizeSm, lg: styles.linkSizeMd } as const;
+    for (const size of ["xs", "sm", "md", "lg"] as const) {
+      const { unmount } = render(
+        <Navbar size={size} collapseBelow="never">
+          <Navbar.Links aria-label="Main">
+            <Navbar.Link href="/a">A</Navbar.Link>
+          </Navbar.Links>
+        </Navbar>,
+      );
+      expect(nav("Main")).toHaveClass(expected[size]!);
+      unmount();
+    }
+  });
+
+  it("takes the bar's linkSize, a row's over it, and a set's over both", () => {
+    render(
+      <Navbar linkSize="lg" collapseBelow="never">
+        <Navbar.Row>
+          <Navbar.Links aria-label="Bar">
+            <Navbar.Link href="/a">A</Navbar.Link>
+          </Navbar.Links>
+        </Navbar.Row>
+        <Navbar.Row linkSize="xs">
+          <Navbar.Links aria-label="Row">
+            <Navbar.Link href="/b">B</Navbar.Link>
+          </Navbar.Links>
+        </Navbar.Row>
+        <Navbar.Row linkSize="xs">
+          <Navbar.Links aria-label="Set" linkSize="xl">
+            <Navbar.Link href="/c">C</Navbar.Link>
+          </Navbar.Links>
+        </Navbar.Row>
+      </Navbar>,
+    );
+    expect(nav("Bar")).toHaveClass(styles.linkSizeLg!);
+    expect(nav("Row")).toHaveClass(styles.linkSizeXs!);
+    expect(nav("Set")).toHaveClass(styles.linkSizeXl!);
+  });
+
+  it("reads a quiet set as xs when none is set, and one step below what was set otherwise (never below xs)", () => {
+    const { rerender } = render(
+      <Navbar size="lg" collapseBelow="never">
+        <Navbar.Links aria-label="Quiet" quiet>
+          <Navbar.Link href="/a">A</Navbar.Link>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    expect(nav("Quiet")).toHaveClass(styles.linkSizeXs!);
+    for (const [set, read] of [["xl", styles.linkSizeLg], ["md", styles.linkSizeSm], ["xs", styles.linkSizeXs]] as const) {
+      rerender(
+        <Navbar linkSize={set} collapseBelow="never">
+          <Navbar.Links aria-label="Quiet" quiet>
+            <Navbar.Link href="/a">A</Navbar.Link>
+          </Navbar.Links>
+        </Navbar>,
+      );
+      expect(nav("Quiet")).toHaveClass(read!);
+    }
+  });
+
+  it("scales a link's icon with the set's size, and the panel's copy keeps its own", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <Navbar linkSize="xs" collapseBelow="never">
+        <Navbar.Links aria-label="Main">
+          <Navbar.Link href="/a" icon={HouseIcon}>
+            A
+          </Navbar.Link>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    const iconOf = () => nav("Main").querySelector("svg")!;
+    expect(iconOf().getAttribute("class")).toMatch(/sizeXs/);
+    rerender(
+      <Navbar linkSize="xl" collapseBelow="never">
+        <Navbar.Links aria-label="Main">
+          <Navbar.Link href="/a" icon={HouseIcon}>
+            A
+          </Navbar.Link>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    expect(iconOf().getAttribute("class")).toMatch(/sizeLg/);
+    // the menu panel draws its own copy, which keeps the panel's sizing
+    rerender(
+      <Navbar linkSize="xl">
+        <Navbar.Links aria-label="Main">
+          <Navbar.Link href="/a" icon={HouseIcon}>
+            A
+          </Navbar.Link>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    await user.click(screen.getByRole("button", { name: "Menu" }));
+    const panel = await screen.findByRole("dialog");
+    expect(panel.querySelector("nav svg")!.getAttribute("class")).toMatch(/sizeSm/);
+    expect(panel.querySelector("nav")!.className).not.toMatch(/linkSize/);
+  });
+
+  it("gives a group's dropdown the set's size when one was set, and Menu's own otherwise", async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<WithGroup collapseBelow="never" />);
+    await user.click(screen.getByRole("button", { name: "Resources" }));
+    expect((await screen.findByRole("menu")).className).toMatch(/sizeMd/);
+    unmount();
+    render(<WithGroup collapseBelow="never" linkSize="xl" />);
+    await user.click(screen.getByRole("button", { name: "Resources" }));
+    expect((await screen.findByRole("menu")).className).toMatch(/sizeXl/);
+  });
+});
+
 describe("Navbar.Group in the bar", () => {
   it("opens a menu of its links from a button, with the current one marked", async () => {
     const user = userEvent.setup();

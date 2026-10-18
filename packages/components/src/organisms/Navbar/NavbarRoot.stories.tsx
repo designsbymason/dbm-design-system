@@ -39,6 +39,13 @@ const meta: Meta<typeof Navbar> = {
         "The bar's height, and the default for its rows: as tall as an IconButton of the same step plus room above and below.",
       table: { defaultValue: { summary: '"md"' } },
     },
+    linkSize: {
+      control: "select",
+      options: ["auto", "xs", "sm", "md", "lg", "xl"],
+      mapping: { auto: undefined },
+      description:
+        "The text size, icon size and padding of the links, on Menu's five steps, apart from the bar's height. auto follows size (xs and sm read xs and sm, md reads sm, lg reads md), so nothing changes; a quiet set reads one step below it when one is set. A group's dropdown takes the same step for its items.",
+    },
     contained: {
       control: "boolean",
       description: "Keeps the content to the page's reading width with Container, centred, instead of edge to edge.",

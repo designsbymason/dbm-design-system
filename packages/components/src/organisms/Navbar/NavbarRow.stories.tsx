@@ -19,6 +19,12 @@ const meta: Meta<typeof Navbar.Row> = {
       options: ["xs", "sm", "md", "lg"],
       description: "This row's height step, in place of the bar's size. xs suits a courtesy strip.",
     },
+    linkSize: {
+      control: "select",
+      options: ["auto", "xs", "sm", "md", "lg", "xl"],
+      mapping: { auto: undefined },
+      description: "The link size for this row's links, in place of the bar's linkSize (auto follows this row's size).",
+    },
     contained: {
       control: "boolean",
       description: "Keeps this row's content to the page's reading width, in place of the bar's contained.",

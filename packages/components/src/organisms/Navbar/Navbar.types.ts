@@ -20,6 +20,9 @@ import type { MenuAlign } from "../Menu";
  */
 export type NavbarSize = "xs" | "sm" | "md" | "lg";
 
+/** The size of a link in the bar, on the same five steps as `Menu`'s `size`. */
+export type NavbarLinkSize = "xs" | "sm" | "md" | "lg" | "xl";
+
 /**
  * How the bar itself is drawn: `outlined` (a surface with a line under it), `filled` (a tinted surface) or `ghost`
  * (nothing of its own, the content sits on the page). The same names `Card` and `EmptyState` use for their `variant`.
@@ -93,6 +96,13 @@ export interface NavbarProps extends Omit<ComponentPropsWithoutRef<"header">, "d
    * @default 'md'
    */
   size?: NavbarSize;
+  /**
+   * The text size, icon size and padding of the links in the bar's rows, on the same five steps as `Menu`'s `size`, apart from the
+   * bar's `size` (the height). Left out, it follows `size` so nothing changes (`xs` and `sm` bars read `xs` and `sm`, `md` reads
+   * `sm`, `lg` reads `md`), and a `quiet` set reads `xs`; set, a `quiet` set reads one step below it. A group's dropdown takes
+   * the same step for its items. The menu panel's links keep their own size.
+   */
+  linkSize?: NavbarLinkSize;
   /**
    * Keeps the content to the page's reading width with `Container`, centred, instead of running edge to edge.
    * @default false
@@ -206,6 +216,8 @@ export interface NavbarRowProps extends HTMLAttributes<HTMLDivElement> {
   variant?: NavbarVariant;
   /** This row's height step, in place of the bar's `size`. `"xs"` suits a courtesy strip. */
   size?: NavbarSize;
+  /** The link size for this row's links, in place of the bar's `linkSize` (or what this row's `size` implies) — see {@link NavbarProps.linkSize}. */
+  linkSize?: NavbarLinkSize;
   /** Keeps this row's content to the page's reading width, in place of the bar's `contained`. */
   contained?: boolean;
   /**
@@ -342,6 +354,8 @@ export interface NavbarLinksProps extends Omit<ComponentPropsWithoutRef<"nav">, 
    * @default false
    */
   quiet?: boolean;
+  /** This set's link size, in place of its row's and the bar's `linkSize` — see {@link NavbarProps.linkSize}. */
+  linkSize?: NavbarLinkSize;
   /**
    * The column this part sits in when its row is drawn in `columns`; ignored otherwise.
    * @default 'center'

@@ -37,13 +37,14 @@ const columnGroupClass: Record<NavbarColumn, string | undefined> = {
  * Without any rows the bar draws its parts as one row, so a single-row bar needs none of this.
  */
 export const NavbarRow = forwardRef<HTMLDivElement, NavbarRowProps>(
-  ({ variant, size, contained, columns, columnsBelow = "md", sticky = true, className, children, ...props }, ref) => {
+  ({ variant, size, linkSize, contained, columns, columnsBelow = "md", sticky = true, className, children, ...props }, ref) => {
     const bar = useNavbarContext("Navbar.Row");
     const index = useContext(NavbarRowIndexContext);
     const rowVariant = variant ?? bar.variant;
     const rowSize = size ?? bar.size;
     const rowContained = contained ?? bar.contained;
-    const rowContext = useMemo(() => ({ size: rowSize }), [rowSize]);
+    const rowLinkSize = linkSize ?? bar.linkSize;
+    const rowContext = useMemo(() => ({ size: rowSize, linkSize: rowLinkSize }), [rowSize, rowLinkSize]);
     const autoMenuButton = bar.menuButtonRow === index ? bar.autoMenuButton : null;
     const content =
       columns === undefined ? (

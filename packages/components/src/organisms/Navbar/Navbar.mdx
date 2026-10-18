@@ -22,6 +22,7 @@ export const propOrder = [
   "currentVariant",
   "rounded",
   "size",
+  "linkSize",
   "contained",
   "collapseBelow",
   "menuSide",
@@ -50,6 +51,7 @@ export const playgroundOrder = [
   "currentVariant",
   "rounded",
   "size",
+  "linkSize",
   "contained",
   "collapseBelow",
   "menuSide",
@@ -63,9 +65,9 @@ export const playgroundOrder = [
   "id",
 ];
 export const brandPropOrder = ["children", "href", "asChild", "column", "aria-label", "id", "className", "style", "data-testid"];
-export const rowPropOrder = ["children", "variant", "size", "contained", "columns", "columnsBelow", "sticky", "id", "className", "style", "data-testid"];
+export const rowPropOrder = ["children", "variant", "size", "linkSize", "contained", "columns", "columnsBelow", "sticky", "id", "className", "style", "data-testid"];
 export const searchPropOrder = ["value", "collapseBelow", "size", "buttonVariant", "buttonTone", "buttonSize", "closeOnSubmit", "column", "aria-label", "id", "className", "style", "data-testid"];
-export const linksPropOrder = ["children", "align", "quiet", "column", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
+export const linksPropOrder = ["children", "align", "quiet", "linkSize", "column", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
 export const linkPropOrder = ["children", "href", "icon", "badge", "external", "current", "disabled", "asChild", "aria-label", "id", "className", "style", "data-testid"];
 export const groupPropOrder = ["label", "children", "current", "defaultOpen", "disabled", "align", "aria-label", "id", "className", "style", "data-testid"];
 export const actionPropOrder = ["hideBelow", "children", "id", "className", "style", "data-testid"];
@@ -258,6 +260,16 @@ In a sticky bar, a leading row with `sticky={false}` scrolls away while the rest
 as one box, so a row that scrolls away can't sit below one that sticks. The icon buttons have no captions here, and choosing a primary link makes it current, as if each were another page.
 
 <Canvas of={NavbarStories.RowsScrollAway} />
+
+### Link size
+
+`size` is the bar's height. `linkSize` sets the links' text size, icon size and padding on its own, on the same five steps as `Menu`'s `size`,
+so a tall bar can have small links and the reverse. Left out it follows `size`, so nothing changes (`md` reads `sm`, `lg` reads `md`).
+Set it on the bar, on a `Navbar.Row` or on one `Navbar.Links`; the nearest wins. A `quiet` set reads one step below it, and a
+`Navbar.Group`'s dropdown takes the same step for its items. The menu panel's links keep their own size, and the bar's height is a
+floor that a taller link still grows.
+
+<Canvas of={NavbarStories.LinkSizes} />
 
 ### Marking the current page
 
@@ -586,7 +598,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
     <Navbar.Links
       aria-label="Categories"
       align="center"
-      style={{ fontSize: "var(--dbm-font-size-sm)", fontWeight: "var(--dbm-font-weight-bold)", textTransform: "uppercase" }}
+      style={{ fontWeight: "var(--dbm-font-weight-bold)", textTransform: "uppercase" }}
     >
       <Navbar.Link href="/women">Women</Navbar.Link>
       <Navbar.Link href="/men">Men</Navbar.Link>
@@ -646,6 +658,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 <TokenRow token="shadow.light.md / shadow.dark.md" usage="a sticky bar's elevation while it is stuck" />
 <TokenRow token="font-family.primary" usage="the bar's typography" />
 <TokenRow token="font-size.sm / font-size.base" usage="a link's text, at the default sizes and at large" />
+<TokenRow token="font-size.md / font-size.lg" usage="a link's text at the `lg` and `xl` link sizes (`linkSize`)" />
 <TokenRow token="font-weight.bold" usage="the brand" />
 <TokenRow token="font-weight.medium" usage="a link" />
 <TokenRow token="navbar.search-min-width / navbar.search-max-width" usage="the width the search field wants in the bar, and the widest it grows" />

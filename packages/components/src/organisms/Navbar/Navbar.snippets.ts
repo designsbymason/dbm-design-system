@@ -34,6 +34,28 @@ export const navbarSnippets = {
   variants: `{/* variant: "outlined" (default) | "filled" | "ghost" */}
 ${navbar('variant="filled"')}`,
 
+  linkSizes: `{/* linkSize sets the links' text size, icon size and padding, on Menu's five steps ("xs" | "sm" | "md" | "lg" | "xl"), apart from
+    the bar's size (its height). Left out it follows size, so nothing changes. It can be set on the bar, a Navbar.Row or one
+    Navbar.Links (the nearest wins); a quiet set reads one step below it; a Navbar.Group's dropdown takes the same step for its items. The
+    menu panel's links keep their own size. Here a tall bar with small links. */}
+<Navbar size="lg" linkSize="xs">
+  <Navbar.Brand href="/">dbM</Navbar.Brand>
+  <Navbar.Links>
+    <Navbar.Link href="/products" current>
+      Products
+    </Navbar.Link>
+    <Navbar.Link href="/pricing">Pricing</Navbar.Link>
+  </Navbar.Links>
+</Navbar>
+
+{/* One set larger than the rest of the bar */}
+<Navbar>
+  <Navbar.Brand href="/">dbM</Navbar.Brand>
+  <Navbar.Links linkSize="lg">
+    <Navbar.Link href="/products">Products</Navbar.Link>
+  </Navbar.Links>
+</Navbar>`,
+
   currentVariants: `{/* currentVariant: "underline" (default) | "subtle" | "solid". One look for the whole bar, the phone panel included;
     aria-current="page" is set whichever it is. */}
 ${navbar('currentVariant="solid"')}`,
@@ -157,7 +179,7 @@ ${navbar('currentVariant="solid"')}`,
     <Navbar.Links
       aria-label="Categories"
       align="center"
-      style={{ fontSize: "var(--dbm-font-size-sm)", fontWeight: "var(--dbm-font-weight-bold)", textTransform: "uppercase" }}
+      style={{ fontWeight: "var(--dbm-font-weight-bold)", textTransform: "uppercase" }}
     >
       <Navbar.Link href="/women">Women</Navbar.Link>
       <Navbar.Link href="/men">Men</Navbar.Link>
@@ -223,7 +245,7 @@ ${navbar('currentVariant="solid"')}`,
     <Navbar.Links
       aria-label="Categories"
       align="center"
-      style={{ fontSize: "var(--dbm-font-size-sm)", fontWeight: "var(--dbm-font-weight-bold)", textTransform: "uppercase" }}
+      style={{ fontWeight: "var(--dbm-font-weight-bold)", textTransform: "uppercase" }}
     >
       <Navbar.Link href="/women" current={page === "women"}>Women</Navbar.Link>
       <Navbar.Link href="/men" current={page === "men"}>Men</Navbar.Link>
@@ -429,6 +451,7 @@ export interface NavbarPlaygroundSnippetArgs {
   currentVariant?: NavbarCurrentVariant;
   rounded?: boolean;
   size?: NavbarSize;
+  linkSize?: string;
   contained?: boolean;
   collapseBelow?: NavbarCollapseBelow;
   menuSide?: "start" | "end" | "top" | "bottom";
@@ -453,6 +476,7 @@ export function navbarPlaygroundSnippet(args: NavbarPlaygroundSnippetArgs): stri
   if (args.currentVariant && args.currentVariant !== "underline") attributes.push(`currentVariant="${args.currentVariant}"`);
   if (args.rounded) attributes.push("rounded");
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
+  if (args.linkSize && args.linkSize !== "auto") attributes.push(`linkSize="${args.linkSize}"`);
   if (args.contained) attributes.push("contained");
   if (args.collapseBelow && args.collapseBelow !== "md") attributes.push(`collapseBelow="${args.collapseBelow}"`);
   if (args.menuSide && args.menuSide !== "start") attributes.push(`menuSide="${args.menuSide}"`);

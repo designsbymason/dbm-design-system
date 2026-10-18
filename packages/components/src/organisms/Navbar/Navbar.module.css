@@ -648,8 +648,42 @@ a.brand:focus-visible,
    in it: a link takes its parent's (`inherit`). */
 .links {
   min-inline-size: 0;
-  font-size: var(--dbm-font-size-sm);
+  font-size: var(--navbar-link-font, var(--dbm-font-size-sm));
   font-weight: var(--dbm-font-weight-medium);
+}
+
+/* `linkSize`: the text size, icon size (in the component) and padding of the links in a set, apart from the bar's height. The text steps
+   are `Menu`'s own (xs, sm, base, md, lg); the padding is a link bar's, a little wider than a list row's. A set the menu panel copies
+   keeps the panel's own sizing: these properties are set on the bar's `<nav>`, which the panel's copy is not inside. The defaults
+   `sm` and `md` are today's two text sizes, so a bar that sets none is as it was. */
+.linkSizeXs {
+  --navbar-link-font: var(--dbm-font-size-xs);
+  --navbar-link-pad-block: var(--dbm-space-1);
+  --navbar-link-pad-inline: var(--dbm-space-2);
+}
+
+.linkSizeSm {
+  --navbar-link-font: var(--dbm-font-size-sm);
+  --navbar-link-pad-block: var(--dbm-space-2);
+  --navbar-link-pad-inline: var(--dbm-space-3);
+}
+
+.linkSizeMd {
+  --navbar-link-font: var(--dbm-font-size-base);
+  --navbar-link-pad-block: var(--dbm-space-2);
+  --navbar-link-pad-inline: var(--dbm-space-3);
+}
+
+.linkSizeLg {
+  --navbar-link-font: var(--dbm-font-size-md);
+  --navbar-link-pad-block: var(--dbm-space-3);
+  --navbar-link-pad-inline: var(--dbm-space-4);
+}
+
+.linkSizeXl {
+  --navbar-link-font: var(--dbm-font-size-lg);
+  --navbar-link-pad-block: var(--dbm-space-3);
+  --navbar-link-pad-inline: var(--dbm-space-4);
 }
 
 .list {
@@ -670,8 +704,8 @@ a.brand:focus-visible,
   align-items: center;
   gap: var(--dbm-space-2);
   min-block-size: var(--dbm-space-6);
-  padding-block: var(--dbm-space-2);
-  padding-inline: var(--dbm-space-3);
+  padding-block: var(--navbar-link-pad-block, var(--dbm-space-2));
+  padding-inline: var(--navbar-link-pad-inline, var(--dbm-space-3));
   border-radius: var(--dbm-radius-md);
   color: var(--dbm-text-secondary);
   font-size: inherit;
@@ -681,10 +715,6 @@ a.brand:focus-visible,
   transition:
     background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
     color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
-}
-
-.sizeLg .links {
-  font-size: var(--dbm-font-size-base);
 }
 
 /* Hovering a link tints it and turns its text, and its icon (which takes the link's colour), to the brand colour: `text.brand` on
@@ -897,10 +927,6 @@ a.brand:focus-visible,
 }
 
 /* Quieter links (`quiet`): smaller text in the secondary colour, for a courtesy row; a target is still 24 pixels. */
-.quiet.links {
-  font-size: var(--dbm-font-size-xs);
-}
-
 .quiet.panelNav {
   font-size: var(--dbm-font-size-sm);
 }

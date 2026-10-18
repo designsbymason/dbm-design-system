@@ -4,7 +4,7 @@ import { Fragment, useRef, useState } from "react";
 import type { CSSProperties, ReactNode, RefObject } from "react";
 import type { SpaceValue } from "@dbm-design-system/primitives";
 import { navbarPlaygroundSnippet, navbarSnippets } from "./Navbar.snippets";
-import type { NavbarCollapseBelow, NavbarCurrentVariant, NavbarProps, NavbarSize, NavbarVariant } from "./Navbar.types";
+import type { NavbarCollapseBelow, NavbarCurrentVariant, NavbarLinkSize, NavbarProps, NavbarSize, NavbarVariant } from "./Navbar.types";
 import { DemoColumnsBars, DemoNavbar, DemoRowsNavbar, GalleryBar, NavbarStage, RouterDemoNavbar, NavbarViewModeContext, StickyDemo } from "./NavbarStoryKit";
 
 // Navbar's root-level args in one Playground, every prop listed in the one order the Docs table uses: the ones a person can
@@ -16,6 +16,7 @@ interface PlaygroundArgs {
   currentVariant: NavbarCurrentVariant;
   rounded: boolean;
   size: NavbarSize;
+  linkSize?: NavbarLinkSize;
   contained: boolean;
   collapseBelow: NavbarCollapseBelow;
   menuSide: "start" | "end" | "top" | "bottom";
@@ -51,6 +52,7 @@ const editableArgs = [
   "currentVariant",
   "rounded",
   "size",
+  "linkSize",
   "contained",
   "collapseBelow",
   "menuSide",
@@ -120,6 +122,13 @@ const meta: Meta<PlaygroundArgs> = {
       description:
         "The bar's height, and the default for its rows: as tall as an IconButton of the same step plus room above and below.",
       table: { defaultValue: { summary: '"md"' } },
+    },
+    linkSize: {
+      control: "select",
+      options: ["auto", "xs", "sm", "md", "lg", "xl"],
+      mapping: { auto: undefined },
+      description:
+        "The text size, icon size and padding of the links, on Menu's five steps, apart from the bar's height. auto follows size (xs and sm read xs and sm, md reads sm, lg reads md), so nothing changes; a quiet set reads one step below it when one is set. A group's dropdown takes the same step for its items.",
     },
     contained: {
       control: "boolean",
@@ -206,6 +215,8 @@ const meta: Meta<PlaygroundArgs> = {
     currentVariant: "underline",
     rounded: false,
     size: "md",
+    // "auto" is the select's option for "follow size"; its `mapping` turns it into `undefined` before the story renders
+    linkSize: "auto" as unknown as NavbarLinkSize,
     contained: false,
     collapseBelow: "md",
     menuSide: "start",
@@ -268,6 +279,28 @@ export const Variants: Story = {
               />
             </GalleryBar>
           ))}
+        </div>
+      )}
+    </NavbarStage>
+  ),
+};
+
+export const LinkSizes: Story = {
+  name: "Link size",
+  parameters: { docs: { source: { code: navbarSnippets.linkSizes } } },
+  argTypes: { ...noControls },
+  render: (args) => (
+    <NavbarStage minBlockSize="40rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", display: "grid", gap: "var(--dbm-space-4)", alignSelf: "start" }}>
+          {(["xs", "sm", "md", "lg", "xl"] as const).map((linkSize) => (
+            <GalleryBar key={linkSize} name={`${linkSize} links`}>
+              <DemoNavbar linkSize={linkSize} linksLabel={`${linkSize} links`} menuContainer={menuContainer} collapseBelow={args.collapseBelow} extras />
+            </GalleryBar>
+          ))}
+          <GalleryBar name="A tall bar with small links">
+            <DemoNavbar size="lg" linkSize="xs" linksLabel="tall bar, small links" menuContainer={menuContainer} collapseBelow={args.collapseBelow} />
+          </GalleryBar>
         </div>
       )}
     </NavbarStage>

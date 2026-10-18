@@ -26,6 +26,12 @@ const meta: Meta<typeof Navbar.Links> = {
         "A quieter look for secondary links (a courtesy row): smaller text in the secondary colour. The current link is still marked.",
       table: { defaultValue: { summary: "false" } },
     },
+    linkSize: {
+      control: "select",
+      options: ["auto", "xs", "sm", "md", "lg", "xl"],
+      mapping: { auto: undefined },
+      description: "This set's link size, in place of its row's and the bar's linkSize (auto follows them).",
+    },
     column: {
       control: "select",
       options: ["start", "center", "end"],

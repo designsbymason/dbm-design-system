@@ -1460,6 +1460,58 @@ export const LinkHoverIsBrand: Story = {
   },
 };
 
+export const LinkSizeSteps: Story = {
+  name: "The link size grows the links' text, icon and padding step by step, apart from the bar's height",
+  render: () => (
+    <NavbarStage minBlockSize="40rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", display: "grid", gap: "1rem", alignSelf: "start" }}>
+          {(["xs", "sm", "md", "lg", "xl"] as const).map((linkSize) => (
+            <GalleryBar key={linkSize} name={`${linkSize} links`}>
+              <DemoNavbar linkSize={linkSize} linksLabel={`${linkSize} links`} menuContainer={menuContainer} collapseBelow="never" extras />
+            </GalleryBar>
+          ))}
+          <GalleryBar name="default links">
+            <DemoNavbar linksLabel="default links" menuContainer={menuContainer} collapseBelow="never" extras />
+          </GalleryBar>
+          <GalleryBar name="tall bar, small links">
+            <DemoNavbar size="lg" linkSize="xs" linksLabel="tall bar, small links" menuContainer={menuContainer} collapseBelow="never" />
+          </GalleryBar>
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const linkOf = (name: string) => within(canvas.getByRole("navigation", { name })).getByRole("link", { name: "Products" });
+    const steps = ["xs", "sm", "md", "lg", "xl"] as const;
+    const metrics = steps.map((step) => {
+      const link = linkOf(`${step} links`);
+      const style = getComputedStyle(link);
+      return { font: px(style.fontSize), height: link.getBoundingClientRect().height, padInline: px(style.paddingInlineStart) };
+    });
+    // each step is larger than the last in text and in the box, and the fixed steps are the font tokens themselves
+    for (let i = 1; i < metrics.length; i++) {
+      expect(metrics[i]!.font).toBeGreaterThan(metrics[i - 1]!.font);
+      expect(metrics[i]!.height).toBeGreaterThan(metrics[i - 1]!.height - 0.5);
+    }
+    expect(metrics[0]!.font).toBeCloseTo(tokenPx("--dbm-font-size-xs") * 16, 1);
+    expect(metrics[1]!.font).toBeCloseTo(tokenPx("--dbm-font-size-sm") * 16, 1);
+    expect(metrics[2]!.font).toBeCloseTo(tokenPx("--dbm-font-size-base") * 16, 1);
+    // no setting follows the height step: the default md bar reads the sm step exactly
+    const plain = getComputedStyle(linkOf("default links"));
+    expect(px(plain.fontSize)).toBeCloseTo(metrics[1]!.font, 1);
+    expect(px(plain.paddingInlineStart)).toBeCloseTo(metrics[1]!.padInline, 1);
+    // the bar's height is its own: it does not move with the links (all md bars, links shorter than the row's floor)
+    const headerHeight = (name: string) => canvas.getByRole("region", { name }).querySelector("header")!.getBoundingClientRect().height;
+    const heights = [...steps.map((step) => `${step} links`), "default links"].map(headerHeight);
+    for (const height of heights) expect(Math.abs(height - heights[0]!)).toBeLessThan(1);
+    // a tall bar with small links keeps its own height and the small step's text
+    expect(headerHeight("tall bar, small links")).toBeGreaterThan(heights[0]! + 4);
+    expect(px(getComputedStyle(linkOf("tall bar, small links")).fontSize)).toBeCloseTo(metrics[0]!.font, 1);
+  },
+};
+
 export const ColumnsAreFlowAboveTheStep: Story = {
   name: "Above the step the parts flow as they do without columns",
   render: () => <ColumnsBar columns="balanced" />,

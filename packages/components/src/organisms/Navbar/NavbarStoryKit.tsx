@@ -297,7 +297,6 @@ export function DemoRowsNavbar({
             aria-label="Categories"
             align="center"
             style={{
-              fontSize: "var(--dbm-font-size-sm)",
               fontWeight: "var(--dbm-font-weight-bold)",
               textTransform: "uppercase",
             }}

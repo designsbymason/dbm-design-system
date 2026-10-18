@@ -15,6 +15,7 @@ import styles from "./Navbar.module.css";
 import { childrenOf, flattenParts } from "./collectParts";
 import {
   NavbarContext,
+  NavbarLinkSizeContext,
   NavbarMenuContext,
   NavbarPanelContext,
   NavbarRowContext,
@@ -23,6 +24,7 @@ import {
   useNavbarContext,
 } from "./NavbarContext";
 import type { NavbarContextValue } from "./NavbarContext";
+import { defaultLinkSize, linkIconSize, stepDown } from "./linkSizes";
 import { NavbarRow } from "./NavbarRow";
 import { NavbarSearch } from "./NavbarSearch";
 import { useHideOnScroll } from "./useHideOnScroll";
@@ -32,6 +34,7 @@ import type {
   NavbarActionsProps,
   NavbarBrandProps,
   NavbarCollapseBelow,
+  NavbarLinkSize,
   NavbarCurrentVariant,
   NavbarGroupProps,
   NavbarLinkProps,
@@ -57,6 +60,14 @@ const hideBelowClass: Record<NonNullable<NavbarActionProps["hideBelow"]>, string
   xl: styles.hideBelowXl,
   "2xl": styles.hideBelow2xl,
   "3xl": styles.hideBelow3xl,
+};
+
+const linkSizeClass: Record<NavbarLinkSize, string | undefined> = {
+  xs: styles.linkSizeXs,
+  sm: styles.linkSizeSm,
+  md: styles.linkSizeMd,
+  lg: styles.linkSizeLg,
+  xl: styles.linkSizeXl,
 };
 
 const collapseClass: Record<NavbarCollapseBelow, string | undefined> = {
@@ -151,6 +162,7 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
       currentVariant = "underline",
       rounded = false,
       size = "md",
+      linkSize,
       collapseBelow = "md",
       menuOpen,
       defaultMenuOpen = false,
@@ -251,6 +263,7 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
         labels: resolvedLabels,
         variant,
         size,
+        linkSize,
         contained,
         closeMenuOnNavigate,
         currentVariant,
@@ -281,6 +294,7 @@ const NavbarRoot = forwardRef<HTMLElement, NavbarProps>(
         resolvedLabels.search,
         variant,
         size,
+        linkSize,
         contained,
         closeMenuOnNavigate,
         currentVariant,
@@ -410,8 +424,14 @@ NavbarBrand.displayName = "Navbar.Brand";
  * width, and, below it, as the body of the menu panel the menu button opens. Its children are drawn in both places.
  */
 const NavbarLinks = forwardRef<HTMLElement, NavbarLinksProps>(
-  ({ children, className, align = "start", quiet = false, column: _column, "aria-label": ariaLabel, "aria-labelledby": ariaLabelledBy, ...props }, ref) => {
-    const { labels, panelBody, panelQuietBody } = useNavbarContext("Navbar.Links");
+  ({ children, className, align = "start", quiet = false, linkSize: ownLinkSize, column: _column, "aria-label": ariaLabel, "aria-labelledby": ariaLabelledBy, ...props }, ref) => {
+    const { labels, panelBody, panelQuietBody, size: barSize, linkSize: barLinkSize } = useNavbarContext("Navbar.Links");
+    const row = useContext(NavbarRowContext);
+    // The size a set reads: its own, else its row's, else the bar's; none of them set, it follows the row's height step. A `quiet` set
+    // reads `xs` then, and one step below what was set otherwise.
+    const explicit = ownLinkSize ?? row?.linkSize ?? barLinkSize;
+    const resolvedLinkSize = quiet ? (explicit ? stepDown(explicit) : "xs") : (explicit ?? defaultLinkSize[row?.size ?? barSize]);
+    const linkSizeValue = useMemo(() => ({ size: resolvedLinkSize, explicit: explicit !== undefined }), [resolvedLinkSize, explicit]);
     const panelTarget = quiet ? panelQuietBody : panelBody;
     const name = ariaLabelledBy === undefined ? (ariaLabel ?? labels.navigation) : ariaLabel;
 
@@ -423,12 +443,12 @@ const NavbarLinks = forwardRef<HTMLElement, NavbarLinksProps>(
           aria-label={name}
           aria-labelledby={ariaLabelledBy}
           data-align={align}
-          className={cx(styles.links, quiet && styles.quiet, className)}
+          className={cx(styles.links, quiet && styles.quiet, linkSizeClass[resolvedLinkSize], className)}
         >
           {/* `role="list"` and `role="listitem"` are redundant on paper; Safari with VoiceOver drops list semantics under `list-style: none`. */}
           {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}
           <ul role="list" className={styles.list}>
-            {children}
+            <NavbarLinkSizeContext.Provider value={linkSizeValue}>{children}</NavbarLinkSizeContext.Provider>
           </ul>
         </nav>
         {/* The menu panel is drawn by the bar, once; each set of links puts its copy into it, in the order they are written. */}
@@ -479,6 +499,9 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
     const inPanel = useContext(NavbarPanelContext);
     const closeGroupMenu = useContext(NavbarMenuContext);
     const inMenu = closeGroupMenu !== null;
+    // The icon follows the set's link size in the bar; in the panel and in a group's list it keeps its own.
+    const linkSize = useContext(NavbarLinkSizeContext);
+    const iconSize = linkSize && !inPanel && !inMenu ? linkIconSize[linkSize.size] : "sm";
     const grows = useBecameCurrent(current);
     const Component = asChild ? Slot : "a";
 
@@ -525,7 +548,7 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
           children
         ) : (
           <>
-            {icon && <Icon icon={icon} size="sm" />}
+            {icon && <Icon icon={icon} size={iconSize} />}
             {children}
             {badge !== undefined && badge !== null && <span className={styles.badge}>{badge}</span>}
             {isExternal && (
@@ -569,6 +592,8 @@ const NavbarGroup = forwardRef<HTMLButtonElement, NavbarGroupProps>(
   ({ label, current = false, disabled = false, defaultOpen, align = "start", className, children, ...props }, ref) => {
     const { dir, currentVariant, rounded, menuContainer } = useNavbarContext("Navbar.Group");
     const inPanel = useContext(NavbarPanelContext);
+    // The dropdown's items take the link size when one was set; left alone, `Menu`'s own default.
+    const linkSize = useContext(NavbarLinkSizeContext);
     const [open, setOpen] = useState(defaultOpen ?? current);
     const [menuOpen, setMenuOpen] = useState(false);
     const grows = useBecameCurrent(current);
@@ -624,7 +649,7 @@ const NavbarGroup = forwardRef<HTMLButtonElement, NavbarGroupProps>(
               {trigger}
             </button>
           </Menu.Trigger>
-          <Menu.Content align={align} container={menuContainer}>
+          <Menu.Content align={align} container={menuContainer} size={linkSize?.explicit ? linkSize.size : undefined}>
             <NavbarMenuContext.Provider value={closeGroupMenu}>{children}</NavbarMenuContext.Provider>
           </Menu.Content>
         </Menu>
