@@ -9,6 +9,17 @@ const meta: Meta<typeof Navbar.MenuButton> = {
   tags: ["!dev"],
   argTypes: {
     icon: { control: false, description: "The icon, a component reference. Defaults to a three-line menu icon." },
+    variant: {
+      control: "select",
+      options: ["primary", "secondary", "tertiary", "ghost", "destructive"],
+      description: "The button's look, in place of the quiet one it has by default: any IconButton variant, so it can match the icon buttons beside it.",
+      table: { defaultValue: { summary: '"ghost"' } },
+    },
+    size: {
+      control: "select",
+      options: ["xs", "sm", "md", "lg", "xl"],
+      description: "The button's size, in place of its row's: the same scale as IconButton.",
+    },
     "aria-label": { control: "text", description: "The button's accessible name. Defaults to labels.menu (\"Menu\")." },
     id: { control: "text", description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },

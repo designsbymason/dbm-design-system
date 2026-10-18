@@ -32,6 +32,7 @@ export const NavbarSearch = forwardRef<HTMLDivElement, NavbarSearchProps>(
       collapseBelow = "md",
       closeOnSubmit = true,
       size,
+      buttonVariant = "ghost",
       "aria-label": ariaLabel,
       id,
       className,
@@ -69,7 +70,7 @@ export const NavbarSearch = forwardRef<HTMLDivElement, NavbarSearchProps>(
             <Drawer.Trigger asChild>
               <IconButton
                 icon={MagnifyingGlassIcon}
-                variant="ghost"
+                variant={buttonVariant}
                 size={fieldSize}
                 aria-label={name}
                 className={styles.searchButton}
@@ -86,14 +87,14 @@ export const NavbarSearch = forwardRef<HTMLDivElement, NavbarSearchProps>(
               aria-describedby={undefined}
             >
               <Drawer.Header>
-                <Drawer.Title>{name}</Drawer.Title>
+                <Drawer.Title size="lg">{name}</Drawer.Title>
               </Drawer.Header>
               <Drawer.Body>
                 <div role="search" aria-label={name}>
                   <SearchInput
                     {...inputProps}
                     ref={sheetField}
-                    size="lg"
+                    size="md"
                     aria-label={name}
                     onKeyDown={closeOnEnter}
                     className={styles.sheetField}

@@ -149,43 +149,68 @@ export function GalleryBar({ name, children }: { name: string; children: ReactNo
 }
 
 /**
- * A multi-row header: a courtesy strip (which scrolls away when the bar is sticky), the row with the logo, the search field and the
- * account and cart buttons, and a row of categories. The sets of links are named so each landmark has its own name.
+ * A multi-row header, laid out the way a shop's is: a thin courtesy strip (which scrolls away when the bar is sticky); a taller row with the
+ * logo, the search field and small tertiary icon buttons, which on a phone puts the menu button and the search button at the start, the logo
+ * in the centre and the other buttons at the end; and a smaller row of primary links, centred, in capitals, with none marked current (the
+ * visitor is on the home page). The sets of links are named so each landmark has its own name.
  */
 export function DemoRowsNavbar({
   menuContainer,
   searchCollapseBelow,
+  collapseBelow = "md",
   ...props
 }: NavbarProps & {
   /** Where the search field gives way to a button, as `Navbar.Search`'s `collapseBelow`. */
   searchCollapseBelow?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "never";
 }) {
-  const demo = useDemoCurrent("women");
   return (
-    <Navbar menuContainer={menuContainer} {...props}>
-      <Navbar.Row size="xs" variant="filled" sticky={false}>
+    <Navbar menuContainer={menuContainer} collapseBelow={collapseBelow} {...props}>
+      <Navbar.Row size="xs" variant="outlined" sticky={false}>
         <Navbar.Links aria-label="Help" quiet align="end">
-          <Navbar.Link {...demo.link("help")}>Help</Navbar.Link>
-          <Navbar.Link {...demo.link("orders")}>Track an order</Navbar.Link>
-          <Navbar.Link {...demo.link("stores")}>Find a store</Navbar.Link>
+          <Navbar.Link href="#help" onClick={preventNavigation}>
+            Help
+          </Navbar.Link>
+          <Navbar.Link href="#orders" onClick={preventNavigation}>
+            Track an order
+          </Navbar.Link>
+          <Navbar.Link href="#stores" onClick={preventNavigation}>
+            Find a store
+          </Navbar.Link>
         </Navbar.Links>
       </Navbar.Row>
-      <Navbar.Row variant="ghost">
-        <Navbar.Brand href="#" onClick={preventNavigation}>
+      <Navbar.Row size="lg" variant="outlined">
+        <Navbar.MenuButton variant="tertiary" size="sm" />
+        <Navbar.Brand href="#" centerBelow={collapseBelow} onClick={preventNavigation}>
           dbM
         </Navbar.Brand>
-        <Navbar.Search collapseBelow={searchCollapseBelow} placeholder="Search products" />
+        <Navbar.Search size="sm" buttonVariant="tertiary" collapseBelow={searchCollapseBelow} placeholder="Search products" />
         <Navbar.Actions>
-          <IconButton icon={UserCircleIcon} aria-label="Account" variant="ghost" size="md" />
-          <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="ghost" size="md" />
+          <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="sm" />
+          <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="sm" />
         </Navbar.Actions>
       </Navbar.Row>
-      <Navbar.Row variant="outlined">
-        <Navbar.Links aria-label="Categories">
-          <Navbar.Link {...demo.link("women")}>Women</Navbar.Link>
-          <Navbar.Link {...demo.link("men")}>Men</Navbar.Link>
-          <Navbar.Link {...demo.link("kids")}>Kids</Navbar.Link>
-          <Navbar.Link {...demo.link("sale")}>Sale</Navbar.Link>
+      <Navbar.Row size="sm" variant="outlined">
+        <Navbar.Links
+          aria-label="Categories"
+          align="center"
+          style={{
+            fontSize: "var(--dbm-font-size-xs)",
+            fontWeight: "var(--dbm-font-weight-semibold)",
+            textTransform: "uppercase",
+          }}
+        >
+          <Navbar.Link href="#women" onClick={preventNavigation}>
+            Women
+          </Navbar.Link>
+          <Navbar.Link href="#men" onClick={preventNavigation}>
+            Men
+          </Navbar.Link>
+          <Navbar.Link href="#kids" onClick={preventNavigation}>
+            Kids
+          </Navbar.Link>
+          <Navbar.Link href="#sale" onClick={preventNavigation}>
+            Sale
+          </Navbar.Link>
         </Navbar.Links>
       </Navbar.Row>
     </Navbar>

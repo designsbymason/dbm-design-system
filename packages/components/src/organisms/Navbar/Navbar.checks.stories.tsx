@@ -896,11 +896,14 @@ export const RowsLayout: Story = {
     // stacked in order, each under the one before, with no gap
     expect(courtesy.getBoundingClientRect().bottom).toBeCloseTo(main.getBoundingClientRect().top, 0);
     expect(main.getBoundingClientRect().bottom).toBeCloseTo(categories.getBoundingClientRect().top, 0);
-    // the strip is the xs height (an xs IconButton plus room), the main row the md one
+    // each row is its own step: the strip a thin 24px target plus room, the logo row lg, the categories sm (an IconButton of that step plus room)
     const innerHeight = (row: HTMLElement) => row.firstElementChild!.getBoundingClientRect().height;
-    expect(Math.abs(innerHeight(courtesy) - (tokenPx("--dbm-icon-button-size-xs") + 2 * tokenPx("--dbm-space-1") * 16))).toBeLessThan(1);
-    expect(Math.abs(innerHeight(main) - (tokenPx("--dbm-icon-button-size-md") + 2 * tokenPx("--dbm-space-2") * 16))).toBeLessThan(1);
-    expect(innerHeight(courtesy)).toBeLessThan(innerHeight(main));
+    const space = (name: string) => tokenPx(name) * 16;
+    expect(Math.abs(innerHeight(courtesy) - (space("--dbm-space-6") + 2 * space("--dbm-space-1")))).toBeLessThan(1);
+    expect(Math.abs(innerHeight(main) - (tokenPx("--dbm-icon-button-size-lg") + 2 * space("--dbm-space-2")))).toBeLessThan(1);
+    expect(Math.abs(innerHeight(categories) - (tokenPx("--dbm-icon-button-size-sm") + 2 * space("--dbm-space-1")))).toBeLessThan(1);
+    expect(innerHeight(courtesy)).toBeLessThan(innerHeight(categories));
+    expect(innerHeight(categories)).toBeLessThan(innerHeight(main));
     // the search landmark takes the room between the brand and the actions, within its token widths
     const brand = within(main).getByRole("link", { name: "dbM" }).getBoundingClientRect();
     const search = within(main).getByRole("search").getBoundingClientRect();
@@ -909,6 +912,10 @@ export const RowsLayout: Story = {
     expect(search.right).toBeLessThanOrEqual(actions.left);
     expect(search.width).toBeGreaterThanOrEqual(tokenPx("--dbm-navbar-search-min-width") * 16 - 1);
     expect(search.width).toBeLessThanOrEqual(tokenPx("--dbm-navbar-search-max-width") * 16 + 1);
+    // the field is the field: its icon is set apart from its text, as it is in `SearchInput` on its own
+    const field = within(main).getByRole("searchbox");
+    const icon = field.parentElement!.querySelector("svg")!;
+    expect(field.getBoundingClientRect().left - icon.getBoundingClientRect().right).toBeGreaterThanOrEqual(4);
     // and with room to spare it takes the most it is allowed
     expect(Math.abs(search.width - tokenPx("--dbm-navbar-search-max-width") * 16)).toBeLessThan(2);
     // the courtesy links sit at the end of their row, quieter than the categories
@@ -916,7 +923,22 @@ export const RowsLayout: Story = {
     expect(courtesy.getBoundingClientRect().right - help.right).toBeLessThan(40);
     const quiet = getComputedStyle(within(courtesy).getByRole("link", { name: "Help" }));
     const loud = getComputedStyle(within(categories).getByRole("link", { name: "Men" }));
-    expect(px(quiet.fontSize)).toBeLessThan(px(loud.fontSize));
+    expect(px(quiet.fontSize)).toBeLessThanOrEqual(px(loud.fontSize));
+    // the primary links: centred in their row, in capitals, semibold and small, and none is marked as the current page
+    const nav = within(categories).getByRole("navigation", { name: "Categories" });
+    const navBox = nav.getBoundingClientRect();
+    const centre = (navBox.left + navBox.right) / 2;
+    const rowBox = categories.getBoundingClientRect();
+    expect(Math.abs(centre - (rowBox.left + rowBox.right) / 2)).toBeLessThan(2);
+    const link = getComputedStyle(within(categories).getByRole("link", { name: "Men" }));
+    expect(link.textTransform).toBe("uppercase");
+    expect(link.fontWeight).toBe("600");
+    expect(px(link.fontSize)).toBeLessThan(px(getComputedStyle(within(courtesy).getByRole("link", { name: "Help" })).fontSize) + 1.5);
+    expect(canvasElement.querySelector('[aria-current="page"]')).toBeNull();
+    // the buttons in the logo row are small tertiary icon buttons, the search field a size down
+    const buttons = within(main).getAllByRole("button", { name: /Account|Cart/ });
+    for (const button of buttons) expect(Math.round(button.getBoundingClientRect().height)).toBe(Math.round(tokenPx("--dbm-icon-button-size-sm")));
+    expect(within(main).getByRole("searchbox").parentElement!.getBoundingClientRect().height).toBeLessThan(tokenPx("--dbm-icon-button-size-md"));
     // only the first row scrolls away, and the categories' line is the one under the bar
     expect(courtesy).toHaveAttribute("data-scroll-away");
     expect(categories.getBoundingClientRect().height - innerHeight(categories)).toBeCloseTo(1, 0);
@@ -1093,5 +1115,81 @@ export const RowsHideOnScroll: Story = {
     await settle();
     expect(header.getBoundingClientRect().top).toBeLessThan(scroller.getBoundingClientRect().top + 30);
     expect(header.getBoundingClientRect().bottom).toBeGreaterThan(scroller.getBoundingClientRect().top + 40);
+  },
+};
+
+export const RowsOnAPhone: Story = {
+  name: "On a phone the menu and search buttons are at the start, the logo is centred, and the other buttons are at the end",
+  globals: { viewport: { value: "mobile1", isRotated: false } },
+  render: () => (
+    <NavbarStage minBlockSize="24rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+          <DemoRowsNavbar menuContainer={menuContainer} />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement, step }) => {
+    expect(window.innerWidth).toBeLessThan(768);
+    const canvas = within(canvasElement);
+    const header = canvas.getByRole("banner");
+    const [courtesy, main, categories] = rows(header) as [HTMLElement, HTMLElement, HTMLElement];
+    // the strip and the categories held only links, which have moved into the menu panel, so they are gone
+    expect(getComputedStyle(courtesy).display).toBe("none");
+    expect(getComputedStyle(categories).display).toBe("none");
+    const menu = canvasElement.querySelector<HTMLElement>('button[aria-label="Menu"]')!.getBoundingClientRect();
+    const search = within(main).getByRole("button", { name: "Search" }).getBoundingClientRect();
+    const brand = within(main).getByRole("link", { name: "dbM" }).getBoundingClientRect();
+    const account = within(main).getByRole("button", { name: "Account" }).getBoundingClientRect();
+    const cart = within(main).getByRole("button", { name: /Cart/ }).getBoundingClientRect();
+    const row = main.getBoundingClientRect();
+    await step("the order on screen: menu, search, logo, account, cart", async () => {
+      expect(menu.right).toBeLessThanOrEqual(search.left);
+      expect(search.right).toBeLessThanOrEqual(brand.left);
+      expect(brand.right).toBeLessThanOrEqual(account.left);
+      expect(account.right).toBeLessThanOrEqual(cart.left);
+    });
+    await step("the logo is centred, the first two at the start and the last two at the end", async () => {
+      expect(Math.abs((brand.left + brand.right) / 2 - (row.left + row.right) / 2)).toBeLessThan(2);
+      expect(menu.left - row.left).toBeLessThan(24);
+      expect(row.right - cart.right).toBeLessThan(24);
+    });
+    await step("all four buttons are small tertiary icon buttons", async () => {
+      for (const button of [menu, search, account, cart]) {
+        expect(Math.round(button.height)).toBe(Math.round(tokenPx("--dbm-icon-button-size-sm")));
+      }
+    });
+    await step("the logo is first in the page, as on a wide window", async () => {
+      const order = [...main.querySelectorAll("a, button")].map((element) => element.getAttribute("aria-label") ?? element.textContent);
+      expect(order.indexOf("dbM")).toBeLessThan(order.indexOf("Search"));
+    });
+  },
+};
+
+export const SearchSheetIsCompact: Story = {
+  name: "The search sheet has a small heading and a medium field",
+  render: () => (
+    <NavbarStage minBlockSize="26rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+          <DemoRowsNavbar searchCollapseBelow="3xl" collapseBelow="never" menuContainer={menuContainer} />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(within(canvas.getByRole("search")).getByLabelText("Search", { selector: "button" }));
+    const sheet = await canvas.findByRole("dialog", { name: "Search" });
+    await waitFor(() => expect(sheet.getAnimations().every((animation) => animation.playState === "finished")).toBe(true));
+    const heading = within(sheet).getByRole("heading", { name: "Search" });
+    // (the heading scale is fluid, so this is the large step's size on a 1200px window, not a token read)
+    expect(px(getComputedStyle(heading).fontSize)).toBeLessThanOrEqual(25);
+    const field = within(sheet).getByRole("searchbox", { name: "Search" }).parentElement!;
+    expect(Math.abs(field.getBoundingClientRect().height - tokenPx("--dbm-icon-button-size-md"))).toBeLessThan(1);
+    await userEvent.keyboard("{Escape}");
+    // end with the sheet gone: an accessibility check run mid-exit sees the page still hidden behind it
+    await waitFor(() => expect(canvas.queryByRole("dialog")).not.toBeInTheDocument());
   },
 };

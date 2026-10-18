@@ -127,81 +127,119 @@ ${navbar('currentVariant="solid"')}`,
 </Navbar>`,
 
   rows: `{/* A multi-row header is still one <header>. Each Navbar.Row is a band, with its own variant, size and contained (they start from
-    the bar's). Several Navbar.Links are allowed: give each its own aria-label, and quiet for a courtesy row's. */}
+    the bar's): here a thin strip (xs), a taller logo row (lg) and a small row of links (sm), none of them current, as on a home page.
+    Several Navbar.Links are allowed: give each its own aria-label, and quiet for a courtesy row's. On a phone the menu and search
+    buttons come before the logo, which is centred (centerBelow), and the other buttons follow it; they are small tertiary icon buttons
+    here (variant and size on Navbar.MenuButton, buttonVariant on Navbar.Search). A style on Navbar.Links sets the text of all its links. */}
 <Navbar>
-  <Navbar.Row size="xs" variant="filled" sticky={false}>
+  <Navbar.Row size="xs" variant="outlined" sticky={false}>
     <Navbar.Links aria-label="Help" quiet align="end">
       <Navbar.Link href="/help">Help</Navbar.Link>
       <Navbar.Link href="/orders">Track an order</Navbar.Link>
+      <Navbar.Link href="/stores">Find a store</Navbar.Link>
     </Navbar.Links>
   </Navbar.Row>
-  <Navbar.Row variant="ghost">
-    <Navbar.Brand href="/">dbM</Navbar.Brand>
-    <Navbar.Search placeholder="Search products" />
+  <Navbar.Row size="lg" variant="outlined">
+    <Navbar.MenuButton variant="tertiary" size="sm" />
+    <Navbar.Brand href="/" centerBelow="md">
+      dbM
+    </Navbar.Brand>
+    <Navbar.Search size="sm" buttonVariant="tertiary" placeholder="Search products" />
     <Navbar.Actions>
-      <IconButton icon={UserCircleIcon} aria-label="Account" variant="ghost" />
-      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="ghost" />
+      <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="sm" />
+      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="sm" />
     </Navbar.Actions>
   </Navbar.Row>
-  <Navbar.Row variant="outlined">
-    <Navbar.Links aria-label="Categories">
-      <Navbar.Link href="/women" current>
-        Women
-      </Navbar.Link>
+  <Navbar.Row size="sm" variant="outlined">
+    <Navbar.Links
+      aria-label="Categories"
+      align="center"
+      style={{ fontSize: "var(--dbm-font-size-xs)", fontWeight: "var(--dbm-font-weight-semibold)", textTransform: "uppercase" }}
+    >
+      <Navbar.Link href="/women">Women</Navbar.Link>
       <Navbar.Link href="/men">Men</Navbar.Link>
+      <Navbar.Link href="/kids">Kids</Navbar.Link>
       <Navbar.Link href="/sale">Sale</Navbar.Link>
     </Navbar.Links>
   </Navbar.Row>
 </Navbar>`,
 
   rowsPanel: `{/* Below the collapse width every set of links goes into the one menu panel, in the order written, with the quiet ones last and a
-    line between sets. This demo collapses below the widest step ("3xl") so the panel shows on any window narrower than 1920px; an
-    app picks the step that suits its links. The automatic menu button goes at the end of the row with the brand. */}
+    line between sets; a row that held only links goes with them. This demo collapses below the widest step ("3xl") so the panel shows
+    on any window narrower than 1920px; an app picks the step that suits its links. Put Navbar.MenuButton where you want it (here
+    first, with the search button beside it and the logo centred between them and the buttons); without one, the button goes at the
+    end of the row with the brand. */}
 <Navbar collapseBelow="3xl">
-  <Navbar.Row size="xs" variant="filled" sticky={false}>
+  <Navbar.Row size="xs" variant="outlined" sticky={false}>
     <Navbar.Links aria-label="Help" quiet align="end">
       <Navbar.Link href="/help">Help</Navbar.Link>
+      <Navbar.Link href="/orders">Track an order</Navbar.Link>
+      <Navbar.Link href="/stores">Find a store</Navbar.Link>
     </Navbar.Links>
   </Navbar.Row>
-  <Navbar.Row variant="ghost">
-    <Navbar.Brand href="/">dbM</Navbar.Brand>
-    <Navbar.Search collapseBelow="3xl" />
+  <Navbar.Row size="lg" variant="outlined">
+    <Navbar.MenuButton variant="tertiary" size="sm" />
+    <Navbar.Brand href="/" centerBelow="3xl">
+      dbM
+    </Navbar.Brand>
+    <Navbar.Search size="sm" buttonVariant="tertiary" collapseBelow="3xl" />
+    <Navbar.Actions>
+      <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="sm" />
+      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="sm" />
+    </Navbar.Actions>
   </Navbar.Row>
-  <Navbar.Row variant="outlined">
-    <Navbar.Links aria-label="Categories">
-      <Navbar.Link href="/women" current>
-        Women
-      </Navbar.Link>
+  <Navbar.Row size="sm" variant="outlined">
+    <Navbar.Links
+      aria-label="Categories"
+      align="center"
+      style={{ fontSize: "var(--dbm-font-size-xs)", fontWeight: "var(--dbm-font-weight-semibold)", textTransform: "uppercase" }}
+    >
+      <Navbar.Link href="/women">Women</Navbar.Link>
       <Navbar.Link href="/men">Men</Navbar.Link>
+      <Navbar.Link href="/kids">Kids</Navbar.Link>
+      <Navbar.Link href="/sale">Sale</Navbar.Link>
     </Navbar.Links>
   </Navbar.Row>
 </Navbar>`,
 
   search: `{/* Navbar.Search is a role="search" landmark around a SearchInput; it takes the room between its neighbours. Below collapseBelow
-    ("md" by default) it is a button that opens the field in a sheet from the top. This demo uses the widest step ("3xl"). The bar's
-    field and the sheet's are two inputs, so pass value and onChange to keep them in step. */}
+    ("md" by default) it is a button that opens the field in a sheet from the top, with a small heading and a field. This demo uses the
+    widest step ("3xl"). buttonVariant is the button's look, to match the icon buttons beside it. The bar's field and the sheet's are two
+    inputs, so pass value and onChange to keep them in step. */}
 <Navbar>
   <Navbar.Brand href="/">dbM</Navbar.Brand>
-  <Navbar.Search collapseBelow="3xl" placeholder="Search products" onSearch={(query) => search(query)} />
+  <Navbar.Search
+    size="sm"
+    buttonVariant="tertiary"
+    collapseBelow="3xl"
+    placeholder="Search products"
+    onSearch={(query) => search(query)}
+  />
 </Navbar>`,
 
   rowsSticky: `{/* In a sticky bar, a leading row with sticky={false} scrolls away while the rest stays at the top. Only leading rows can: the bar
     sticks as one box. boxRef is the scrolling box, as in the sticky example. */}
 <Navbar sticky scrollContainerRef={boxRef}>
-  <Navbar.Row size="xs" variant="filled" sticky={false}>
+  <Navbar.Row size="xs" variant="outlined" sticky={false}>
     <Navbar.Links aria-label="Help" quiet align="end">
       <Navbar.Link href="/help">Help</Navbar.Link>
+      <Navbar.Link href="/orders">Track an order</Navbar.Link>
     </Navbar.Links>
   </Navbar.Row>
-  <Navbar.Row variant="ghost">
-    <Navbar.Brand href="/">dbM</Navbar.Brand>
-    <Navbar.Search />
+  <Navbar.Row size="lg" variant="outlined">
+    <Navbar.MenuButton variant="tertiary" size="sm" />
+    <Navbar.Brand href="/" centerBelow="md">
+      dbM
+    </Navbar.Brand>
+    <Navbar.Search size="sm" buttonVariant="tertiary" />
+    <Navbar.Actions>
+      <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" size="sm" />
+    </Navbar.Actions>
   </Navbar.Row>
-  <Navbar.Row variant="outlined">
-    <Navbar.Links aria-label="Categories">
-      <Navbar.Link href="/women" current>
-        Women
-      </Navbar.Link>
+  <Navbar.Row size="sm" variant="outlined">
+    <Navbar.Links aria-label="Categories" align="center">
+      <Navbar.Link href="/women">Women</Navbar.Link>
+      <Navbar.Link href="/men">Men</Navbar.Link>
     </Navbar.Links>
   </Navbar.Row>
 </Navbar>`,

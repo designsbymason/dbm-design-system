@@ -8,13 +8,15 @@ import type {
   ReactNode,
   RefObject,
 } from "react";
+import type { ButtonSize, ButtonVariant } from "../../atoms/Button";
 import type { DrawerOpenChangeDetails, DrawerSide } from "../Drawer";
 import type { SearchInputProps } from "../../molecules/SearchInput";
 import type { MenuAlign } from "../Menu";
 
 /**
- * A row's height step: its block size is the height of an `IconButton` of the same step plus a little room. `xs` is for a thin
- * strip above the bar (a courtesy or notice row).
+ * A row's height step: its block size is the height of an `IconButton` of the same step plus a little room, at least. `xs` is a thin
+ * strip above the bar (a courtesy or notice row): the smallest target (24px) plus room, a little under an `xs` `IconButton`, which a
+ * row of that step still grows to hold.
  */
 export type NavbarSize = "xs" | "sm" | "md" | "lg";
 
@@ -232,8 +234,13 @@ export interface NavbarSearchProps extends Omit<SearchInputProps, "size" | "clas
    * @default 'md'
    */
   collapseBelow?: Exclude<Breakpoint, "base"> | "never";
-  /** This field's size, in place of its row's. */
+  /** This field's size, in place of its row's. Also the size of the search button it becomes. */
   size?: NavbarSize;
+  /**
+   * The look of the search button the field becomes below `collapseBelow`: any `IconButton` variant, so it can match the icon buttons beside it.
+   * @default 'ghost'
+   */
+  buttonVariant?: ButtonVariant;
   /**
    * Closes the sheet when Enter is pressed in its field, so a phone returns to the page with the results. Has no effect in the bar.
    * @default true
@@ -268,6 +275,14 @@ export interface NavbarBrandProps extends HTMLAttributes<HTMLElement> {
    * @default false
    */
   asChild?: boolean;
+  /**
+   * Centres the brand below a width, a breakpoint step, or `"never"` to keep it at the start. Below the step the brand sits centred between
+   * the controls on either side: the menu button and the search button come before it, and the actions after, the usual layout of a phone's
+   * header. Only the order they are drawn in changes, so the brand stays first in the page. It is centred in the room between the controls, so
+   * it is truly central when there are as many on each side.
+   * @default 'never'
+   */
+  centerBelow?: Exclude<Breakpoint, "base"> | "never";
   /** Names the brand for assistive tech when its content is only a logo. */
   "aria-label"?: string;
   /** Standard DOM id. */
@@ -491,6 +506,13 @@ export interface NavbarMenuButtonProps extends Omit<ComponentPropsWithoutRef<"bu
    * @default ListIcon
    */
   icon?: PhosphorIcon;
+  /**
+   * The button's look, in place of the quiet one it has by default: any `IconButton` variant, so it can match the icon buttons beside it.
+   * @default 'ghost'
+   */
+  variant?: ButtonVariant;
+  /** The button's size, in place of its row's: the same scale as `IconButton`. */
+  size?: ButtonSize;
   /** The button's accessible name. Defaults to `labels.menu` ("Menu"). */
   "aria-label"?: string;
   /** Standard DOM id. */

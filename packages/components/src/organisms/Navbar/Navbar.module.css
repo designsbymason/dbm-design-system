@@ -92,8 +92,10 @@
   padding-inline: var(--dbm-space-4);
 }
 
+/* `xs` is a thin strip: the smallest target (24 pixels) plus room, a little under the xs `IconButton`. A row that holds one still grows to fit it
+   (the height is a minimum), so nothing is clipped. */
 .sizeXs .inner {
-  --navbar-button-size: var(--dbm-icon-button-size-xs);
+  --navbar-button-size: var(--dbm-space-6);
   --navbar-room: var(--dbm-space-1);
 }
 
@@ -239,11 +241,160 @@ a.brand:focus-visible,
   background-position: right center;
 }
 
+/* `Navbar.Brand`'s `centerBelow`: below the step the brand sits centred between the controls on either side, and the controls that belong at the
+   start (the menu button, and the search field once it is a button) come before it. Only the order they are drawn in changes: the brand stays
+   first in the page, as on a wide window, so a keyboard meets it before the search. The actions follow it, and the free space is the brand's
+   own margins (the actions' push to the end is cancelled, as for `align`). The gap between controls is the actions' own, so the two sides match. */
+@media not all and (min-width: 40rem) {
+  .inner:has(> .brandCenterSm) {
+    gap: var(--dbm-space-2);
+  }
+
+  .inner:has(> .brandCenterSm) > .brandCenterSm {
+    margin-inline: auto;
+  }
+
+  .inner:has(> .brandCenterSm) > .menuButton {
+    order: -2;
+    margin-inline-start: 0;
+  }
+
+  .inner:has(> .brandCenterSm) > .search {
+    order: -1;
+  }
+
+  .inner:has(> .brandCenterSm) > .actions {
+    order: 1;
+    margin-inline-start: 0;
+  }
+}
+
+@media not all and (min-width: 48rem) {
+  .inner:has(> .brandCenterMd) {
+    gap: var(--dbm-space-2);
+  }
+
+  .inner:has(> .brandCenterMd) > .brandCenterMd {
+    margin-inline: auto;
+  }
+
+  .inner:has(> .brandCenterMd) > .menuButton {
+    order: -2;
+    margin-inline-start: 0;
+  }
+
+  .inner:has(> .brandCenterMd) > .search {
+    order: -1;
+  }
+
+  .inner:has(> .brandCenterMd) > .actions {
+    order: 1;
+    margin-inline-start: 0;
+  }
+}
+
+@media not all and (min-width: 64rem) {
+  .inner:has(> .brandCenterLg) {
+    gap: var(--dbm-space-2);
+  }
+
+  .inner:has(> .brandCenterLg) > .brandCenterLg {
+    margin-inline: auto;
+  }
+
+  .inner:has(> .brandCenterLg) > .menuButton {
+    order: -2;
+    margin-inline-start: 0;
+  }
+
+  .inner:has(> .brandCenterLg) > .search {
+    order: -1;
+  }
+
+  .inner:has(> .brandCenterLg) > .actions {
+    order: 1;
+    margin-inline-start: 0;
+  }
+}
+
+@media not all and (min-width: 80rem) {
+  .inner:has(> .brandCenterXl) {
+    gap: var(--dbm-space-2);
+  }
+
+  .inner:has(> .brandCenterXl) > .brandCenterXl {
+    margin-inline: auto;
+  }
+
+  .inner:has(> .brandCenterXl) > .menuButton {
+    order: -2;
+    margin-inline-start: 0;
+  }
+
+  .inner:has(> .brandCenterXl) > .search {
+    order: -1;
+  }
+
+  .inner:has(> .brandCenterXl) > .actions {
+    order: 1;
+    margin-inline-start: 0;
+  }
+}
+
+@media not all and (min-width: 96rem) {
+  .inner:has(> .brandCenter2xl) {
+    gap: var(--dbm-space-2);
+  }
+
+  .inner:has(> .brandCenter2xl) > .brandCenter2xl {
+    margin-inline: auto;
+  }
+
+  .inner:has(> .brandCenter2xl) > .menuButton {
+    order: -2;
+    margin-inline-start: 0;
+  }
+
+  .inner:has(> .brandCenter2xl) > .search {
+    order: -1;
+  }
+
+  .inner:has(> .brandCenter2xl) > .actions {
+    order: 1;
+    margin-inline-start: 0;
+  }
+}
+
+@media not all and (min-width: 120rem) {
+  .inner:has(> .brandCenter3xl) {
+    gap: var(--dbm-space-2);
+  }
+
+  .inner:has(> .brandCenter3xl) > .brandCenter3xl {
+    margin-inline: auto;
+  }
+
+  .inner:has(> .brandCenter3xl) > .menuButton {
+    order: -2;
+    margin-inline-start: 0;
+  }
+
+  .inner:has(> .brandCenter3xl) > .search {
+    order: -1;
+  }
+
+  .inner:has(> .brandCenter3xl) > .actions {
+    order: 1;
+    margin-inline-start: 0;
+  }
+}
+
 /* --- The search field --- */
 
 /* Between its neighbours, never narrower than a usable field or wider than a measure. Below its collapse step (`searchCollapse*`) the
    field is out of the bar and a button stands in for it; each step is the literal width of the matching breakpoint token, as the
-   collapse steps below are. */
+   collapse steps below are. The field's own layout is left alone above the step: only what is below it is overridden, so the
+   `display` the field's box has (a flex row, with the gap between its icon and its text) is the field's own. */
 .search {
   flex: 1 1 var(--dbm-navbar-search-min-width);
   min-inline-size: 0;
@@ -262,114 +413,87 @@ a.brand:focus-visible,
   inline-size: 100%;
 }
 
-.searchCollapseSm,
-.searchCollapseMd,
-.searchCollapseLg,
-.searchCollapseXl,
-.searchCollapse2xl,
-.searchCollapse3xl {
-  flex: 0 0 auto;
-}
-
-.searchCollapseSm .searchField,
-.searchCollapseMd .searchField,
-.searchCollapseLg .searchField,
-.searchCollapseXl .searchField,
-.searchCollapse2xl .searchField,
-.searchCollapse3xl .searchField {
-  display: none;
-}
-
-.searchCollapseSm .searchButton,
-.searchCollapseMd .searchButton,
-.searchCollapseLg .searchButton,
-.searchCollapseXl .searchButton,
-.searchCollapse2xl .searchButton,
-.searchCollapse3xl .searchButton {
-  display: inline-flex;
-}
-
-@media (min-width: 40rem) {
+@media not all and (min-width: 40rem) {
   .searchCollapseSm {
-    flex: 1 1 var(--dbm-navbar-search-min-width);
+    flex: 0 0 auto;
   }
 
   .searchCollapseSm .searchField {
-    display: block;
+    display: none;
   }
 
   .searchCollapseSm .searchButton {
-    display: none;
+    display: inline-flex;
   }
 }
 
-@media (min-width: 48rem) {
+@media not all and (min-width: 48rem) {
   .searchCollapseMd {
-    flex: 1 1 var(--dbm-navbar-search-min-width);
+    flex: 0 0 auto;
   }
 
   .searchCollapseMd .searchField {
-    display: block;
+    display: none;
   }
 
   .searchCollapseMd .searchButton {
-    display: none;
+    display: inline-flex;
   }
 }
 
-@media (min-width: 64rem) {
+@media not all and (min-width: 64rem) {
   .searchCollapseLg {
-    flex: 1 1 var(--dbm-navbar-search-min-width);
+    flex: 0 0 auto;
   }
 
   .searchCollapseLg .searchField {
-    display: block;
+    display: none;
   }
 
   .searchCollapseLg .searchButton {
-    display: none;
+    display: inline-flex;
   }
 }
 
-@media (min-width: 80rem) {
+@media not all and (min-width: 80rem) {
   .searchCollapseXl {
-    flex: 1 1 var(--dbm-navbar-search-min-width);
+    flex: 0 0 auto;
   }
 
   .searchCollapseXl .searchField {
-    display: block;
+    display: none;
   }
 
   .searchCollapseXl .searchButton {
-    display: none;
+    display: inline-flex;
   }
 }
 
-@media (min-width: 96rem) {
+@media not all and (min-width: 96rem) {
   .searchCollapse2xl {
-    flex: 1 1 var(--dbm-navbar-search-min-width);
+    flex: 0 0 auto;
   }
 
   .searchCollapse2xl .searchField {
-    display: block;
+    display: none;
   }
 
   .searchCollapse2xl .searchButton {
-    display: none;
+    display: inline-flex;
   }
 }
 
-@media (min-width: 120rem) {
+@media not all and (min-width: 120rem) {
   .searchCollapse3xl {
-    flex: 1 1 var(--dbm-navbar-search-min-width);
+    flex: 0 0 auto;
   }
 
   .searchCollapse3xl .searchField {
-    display: block;
+    display: none;
   }
 
   .searchCollapse3xl .searchButton {
-    display: none;
+    display: inline-flex;
   }
 }
 
@@ -413,8 +537,12 @@ a.brand:focus-visible,
 
 /* --- The primary links --- */
 
+/* The links' text size, weight and case come from their navigation, so one `style` (or `className`) on `Navbar.Links` sets them for every link
+   in it: a link takes its parent's (`inherit`). */
 .links {
   min-inline-size: 0;
+  font-size: var(--dbm-font-size-sm);
+  font-weight: var(--dbm-font-weight-medium);
 }
 
 .list {
@@ -439,8 +567,8 @@ a.brand:focus-visible,
   padding-inline: var(--dbm-space-3);
   border-radius: var(--dbm-radius-md);
   color: var(--dbm-text-secondary);
-  font-size: var(--dbm-font-size-sm);
-  font-weight: var(--dbm-font-weight-medium);
+  font-size: inherit;
+  font-weight: inherit;
   text-decoration: none;
   white-space: nowrap;
   transition:
@@ -448,7 +576,7 @@ a.brand:focus-visible,
     color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
 }
 
-.sizeLg .link {
+.sizeLg .links {
   font-size: var(--dbm-font-size-base);
 }
 
@@ -656,8 +784,12 @@ a.brand:focus-visible,
 }
 
 /* Quieter links (`quiet`): smaller text in the secondary colour, for a courtesy row; a target is still 24 pixels. */
-.quiet .link {
+.quiet.links {
   font-size: var(--dbm-font-size-xs);
+}
+
+.quiet.panelNav {
+  font-size: var(--dbm-font-size-sm);
 }
 
 .quiet .link:not(.current) {
@@ -671,6 +803,8 @@ a.brand:focus-visible,
 
 .panelNav {
   display: block;
+  font-size: var(--dbm-font-size-base);
+  font-weight: var(--dbm-font-weight-medium);
 }
 
 .panelList {
@@ -681,13 +815,7 @@ a.brand:focus-visible,
 .panelList .link {
   inline-size: 100%;
   min-block-size: var(--dbm-icon-button-size-md);
-  font-size: var(--dbm-font-size-base);
   white-space: normal;
-}
-
-/* A quiet set in the panel is a step smaller than the others there (declared after the rule above, which would otherwise win). */
-.quiet .panelList .link {
-  font-size: var(--dbm-font-size-sm);
 }
 
 /* --- Collapsing: one class per step, set on the root ---

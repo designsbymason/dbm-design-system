@@ -59,6 +59,15 @@ const hideBelowClass: Record<NonNullable<NavbarActionProps["hideBelow"]>, string
   "3xl": styles.hideBelow3xl,
 };
 
+const brandCenterClass: Record<Exclude<NavbarCollapseBelow, "never">, string | undefined> = {
+  sm: styles.brandCenterSm,
+  md: styles.brandCenterMd,
+  lg: styles.brandCenterLg,
+  xl: styles.brandCenterXl,
+  "2xl": styles.brandCenter2xl,
+  "3xl": styles.brandCenter3xl,
+};
+
 const collapseClass: Record<NavbarCollapseBelow, string | undefined> = {
   sm: styles.collapseSm,
   md: styles.collapseMd,
@@ -389,14 +398,14 @@ NavbarRoot.displayName = "Navbar";
  * the brand's look on a router link.
  */
 const NavbarBrand = forwardRef<HTMLElement, NavbarBrandProps>(
-  ({ href, asChild = false, className, children, ...props }, ref) => {
+  ({ href, asChild = false, centerBelow = "never", className, children, ...props }, ref) => {
     const Component = asChild ? Slot : href !== undefined ? "a" : "div";
     return (
       <Component
         {...props}
         {...(href !== undefined ? { href } : {})}
         ref={ref as never}
-        className={cx(styles.brand, className)}
+        className={cx(styles.brand, centerBelow !== "never" && brandCenterClass[centerBelow], className)}
       >
         {children}
       </Component>
@@ -684,16 +693,17 @@ NavbarSkipLink.displayName = "Navbar.SkipLink";
  * place one yourself to put it elsewhere or give it another icon.
  */
 const NavbarMenuButton = forwardRef<HTMLButtonElement, NavbarMenuButtonProps>(
-  ({ icon = ListIcon, className, "aria-label": ariaLabel, ...props }, ref) => {
+  ({ icon = ListIcon, variant = "ghost", size: ownSize, className, "aria-label": ariaLabel, ...props }, ref) => {
     const { labels, size: barSize } = useNavbarContext("Navbar.MenuButton");
-    const size = useContext(NavbarRowContext)?.size ?? barSize;
+    const rowSize = useContext(NavbarRowContext)?.size;
+    const size = ownSize ?? rowSize ?? barSize;
     return (
       <Drawer.Trigger asChild>
         <IconButton
           {...props}
           ref={ref}
           icon={icon}
-          variant="ghost"
+          variant={variant}
           size={size}
           aria-label={ariaLabel ?? labels.menu}
           className={cx(styles.menuButton, className)}

@@ -62,9 +62,9 @@ export const playgroundOrder = [
   "aria-label",
   "id",
 ];
-export const brandPropOrder = ["children", "href", "asChild", "aria-label", "id", "className", "style", "data-testid"];
+export const brandPropOrder = ["children", "href", "asChild", "centerBelow", "aria-label", "id", "className", "style", "data-testid"];
 export const rowPropOrder = ["children", "variant", "size", "contained", "sticky", "id", "className", "style", "data-testid"];
-export const searchPropOrder = ["value", "collapseBelow", "size", "closeOnSubmit", "aria-label", "id", "className", "style", "data-testid"];
+export const searchPropOrder = ["value", "collapseBelow", "size", "buttonVariant", "closeOnSubmit", "aria-label", "id", "className", "style", "data-testid"];
 export const linksPropOrder = ["children", "align", "quiet", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
 export const linkPropOrder = ["children", "href", "icon", "badge", "external", "current", "disabled", "asChild", "aria-label", "id", "className", "style", "data-testid"];
 export const groupPropOrder = ["label", "children", "current", "defaultOpen", "disabled", "align", "aria-label", "id", "className", "style", "data-testid"];
@@ -72,7 +72,7 @@ export const actionPropOrder = ["hideBelow", "children", "id", "className", "sty
 export const panelActionsPropOrder = ["children", "id", "className", "style", "data-testid"];
 export const skipLinkPropOrder = ["href", "children", "id", "className", "style", "data-testid"];
 export const actionsPropOrder = ["children", "id", "className", "style", "data-testid"];
-export const menuButtonPropOrder = ["icon", "aria-label", "id", "className", "style", "data-testid"];
+export const menuButtonPropOrder = ["icon", "variant", "size", "aria-label", "id", "className", "style", "data-testid"];
 
 <Meta of={NavbarStories} />
 
@@ -209,17 +209,22 @@ for a bar that sits over a hero or a coloured page.
 
 ### A header of several rows
 
-A `Navbar.Row` is a band of the one `<header>`: here a courtesy strip, the row with the logo, the search field and the account
-buttons, and a row of categories. Each row can set its own `variant`, `size` and `contained`. Give each `Navbar.Links` its own name, since
-they are separate landmarks.
+A `Navbar.Row` is a band of the one `<header>`, and each can set its own `variant`, `size` and `contained`. Here: a thin courtesy strip
+(`size="xs"`, with `quiet` links); a taller row (`size="lg"`) with the logo, a smaller search field (`size="sm"`) and small tertiary icon buttons;
+and a smaller row (`size="sm"`) of primary links, centred (`align="center"`), in capitals and semibold (a `style` on `Navbar.Links` sets the text of every
+link in it), with none marked current, as on a home page. Give each `Navbar.Links` its own name, since they are separate landmarks.
+
+On a phone the same header lays itself out differently: the menu button and the search button come first, the logo (`Navbar.Brand`'s
+`centerBelow`) is centred, and the other buttons are at the end. `Navbar.MenuButton` takes a `variant` and a `size` and `Navbar.Search` a `buttonVariant`
+so they can match the icon buttons beside them. Narrow the window to see it.
 
 <Canvas of={NavbarStories.Rows} />
 
 ### Several sets of links in the menu panel
 
 Below the collapse width, every `Navbar.Links` puts its links into the one menu panel, in the order written, with a line between the sets.
-The `quiet` ones, a courtesy row's, come last. The automatic menu button goes at the end of the row with the brand, and a row that held only links goes with them, so the bar is not left with
-empty bands. This demo collapses below the widest step so the panel shows on any window narrower than 1920px.
+The `quiet` ones, a courtesy row's, come last. Without a `Navbar.MenuButton` of your own, the button goes at the end of the row with the brand; here it is placed first,
+beside the search button. A row that held only links goes with them, so the bar is not left with empty bands. This demo collapses below the widest step so the panel shows on any window narrower than 1920px.
 
 <Canvas of={NavbarStories.RowsInThePanel} />
 
@@ -544,24 +549,30 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 {/* Links centred between the brand and the actions */}
 <Navbar.Links align="center">…</Navbar.Links>
 
-{/* A header of several rows: a strip that scrolls away, the logo and search row, a row of categories */}
+{/* A header of several rows: a thin strip that scrolls away, a taller logo row (on a phone: menu and search buttons, a centred logo, the other
+    buttons), and a small row of links, centred, in capitals, none current (a home page) */}
 <Navbar sticky>
-  <Navbar.Row size="xs" variant="filled" sticky={false}>
+  <Navbar.Row size="xs" variant="outlined" sticky={false}>
     <Navbar.Links aria-label="Help" quiet align="end">
       <Navbar.Link href="/help">Help</Navbar.Link>
       <Navbar.Link href="/orders">Track an order</Navbar.Link>
     </Navbar.Links>
   </Navbar.Row>
-  <Navbar.Row variant="ghost">
-    <Navbar.Brand href="/">dbM</Navbar.Brand>
-    <Navbar.Search placeholder="Search products" onSearch={(query) => search(query)} />
+  <Navbar.Row size="lg" variant="outlined">
+    <Navbar.MenuButton variant="tertiary" size="sm" />
+    <Navbar.Brand href="/" centerBelow="md">dbM</Navbar.Brand>
+    <Navbar.Search size="sm" buttonVariant="tertiary" placeholder="Search products" onSearch={(query) => search(query)} />
     <Navbar.Actions>
-      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="ghost" />
+      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" size="sm" />
     </Navbar.Actions>
   </Navbar.Row>
-  <Navbar.Row variant="outlined">
-    <Navbar.Links aria-label="Categories">
-      <Navbar.Link href="/women" current>Women</Navbar.Link>
+  <Navbar.Row size="sm" variant="outlined">
+    <Navbar.Links
+      aria-label="Categories"
+      align="center"
+      style={{ fontSize: "var(--dbm-font-size-xs)", fontWeight: "var(--dbm-font-weight-semibold)", textTransform: "uppercase" }}
+    >
+      <Navbar.Link href="/women">Women</Navbar.Link>
       <Navbar.Link href="/men">Men</Navbar.Link>
     </Navbar.Links>
   </Navbar.Row>
@@ -623,7 +634,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 <TokenRow token="font-weight.medium" usage="a link" />
 <TokenRow token="navbar.search-min-width / navbar.search-max-width" usage="the width the search field wants in the bar, and the widest it grows" />
 <TokenRow token="font-size.xs" usage="a quiet link's text" />
-<TokenRow token="icon-button.size.xs / icon-button.size.sm / icon-button.size.md / icon-button.size.lg" usage="the bar's height at each size: its menu button's height, plus room, and the panel's link height" />
+<TokenRow token="icon-button.size.sm / icon-button.size.md / icon-button.size.lg" usage="the bar's height at each size: its menu button's height, plus room, and the panel's link height" />
 <TokenRow token="z-index.fixed" usage="the skip link, drawn over the top corner of the page while it has focus" />
 <TokenRow token="space.px" usage="the marker that tells a sticky bar it is stuck is cancelled by this much" />
 <TokenRow token="space.1" usage="the gap between links; the room above and below a small bar; the focus ring's offset" />

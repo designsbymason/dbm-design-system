@@ -25,6 +25,13 @@ const meta: Meta<typeof Navbar.Search> = {
       options: ["xs", "sm", "md", "lg"],
       description: "This field's size, in place of its row's.",
     },
+    buttonVariant: {
+      control: "select",
+      options: ["primary", "secondary", "tertiary", "ghost", "destructive"],
+      description:
+        "The look of the search button the field becomes below collapseBelow: any IconButton variant, so it can match the icon buttons beside it.",
+      table: { defaultValue: { summary: '"ghost"' } },
+    },
     closeOnSubmit: {
       control: "boolean",
       description: "Closes the sheet when Enter is pressed in its field, so a phone returns to the page. No effect in the bar.",

@@ -1293,6 +1293,8 @@ describe("Navbar rows that scroll away", () => {
   });
 });
 
+// jsdom matches no media query, so below its collapse width (the stylesheet's `@media not all and (min-width: …)`) the field stays on
+// show and the button, which only that media rule shows, is `display: none`: the tests read the button with `hidden: true`.
 describe("Navbar.Search", () => {
   it("is a named search landmark with a field, and a button for it below the collapse width", () => {
     render(
@@ -1302,7 +1304,7 @@ describe("Navbar.Search", () => {
     );
     const landmark = screen.getByRole("search", { hidden: true });
     expect(landmark).toHaveAttribute("aria-label", "Search");
-    expect(within(landmark).getByRole("button", { name: "Search" })).toBeInTheDocument();
+    expect(within(landmark).getByLabelText("Search", { selector: "button" })).toBeInTheDocument();
     expect(within(landmark).getByRole("searchbox", { hidden: true })).toBeInTheDocument();
   });
 
@@ -1361,7 +1363,7 @@ describe("Navbar.Search", () => {
         <Navbar.Search />
       </Navbar>,
     );
-    const button = screen.getByRole("button", { name: "Search" });
+    const button = screen.getByLabelText("Search", { selector: "button" });
     await user.click(button);
     const sheet = await screen.findByRole("dialog", { name: "Search" });
     const field = within(sheet).getByRole("searchbox", { name: "Search" });
@@ -1379,7 +1381,7 @@ describe("Navbar.Search", () => {
         <Navbar.Search onSearch={onSearch} />
       </Navbar>,
     );
-    await user.click(screen.getByRole("button", { name: "Search" }));
+    await user.click(screen.getByLabelText("Search", { selector: "button" }));
     await user.type(within(await screen.findByRole("dialog")).getByRole("searchbox"), "shoes{Enter}");
     expect(onSearch).toHaveBeenCalledWith("shoes");
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
@@ -1388,7 +1390,7 @@ describe("Navbar.Search", () => {
         <Navbar.Search onSearch={onSearch} closeOnSubmit={false} />
       </Navbar>,
     );
-    await user.click(screen.getByRole("button", { name: "Search" }));
+    await user.click(screen.getByLabelText("Search", { selector: "button" }));
     await user.type(within(await screen.findByRole("dialog")).getByRole("searchbox"), "hats{Enter}");
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
@@ -1404,7 +1406,7 @@ describe("Navbar.Search", () => {
       );
     }
     render(<Controlled />);
-    await user.click(screen.getByRole("button", { name: "Search" }));
+    await user.click(screen.getByLabelText("Search", { selector: "button" }));
     const sheetField = within(await screen.findByRole("dialog")).getByRole("searchbox");
     await user.type(sheetField, "boots");
     expect(sheetField).toHaveValue("boots");
@@ -1424,7 +1426,7 @@ describe("Navbar.Search", () => {
         <Navbar.Search />
       </Navbar>,
     );
-    await user.click(within(second.container).getByRole("button", { name: "Search" }));
+    await user.click(within(second.container).getByLabelText("Search", { selector: "button" }));
     expect(await axe(await screen.findByRole("dialog"))).toHaveNoViolations();
   });
 });
@@ -1448,5 +1450,105 @@ describe("Navbar.Links quiet and the xs size", () => {
   it("draws a bar or a row at the xs step", () => {
     render(<Basic size="xs" />);
     expect(screen.getByRole("banner").firstElementChild).toHaveClass(styles.sizeXs!);
+  });
+});
+
+describe("Navbar layout options", () => {
+  it("marks a brand that centres below a step, and a brand that doesn't centre has no mark", () => {
+    const { rerender } = render(
+      <Navbar>
+        <Navbar.Brand href="/" centerBelow="md" data-testid="brand">
+          dbM
+        </Navbar.Brand>
+      </Navbar>,
+    );
+    expect(screen.getByTestId("brand")).toHaveClass(styles.brandCenterMd!);
+    rerender(
+      <Navbar>
+        <Navbar.Brand href="/" data-testid="brand">
+          dbM
+        </Navbar.Brand>
+      </Navbar>,
+    );
+    expect(screen.getByTestId("brand").className).not.toMatch(/brandCenter/);
+    rerender(
+      <Navbar>
+        <Navbar.Brand href="/" centerBelow="never" data-testid="brand">
+          dbM
+        </Navbar.Brand>
+      </Navbar>,
+    );
+    expect(screen.getByTestId("brand").className).not.toMatch(/brandCenter/);
+  });
+
+  it("takes a variant and a size on the menu button, in place of the quiet one and its row's", () => {
+    const { rerender } = render(
+      <Navbar>
+        <Navbar.Row size="lg">
+          <Navbar.MenuButton aria-label="Open" />
+        </Navbar.Row>
+      </Navbar>,
+    );
+    const plain = screen.getByRole("button", { name: "Open" }).className;
+    rerender(
+      <Navbar>
+        <Navbar.Row size="lg">
+          <Navbar.MenuButton aria-label="Open" variant="tertiary" size="sm" />
+        </Navbar.Row>
+      </Navbar>,
+    );
+    const styled = screen.getByRole("button", { name: "Open" }).className;
+    expect(styled).not.toBe(plain);
+    expect(styled).toMatch(/Tertiary/i);
+    expect(styled).toMatch(/sizeSm/);
+    expect(plain).toMatch(/Ghost/i);
+    expect(plain).toMatch(/sizeLg/);
+  });
+
+  it("takes a look for the search button it becomes", () => {
+    render(
+      <Navbar>
+        <Navbar.Search buttonVariant="tertiary" size="sm" />
+      </Navbar>,
+    );
+    const button = screen.getByLabelText("Search", { selector: "button" });
+    expect(button.className).toMatch(/Tertiary/i);
+    expect(button.className).toMatch(/sizeSm/);
+  });
+
+  it("draws the search sheet with a small heading and a medium field", async () => {
+    const user = userEvent.setup();
+    render(
+      <Navbar>
+        <Navbar.Search />
+      </Navbar>,
+    );
+    await user.click(screen.getByLabelText("Search", { selector: "button" }));
+    const sheet = await screen.findByRole("dialog", { name: "Search" });
+    expect(within(sheet).getByRole("heading", { name: "Search" }).className).toMatch(/Lg/);
+    expect(within(sheet).getByRole("searchbox").parentElement!.className).toMatch(/sizeMd/);
+  });
+
+  it("lets a style on the links set the text of every link in them", () => {
+    render(
+      <Navbar collapseBelow="never">
+        <Navbar.Links aria-label="Shop" style={{ textTransform: "uppercase", fontWeight: 600 }}>
+          <Navbar.Link href="/a">A</Navbar.Link>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    expect(screen.getByRole("navigation")).toHaveStyle({ textTransform: "uppercase", fontWeight: "600" });
+  });
+
+  it("draws a bar with no current link when none is marked", () => {
+    render(
+      <Navbar collapseBelow="never">
+        <Navbar.Links>
+          <Navbar.Link href="/a">A</Navbar.Link>
+          <Navbar.Link href="/b">B</Navbar.Link>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    expect(document.querySelector('[aria-current="page"]')).toBeNull();
   });
 });
