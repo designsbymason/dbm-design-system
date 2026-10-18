@@ -680,8 +680,8 @@ NavbarSkipLink.displayName = "Navbar.SkipLink";
 
 /**
  * The button that opens the menu panel below the `collapseBelow` width, an `IconButton` that is the panel's `Drawer`
- * trigger. Drawn for you at the bar's end when `Navbar.Links` is present; place one yourself to put it elsewhere or give it
- * another icon.
+ * trigger. Drawn for you when `Navbar.Links` is present, at the end of the row with the brand (the only row, in a bar with none);
+ * place one yourself to put it elsewhere or give it another icon.
  */
 const NavbarMenuButton = forwardRef<HTMLButtonElement, NavbarMenuButtonProps>(
   ({ icon = ListIcon, className, "aria-label": ariaLabel, ...props }, ref) => {

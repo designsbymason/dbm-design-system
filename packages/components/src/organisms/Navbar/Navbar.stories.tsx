@@ -93,7 +93,7 @@ const meta: Meta<PlaygroundArgs> = {
   ],
   argTypes: {
     children: readOnly(
-      "Navbar.Brand, Navbar.Links, Navbar.Actions and optionally Navbar.MenuButton, in reading order. The Playground draws a fixed bar.",
+      "The bar's parts, in reading order: directly (Navbar.Brand, Navbar.Links, Navbar.Search, Navbar.Actions), or in Navbar.Rows. The Playground draws a fixed one-row bar; see the stories below for rows and search.",
     ),
     variant: {
       control: "select",
@@ -184,7 +184,7 @@ const meta: Meta<PlaygroundArgs> = {
       description: "The reading direction, passed to the bar and the menu panel. Not read from the page.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
-    labels: readOnly("The text the bar supplies itself: menu, navigation, close, skipLink and externalLink."),
+    labels: readOnly("The text the bar supplies itself: menu, navigation, close, skipLink, externalLink and search."),
     "aria-label": {
       control: "text",
       description: "Names the banner landmark, for a page with more than one header. Empty leaves it unnamed.",

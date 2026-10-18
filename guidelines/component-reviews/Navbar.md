@@ -88,6 +88,7 @@ Eleventh organism, built 2026-10-17 with the `06-engineering-standards.md` §9 c
   - The search sheet's input is the text line inside a taller field box, so a 24px target check measures the box.
   - The checks that read the bar's surface and height now read the first row's, since that's where it lives.
 - **Checks added:** unit tests for rows, their defaults and overrides, the menu button's row, fragments, the shared panel and its order, the warnings, the search landmark, the sheet and a controlled field, the scroll-away measure and the stuck state, `quiet` and `xs`, plus server render and hydration with rows; and real-browser checks for the stacked heights, the search width with room and when crowded, the panel's order and line, the search sheet's open, focus and close, the strip scrolling away while the rest sticks, and hiding the whole bar with an offset. Three were run against a deliberately broken stylesheet or component to see them fail.
+- **Prose brought up to date after it:** the Docs, stories, types and JSDoc no longer say parts must be direct children (the bar looks through fragments and into rows), the `labels` and `children` descriptions name `search`, rows and `Navbar.Search`, the menu button's JSDoc says which row it goes in, and the Code examples gain a rows header, a controlled search and `quiet` links.
 - **Not verified:** a screen reader on the search landmark and the sheet, a real finger on the sheet, and a header taller than the window with the strip scrolling away on a small screen.
 
 ## Checks run

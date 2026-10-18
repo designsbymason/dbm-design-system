@@ -11,7 +11,7 @@ const meta: Meta<typeof Navbar> = {
     children: {
       control: false,
       description:
-        "Navbar.SkipLink first if there is one, then Navbar.Brand, Navbar.Links, Navbar.Actions, and optionally Navbar.PanelActions (drawn only in the menu panel's footer) and Navbar.MenuButton, in reading order. Direct children: a part in a fragment isn't noticed for the automatic menu button or the panel's footer.",
+        "Either the parts directly (Navbar.SkipLink first if there is one, then Navbar.Brand, Navbar.Links, Navbar.Search, Navbar.Actions), drawn as one row, or one or more Navbar.Rows holding them; and optionally Navbar.PanelActions (drawn only in the menu panel's footer) and Navbar.MenuButton. The bar finds the links, the panel actions and the menu button among its children and in its rows, through fragments; one wrapped in another component still draws but isn't noticed.",
     },
     variant: {
       control: "select",
@@ -116,7 +116,7 @@ const meta: Meta<typeof Navbar> = {
     labels: {
       control: false,
       description:
-        "The text the bar supplies itself: menu (the button's name and the panel's title), navigation, close, skipLink (the skip link's text) and externalLink (the cue read after an external link).",
+        "The text the bar supplies itself: menu (the button's name and the panel's title), navigation, close, skipLink (the skip link's text), externalLink (the cue read after an external link) and search (the name of Navbar.Search's field, button and sheet).",
     },
     "aria-label": {
       control: "text",

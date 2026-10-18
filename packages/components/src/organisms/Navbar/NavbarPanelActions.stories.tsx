@@ -12,7 +12,7 @@ const meta: Meta<typeof Navbar.PanelActions> = {
     children: {
       control: false,
       description:
-        "What to show at the foot of the menu panel, such as a full-width Sign in button. Drawn only in the panel, never in the bar. Goes directly inside Navbar, not in a fragment or another component.",
+        "What to show at the foot of the menu panel, such as a full-width Sign in button. Drawn only in the panel, never in the bar. Put it among the bar's children or in a row (a fragment is fine; another component around it hides it from the bar).",
     },
     id: { control: "text", description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },

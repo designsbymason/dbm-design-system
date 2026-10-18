@@ -116,7 +116,7 @@ export function DemoNavbar({
           </Navbar.Action>
         </Navbar.Actions>
       )}
-      {/* a direct child, not inside a fragment: the bar looks for it among its children to draw the panel's footer */}
+      {/* the bar looks for the panel actions among its children and rows to draw the panel's footer, so keep it out of another component */}
       {actions === "responsive" && (
         <Navbar.PanelActions>
           <Button>Sign in</Button>

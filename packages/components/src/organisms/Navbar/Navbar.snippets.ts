@@ -39,7 +39,7 @@ ${navbar('variant="filled"')}`,
 ${navbar('currentVariant="solid"')}`,
 
   responsiveActions: `{/* Navbar.Action hideBelow takes an action out of the bar below a width; Navbar.PanelActions is where it comes
-    back, at the foot of the menu panel. PanelActions is drawn only in the panel, and goes directly inside Navbar. This demo uses
+    back, at the foot of the menu panel. PanelActions is drawn only in the panel; put it among the bar's children or in a row. This demo uses
     the widest step ("3xl") for both so it shows on any window narrower than 1920px; an app picks the step that suits it. */}
 <Navbar collapseBelow="3xl">
   <Navbar.Brand href="/">dbM</Navbar.Brand>

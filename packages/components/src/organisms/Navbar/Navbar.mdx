@@ -111,9 +111,9 @@ narrow the window to see it.
 
 `Navbar` is the `<header>` element, so it also accepts any other native `<header>` attribute beyond
 what's listed here (e.g. `onFocus`, `title`), passed straight through. `dir` is set by the bar and can't
-be replaced by a same-named attribute. Parts are found among the bar's direct children (the automatic
-menu button looks for `Navbar.Links` and `Navbar.MenuButton` there); a part wrapped in a fragment or
-another component still draws, but isn't noticed.
+be replaced by a same-named attribute. The bar finds `Navbar.Links`, `Navbar.MenuButton` and `Navbar.PanelActions` among its children and
+in its `Navbar.Row`s, looking through fragments, to draw the menu panel and its button; one wrapped in another component still draws,
+but isn't noticed.
 
 <PropertiesTable of={NavbarRootStories} order={propOrder} />
 
@@ -171,8 +171,8 @@ wrap an action in this only to hide it.
 
 ### Navbar.PanelActions properties
 
-What the menu panel shows at its foot, drawn only there. A direct child of `Navbar` (a part wrapped in a
-fragment or another component isn't noticed, so the panel draws no footer for it). Also accepts any other native
+What the menu panel shows at its foot, drawn only there. Put it among the bar's children or in a row, in a fragment if you like (a part
+wrapped in another component isn't noticed, so the panel draws no footer for it). Also accepts any other native
 `<div>` attribute beyond what's listed here.
 
 <PropertiesTable of={NavbarPanelActionsStories} order={panelActionsPropOrder} />
@@ -193,7 +193,7 @@ The bar's end. Also accepts any other native `<div>` attribute beyond what's lis
 ### Navbar.MenuButton properties
 
 The button that opens the menu panel below the collapse width. Also accepts any other native `<button>`
-attribute beyond what's listed here. It is drawn for you at the bar's end when `Navbar.Links` is present;
+attribute beyond what's listed here. It is drawn for you when `Navbar.Links` is present, at the end of the row with the brand;
 place one yourself to put it elsewhere or give it another icon.
 
 <PropertiesTable of={NavbarMenuButtonStories} order={menuButtonPropOrder} />
@@ -543,6 +543,32 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 
 {/* Links centred between the brand and the actions */}
 <Navbar.Links align="center">…</Navbar.Links>
+
+{/* A header of several rows: a strip that scrolls away, the logo and search row, a row of categories */}
+<Navbar sticky>
+  <Navbar.Row size="xs" variant="filled" sticky={false}>
+    <Navbar.Links aria-label="Help" quiet align="end">
+      <Navbar.Link href="/help">Help</Navbar.Link>
+      <Navbar.Link href="/orders">Track an order</Navbar.Link>
+    </Navbar.Links>
+  </Navbar.Row>
+  <Navbar.Row variant="ghost">
+    <Navbar.Brand href="/">dbM</Navbar.Brand>
+    <Navbar.Search placeholder="Search products" onSearch={(query) => search(query)} />
+    <Navbar.Actions>
+      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="ghost" />
+    </Navbar.Actions>
+  </Navbar.Row>
+  <Navbar.Row variant="outlined">
+    <Navbar.Links aria-label="Categories">
+      <Navbar.Link href="/women" current>Women</Navbar.Link>
+      <Navbar.Link href="/men">Men</Navbar.Link>
+    </Navbar.Links>
+  </Navbar.Row>
+</Navbar>
+
+{/* The search field below its step is a button that opens a sheet; keep the two fields in step with value and onChange */}
+<Navbar.Search collapseBelow="lg" value={query} onChange={(event) => setQuery(event.target.value)} />
 
 {/* Transparent over a hero until it sticks, and out of the way while reading */}
 <Navbar sticky variant="ghost" hideOnScroll>
