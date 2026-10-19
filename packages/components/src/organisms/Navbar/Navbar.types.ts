@@ -394,7 +394,7 @@ export interface NavbarLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEle
   children?: ReactNode;
   /** Where the link goes. With `asChild`, put it on the child instead. */
   href?: string;
-  /** An icon before the text, a component reference. It follows the text's colour, so it tracks hover and the current look. */
+  /** An icon before the text, a component reference. It follows the text's colour, so it tracks the current look. */
   icon?: PhosphorIcon;
   /**
    * What to show after the text, such as a count or a dot: plain text, drawn in `Badge`'s subtle brand look at the link's size, or a

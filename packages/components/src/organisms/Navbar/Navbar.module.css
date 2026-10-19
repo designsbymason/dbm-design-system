@@ -754,11 +754,10 @@ a.brand:focus-visible,
   min-inline-size: var(--navbar-link-badge, var(--dbm-space-5));
 }
 
-/* Hovering a link tints it and turns its text, and its icon (which takes the link's colour), to the brand colour: `text.brand` on
-   `bg.brand-subtle` is 5.8:1 or more in every theme (7.0 / 8.3 Purple, 5.8 / 7.2 Emerald, light / dark). */
+/* Hovering a link tints it, and nothing else changes: the text and the icon keep their colour, as an item in a menu or a list does. The
+   tint is the signal; `text.secondary` on `bg.brand-subtle` is 6.0:1 or more in every theme. */
 .link:hover {
   background-color: var(--dbm-bg-brand-subtle);
-  color: var(--dbm-text-brand);
 }
 
 .link:focus-visible {
@@ -795,12 +794,10 @@ a.brand:focus-visible,
   color: var(--dbm-text-primary);
 }
 
-/* Under the pointer the current link's text, and its icon, turn brand-coloured on the tint, as any link's do (`text.brand` on
-   `bg.brand-subtle` is 5.8:1 or more in every theme). The `subtle` look is already `text.brand` and the `solid` one keeps
-   `text.on-brand`, since brand text on its brand fill would vanish. */
+/* Under the pointer the current link takes the tint like any link, and keeps its own text colour (`text.primary` here, `text.brand` in the
+   `subtle` look, `text.on-brand` in the `solid` one). */
 .currentUnderline:hover {
   background-color: var(--dbm-bg-brand-subtle);
-  color: var(--dbm-text-brand);
 }
 
 .currentUnderline::after {
@@ -970,10 +967,6 @@ a.brand:focus-visible,
 
 .quiet .link:not(.current) {
   color: var(--dbm-text-secondary);
-}
-
-.quiet .link:not(.current):hover {
-  color: var(--dbm-text-brand);
 }
 
 

@@ -541,7 +541,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
   accessibility tree; the panel's copy is what a screen reader finds.
 - Every control is at least 24 by 24 pixels. The focus ring is the standard two-pixel outline in
   `border.focus`.
-- The motion is a short colour fade on hover, and the underline growing in when a link becomes the current one (from the link's start edge in the bar, from its top in the menu panel), both removed under `prefers-reduced-motion`, where the line is simply there. In
+- The motion is a short fade of the tint on hover (the text and icon keep their colour, as a menu item's do), and the underline growing in when a link becomes the current one (from the link's start edge in the bar, from its top in the menu panel), both removed under `prefers-reduced-motion`, where the line is simply there. In
   forced-colours mode a filled or stuck bar and the current link get a one-pixel outline, since a fill or
   shadow alone would vanish.
 - `subtle` uses `text.brand` on `bg.brand-subtle`, the pairing `Tabs` uses; `solid` uses `text.on-brand` on `bg.brand`, the pairing
@@ -679,7 +679,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 <TokenRow token="bg.brand-subtle / bg.brand-subtle-hover" usage="a link's hover, and the current link's fill and its hover" />
 <TokenRow token="text.primary" usage="the bar's text and the brand" />
 <TokenRow token="text.secondary" usage="a link at rest, and a disabled one" />
-<TokenRow token="text.brand" usage="the current link, in the subtle look, and a hovered link and its icon (the current link's too, in the underline look)" />
+<TokenRow token="text.brand" usage="the current link, in the subtle look" />
 <TokenRow token="text.on-brand" usage="the current link's text in the solid look" />
 <TokenRow token="bg.brand / bg.brand-hover" usage="the solid look's fill and its hover, and the underline look's line" />
 <TokenRow token="icon.on-brand" usage="the focus ring on the solid look, drawn inside the link where the standard ring would be unreadable" />

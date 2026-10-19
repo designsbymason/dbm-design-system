@@ -1425,8 +1425,8 @@ async function pointAt(element: Element | null) {
   await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y });
 }
 
-export const LinkHoverIsBrand: Story = {
-  name: "A hovered link's text and icon turn brand-coloured on the brand tint, with the contrast text needs",
+export const LinkHoverIsATint: Story = {
+  name: "A hovered link takes the brand tint and nothing else changes: its text and icon keep their colour, with the contrast text needs",
   render: () => (
     <NavbarStage minBlockSize="14rem">
       {(menuContainer) => (
@@ -1438,33 +1438,26 @@ export const LinkHoverIsBrand: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const brandText = tokenColorOf("--dbm-text-brand");
-    const links = ["Pricing", "Docs"].map((name) => canvas.getByRole("link", { name: new RegExp(name) }));
-    for (const link of links) {
-      const resting = getComputedStyle(link).color;
-      expect(resting).not.toBe(brandText);
+    const tint = tokenColorOf("--dbm-bg-brand-subtle");
+    // every link, the current one (Products, in the underline look) and one with an icon among them
+    for (const name of ["Pricing", "Docs", "Products"]) {
+      const link = canvas.getByRole("link", { name: new RegExp(name) });
+      const icon = link.querySelector("svg");
+      const resting = { text: getComputedStyle(link).color, icon: icon ? getComputedStyle(icon).color : undefined, fill: getComputedStyle(link).backgroundColor };
+      expect(resting.fill).not.toBe(tint);
       await pointAt(link);
-      await waitFor(() => expect(getComputedStyle(link).color).toBe(brandText));
+      await waitFor(() => expect(getComputedStyle(link).backgroundColor).toBe(tint));
       await new Promise((resolve) => setTimeout(resolve, 250));
       const style = getComputedStyle(link);
-      expect(style.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+      // the colour of the text and of the icon is what it was
+      expect(style.color).toBe(resting.text);
+      if (icon) expect(getComputedStyle(icon).color).toBe(resting.icon);
+      // and it is still readable on the tint
       expect(contrast(style.color, style.backgroundColor)).toBeGreaterThanOrEqual(4.5);
-      // the icon takes the link's colour, so it is brand-coloured too
-      const icon = link.querySelector("svg");
-      if (icon) expect(getComputedStyle(icon).color).toBe(brandText);
       await pointAt(null);
-      await waitFor(() => expect(getComputedStyle(link).color).toBe(resting));
+      await waitFor(() => expect(getComputedStyle(link).backgroundColor).toBe(resting.fill));
     }
-    // the current link (Products, drawn in the underline look by default) turns brand-coloured under the pointer as well
-    const current = canvas.getByRole("link", { name: "Products" });
-    expect(current).toHaveAttribute("aria-current", "page");
-    expect(getComputedStyle(current).color).not.toBe(brandText);
-    await pointAt(current);
-    await waitFor(() => expect(getComputedStyle(current).color).toBe(brandText));
-    await new Promise((resolve) => setTimeout(resolve, 250));
-    expect(contrast(getComputedStyle(current).color, getComputedStyle(current).backgroundColor)).toBeGreaterThanOrEqual(4.5);
-    await pointAt(null);
-    // the Docs link has an icon in this bar, so the loop above read one at least once
+    expect(canvas.getByRole("link", { name: "Products" })).toHaveAttribute("aria-current", "page");
     expect(canvas.getByRole("link", { name: /Docs/ }).querySelector("svg")).not.toBeNull();
   },
 };
