@@ -121,7 +121,7 @@ but isn't noticed.
 
 ### Navbar.Row properties
 
-One band of the bar. Every row starts from the bar's `variant`, `size` and `contained` and can set its own. Also accepts any other
+One band of the bar. Every row starts from the bar's `variant`, `size`, `linkSize` and `contained` and can set its own. Also accepts any other
 native `<div>` attribute beyond what's listed here. A bar with no rows draws its parts as one row, so a single-row bar needs none.
 
 <PropertiesTable of={NavbarRowStories} order={rowPropOrder} />
@@ -431,7 +431,7 @@ has moved beneath it. In a scrolling box of your own, `scrollContainerRef` names
 
 ### Current page and a disabled link
 
-`current` marks the page the reader is on with `aria-current="page"` and a tinted look; you decide which
+`current` marks the page the reader is on with `aria-current="page"` and the bar's `currentVariant` look (an underline unless you set another); you decide which
 link it is, from your router. A `disabled` link blocks its click and stays in the tab order.
 
 <Canvas of={NavbarStories.CurrentPage} />
@@ -496,7 +496,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
   links; a wide panel of grouped links, with descriptions or images, is a mega-menu, which is `NavigationMenu`.
 - `menuSide="start"` is the right edge in right-to-left text. Pass `dir` on the bar and it reaches the
   panel too, which is drawn in a portal and would otherwise follow the page.
-- Use `labels` to translate the menu button, the navigation's name, the panel's close button, the skip link and the external-link cue.
+- Use `labels` to translate the menu button, the navigation's name, the panel's close button, the skip link, the external-link cue and the search field's name.
 - Rows are for a header with more than one band: the courtesy strip scrolls away when the bar is sticky (`sticky={false}`), the rest sticks as one, and
   the automatic menu button goes at the end of the row with the brand. Put every part in a row once there are rows.
 - Only the links collapse by themselves. A bar with a search field, an account menu and a button can overflow a phone: wrap the ones that
@@ -663,7 +663,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 </Navbar>
 
 {/* Translate what the bar writes itself */}
-<Navbar labels={{ menu: "Menu", navigation: "Main", close: "Close", skipLink: "Skip to content", externalLink: "(opens in a new tab)" }}>
+<Navbar labels={{ menu: "Menu", navigation: "Main", close: "Close", skipLink: "Skip to content", externalLink: "(opens in a new tab)", search: "Search" }}>
   …
 </Navbar>
 
@@ -675,7 +675,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 
 ## Design tokens used
 
-<TokenRow token="bg.surface" usage="an outlined, filled or sticky bar's surface, so what scrolls beneath it doesn't show through" />
+<TokenRow token="bg.surface" usage="an outlined, filled or sticky bar's surface (a frosted bar mixes it with transparency), so what scrolls beneath it doesn't show through" />
 <TokenRow token="bg.brand-subtle / bg.brand-subtle-hover" usage="a link's hover, and the current link's fill and its hover" />
 <TokenRow token="text.primary" usage="the bar's text and the brand" />
 <TokenRow token="text.secondary" usage="a link at rest, and a disabled one" />
@@ -683,23 +683,23 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 <TokenRow token="text.on-brand" usage="the current link's text in the solid look" />
 <TokenRow token="bg.brand / bg.brand-hover" usage="the solid look's fill and its hover, and the underline look's line" />
 <TokenRow token="icon.on-brand" usage="the focus ring on the solid look, drawn inside the link where the standard ring would be unreadable" />
-<TokenRow token="border.default" usage="the line under an outlined bar, and the skip link's edge" />
+<TokenRow token="border.default" usage="the line under an outlined or frosted bar, and the skip link's edge" />
 <TokenRow token="border.focus" usage="the focus ring on the brand and the links" />
-<TokenRow token="border-width.1" usage="the outlined bar's line" />
+<TokenRow token="border-width.1" usage="the outlined and frosted bars' line" />
 <TokenRow token="border-width.2" usage="the focus ring's width, and the underline look's line thickness" />
 <TokenRow token="radius.md" usage="a link's corners" />
 <TokenRow token="radius.full" usage="the underline look's line, and a link's pill shape when rounded" />
 <TokenRow token="radius.sm" usage="the focus ring's corners, on the brand and the links" />
 <TokenRow token="shadow.light.md / shadow.dark.md" usage="a sticky bar's elevation while it is stuck" />
 <TokenRow token="font-family.primary" usage="the bar's typography" />
-<TokenRow token="font-size.sm / font-size.base" usage="a link's text, at the default sizes and at large" />
+<TokenRow token="font-size.sm / font-size.base" usage="a link's text at the `sm` and `md` link sizes, and the menu panel's links" />
 <TokenRow token="opacity.90" usage="the frosted variant's surface, mixed with `bg.surface`" />
 <TokenRow token="space.3" usage="the frosted variant's blur radius, as `Backdrop` draws its own" />
-<TokenRow token="font-size.md / font-size.lg" usage="a link's text at the `lg` and `xl` link sizes (`linkSize`)" />
+<TokenRow token="font-size.md / font-size.lg" usage="a link's text at the `lg` (`font-size.md`) and `xl` (`font-size.lg`) link sizes (`linkSize`)" />
 <TokenRow token="font-weight.bold" usage="the brand" />
 <TokenRow token="font-weight.medium" usage="a link" />
 <TokenRow token="navbar.search-min-width / navbar.search-max-width" usage="the width the search field wants in the bar, and the widest it grows" />
-<TokenRow token="font-size.xs" usage="a quiet link's text" />
+<TokenRow token="font-size.xs" usage="a link's text at the `xs` link size, and so a quiet set's on an `sm` bar" />
 <TokenRow token="icon-button.size.sm / icon-button.size.md / icon-button.size.lg" usage="the bar's height at each size: its menu button's height, plus room, and the panel's link height" />
 <TokenRow token="z-index.fixed" usage="the skip link, drawn over the top corner of the page while it has focus" />
 <TokenRow token="space.px" usage="the marker that tells a sticky bar it is stuck is cancelled by this much" />

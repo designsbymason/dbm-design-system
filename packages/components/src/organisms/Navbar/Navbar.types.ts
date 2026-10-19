@@ -187,8 +187,8 @@ export interface NavbarProps extends Omit<ComponentPropsWithoutRef<"header">, "d
    */
   dir?: NavbarDirection;
   /**
-   * The text the bar supplies itself, with English defaults: the menu button's name, the navigation's name, and the menu
-   * panel's close button.
+   * The text the bar supplies itself, with English defaults: the menu button's name, the navigation's name, the menu panel's
+   * close button, the skip link's text, the external-link cue and the search field's name.
    */
   labels?: Partial<NavbarLabels>;
   /** Names the banner landmark for assistive tech, for a page with more than one header (an article's, say). */
@@ -409,7 +409,7 @@ export interface NavbarLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEle
    */
   external?: boolean;
   /**
-   * Marks the link as the page the reader is on: `aria-current="page"` and a tinted look. The caller decides which one it
+   * Marks the link as the page the reader is on: `aria-current="page"` and the bar's `currentVariant` look (an underline unless set). The caller decides which one it
    * is (from the router), so it stays correct on a server-rendered page.
    * @default false
    */
@@ -445,7 +445,7 @@ export interface NavbarGroupProps extends Omit<ComponentPropsWithoutRef<"button"
   /** The group's `Navbar.Link`s. In the bar they are the items of a floating menu; in the phone panel they are listed under the button. */
   children?: ReactNode;
   /**
-   * Gives the button the tinted look of the current page, for a group that holds it. The caller decides, from the router.
+   * Gives the button the current-page look (the bar's `currentVariant`), for a group that holds it. The caller decides, from the router.
    * Also opens the group in the phone panel, unless `defaultOpen` says otherwise.
    * @default false
    */

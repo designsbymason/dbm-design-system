@@ -17,7 +17,7 @@ const meta: Meta<typeof Navbar.Group> = {
     current: {
       control: "boolean",
       description:
-        "Gives the button the tinted look of the current page, for a group that holds it. The caller decides. Also starts the group expanded in the phone panel, unless defaultOpen says otherwise.",
+        "Gives the button the current-page look (the bar's currentVariant), for a group that holds it. The caller decides. Also starts the group expanded in the phone panel, unless defaultOpen says otherwise.",
       table: { defaultValue: { summary: "false" } },
     },
     defaultOpen: {

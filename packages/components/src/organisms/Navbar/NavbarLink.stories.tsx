@@ -31,7 +31,7 @@ const meta: Meta<typeof Navbar.Link> = {
     },
     current: {
       control: "boolean",
-      description: "Marks the link as the page the reader is on: aria-current=\"page\" and a tinted look. The caller decides which one it is.",
+      description: "Marks the link as the page the reader is on: aria-current=\"page\" and the bar's currentVariant look (an underline unless set). The caller decides which one it is.",
       table: { defaultValue: { summary: "false" } },
     },
     disabled: {

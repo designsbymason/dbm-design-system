@@ -286,7 +286,7 @@ ${navbar('currentVariant="solid"')}`,
     from your router (page is yours). buttonVariant, buttonTone and buttonSize are the button's look, to match the icon buttons beside
     it. The bar's field and the sheet's are two inputs, so pass value and onChange to keep them in step. */}
 <Navbar>
-  <Navbar.Row variant="outlined" columns="auto 1fr auto">
+  <Navbar.Row size="md" variant="outlined" columns="auto 1fr auto">
     <Navbar.Brand href="/">dbM</Navbar.Brand>
     <Navbar.Links align="center">
       <Navbar.Link href="/products" current={page === "products"}>Products</Navbar.Link>
@@ -319,6 +319,7 @@ ${navbar('currentVariant="solid"')}`,
     <Navbar.Links aria-label="Help" quiet align="end">
       <Navbar.Link href="/help">Help</Navbar.Link>
       <Navbar.Link href="/orders">Track an order</Navbar.Link>
+      <Navbar.Link href="/stores">Find a store</Navbar.Link>
     </Navbar.Links>
   </Navbar.Row>
   <Navbar.Row size="lg" variant="outlined" columns="balanced">
@@ -328,13 +329,20 @@ ${navbar('currentVariant="solid"')}`,
     <Navbar.Search size="sm" buttonVariant="tertiary" buttonTone="neutral" buttonSize="md" style={{ marginInline: "auto" }} />
     <Navbar.Actions style={{ marginInlineStart: 0 }}>
       <IconButton icon={UserCircleIcon} aria-label="Account" variant="tertiary" tone="neutral" size="md" />
+      <IconButton icon={ShoppingCartIcon} aria-label="Cart, 2 items" variant="tertiary" tone="neutral" size="md" />
     </Navbar.Actions>
     <Navbar.MenuButton variant="tertiary" tone="neutral" size="md" />
   </Navbar.Row>
   <Navbar.Row size="sm" variant="outlined">
-    <Navbar.Links aria-label="Categories" align="center">
+    <Navbar.Links
+      aria-label="Categories"
+      align="center"
+      style={{ fontWeight: "var(--dbm-font-weight-bold)", textTransform: "uppercase" }}
+    >
       <Navbar.Link href="/women" current={page === "women"}>Women</Navbar.Link>
       <Navbar.Link href="/men" current={page === "men"}>Men</Navbar.Link>
+      <Navbar.Link href="/kids" current={page === "kids"}>Kids</Navbar.Link>
+      <Navbar.Link href="/sale" current={page === "sale"}>Sale</Navbar.Link>
     </Navbar.Links>
   </Navbar.Row>
 </Navbar>`,
