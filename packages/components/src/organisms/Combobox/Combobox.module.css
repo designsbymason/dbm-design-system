@@ -43,26 +43,26 @@
 }
 
 .adornmentSm {
-  --adornment-box: max(var(--dbm-space-6), calc(var(--dbm-icon-size-xs) + 2 * var(--dbm-space-2)));
+  --adornment-box: max(var(--dbm-space-6), calc(var(--dbm-icon-size-sm) + 2 * var(--dbm-space-2)));
   padding: var(--dbm-space-2);
   margin-block: calc((var(--dbm-font-size-sm) * var(--dbm-line-height-tight) - var(--adornment-box)) / 2);
 }
 
 .adornmentMd {
-  --adornment-box: max(var(--dbm-space-6), calc(var(--dbm-icon-size-sm) + 2 * var(--dbm-space-2)));
+  --adornment-box: max(var(--dbm-space-6), calc(var(--dbm-icon-size-md) + 2 * var(--dbm-space-2)));
   padding: var(--dbm-space-2);
   margin-block: calc((var(--dbm-font-size-base) * var(--dbm-line-height-tight) - var(--adornment-box)) / 2);
 }
 
 .adornmentLg {
-  --adornment-box: max(var(--dbm-space-6), calc(var(--dbm-icon-size-md) + 2 * var(--dbm-space-3)));
-  padding: var(--dbm-space-3);
+  --adornment-box: max(var(--dbm-space-6), calc(var(--dbm-icon-size-lg) + 2 * var(--dbm-space-2)));
+  padding: var(--dbm-space-2);
   margin-block: calc((var(--dbm-font-size-md) * var(--dbm-line-height-tight) - var(--adornment-box)) / 2);
 }
 
 .adornmentXl {
-  --adornment-box: max(var(--dbm-space-6), calc(var(--dbm-icon-size-lg) + 2 * var(--dbm-space-3)));
-  padding: var(--dbm-space-3);
+  --adornment-box: max(var(--dbm-space-6), calc(var(--dbm-icon-size-xl) + 2 * var(--dbm-space-2)));
+  padding: var(--dbm-space-2);
   margin-block: calc((var(--dbm-font-size-lg) * var(--dbm-line-height-tight) - var(--adornment-box)) / 2);
 }
 

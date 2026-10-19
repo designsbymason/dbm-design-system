@@ -181,3 +181,7 @@ Same review as `Card`'s and `Table`'s (standard: `07-storybook-and-documentation
 
 ## Change after Finalization, through `Input`: the focus ring (2026-10-11)
 `Input`'s focus ring now sits on the field's own edge (see [Input.md](Input.md)). Nothing in this component's own files changed; it draws with `Input`, so its box takes the new ring. Three-question test: it changes the rendered output of something that existed, as a preference, scoped to a shared atom: partial re-verification through the shared real-browser check, which includes this field. Its own inner controls keep their rings.
+
+## Icons at the input's own step, 2026-10-19 (visual change; stays Finalized)
+
+At explicit direction, following `Input`'s own change (see [Input](Input.md)): the icons this component draws in the field (the leading and trailing icons, the clear and loading ones) are the same step as the field's `size` (`xs` 12px … `xl` 32px) instead of one step below it. The compensating margin and, at `lg` and `xl`, the smaller padding of its button are recomputed as `Input`'s clear button's are. A real-browser check in `Input.checks.stories.tsx` measures the icons and the field's height at every size.

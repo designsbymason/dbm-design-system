@@ -60,3 +60,7 @@ Findings from the review, all fixed:
 - Escape with the list closed passes through, so there is no "press again to clear"; the clear button does that.
 - No type-ahead by first letter and no multi-select: `MultiSelect` builds on this later.
 - Contrast: the one new pairing (the description on the highlighted row) was measured and fixed; the other pairings are the ones `Select` already uses, and were not re-measured here. A check measures the label and description on the highlighted row in all four themes.
+
+## Icons at the input's own step, 2026-10-19 (visual change; stays Finalized)
+
+At explicit direction, following `Input`'s own change (see [Input](Input.md)): the icons this component draws in the field (the leading and trailing icons, the clear and loading ones) are the same step as the field's `size` (`xs` 12px … `xl` 32px) instead of one step below it. The compensating margin and, at `lg` and `xl`, the smaller padding of its button are recomputed as `Input`'s clear button's are. A real-browser check in `Input.checks.stories.tsx` measures the icons and the field's height at every size.

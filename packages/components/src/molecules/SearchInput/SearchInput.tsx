@@ -9,15 +9,15 @@ import type { SearchInputProps } from "./SearchInput.types";
 
 // Shared with Input's own trailing clear-icon convention
 // (`clearIconSizeForInputSize`, Input.tsx) — the leading slot here plays the
-// same visual role (one size step down from SearchInput's own `size`), and
+// same visual role (the same step as SearchInput's own `size`), and
 // the scale happens to cover every size `Spinner` itself accepts too, so
 // one map serves both the icon and the loading-spinner branch below.
-const prefixSizeForInputSize: Record<InputSize, "xs" | "sm" | "md" | "lg"> = {
+const prefixSizeForInputSize: Record<InputSize, "xs" | "sm" | "md" | "lg" | "xl"> = {
   xs: "xs",
-  sm: "xs",
-  md: "sm",
-  lg: "md",
-  xl: "lg",
+  sm: "sm",
+  md: "md",
+  lg: "lg",
+  xl: "xl",
 };
 
 /**

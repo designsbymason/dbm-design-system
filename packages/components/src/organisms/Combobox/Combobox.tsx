@@ -64,13 +64,13 @@ const adornmentClass: Record<ComboboxSize, string | undefined> = {
   xl: styles.adornmentXl,
 };
 
-// One step below the field's own size, the way `Input` sizes its clear icon.
-const adornmentIconSize: Record<ComboboxSize, "xs" | "sm" | "md" | "lg"> = {
+// The same step as the field's own size, the way `Input` sizes its clear icon.
+const adornmentIconSize: Record<ComboboxSize, "xs" | "sm" | "md" | "lg" | "xl"> = {
   xs: "xs",
-  sm: "xs",
-  md: "sm",
-  lg: "md",
-  xl: "lg",
+  sm: "sm",
+  md: "md",
+  lg: "lg",
+  xl: "xl",
 };
 
 const optionIconSize: Record<ComboboxSize, "xs" | "sm" | "md" | "lg"> = {
@@ -826,7 +826,7 @@ export const Combobox = forwardRef<HTMLInputElement, ComboboxProps>(
               onKeyDown={handleKeyDown}
               suffix={
                 <span className={styles.adornments}>
-                  {loading ? <Spinner size="xs" tone="default" /> : null}
+                  {loading ? <Spinner size={adornmentIconSize[size]} tone="default" /> : null}
                   {showClear ? (
                     <button
                       type="button"

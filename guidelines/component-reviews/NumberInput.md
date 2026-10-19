@@ -231,3 +231,7 @@ Same review as `Card`'s and `Table`'s (standard: `07-storybook-and-documentation
 
 ## Change after Finalization, through `Input`: the focus ring (2026-10-11)
 `Input`'s focus ring now sits on the field's own edge (see [Input.md](Input.md)). Nothing in this component's own files changed; it draws with `Input`, so its box takes the new ring. Three-question test: it changes the rendered output of something that existed, as a preference, scoped to a shared atom: partial re-verification through the shared real-browser check, which includes this field. Its own inner controls keep their rings.
+
+## Icons at the input's own step, 2026-10-19 (clear icon only; stays Finalized)
+
+At explicit direction, following `Input`'s own change (see [Input](Input.md)): the clear icon follows `Input` and is now the same step as the field's `size`. The stepper's two carets are deliberately **not** moved: they are stacked in a box one line of text tall, so each button is 7 to 14 pixels high, and a caret at the input's step (up to 32px) could not fit. They stay at `xs` (`sm` at `lg` and `xl`).

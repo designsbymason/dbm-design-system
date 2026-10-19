@@ -7,12 +7,12 @@ import type { InputSize } from "../../atoms/Input";
 import styles from "./PasswordInput.module.css";
 import type { PasswordInputProps } from "./PasswordInput.types";
 
-const toggleIconSizeForInputSize: Record<InputSize, "xs" | "sm" | "md" | "lg"> = {
+const toggleIconSizeForInputSize: Record<InputSize, "xs" | "sm" | "md" | "lg" | "xl"> = {
   xs: "xs",
-  sm: "xs",
-  md: "sm",
-  lg: "md",
-  xl: "lg",
+  sm: "sm",
+  md: "md",
+  lg: "lg",
+  xl: "xl",
 };
 
 const toggleSizeClass: Record<InputSize, string | undefined> = {
