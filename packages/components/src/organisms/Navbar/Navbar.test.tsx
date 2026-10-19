@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { Badge } from "../../atoms/Badge";
 import { Button } from "../../atoms/Button";
 import { Navbar } from "./Navbar";
 import buttonStyles from "../../atoms/Button/Button.module.css";
@@ -555,6 +556,35 @@ describe("Navbar link extras and the frosted variant", () => {
     const [leading, trailing] = [...link.querySelectorAll("svg")];
     expect(leading!.getAttribute("class")).toMatch(/sizeLg/);
     expect(trailing!.getAttribute("class")).toMatch(/sizeMd/);
+  });
+
+  it("draws a Badge passed as the badge as written, with the link's size where it sets none, and never inside another badge", () => {
+    render(
+      <Navbar linkSize="xl" collapseBelow="never">
+        <Navbar.Links aria-label="Main">
+          <Navbar.Link href="/a" badge={<Badge tone="danger" variant="solid">2</Badge>}>
+            Alerts
+          </Navbar.Link>
+          <Navbar.Link href="/b" badge={<Badge tone="success" size="xs">9</Badge>}>
+            Orders
+          </Navbar.Link>
+          <Navbar.Link href="/c" badge="New">
+            Pricing
+          </Navbar.Link>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    const pill = (link: string, text: string) => [...screen.getByRole("link", { name: new RegExp(link) }).querySelectorAll("span")].filter((span) => span.textContent === text);
+    // one pill each, a direct child of the link: a passed Badge is not wrapped in the link's own
+    expect(pill("Alerts", "2")).toHaveLength(1);
+    expect(pill("Alerts", "2")[0]!.parentElement!.tagName).toBe("A");
+    expect(pill("Alerts", "2")[0]!.className).toMatch(/Danger/i);
+    expect(pill("Alerts", "2")[0]!.className).toMatch(/sizeMd/);
+    // its own size wins over the link's
+    expect(pill("Orders", "9")[0]!.className).toMatch(/sizeXs/);
+    expect(pill("Orders", "9")[0]!.className).toMatch(/Success/i);
+    // plain content is the link's own subtle brand badge
+    expect(pill("Pricing", "New")[0]!.className).toMatch(/Brand/i);
   });
 
   it("draws the frosted variant's class on a row and its bar", () => {

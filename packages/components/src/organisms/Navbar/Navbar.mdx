@@ -332,6 +332,11 @@ A link takes an `icon` before its text, a `badge` after it (a count is read as p
 is marked `external` when its `href` starts `http://`, `https://` or `//`: it opens in a new tab with a trailing
 icon and a hidden "(opens in a new tab)".
 
+A `badge` that is plain text or a number is drawn in `Badge`'s subtle brand look, at the size that goes with the link. To choose its tone
+or variant, pass a `Badge` yourself (`badge={<Badge tone="danger" variant="solid">2</Badge>}`): it is drawn as written, with the link's size
+where it sets none and kept to the link's height. Pass the `Badge` element itself, not a component that returns one, or it is taken for
+content and drawn inside the link's own.
+
 <Canvas of={NavbarStories.LinkExtras} />
 
 ### Where the links sit

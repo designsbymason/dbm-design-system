@@ -1,8 +1,8 @@
 import { ArrowSquareOutIcon, CaretDownIcon, ListIcon } from "@dbm-design-system/icons";
 import { cx, mergeDefined, mergeRefs } from "@dbm-design-system/primitives";
 import { Slot } from "@radix-ui/react-slot";
-import { forwardRef, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
-import type { CSSProperties, MouseEvent } from "react";
+import { cloneElement, forwardRef, isValidElement, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
+import type { CSSProperties, MouseEvent, ReactElement } from "react";
 import { createPortal } from "react-dom";
 import { Affix } from "../../atoms/Affix";
 import { ButtonGroupProvider, useButtonGroup } from "../../atoms/Button/buttonGroupContext";
@@ -27,6 +27,7 @@ import {
 import type { NavbarContextValue } from "./NavbarContext";
 import { defaultLinkSize, linkBadgeSize, linkIconSize, linkTrailingIconSize, stepDown } from "./linkSizes";
 import { Badge } from "../../atoms/Badge";
+import type { BadgeProps } from "../../atoms/Badge";
 import { NavbarRow } from "./NavbarRow";
 import { NavbarSearch } from "./NavbarSearch";
 import { useHideOnScroll } from "./useHideOnScroll";
@@ -557,11 +558,20 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
           <>
             {icon && <Icon icon={icon} size={iconSize} />}
             {children}
-            {badge !== undefined && badge !== null && (
-              <Badge tone="brand" variant="subtle" size={badgeSize} className={styles.linkBadge}>
-                {badge}
-              </Badge>
-            )}
+            {badge !== undefined &&
+              badge !== null &&
+              // A `Badge` passed as the badge is drawn as written (its tone, variant, `max`…), with the link's size and height rule filled in
+              // where it didn't say; anything else is the content of the link's own badge (subtle, brand), so a pill is never inside a pill.
+              (isValidElement(badge) && badge.type === Badge ? (
+                cloneElement(badge as ReactElement<BadgeProps>, {
+                  size: (badge as ReactElement<BadgeProps>).props.size ?? badgeSize,
+                  className: cx(styles.linkBadge, (badge as ReactElement<BadgeProps>).props.className),
+                })
+              ) : (
+                <Badge tone="brand" variant="subtle" size={badgeSize} className={styles.linkBadge}>
+                  {badge}
+                </Badge>
+              ))}
             {isExternal && (
               <>
                 <Icon icon={ArrowSquareOutIcon} size={trailingIconSize} />

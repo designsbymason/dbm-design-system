@@ -126,6 +126,10 @@ ${navbar('currentVariant="solid"')}`,
   <Navbar.Link href="/inbox" icon={BellIcon} badge="3">
     Inbox
   </Navbar.Link>
+  {/* a Badge you pass is drawn as written, so its tone and variant are yours (its size is the link's unless it sets one) */}
+  <Navbar.Link href="/alerts" badge={<Badge tone="danger" variant="solid">2</Badge>}>
+    Alerts
+  </Navbar.Link>
   <Navbar.Link href="https://status.example.com">Status</Navbar.Link>
 </Navbar.Links>`,
 

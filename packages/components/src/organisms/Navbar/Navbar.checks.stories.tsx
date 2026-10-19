@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { UserCircleIcon, ShoppingCartIcon } from "@dbm-design-system/icons";
+import { Badge } from "../../atoms/Badge";
 import { IconButton } from "../../atoms/IconButton";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { Navbar } from "./Navbar";
@@ -1681,6 +1682,45 @@ export const FilledIsSurfaceAndBackgroundIsOverridable: Story = {
     expect(getComputedStyle(canvas.getByRole("region", { name: "bar style" }).querySelector("header")!).backgroundColor).toBe(tint);
     // and on a filled bar it does not: the row paints over the header (which is why the Docs say to style the row)
     expect(getComputedStyle(canvas.getByTestId("covered-row")).backgroundColor).toBe(surface);
+  },
+};
+
+export const PassedBadgeIsDrawnAsWritten: Story = {
+  name: "A Badge passed as a link's badge keeps its own tone and variant, is one pill, and stays within the link's height",
+  render: () => (
+    <NavbarStage minBlockSize="14rem">
+      {(menuContainer) => (
+        <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+          <Navbar menuContainer={menuContainer} collapseBelow="never">
+            <Navbar.Links aria-label="Main">
+              <Navbar.Link href="#a">Plain</Navbar.Link>
+              <Navbar.Link href="#b" badge={<Badge tone="danger" variant="solid">2</Badge>}>
+                Alerts
+              </Navbar.Link>
+              <Navbar.Link href="#c" badge="New">
+                Pricing
+              </Navbar.Link>
+            </Navbar.Links>
+          </Navbar>
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const pill = (link: string, text: string) =>
+      [...within(canvas.getByRole("link", { name: new RegExp(link) })).getAllByText(text)].filter((element) => element.tagName === "SPAN");
+    // the passed Badge is danger-solid (its own fill), the plain text is the link's subtle brand one: different fills
+    const danger = pill("Alerts", "2");
+    expect(danger).toHaveLength(1);
+    expect(getComputedStyle(danger[0]!).backgroundColor).toBe(tokenColorOf("--dbm-bg-danger"));
+    const brand = pill("Pricing", "New")[0]!;
+    expect(getComputedStyle(brand).backgroundColor).not.toBe(getComputedStyle(danger[0]!).backgroundColor);
+    // neither makes its link taller than a plain one
+    const plain = canvas.getByRole("link", { name: "Plain" }).getBoundingClientRect().height;
+    for (const name of ["Alerts", "Pricing"]) {
+      expect(Math.abs(canvas.getByRole("link", { name: new RegExp(name) }).getBoundingClientRect().height - plain)).toBeLessThan(1);
+    }
   },
 };
 
