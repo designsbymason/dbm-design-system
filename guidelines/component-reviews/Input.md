@@ -48,3 +48,7 @@ At the maintainer's direction, as a rule for every text field (`05-component-api
 - **Why:** the floating ring read as a second frame around the field, and its extent was clipped by a scrolling body at an edge.
 - **Checks:** a real-browser check measures, for this field and its invalid state, a 2px ring at a −2px offset, the same corners and box before and after, and the ring colour equal to the border colour (focus, or danger). It fails with the old ring put back.
 - **Not re-verified:** the four themes and a real phone were not looked at live (the Browser pane was not displayed); no colour or token value changed.
+
+## Affix icons follow `size`, 2026-10-19 (additive; stays Finalized)
+
+At explicit direction, after a report that the "With prefix icon" story's icon did not change with the size control (the story had fixed the icon at `sm`, and the slot drew its content as written): an `<Icon>` passed directly as `prefix` or `suffix` with no `size` of its own now takes the step the clear icon uses (`xs`/`sm` → `xs`, `md` → `sm`, `lg` → `md`, `xl` → `lg`). An icon that sets a `size` keeps it, and wrapped content and text are untouched, so `SearchInput`, `PasswordInput`, `NumberInput` and `Combobox`, which all size their own icons, are unchanged. The story and snippets no longer fix a size. Tested in `Input.test.tsx` for every size.

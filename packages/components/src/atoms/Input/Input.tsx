@@ -1,10 +1,20 @@
 import { XIcon } from "@dbm-design-system/icons";
 import { cx, mergeRefs } from "@dbm-design-system/primitives";
-import { forwardRef, useLayoutEffect, useRef, useState } from "react";
+import { cloneElement, forwardRef, isValidElement, useLayoutEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import type { ChangeEvent, MouseEvent as ReactMouseEvent } from "react";
 import { Icon } from "../Icon";
 import styles from "./Input.module.css";
 import type { InputProps, InputSize } from "./Input.types";
+
+// An `<Icon>` passed straight into `prefix`/`suffix` with no `size` of its own takes the step used for the clear icon (one step down
+// from the input's), so it scales with `size`. An icon that sets a `size`, anything wrapped, and plain text are drawn as written.
+function sizeAffixIcon(affix: ReactNode, size: InputSize): ReactNode {
+  if (isValidElement<{ size?: string }>(affix) && affix.type === Icon && affix.props.size === undefined) {
+    return cloneElement(affix, { size: clearIconSizeForInputSize[size] });
+  }
+  return affix;
+}
 
 const sizeClass: Record<InputSize, string | undefined> = {
   xs: styles.sizeXs,
@@ -146,7 +156,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         )}
         style={style}
       >
-        {prefix && <span className={styles.affix}>{prefix}</span>}
+        {prefix && <span className={styles.affix}>{sizeAffixIcon(prefix, size)}</span>}
         {/* `{...props}` is spread before the computed `aria-invalid` so a
             same-named prop a consumer passes can never silently override
             it — the JSX-attribute-ordering bug already found and fixed on
@@ -168,7 +178,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           {...props}
           aria-invalid={hasError || undefined}
         />
-        {suffix && <span className={styles.affix}>{suffix}</span>}
+        {suffix && <span className={styles.affix}>{sizeAffixIcon(suffix, size)}</span>}
         {showCountText && (
           <span className={styles.count}>
             {formatNumber(liveLength)}/{formatNumber(maxLength)}

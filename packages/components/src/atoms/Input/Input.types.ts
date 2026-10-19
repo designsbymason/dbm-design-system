@@ -7,19 +7,14 @@ export interface InputProps extends Omit<
   "prefix" | "size"
 > {
   /**
-   * Leading slot content — an icon, currency symbol, etc. When passing an
-   * `<Icon>`, its size doesn't scale with this input's own `size`
-   * automatically (this slot renders arbitrary content as-is, with no
-   * visibility into what's inside it) — pass a matching `size` on the
-   * icon yourself, e.g. `size="lg"` on the `Input` pairs with `size="md"`
-   * on the icon (one step down, same as this component's own internal
-   * clear-button icon).
+   * Leading slot content — an icon, currency symbol, etc. An `<Icon>` passed directly here with no `size` of its own scales with this
+   * input's `size`, one step down (`xs` and `sm` use `xs`, `md` uses `sm`, `lg` uses `md`, `xl` uses `lg`), the same as the built-in
+   * clear icon. An icon that sets its own `size` keeps it, and an icon wrapped in another element, or any other content, is drawn as
+   * written.
    */
   prefix?: ReactNode;
   /**
-   * Trailing slot content. Same sizing caveat as `prefix` — an `<Icon>`
-   * passed here doesn't scale with this input's own `size` automatically;
-   * set the icon's own `size` to match yourself.
+   * Trailing slot content. Sized the same way as `prefix`: an `<Icon>` passed directly with no `size` follows the input's `size`.
    */
   suffix?: ReactNode;
   /**

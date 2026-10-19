@@ -251,7 +251,7 @@ export const WithPrefixIcon: Story = {
     <div style={{ maxWidth: "20rem" }}>
       <Input
         {...args}
-        prefix={<Icon icon={MagnifyingGlassIcon} size="sm" />}
+        prefix={<Icon icon={MagnifyingGlassIcon} />}
         placeholder="Search"
       />
     </div>
@@ -303,7 +303,7 @@ export const Clearable: Story = {
       <div style={{ maxWidth: "20rem" }}>
         <Input
           {...args}
-          prefix={<Icon icon={MagnifyingGlassIcon} size="sm" />}
+          prefix={<Icon icon={MagnifyingGlassIcon} />}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onClear={() => setValue("")}

@@ -152,9 +152,8 @@ usually through the browser's own `Intl.NumberFormat`. The native `maxLength` li
   own responsibility, not something `Input` does for you.
 - Pair `hasError` with a nearby `FieldError` so the reason is visible, not just the red border and
   `aria-invalid`.
-- Match a `prefix`/`suffix` icon's own `size` to `Input`'s size yourself — one step down, same as
-  this component's own internal clear-button icon — since this slot renders arbitrary content
-  as-is, with no visibility into what's inside it to resize automatically.
+- Pass a `prefix`/`suffix` icon as an `<Icon>` with no `size` and it follows `Input`'s size, one step down (the same as the clear
+  button's icon). An icon that sets its own `size` keeps it, and one wrapped in another element, or any other content, is drawn as written.
 - Pair `showCount` with `maxLength` — `showCount` alone renders nothing, matching `Textarea`'s own
   convention.
 
@@ -210,7 +209,7 @@ usually through the browser's own `Intl.NumberFormat`. The native `maxLength` li
 
 ```tsx
 <Input placeholder="Search" />
-<Input prefix={<Icon icon={MagnifyingGlassIcon} size="sm" />} placeholder="Search" />
+<Input prefix={<Icon icon={MagnifyingGlassIcon} />} placeholder="Search" />
 <Input suffix="@example.com" placeholder="username" />
 <Input hasError defaultValue="not-an-email" />
 <Input disabled placeholder="Disabled" />

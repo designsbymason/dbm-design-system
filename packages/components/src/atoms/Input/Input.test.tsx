@@ -3,7 +3,42 @@ import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { MagnifyingGlassIcon } from "@dbm-design-system/icons";
+import { Icon } from "../Icon";
 import { Input } from "./Input";
+
+describe("Input affix icons", () => {
+  const iconClass = (size: string) => {
+    const { container, unmount } = render(<Icon icon={MagnifyingGlassIcon} size={size as "xs"} />);
+    const value = container.querySelector("svg")!.getAttribute("class");
+    unmount();
+    return value;
+  };
+  const expected = { xs: "xs", sm: "xs", md: "sm", lg: "md", xl: "lg" } as const;
+
+  for (const [size, step] of Object.entries(expected)) {
+    it(`an unsized Icon in prefix and suffix is one step down at size ${size}`, () => {
+      const { container } = render(
+        <Input size={size as "xs"} aria-label="x" prefix={<Icon icon={MagnifyingGlassIcon} />} suffix={<Icon icon={MagnifyingGlassIcon} />} />,
+      );
+      for (const svg of container.querySelectorAll("svg")) expect(svg.getAttribute("class")).toBe(iconClass(step));
+    });
+  }
+
+  it("keeps an Icon's own size, and leaves wrapped content alone", () => {
+    const { container } = render(
+      <Input
+        size="xl"
+        aria-label="x"
+        prefix={<Icon icon={MagnifyingGlassIcon} size="2xl" />}
+        suffix={<span><Icon icon={MagnifyingGlassIcon} /></span>}
+      />,
+    );
+    const [own, wrapped] = Array.from(container.querySelectorAll("svg"));
+    expect(own!.getAttribute("class")).toBe(iconClass("2xl"));
+    expect(wrapped!.getAttribute("class")).toBe(iconClass("md"));
+  });
+});
 
 describe("Input", () => {
   it("renders a native input and accepts typed input", async () => {

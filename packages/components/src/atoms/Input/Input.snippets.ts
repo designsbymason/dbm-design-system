@@ -15,10 +15,10 @@ export const inputSnippets = {
   allSizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" */}
 <Input aria-label="Size lg" size="lg" placeholder="Size lg" />`,
 
-  withPrefixIcon: `{/* prefix takes any node — here an Icon. MagnifyingGlassIcon comes from @dbm-design-system/icons. */}
+  withPrefixIcon: `{/* prefix takes any node — here an Icon, which follows the input's size when it sets none. MagnifyingGlassIcon comes from @dbm-design-system/icons. */}
 <Input
   aria-label="Search"
-  prefix={<Icon icon={MagnifyingGlassIcon} size="sm" />}
+  prefix={<Icon icon={MagnifyingGlassIcon} />}
   placeholder="Search"
 />`,
 
@@ -29,7 +29,7 @@ export const inputSnippets = {
     onClear is what makes the clear button appear. MagnifyingGlassIcon comes from @dbm-design-system/icons. */}
 <Input
   aria-label="Search"
-  prefix={<Icon icon={MagnifyingGlassIcon} size="sm" />}
+  prefix={<Icon icon={MagnifyingGlassIcon} />}
   value={value}
   onChange={(event) => setValue(event.target.value)}
   onClear={() => setValue("")}
