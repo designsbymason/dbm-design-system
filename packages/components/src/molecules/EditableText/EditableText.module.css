@@ -86,6 +86,8 @@
    always where there is no hover, and for an empty value (which has nothing else to say it can be edited). */
 .icon {
   flex-shrink: 0;
+  /* the pencil is the field's own step, which can be taller than a line of text; the margin keeps it from making the text taller than the field */
+  margin-block: calc(-1 * var(--dbm-space-2));
   opacity: 0;
   transition: opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
 }
@@ -105,6 +107,7 @@
 /* Never squeezed by a long value. */
 .spinner {
   flex: none;
+  margin-block: calc(-1 * var(--dbm-space-2));
 }
 
 /* The field, its optional controls and a message. */

@@ -66,6 +66,8 @@
 .icon {
   color: var(--dbm-icon-default);
   flex-shrink: 0;
+  /* the caret is the field's own step, which at some sizes is taller than a line of text; the margin keeps it from making the trigger taller */
+  margin-block: calc(-1 * var(--dbm-space-2));
 }
 
 /* Sizes — identical scale to Input.module.css so a Select and an Input at
@@ -134,25 +136,25 @@
 
 .sizeSmClearable {
   padding-inline-end: calc(
-    var(--dbm-space-3) + var(--dbm-icon-size-xs) + 2 * var(--dbm-space-2) + var(--dbm-space-1)
+    var(--dbm-space-3) + var(--dbm-icon-size-sm) + 2 * var(--dbm-space-2) + var(--dbm-space-1)
   );
 }
 
 .sizeMdClearable {
   padding-inline-end: calc(
-    var(--dbm-space-3) + var(--dbm-icon-size-sm) + 2 * var(--dbm-space-2) + var(--dbm-space-1)
+    var(--dbm-space-3) + var(--dbm-icon-size-md) + 2 * var(--dbm-space-2) + var(--dbm-space-1)
   );
 }
 
 .sizeLgClearable {
   padding-inline-end: calc(
-    var(--dbm-space-4) + var(--dbm-icon-size-md) + 2 * var(--dbm-space-3) + var(--dbm-space-1)
+    var(--dbm-space-4) + var(--dbm-icon-size-lg) + 2 * var(--dbm-space-3) + var(--dbm-space-1)
   );
 }
 
 .sizeXlClearable {
   padding-inline-end: calc(
-    var(--dbm-space-4) + var(--dbm-icon-size-lg) + 2 * var(--dbm-space-3) + var(--dbm-space-1)
+    var(--dbm-space-4) + var(--dbm-icon-size-xl) + 2 * var(--dbm-space-3) + var(--dbm-space-1)
   );
 }
 

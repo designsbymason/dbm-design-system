@@ -274,3 +274,7 @@ CI failed three times on `Open the picker, choose with the arrow keys, close wit
 
 ## Change after Finalization: the focus ring is drawn on the field's own edge (2026-10-11)
 The same field-family rule as `Input`'s (see [Input.md](Input.md) and `05-component-api-conventions.md` §6): the ring sits on the field's own edge, the corners are not tightened while focused, and an invalid field keeps the ring in the danger colour. Covered by the shared real-browser check; the four themes and a real phone were not looked at live.
+
+## Icons at the input's own step, 2026-10-19 (visual change; stays Finalized)
+
+At explicit direction, following `Input`'s own change (see [Input](Input.md)): the icons this component draws in the field are the same step as its `size` (`xs` 12px … `xl` 32px) instead of one step below it. The clock and clear buttons' compensating margins are recomputed, with `space.2` of padding at `lg` and `xl` (was `space.3`) so the larger button stays inside the field's padding; the field is no taller than a plain `Input` (measured). `TimeRangePicker` is built on this component, so its two fields follow; its own picker button is an `IconButton` at its `size` and was not changed. A real-browser check in `Input.checks.stories.tsx` measures the icons at every size.

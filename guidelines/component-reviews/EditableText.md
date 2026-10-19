@@ -77,3 +77,7 @@ The hidden input is now a text input that is only hidden from sight (`aria-hidde
 
 By the three-question test: it changes the DOM an existing prop produces (1: yes), and corrects a field that did not do what `required` says on a form (2: a genuine defect), so `EditableText` stays Finalized, with its own files the whole blast radius. Re-verified: functional verification (seven new unit tests, two real-browser checks in `Form.checks.stories.tsx`) and Docs.
 
+
+## Icons at the input's own step, 2026-10-19 (visual change; stays Finalized)
+
+At explicit direction, following `Input`'s own change (see [Input](Input.md)): the icons this component draws in the field are the same step as its `size` (`xs` 12px … `xl` 32px) instead of one step below it. This is the pencil and the loading spinner in the read-mode row; the confirm and cancel buttons already used the component's `size` and are unchanged. Both take a negative block margin so the larger icon never makes the text taller than the field it becomes. A real-browser check in `Input.checks.stories.tsx` measures the icons at every size.

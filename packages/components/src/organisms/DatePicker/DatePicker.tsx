@@ -61,8 +61,8 @@ const buttonClass: Record<DatePickerSize, string | undefined> = {
   xl: styles.buttonXl,
 };
 
-// `Input`'s own mapping: the icon is one step down from the field's size, so the button stays inside its row.
-const iconSizeFor: Record<DatePickerSize, "xs" | "sm" | "md" | "lg"> = { xs: "xs", sm: "xs", md: "sm", lg: "md", xl: "lg" };
+// `Input`'s own mapping: the icon is the same step as the field's size; the button's margin keeps it inside its row.
+const iconSizeFor: Record<DatePickerSize, "xs" | "sm" | "md" | "lg" | "xl"> = { xs: "xs", sm: "sm", md: "md", lg: "lg", xl: "xl" };
 
 const SIDE_OFFSET = 4;
 // The gap kept between a full-width panel and the edges of the screen, in pixels (also the layer's collision padding).

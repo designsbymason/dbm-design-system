@@ -193,22 +193,22 @@
 
 .buttonSm {
   padding: var(--dbm-space-2);
-  margin-block: calc((var(--dbm-font-size-sm) * var(--dbm-line-height-tight) - var(--dbm-icon-size-xs) - 2 * var(--dbm-space-2)) / 2);
+  margin-block: calc((var(--dbm-font-size-sm) * var(--dbm-line-height-tight) - var(--dbm-icon-size-sm) - 2 * var(--dbm-space-2)) / 2);
 }
 
 .buttonMd {
   padding: var(--dbm-space-2);
-  margin-block: calc((var(--dbm-font-size-base) * var(--dbm-line-height-tight) - var(--dbm-icon-size-sm) - 2 * var(--dbm-space-2)) / 2);
+  margin-block: calc((var(--dbm-font-size-base) * var(--dbm-line-height-tight) - var(--dbm-icon-size-md) - 2 * var(--dbm-space-2)) / 2);
 }
 
 .buttonLg {
-  padding: var(--dbm-space-3);
-  margin-block: calc((var(--dbm-font-size-md) * var(--dbm-line-height-tight) - var(--dbm-icon-size-md) - 2 * var(--dbm-space-3)) / 2);
+  padding: var(--dbm-space-2);
+  margin-block: calc((var(--dbm-font-size-md) * var(--dbm-line-height-tight) - var(--dbm-icon-size-lg) - 2 * var(--dbm-space-2)) / 2);
 }
 
 .buttonXl {
-  padding: var(--dbm-space-3);
-  margin-block: calc((var(--dbm-font-size-lg) * var(--dbm-line-height-tight) - var(--dbm-icon-size-lg) - 2 * var(--dbm-space-3)) / 2);
+  padding: var(--dbm-space-2);
+  margin-block: calc((var(--dbm-font-size-lg) * var(--dbm-line-height-tight) - var(--dbm-icon-size-xl) - 2 * var(--dbm-space-2)) / 2);
 }
 
 /* The floating panel. The same elevated surface as `Popover`'s and `Combobox`'s panels, portaled outside this component's tree,

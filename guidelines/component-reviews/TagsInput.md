@@ -62,3 +62,7 @@ A full §9 pass over the finished component. Findings, all fixed:
 
 ## Change after Finalization: the focus ring is drawn on the field's own edge (2026-10-11)
 The same field-family rule as `Input`'s (see [Input.md](Input.md) and `05-component-api-conventions.md` §6): the ring sits on the box's own edge, the corners are not tightened while focused, and an invalid field keeps the ring in the danger colour. Found by the check: `.box:focus-within` out-ranked `.invalid`, so an invalid box's border went to the focus colour; the invalid rule now restores the danger border while focused. Covered by the shared real-browser check; the four themes and a real phone were not looked at live.
+
+## Icons at the input's own step, 2026-10-19 (visual change; stays Finalized)
+
+At explicit direction, following `Input`'s own change (see [Input](Input.md)): the icons this component draws in the field are the same step as its `size` (`xs` 12px … `xl` 32px) instead of one step below it. This is the clear-all icon; the chips and their remove icons keep their own sizes. A real-browser check in `Input.checks.stories.tsx` measures the icons at every size.

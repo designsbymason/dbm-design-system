@@ -54,8 +54,8 @@ const buttonClass: Record<TimePickerSize, string | undefined> = {
   xl: styles.buttonXl,
 };
 
-// `Input`'s own mapping: the icon is one step down from the field's size, so the button stays inside its row.
-const iconSizeFor: Record<TimePickerSize, "xs" | "sm" | "md" | "lg"> = { xs: "xs", sm: "xs", md: "sm", lg: "md", xl: "lg" };
+// `Input`'s own mapping: the icon is the same step as the field's size; the button's margin keeps it inside its row.
+const iconSizeFor: Record<TimePickerSize, "xs" | "sm" | "md" | "lg" | "xl"> = { xs: "xs", sm: "sm", md: "md", lg: "lg", xl: "xl" };
 
 const draftKey = { hour: "hour", minute: "minute", second: "second", period: "period" } as const;
 

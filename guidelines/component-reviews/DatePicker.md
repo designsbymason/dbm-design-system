@@ -60,3 +60,7 @@ The §9 review (`/review-component DatePicker`) found twelve things; all are fix
 - Not run: a screen-reader pass, a real phone's on-screen keyboard, Windows high-contrast mode (only Chromium's emulation), Firefox and Safari, light Emerald and a tablet width, and a fresh contrast measurement of the reason line and the preset buttons (both are existing token pairings).
 - The related-card preview scales a `Calendar` to half size with a transform.
 - Making the full-width presentation the default below `sm` waits for a real device ([ADR-0083](../adr/0083-datepicker-anchors-its-panel-to-the-whole-field-with-a-trigger-less-radix-anchor-and-offers-side-align-and-a-full-width-presentation-over-the-popover-molecule-and-its-button.md)).
+
+## Icons at the input's own step, 2026-10-19 (visual change; stays Finalized)
+
+At explicit direction, following `Input`'s own change (see [Input](Input.md)): the icons this component draws in the field are the same step as its `size` (`xs` 12px … `xl` 32px) instead of one step below it. The calendar and clear buttons' compensating margins are recomputed, with `space.2` of padding at `lg` and `xl` (was `space.3`) so the larger button stays inside the field's padding; the field is no taller than a plain `Input` (measured). A real-browser check in `Input.checks.stories.tsx` measures the icons at every size.

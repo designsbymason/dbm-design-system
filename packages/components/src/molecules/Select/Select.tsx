@@ -15,17 +15,16 @@ const sizeClass: Record<SelectSize, string | undefined> = {
   xl: styles.sizeXl,
 };
 
-// The clear button's own icon renders one size step down from Select's own
-// `size`, same principle (and identical mapping) as `Input`'s own
-// `clearIconSizeForInputSize` — Select's sizes now match Input's pixel for
-// pixel (see the size-parity fix in this component's own review), so the
-// same step-down mapping applies unchanged.
-const clearIconSizeForSelectSize: Record<SelectSize, "xs" | "sm" | "md" | "lg"> = {
+// The clear and caret icons are the same step as Select's own `size`, the
+// identical mapping to `Input`'s own `clearIconSizeForInputSize` — Select's
+// sizes match Input's pixel for pixel (see the size-parity fix in this
+// component's own review).
+const clearIconSizeForSelectSize: Record<SelectSize, "xs" | "sm" | "md" | "lg" | "xl"> = {
   xs: "xs",
-  sm: "xs",
-  md: "sm",
-  lg: "md",
-  xl: "lg",
+  sm: "sm",
+  md: "md",
+  lg: "lg",
+  xl: "xl",
 };
 
 const clearSizeClass: Record<SelectSize, string | undefined> = {
@@ -246,7 +245,7 @@ const SelectRoot = forwardRef<HTMLButtonElement, SelectProps>(
                 visible caret. */}
             {!showClear && (
               <SelectPrimitive.Icon className={styles.icon} asChild>
-                <Icon icon={CaretDownIcon} size="xs" />
+                <Icon icon={CaretDownIcon} size={clearIconSizeForSelectSize[size]} />
               </SelectPrimitive.Icon>
             )}
           </>

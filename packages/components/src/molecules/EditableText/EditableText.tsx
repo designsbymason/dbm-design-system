@@ -30,13 +30,13 @@ const sizeClass: Record<InputSize, string | undefined> = {
   xl: styles.sizeXl,
 };
 
-// `Input`'s own mapping: the pencil is one step down from the field's size, so it stays inside the row.
-const iconSizeForSize: Record<InputSize, "xs" | "sm" | "md" | "lg"> = {
+// `Input`'s own mapping: the pencil and spinner are the same step as the field's size.
+const iconSizeForSize: Record<InputSize, "xs" | "sm" | "md" | "lg" | "xl"> = {
   xs: "xs",
-  sm: "xs",
-  md: "sm",
-  lg: "md",
-  xl: "lg",
+  sm: "sm",
+  md: "md",
+  lg: "lg",
+  xl: "xl",
 };
 
 const warned = new Set<string>();

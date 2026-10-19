@@ -23,7 +23,7 @@ const sizeClass: Record<InputSize, string | undefined> = {
 
 // One step below the field, as `TableToolbar`'s chips are, so a row of them sits inside the box.
 const tagSizeFor: Record<InputSize, TagSize> = { xs: "xs", sm: "xs", md: "sm", lg: "md", xl: "lg" };
-const iconSizeFor: Record<InputSize, "xs" | "sm" | "md" | "lg"> = { xs: "xs", sm: "xs", md: "sm", lg: "md", xl: "lg" };
+const iconSizeFor: Record<InputSize, "xs" | "sm" | "md" | "lg" | "xl"> = { xs: "xs", sm: "sm", md: "md", lg: "lg", xl: "xl" };
 
 const warned = new Set<string>();
 function warnOnce(message: string) {

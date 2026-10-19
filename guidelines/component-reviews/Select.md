@@ -650,3 +650,7 @@ it fails on the old CSS (`expected 72 to be less than or equal to 63`).
 
 ## Change after Finalization: the focus ring is drawn on the field's own edge (2026-10-11)
 The same field-family rule as `Input`'s (see [Input.md](Input.md) and `05-component-api-conventions.md` §6): the ring sits on the trigger's own edge, the corners are not tightened while focused, and an invalid field keeps the ring in the danger colour. Covered by the shared real-browser check; the four themes and a real phone were not looked at live.
+
+## Icons at the input's own step, 2026-10-19 (visual change; stays Finalized)
+
+At explicit direction, following `Input`'s own change (see [Input](Input.md)): the icons this component draws in the field are the same step as its `size` (`xs` 12px … `xl` 32px) instead of one step below it. This covers the clear icon and the caret, which was fixed at `xs` before; the caret takes a negative block margin so a larger one never makes the trigger taller, and the clearable trigger's reserved room is recomputed from the new icon sizes. The option check mark in the list stays at `xs`. A real-browser check in `Input.checks.stories.tsx` measures the icons at every size.

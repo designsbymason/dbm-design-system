@@ -20,20 +20,16 @@ const sizeClass: Record<TextareaSize, string | undefined> = {
   xl: styles.sizeXl,
 };
 
-// The clear button's icon scales with Textarea's own `size`, one step
-// down — same principle as Input's own `clearIconSizeForInputSize` (and
-// Tag's `iconSizeForTagSize` before it) — since Textarea shares Input's
-// exact size scale/tokens (see Textarea.module.css's own "shared with
+// The clear button's icon is the same step as Textarea's own `size` — the
+// same mapping as Input's own `clearIconSizeForInputSize` — since Textarea
+// shares Input's exact size scale/tokens (see Textarea.module.css's own "shared with
 // Input" comment on its size classes).
-const clearIconSizeForTextareaSize: Record<
-  TextareaSize,
-  "xs" | "sm" | "md" | "lg"
-> = {
+const clearIconSizeForTextareaSize: Record<TextareaSize, "xs" | "sm" | "md" | "lg" | "xl"> = {
   xs: "xs",
-  sm: "xs",
-  md: "sm",
-  lg: "md",
-  xl: "lg",
+  sm: "sm",
+  md: "md",
+  lg: "lg",
+  xl: "xl",
 };
 
 /**

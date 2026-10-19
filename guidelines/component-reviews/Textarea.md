@@ -35,3 +35,7 @@ Found while building `EditableText`, whose multi-line text is drawn as the same 
 
 ## Change after Finalization: the focus ring is drawn on the field's own edge (2026-10-11)
 The same field-family rule as `Input`'s (see [Input.md](Input.md) and `05-component-api-conventions.md` §6): the ring sits on the box's own edge, the corners are not tightened while focused, and an invalid field keeps the ring in the danger colour. Covered by the shared real-browser check; the four themes and a real phone were not looked at live.
+
+## Icons at the input's own step, 2026-10-19 (visual change; stays Finalized)
+
+At explicit direction, following `Input`'s own change (see [Input](Input.md)): the icons this component draws in the field are the same step as its `size` (`xs` 12px … `xl` 32px) instead of one step below it. The clear button is a top-corner overlay, so no height changes; the text still stops short of it at every size (measured). A real-browser check in `Input.checks.stories.tsx` measures the icons at every size.
