@@ -126,6 +126,41 @@ export const NeutralLabelsAndIconsOnHover: Story = {
   },
 };
 
+export const HoverFills: Story = {
+  name: "Secondary and tertiary hover on the subtle fill, ghost on the hover fill, in both tones",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-4)", background: "var(--dbm-bg-surface)", padding: "var(--dbm-space-4)" }}>
+      {(["brand", "neutral"] as const).map((tone) => (
+        <div key={tone} style={{ display: "flex", flexWrap: "wrap", gap: "var(--dbm-space-4)" }}>
+          {(["secondary", "tertiary", "ghost"] as const).map((variant) => (
+            <Button key={variant} tone={tone} variant={variant}>
+              {tone} {variant}
+            </Button>
+          ))}
+          {(["secondary", "tertiary", "ghost"] as const).map((variant) => (
+            <IconButton key={variant} tone={tone} variant={variant} icon={TrashIcon} aria-label={`${tone} ${variant} icon`} />
+          ))}
+        </div>
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    for (const tone of ["brand", "neutral"] as const) {
+      for (const variant of ["secondary", "tertiary", "ghost"] as const) {
+        const expected = toRgb(tokenColor(`--dbm-bg-${tone}-subtle${variant === "ghost" ? "-hover" : ""}`));
+        for (const name of [`${tone} ${variant}`, `${tone} ${variant} icon`]) {
+          const button = canvas.getByRole("button", { name });
+          await pointAt(button);
+          await new Promise((resolve) => setTimeout(resolve, 250));
+          expect(toRgb(getComputedStyle(button).backgroundColor), name).toEqual(expected);
+          await pointAt(null);
+        }
+      }
+    }
+  },
+};
+
 export const NeutralPressedIconButton: Story = {
   name: "A pressed neutral icon button keeps its contrast",
   render: () => (
