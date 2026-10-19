@@ -152,8 +152,8 @@ usually through the browser's own `Intl.NumberFormat`. The native `maxLength` li
   own responsibility, not something `Input` does for you.
 - Pair `hasError` with a nearby `FieldError` so the reason is visible, not just the red border and
   `aria-invalid`.
-- Pass a `prefix`/`suffix` icon as an `<Icon>` with no `size` and it follows `Input`'s size, one step down (the same as the clear
-  button's icon). An icon that sets its own `size` keeps it, and one wrapped in another element, or any other content, is drawn as written.
+- Pass a `prefix`/`suffix` icon as an `<Icon>` with no `size` and it follows `Input`'s size, the same step (12, 16, 20, 24 and 32px from `xs` to `xl`, the clear
+  button's icon too). An icon that sets its own `size` keeps it, and one wrapped in another element, or any other content, is drawn as written.
 - Pair `showCount` with `maxLength` — `showCount` alone renders nothing, matching `Textarea`'s own
   convention.
 

@@ -7,8 +7,8 @@ import { Icon } from "../Icon";
 import styles from "./Input.module.css";
 import type { InputProps, InputSize } from "./Input.types";
 
-// An `<Icon>` passed straight into `prefix`/`suffix` with no `size` of its own takes the step used for the clear icon (one step down
-// from the input's), so it scales with `size`. An icon that sets a `size`, anything wrapped, and plain text are drawn as written.
+// An `<Icon>` passed straight into `prefix`/`suffix` with no `size` of its own takes the step used for the clear icon (the same step as the input
+// (the clear icon's)), so it scales with `size`. An icon that sets a `size`, anything wrapped, and plain text are drawn as written.
 function sizeAffixIcon(affix: ReactNode, size: InputSize): ReactNode {
   if (isValidElement<{ size?: string }>(affix) && affix.type === Icon && affix.props.size === undefined) {
     return cloneElement(affix, { size: clearIconSizeForInputSize[size] });
@@ -38,20 +38,17 @@ const sizeClass: Record<InputSize, string | undefined> = {
 // (`clearButtonSizeClass` below, keyed by Input's own size), with a
 // compensating negative margin in Input.module.css so the padded box
 // still doesn't inflate `.wrapper` past the Button-matched height.
-const clearIconSizeForInputSize: Record<InputSize, "xs" | "sm" | "md" | "lg"> = {
+const clearIconSizeForInputSize: Record<InputSize, "xs" | "sm" | "md" | "lg" | "xl"> = {
   xs: "xs",
-  sm: "xs",
-  md: "sm",
-  lg: "md",
-  xl: "lg",
+  sm: "sm",
+  md: "md",
+  lg: "lg",
+  xl: "xl",
 };
 
-// Keyed by Input's own `size`, not by `clearIconSizeForInputSize`'s icon
-// step — `xs`/`sm` share the same icon size but still need their own
-// class here, since the hit-area padding and its compensating margin
-// (Input.module.css) depend on each Input size's own font-size/
-// line-height envelope, which differs between `xs` and `sm` even when
-// their icon sizes match.
+// Keyed by Input's own `size`: the hit-area padding and its compensating
+// margin (Input.module.css) depend on each Input size's own font-size/
+// line-height envelope as well as its icon size.
 const clearButtonSizeClass: Record<InputSize, string | undefined> = {
   xs: styles.clearXs,
   sm: styles.clearSm,

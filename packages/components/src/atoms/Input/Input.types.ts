@@ -8,7 +8,7 @@ export interface InputProps extends Omit<
 > {
   /**
    * Leading slot content — an icon, currency symbol, etc. An `<Icon>` passed directly here with no `size` of its own scales with this
-   * input's `size`, one step down (`xs` and `sm` use `xs`, `md` uses `sm`, `lg` uses `md`, `xl` uses `lg`), the same as the built-in
+   * input's `size`, the same step (`xs` 12px, `sm` 16px, `md` 20px, `lg` 24px, `xl` 32px), as the built-in
    * clear icon. An icon that sets its own `size` keeps it, and an icon wrapped in another element, or any other content, is drawn as
    * written.
    */

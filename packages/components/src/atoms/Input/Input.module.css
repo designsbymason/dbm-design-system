@@ -62,8 +62,11 @@
    the rarer plain-text suffix case (e.g. `suffix="@example.com"`), which
    also uses `.affix` and reads no differently. No hover background — a
    plain prefix/suffix icon isn't itself interactive. */
+/* `block-size: 0` with centred items: a slot's content is centred on the row but adds nothing to its height, so an icon the size of the
+   input's own step (16px at `sm`, taller than that step's line) never makes the field taller than one without it. */
 .affix {
   align-items: center;
+  block-size: 0;
   color: var(--dbm-icon-default);
   display: inline-flex;
   flex-shrink: 0;
@@ -124,7 +127,7 @@
 }
 
 /* Each step gives the button real `padding` around its icon (the icon
-   itself is one size step down from Input's own `size` —
+   itself is the same size step as Input's own `size` —
    `clearIconSizeForInputSize`, Input.tsx) for a comfortable hit area and
    hover halo — found (2026-08-29) that a zero-padding box sized to just
    the bare icon was too small a tap target, even though it solved the
@@ -140,12 +143,11 @@
    smaller sizes). Composed entirely from existing tokens via calc() —
    nothing here is a guessed pixel value.
 
-   Keyed by Input's own `size` (not by the icon-size step) even though
-   `xs`/`sm` share the same icon-size step (`xs`) — they still need their
-   *own* class here, since the margin-block compensation depends on each
-   Input size's own font-size/line-height envelope, which differs between
-   `xs` and `sm` even when their icon sizes match. A shared class keyed by
-   icon size alone would silently reuse `xs`'s envelope for `sm` too. */
+   Keyed by Input's own `size`: the icon is the same step as the input
+   (xs 12px … xl 32px), and the margin-block compensation depends on each
+   size's own font-size/line-height envelope. `lg` and `xl` use a smaller
+   padding than the steps below them so the larger icon's hit area still
+   sits inside the field's own padding, off the border. */
 
 .clearXs {
   padding: var(--dbm-space-1);
@@ -157,28 +159,28 @@
 .clearSm {
   padding: var(--dbm-space-2);
   margin-block: calc(
-    (var(--dbm-font-size-sm) * var(--dbm-line-height-tight) - var(--dbm-icon-size-xs) - 2 * var(--dbm-space-2)) / 2
+    (var(--dbm-font-size-sm) * var(--dbm-line-height-tight) - var(--dbm-icon-size-sm) - 2 * var(--dbm-space-2)) / 2
   );
 }
 
 .clearMd {
   padding: var(--dbm-space-2);
   margin-block: calc(
-    (var(--dbm-font-size-base) * var(--dbm-line-height-tight) - var(--dbm-icon-size-sm) - 2 * var(--dbm-space-2)) / 2
+    (var(--dbm-font-size-base) * var(--dbm-line-height-tight) - var(--dbm-icon-size-md) - 2 * var(--dbm-space-2)) / 2
   );
 }
 
 .clearLg {
-  padding: var(--dbm-space-3);
+  padding: var(--dbm-space-2);
   margin-block: calc(
-    (var(--dbm-font-size-md) * var(--dbm-line-height-tight) - var(--dbm-icon-size-md) - 2 * var(--dbm-space-3)) / 2
+    (var(--dbm-font-size-md) * var(--dbm-line-height-tight) - var(--dbm-icon-size-lg) - 2 * var(--dbm-space-2)) / 2
   );
 }
 
 .clearXl {
-  padding: var(--dbm-space-3);
+  padding: var(--dbm-space-2);
   margin-block: calc(
-    (var(--dbm-font-size-lg) * var(--dbm-line-height-tight) - var(--dbm-icon-size-lg) - 2 * var(--dbm-space-3)) / 2
+    (var(--dbm-font-size-lg) * var(--dbm-line-height-tight) - var(--dbm-icon-size-xl) - 2 * var(--dbm-space-2)) / 2
   );
 }
 

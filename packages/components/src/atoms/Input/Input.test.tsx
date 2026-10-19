@@ -14,10 +14,10 @@ describe("Input affix icons", () => {
     unmount();
     return value;
   };
-  const expected = { xs: "xs", sm: "xs", md: "sm", lg: "md", xl: "lg" } as const;
+  const expected = { xs: "xs", sm: "sm", md: "md", lg: "lg", xl: "xl" } as const;
 
   for (const [size, step] of Object.entries(expected)) {
-    it(`an unsized Icon in prefix and suffix is one step down at size ${size}`, () => {
+    it(`an unsized Icon in prefix and suffix is the same step at size ${size}`, () => {
       const { container } = render(
         <Input size={size as "xs"} aria-label="x" prefix={<Icon icon={MagnifyingGlassIcon} />} suffix={<Icon icon={MagnifyingGlassIcon} />} />,
       );

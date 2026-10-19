@@ -84,7 +84,7 @@ test.describe("visual regression", () => {
   // and even the `border-color` *longhand* resolves to black instead of
   // preserving the reference) — see the note in `Button.test.tsx`'s own
   // variant-color test. Real-browser computed-style check instead.
-  test("Button — secondary variant: brand border/text/icon, transparent by default, brand-subtle-hover on hover", async ({
+  test("Button — secondary variant: brand border/text/icon, transparent by default, brand-subtle on hover", async ({
     page,
   }) => {
     await page.goto(
@@ -122,7 +122,7 @@ test.describe("visual regression", () => {
   // reasoning as the `secondary` test above (no border here, so no jsdom
   // limitation to work around — this could be a Vitest test too, but kept
   // alongside `secondary`'s for a single source of truth on this pair).
-  test("Button — tertiary variant: brand text/icon, transparent by default, brand-subtle-hover on hover", async ({
+  test("Button — tertiary variant: brand text/icon, transparent by default, brand-subtle on hover", async ({
     page,
   }) => {
     await page.goto(
