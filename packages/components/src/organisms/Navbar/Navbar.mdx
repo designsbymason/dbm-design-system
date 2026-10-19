@@ -231,7 +231,7 @@ the bar's `style`, or add the row. The links' colours are checked against the st
 A `Navbar.Row` is a band of the one `<header>`, and each can set its own `variant`, `size` and `contained`. Here: a thin courtesy strip
 (`size="xs"`, with `quiet` links); a taller row (`size="lg"`) with the logo, a smaller search field (`size="sm"`), centred between the logo and the buttons, and medium, neutral, tertiary icon buttons with a caption under each on a wide window (`label` and `hideLabelBelow` on `IconButton`);
 and a smaller row (`size="sm"`) of primary links, centred (`align="center"`), in bold capitals (a `style` on `Navbar.Links` sets the text of every
-link in it), with none marked current, as on a home page. Give each `Navbar.Links` its own name, since they are separate landmarks.
+link in it), with none marked current to begin with (a home page); choosing one makes it current, as a router would. Give each `Navbar.Links` its own name, since they are separate landmarks.
 
 On a phone the same header lays itself out differently: the logo row is drawn in three columns (`columns="balanced"` on the `Navbar.Row`), with the menu
 button and the search button at the start, the logo in the centre and the other buttons at the end. The logo is central however many buttons are on each side. `Navbar.MenuButton` takes a `variant`, a `tone` and a `size` and `Navbar.Search` a `buttonVariant`, a `buttonTone` and a `buttonSize`
@@ -614,7 +614,7 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 <Navbar.Links align="center">…</Navbar.Links>
 
 {/* A header of several rows: a thin strip that scrolls away, a taller logo row (on a phone, in columns: menu and search buttons, a centred logo, the other
-    buttons), and a small row of links, centred, in capitals, none current (a home page) */}
+    buttons), and a small row of links, centred, in capitals, none current to begin with (a home page); choosing one makes it current (page is yours) */}
 <Navbar sticky>
   <Navbar.Row size="xs" variant="outlined" sticky={false}>
     <Navbar.Links aria-label="Help" quiet align="end">
@@ -636,8 +636,8 @@ This story is shown at a phone's width when opened on its own; on this page, nar
       align="center"
       style={{ fontWeight: "var(--dbm-font-weight-bold)", textTransform: "uppercase" }}
     >
-      <Navbar.Link href="/women">Women</Navbar.Link>
-      <Navbar.Link href="/men">Men</Navbar.Link>
+      <Navbar.Link href="/women" current={page === "women"}>Women</Navbar.Link>
+      <Navbar.Link href="/men" current={page === "men"}>Men</Navbar.Link>
     </Navbar.Links>
   </Navbar.Row>
 </Navbar>

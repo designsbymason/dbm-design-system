@@ -8,7 +8,7 @@ import { Text } from "../../atoms/Text";
 import { SearchInput } from "../../molecules/SearchInput";
 import { Menu } from "../Menu";
 import { Navbar } from "./Navbar";
-import type { NavbarProps } from "./Navbar.types";
+import type { NavbarProps, NavbarSize } from "./Navbar.types";
 
 export { DrawerStage as NavbarStage, DrawerViewModeContext as NavbarViewModeContext } from "../Drawer/DrawerStoryKit";
 
@@ -46,6 +46,7 @@ export function DemoNavbar({
   withGroup = false,
   skipLink = false,
   extras = false,
+  pricingBadge = "New",
   linksAlign,
   linksLabel,
   ...props
@@ -59,6 +60,8 @@ export function DemoNavbar({
   skipLink?: boolean;
   /** Gives the links an icon, a count and an external destination, to show those. */
   extras?: boolean;
+  /** What the Pricing link shows as its badge with `extras`; "New" (the link's own subtle brand badge) unless a story passes a `Badge`. */
+  pricingBadge?: ReactNode;
   /** Where the links sit between the brand and the actions. */
   linksAlign?: "start" | "center" | "end";
   /** Adds a "Resources" group of links after the plain ones: a dropdown in the bar, an expandable group in the panel. */
@@ -75,7 +78,7 @@ export function DemoNavbar({
       </Navbar.Brand>
       <Navbar.Links aria-label={linksLabel} align={linksAlign}>
         <Navbar.Link {...demo.link("products")}>Products</Navbar.Link>
-        <Navbar.Link {...demo.link("pricing")} badge={extras ? "New" : undefined}>
+        <Navbar.Link {...demo.link("pricing")} badge={extras ? pricingBadge : undefined}>
           Pricing
         </Navbar.Link>
         <Navbar.Link {...demo.link("docs")} icon={extras ? BookOpenIcon : undefined}>
@@ -204,6 +207,8 @@ export interface DemoRowsOptions {
   searchWithActions?: boolean;
   /** The logo row's `columns` below the collapse width. `"balanced"` keeps the logo central; a track list gives the buttons the room they need. @default 'balanced' */
   columns?: string;
+  /** The height step of the logo row. @default 'lg' */
+  rowSize?: NavbarSize;
   /** Puts the primary links in the logo row, centred between the logo and the buttons, instead of in a row of their own (use with `primaryRow={false}`). @default false */
   linksInLogoRow?: boolean;
   /** Marks a primary link current when it is clicked, as a router would on moving between pages; with this off none is current, as on a home page. @default false */
@@ -214,7 +219,7 @@ export interface DemoRowsOptions {
  * A multi-row header, laid out the way a shop's is: a thin courtesy strip (which scrolls away when the bar is sticky); a taller row with the
  * logo, a small search field centred between them and the brand and medium icon buttons with a caption under each on a wide window, which on
  * a phone (`columns`) puts the menu button and the search button at the start, the logo in the centre and the other buttons at the end; and a
- * smaller row of primary links, centred, in bold capitals, with none marked current (the visitor is on the home page) unless `navigable`.
+ * smaller row of primary links, centred, in bold capitals, with none marked current to begin with (the visitor is on the home page); with `navigable` the one clicked becomes current.
  * The sets of links are named so each landmark has its own name. The options let a story show a variation of it without changing the others.
  */
 export function DemoRowsNavbar({
@@ -227,6 +232,7 @@ export function DemoRowsNavbar({
   primaryRow = true,
   searchWithActions = false,
   linksInLogoRow = false,
+  rowSize = "lg",
   columns = "balanced",
   navigable = false,
   ...props
@@ -277,7 +283,7 @@ export function DemoRowsNavbar({
         </Navbar.Row>
       )}
       <Navbar.Row
-        size="lg"
+        size={rowSize}
         variant="outlined"
         columns={collapseBelow === "never" ? undefined : columns}
         columnsBelow={collapseBelow === "never" ? undefined : collapseBelow}
@@ -338,11 +344,14 @@ export function RouterDemoNavbar({ menuContainer }: { menuContainer?: HTMLElemen
 export function StickyDemo({
   boxRef,
   hero = false,
+  tinted = false,
   children,
 }: {
   boxRef: RefObject<HTMLDivElement | null>;
   /** Puts a tinted hero block behind the bar's starting place, to show a transparent bar over something. */
   hero?: boolean;
+  /** Tints the page's content (the paragraphs below the bar) in `bg.brand-subtle`, instead of leaving it on the plain page. */
+  tinted?: boolean;
   children: (ref: RefObject<HTMLDivElement | null>) => ReactNode;
 }) {
   return (
@@ -366,7 +375,7 @@ export function StickyDemo({
           }}
         />
       )}
-      <div style={{ padding: "var(--dbm-space-6)", display: "grid", gap: "var(--dbm-space-4)" }}>
+      <div style={{ padding: "var(--dbm-space-6)", display: "grid", gap: "var(--dbm-space-4)", background: tinted ? "var(--dbm-bg-brand-subtle)" : undefined }}>
         {Array.from({ length: 12 }, (_, index) => (
           <Text key={index}>
             Scroll this box. The bar above stays at its top, and gains a shadow once the page has moved under it (paragraph{" "}

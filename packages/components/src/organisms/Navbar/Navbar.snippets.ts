@@ -117,7 +117,9 @@ ${navbar('currentVariant="solid"')}`,
   linkExtras: `{/* icon goes before the text; badge after it, and is part of the link's name ("Inbox 3"); an href starting http(s):// or //
     is external (a new tab, a trailing icon and a hidden cue), or say it with external. */}
 <Navbar.Links>
-  <Navbar.Link href="/pricing" badge="New">
+  {/* plain text is drawn in the link's own subtle brand badge; a Badge you pass is drawn as written, so its tone and variant are yours
+      (its size is the link's unless it sets one) */}
+  <Navbar.Link href="/pricing" badge={<Badge tone="success" variant="subtle">New</Badge>}>
     Pricing
   </Navbar.Link>
   <Navbar.Link href="/docs" icon={BookOpenIcon}>
@@ -125,10 +127,6 @@ ${navbar('currentVariant="solid"')}`,
   </Navbar.Link>
   <Navbar.Link href="/inbox" icon={BellIcon} badge="3">
     Inbox
-  </Navbar.Link>
-  {/* a Badge you pass is drawn as written, so its tone and variant are yours (its size is the link's unless it sets one) */}
-  <Navbar.Link href="/alerts" badge={<Badge tone="danger" variant="solid">2</Badge>}>
-    Alerts
   </Navbar.Link>
   <Navbar.Link href="https://status.example.com">Status</Navbar.Link>
 </Navbar.Links>`,
@@ -171,7 +169,7 @@ ${navbar('currentVariant="solid"')}`,
 </Navbar>`,
 
   rows: `{/* A multi-row header is still one <header>. Each Navbar.Row is a band, with its own variant, size and contained (they start from
-    the bar's): here a thin strip (xs), a taller logo row (lg) and a row of links (sm), none of them current, as on a home page. The search field is centred in the room
+    the bar's): here a thin strip (xs), a taller logo row (lg) and a row of links (sm), none of them current to begin with (a home page); choosing one makes it current, as a router would (page is yours). The search field is centred in the room
     between the logo and the buttons (an auto margin on it, and the actions' own push to the end cancelled).
     Several Navbar.Links are allowed: give each its own aria-label, and quiet for a courtesy row's. On a phone (columns) the row is
     three columns: the menu and search buttons at the start, the logo in the centre, the other buttons at the end, so the logo stays
@@ -203,10 +201,10 @@ ${navbar('currentVariant="solid"')}`,
       align="center"
       style={{ fontWeight: "var(--dbm-font-weight-bold)", textTransform: "uppercase" }}
     >
-      <Navbar.Link href="/women">Women</Navbar.Link>
-      <Navbar.Link href="/men">Men</Navbar.Link>
-      <Navbar.Link href="/kids">Kids</Navbar.Link>
-      <Navbar.Link href="/sale">Sale</Navbar.Link>
+      <Navbar.Link href="/women" current={page === "women"}>Women</Navbar.Link>
+      <Navbar.Link href="/men" current={page === "men"}>Men</Navbar.Link>
+      <Navbar.Link href="/kids" current={page === "kids"}>Kids</Navbar.Link>
+      <Navbar.Link href="/sale" current={page === "sale"}>Sale</Navbar.Link>
     </Navbar.Links>
   </Navbar.Row>
 </Navbar>`,
@@ -288,7 +286,7 @@ ${navbar('currentVariant="solid"')}`,
     from your router (page is yours). buttonVariant, buttonTone and buttonSize are the button's look, to match the icon buttons beside
     it. The bar's field and the sheet's are two inputs, so pass value and onChange to keep them in step. */}
 <Navbar>
-  <Navbar.Row size="lg" variant="outlined" columns="auto 1fr auto">
+  <Navbar.Row variant="outlined" columns="auto 1fr auto">
     <Navbar.Brand href="/">dbM</Navbar.Brand>
     <Navbar.Links align="center">
       <Navbar.Link href="/products" current={page === "products"}>Products</Navbar.Link>
@@ -423,10 +421,10 @@ ${navbar('collapseBelow="3xl"')}`,
     opens them in a panel. */}
 ${navbar("")}`,
 
-  sticky: `{/* sticky keeps the bar at the top as the page scrolls, with a shadow while it is stuck. In a scrolling box of your own,
+  sticky: `{/* sticky keeps the bar at the top as the page scrolls, with a shadow while it is stuck. Here it is frosted, so what scrolls under it shows blurred. In a scrolling box of your own,
     scrollContainerRef names it: const boxRef = useRef<HTMLDivElement>(null), on the box with <div ref={boxRef} …>. Without
     one the bar sticks to the page. */}
-${navbar("sticky scrollContainerRef={boxRef}")}`,
+${navbar("sticky variant=\"frosted\" scrollContainerRef={boxRef}")}`,
 
   current: `{/* current marks the page the reader is on (aria-current="page"). You decide which one it is, from the router. */}
 <Navbar>

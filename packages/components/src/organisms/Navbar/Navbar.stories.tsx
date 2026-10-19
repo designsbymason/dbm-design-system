@@ -1,6 +1,7 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { Fragment, useRef, useState } from "react";
+import { Badge } from "../../atoms/Badge";
 import type { CSSProperties, ReactNode, RefObject } from "react";
 import type { SpaceValue } from "@dbm-design-system/primitives";
 import { navbarPlaygroundSnippet, navbarSnippets } from "./Navbar.snippets";
@@ -469,7 +470,7 @@ export const Rows: Story = {
     <NavbarStage minBlockSize="22rem">
       {(menuContainer) => (
         <Top>
-          <DemoRowsNavbar menuContainer={menuContainer} />
+          <DemoRowsNavbar navigable menuContainer={menuContainer} />
         </Top>
       )}
     </NavbarStage>
@@ -516,6 +517,7 @@ export const SearchOnAPhone: Story = {
             courtesyRow={false}
             primaryRow={false}
             linksInLogoRow
+            rowSize="md"
             columns="auto 1fr auto"
             searchWithActions
             navigable
@@ -600,7 +602,7 @@ export const Sticky: Story = {
   render: function Render() {
     const boxRef = useRef<HTMLDivElement | null>(null);
     return (
-      <StickyDemo boxRef={boxRef}>{(ref) => <DemoNavbar sticky scrollContainerRef={ref} />}</StickyDemo>
+      <StickyDemo boxRef={boxRef}>{(ref) => <DemoNavbar sticky variant="frosted" scrollContainerRef={ref} />}</StickyDemo>
     );
   },
 };
@@ -647,7 +649,13 @@ export const LinkExtras: Story = {
     <NavbarStage minBlockSize="14rem">
       {(menuContainer) => (
         <Top>
-          <DemoNavbar extras actions="none" collapseBelow="never" menuContainer={menuContainer} />
+          <DemoNavbar
+            extras
+            pricingBadge={<Badge tone="success" variant="subtle">New</Badge>}
+            actions="none"
+            collapseBelow="never"
+            menuContainer={menuContainer}
+          />
         </Top>
       )}
     </NavbarStage>
@@ -685,7 +693,7 @@ export const GhostOverAHero: Story = {
   render: function Render() {
     const boxRef = useRef<HTMLDivElement | null>(null);
     return (
-      <StickyDemo boxRef={boxRef} hero>
+      <StickyDemo boxRef={boxRef} hero tinted>
         {(ref) => <DemoNavbar sticky variant="ghost" scrollContainerRef={ref} />}
       </StickyDemo>
     );

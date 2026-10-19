@@ -887,7 +887,7 @@ export const RowsLayout: Story = {
     <NavbarStage minBlockSize="22rem">
       {(menuContainer) => (
         <div style={{ inlineSize: "100%", alignSelf: "start" }}>
-          <DemoRowsNavbar menuContainer={menuContainer} />
+          <DemoRowsNavbar navigable menuContainer={menuContainer} />
         </div>
       )}
     </NavbarStage>
@@ -942,6 +942,12 @@ export const RowsLayout: Story = {
     expect(link.fontWeight).toBe("700");
     expect(px(link.fontSize)).toBeGreaterThan(px(getComputedStyle(within(courtesy).getByRole("link", { name: "Help" })).fontSize));
     expect(canvasElement.querySelector('[aria-current="page"]')).toBeNull();
+    // choosing a primary link makes it the current one, and choosing another moves the mark
+    await userEvent.click(within(categories).getByRole("link", { name: "Men" }));
+    expect(within(categories).getByRole("link", { name: "Men" })).toHaveAttribute("aria-current", "page");
+    await userEvent.click(within(categories).getByRole("link", { name: "Sale" }));
+    expect(within(categories).getByRole("link", { name: "Sale" })).toHaveAttribute("aria-current", "page");
+    expect(within(categories).getByRole("link", { name: "Men" })).not.toHaveAttribute("aria-current");
     // the buttons in the logo row are medium tertiary icon buttons, the search field a size down
     const buttons = within(main).getAllByRole("button", { name: /Account|Cart/ });
     for (const button of buttons) expect(button.getBoundingClientRect().height).toBeGreaterThan(tokenPx("--dbm-icon-button-size-md"));
