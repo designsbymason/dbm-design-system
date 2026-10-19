@@ -19,6 +19,7 @@ import { Tooltip } from "../../atoms/Tooltip";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { OverlayLifecycle } from "../../internal/overlay/OverlayLifecycle";
 import type { IconSize, IconTone } from "../../atoms/Icon/Icon.types";
+import { ButtonGroupReset } from "../../atoms/Button/buttonGroupContext";
 import styles from "./Menu.module.css";
 import type {
   MenuCheckboxItemProps,
@@ -301,7 +302,9 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
             }}
           />
           <MenuSizeContext.Provider value={size}>
-            <MenuViewport>{children}</MenuViewport>
+            <MenuViewport>
+              <ButtonGroupReset>{children}</ButtonGroupReset>
+            </MenuViewport>
           </MenuSizeContext.Provider>
         </MenuPrimitive.Content>
       </MenuPrimitive.Portal>
@@ -943,7 +946,9 @@ const MenuSubContent = forwardRef<HTMLDivElement, MenuSubContentProps>(
           aria-orientation="vertical"
         >
           <MenuSizeContext.Provider value={resolved}>
-            <MenuViewport>{children}</MenuViewport>
+            <MenuViewport>
+              <ButtonGroupReset>{children}</ButtonGroupReset>
+            </MenuViewport>
           </MenuSizeContext.Provider>
         </MenuPrimitive.SubContent>
       </MenuPrimitive.Portal>

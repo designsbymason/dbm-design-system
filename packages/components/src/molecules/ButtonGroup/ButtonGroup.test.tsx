@@ -9,6 +9,7 @@ import iconButtonStyles from "../../atoms/IconButton/IconButton.module.css";
 import { Button } from "../../atoms/Button";
 import { IconButton } from "../../atoms/IconButton";
 import { Tooltip } from "../../atoms/Tooltip";
+import { Popover } from "../Popover";
 import { ButtonGroup } from "./ButtonGroup";
 import styles from "./ButtonGroup.module.css";
 
@@ -86,6 +87,38 @@ describe("ButtonGroup", () => {
     expect(group).toHaveClass("custom");
     expect(group).toHaveAttribute("id", "group");
     expect(group).toHaveStyle({ opacity: "0.5" });
+  });
+
+  describe("what a group's overlays draw", () => {
+    it("keeps a button in a popover opened from the group out of the group's settings", async () => {
+      // this file unstubs every global after each test, which removes the setup's `ResizeObserver` the popover measures with
+      vi.stubGlobal(
+        "ResizeObserver",
+        class {
+          observe() {}
+          unobserve() {}
+          disconnect() {}
+        },
+      );
+      const user = userEvent.setup();
+      render(
+        <ButtonGroup aria-label="Actions" size="xs" variant="secondary">
+          <Popover>
+            <Popover.Trigger asChild>
+              <Button>Open</Button>
+            </Popover.Trigger>
+            <Popover.Content aria-label="Panel">
+              <Button>Inside</Button>
+            </Popover.Content>
+          </Popover>
+        </ButtonGroup>,
+      );
+      expect(screen.getByRole("button", { name: "Open" })).toHaveClass(buttonStyles.sizeXs as string);
+      await user.click(screen.getByRole("button", { name: "Open" }));
+      const inside = await screen.findByRole("button", { name: "Inside" });
+      expect(inside).toHaveClass(buttonStyles.sizeMd as string);
+      expect(inside).toHaveClass(buttonStyles.variantPrimary as string);
+    });
   });
 
   describe("settings for the buttons inside", () => {

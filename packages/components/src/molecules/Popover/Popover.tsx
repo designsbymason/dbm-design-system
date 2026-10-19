@@ -3,6 +3,7 @@ import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { forwardRef, useEffect } from "react";
 import { CloseButton } from "../../atoms/CloseButton";
 import { OverlayArrow } from "../../internal/OverlayArrow/OverlayArrow";
+import { ButtonGroupReset } from "../../atoms/Button/buttonGroupContext";
 import styles from "./Popover.module.css";
 import type {
   PopoverCloseProps,
@@ -167,7 +168,7 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
               <CloseButton size="xs" aria-label="Close" />
             </PopoverPrimitive.Close>
           )}
-          {children}
+          <ButtonGroupReset>{children}</ButtonGroupReset>
           {!hideArrow && (
             <PopoverPrimitive.Arrow asChild>
               <OverlayArrow />

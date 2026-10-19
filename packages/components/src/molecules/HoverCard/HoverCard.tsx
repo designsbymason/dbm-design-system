@@ -3,6 +3,7 @@ import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
 import type { CSSProperties } from "react";
 import { forwardRef, useCallback, useContext, useEffect, useId, useRef, useState } from "react";
 import { OverlayArrow } from "../../internal/OverlayArrow/OverlayArrow";
+import { ButtonGroupReset } from "../../atoms/Button/buttonGroupContext";
 import styles from "./HoverCard.module.css";
 import type {
   HoverCardContentProps,
@@ -224,7 +225,7 @@ const HoverCardContent = forwardRef<HTMLDivElement, HoverCardContentProps>(
           style={{ "--hover-card-side-offset": `${sideOffset + (hideArrow ? 0 : ARROW_HEIGHT)}px`, ...style } as CSSProperties}
           {...props}
         >
-          {children}
+          <ButtonGroupReset>{children}</ButtonGroupReset>
           {!hideArrow && (
             <HoverCardPrimitive.Arrow asChild width={ARROW_WIDTH} height={ARROW_HEIGHT}>
               <OverlayArrow />

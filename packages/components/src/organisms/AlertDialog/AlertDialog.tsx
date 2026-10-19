@@ -29,6 +29,7 @@ import { OverlayLifecycle } from "../../internal/overlay/OverlayLifecycle";
 import { OverlayBody, OverlayFooter } from "../../internal/overlay/OverlayParts";
 import dialogStyles from "../Dialog/Dialog.module.css";
 import sections from "../../internal/overlay/OverlaySections.module.css";
+import { ButtonGroupReset } from "../../atoms/Button/buttonGroupContext";
 import styles from "./AlertDialog.module.css";
 import type {
   AlertDialogActionProps,
@@ -292,7 +293,9 @@ const AlertDialogContent = forwardRef<HTMLDivElement, AlertDialogContentProps>(
       >
         <OverlayLifecycle open={open} panelRef={contentRef} onOpenChangeComplete={dialog?.onOpenChangeComplete} />
         <AlertDialogContentContext.Provider value={context}>
-          <div className={sections.slot}>{children}</div>
+          <div className={sections.slot}>
+            <ButtonGroupReset>{children}</ButtonGroupReset>
+          </div>
         </AlertDialogContentContext.Provider>
       </AlertDialogPrimitive.Content>
     );

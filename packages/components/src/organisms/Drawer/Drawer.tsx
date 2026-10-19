@@ -19,6 +19,7 @@ import {
   overlayTriggerClassName,
   useOverlayPanel,
 } from "../../internal/overlay/useOverlayPanel";
+import { ButtonGroupReset } from "../../atoms/Button/buttonGroupContext";
 import styles from "./Drawer.module.css";
 import { DrawerSwipe } from "./DrawerSwipe";
 import type {
@@ -290,7 +291,9 @@ const DrawerContent = forwardRef<HTMLDivElement, DrawerContentProps>(
     const swipeable = swipeToDismiss && !busy;
     const inner = (
       <DrawerGestureContext.Provider value={swipeable}>
-        <OverlayContentContext.Provider value={contentContext}>{children}</OverlayContentContext.Provider>
+        <OverlayContentContext.Provider value={contentContext}>
+          <ButtonGroupReset>{children}</ButtonGroupReset>
+        </OverlayContentContext.Provider>
       </DrawerGestureContext.Provider>
     );
 

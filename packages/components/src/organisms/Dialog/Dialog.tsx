@@ -19,6 +19,7 @@ import {
   overlayTriggerClassName,
   useOverlayPanel,
 } from "../../internal/overlay/useOverlayPanel";
+import { ButtonGroupReset } from "../../atoms/Button/buttonGroupContext";
 import styles from "./Dialog.module.css";
 import type {
   DialogBodyProps,
@@ -243,7 +244,11 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
     const describedBy = describedByProps(ariaDescribedBy, descriptionCount);
     const panelRef = useRef<HTMLDivElement | null>(null);
 
-    const inner = <OverlayContentContext.Provider value={contentContext}>{children}</OverlayContentContext.Provider>;
+    const inner = (
+      <OverlayContentContext.Provider value={contentContext}>
+        <ButtonGroupReset>{children}</ButtonGroupReset>
+      </OverlayContentContext.Provider>
+    );
 
     const content = (
       <DialogPrimitive.Content

@@ -2,6 +2,7 @@ import { cx } from "@dbm-design-system/primitives";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { useContext } from "react";
 import { TooltipProviderPresenceContext } from "./TooltipProviderContext";
+import { ButtonGroupReset } from "../Button/buttonGroupContext";
 import styles from "./Tooltip.module.css";
 import type { TooltipProps } from "./Tooltip.types";
 
@@ -72,7 +73,7 @@ export function Tooltip({
           className={cx(styles.content, className)}
           {...props}
         >
-          {content}
+          <ButtonGroupReset>{content}</ButtonGroupReset>
           {!hideArrow && <TooltipPrimitive.Arrow className={styles.arrow} />}
         </TooltipPrimitive.Content>
       </TooltipPrimitive.Portal>

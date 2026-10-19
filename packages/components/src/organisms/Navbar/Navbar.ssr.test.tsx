@@ -2,6 +2,10 @@ import { act, screen } from "@testing-library/react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { HouseIcon } from "@dbm-design-system/icons";
+import { Badge } from "../../atoms/Badge";
+import { Button } from "../../atoms/Button";
+import { IconButton } from "../../atoms/IconButton";
 import { Navbar } from "./Navbar";
 import type { NavbarProps } from "./Navbar.types";
 
@@ -175,6 +179,77 @@ describe("Navbar with rows hydrating", () => {
       if (props.defaultMenuOpen) {
         expect(await screen.findByRole("dialog", { hidden: true })).toBeInTheDocument();
       }
+      expect(recoverable).toEqual([]);
+      expect(error).not.toHaveBeenCalled();
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+    }
+    error.mockRestore();
+    warn.mockRestore();
+  });
+});
+
+// The newer render paths: a row drawn in columns (the parts gathered by column), a link size, a link badge (plain and a passed `Badge`), a
+// trailing arrow, the frosted variant, and buttons that take their size from `Navbar.Actions`' context.
+function ModernTree(props: NavbarProps) {
+  return (
+    <Navbar {...props}>
+      <Navbar.Row columns="balanced" columnsBelow="lg">
+        <Navbar.Brand href="/">dbM</Navbar.Brand>
+        <Navbar.Links align="center">
+          <Navbar.Link href="/products" current icon={HouseIcon} badge="New">
+            Products
+          </Navbar.Link>
+          <Navbar.Link href="/alerts" badge={<Badge tone="danger" variant="solid">2</Badge>}>
+            Alerts
+          </Navbar.Link>
+          <Navbar.Link href="https://status.example.com">Status</Navbar.Link>
+        </Navbar.Links>
+        <Navbar.Search buttonTone="neutral" buttonSize="md" />
+        <Navbar.Actions>
+          <Button>Sign in</Button>
+          <IconButton icon={HouseIcon} aria-label="Home" label="Home" hideLabelBelow="md" />
+        </Navbar.Actions>
+      </Navbar.Row>
+    </Navbar>
+  );
+}
+
+const modernVariants: Array<[string, NavbarProps]> = [
+  ["in columns", {}],
+  ["frosted, sticky and extra small", { variant: "frosted", sticky: true, size: "xs" }],
+  ["with large links", { linkSize: "xl", size: "lg" }],
+  ["right to left", { dir: "rtl", linkSize: "xs" }],
+];
+
+describe("Navbar with columns, link extras and frosted on the server and hydrating", () => {
+  it.each(modernVariants)("renders %s without touching window or document, with each part in its column", (_name, props) => {
+    const html = onTheServer(() => renderToString(<ModernTree {...props} />));
+    expect(html.match(/<header/g)).toHaveLength(1);
+    expect(html).toContain("Sign in");
+    expect(html).toContain('role="search"');
+    // the three column groups are drawn in the first paint, so the stylesheet alone lays them out
+    expect(html.match(/columnStart|columnCenter|columnEnd/g)?.length ?? 0).toBeGreaterThanOrEqual(3);
+  });
+
+  it.each(modernVariants)("hydrates %s without a mismatch", async (_name, props) => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const html = onTheServer(() => renderToString(<ModernTree {...props} />));
+    const container = document.createElement("div");
+    container.innerHTML = html;
+    document.body.appendChild(container);
+    vi.stubGlobal("IntersectionObserver", StubIntersectionObserver);
+    let root!: ReturnType<typeof hydrateRoot>;
+    const recoverable: string[] = [];
+    await act(async () => {
+      root = hydrateRoot(container, <ModernTree {...props} />, {
+        onRecoverableError: (caught) => recoverable.push(String((caught as Error).message).slice(0, 400)),
+      });
+    });
+    try {
       expect(recoverable).toEqual([]);
       expect(error).not.toHaveBeenCalled();
       expect(warn).not.toHaveBeenCalled();

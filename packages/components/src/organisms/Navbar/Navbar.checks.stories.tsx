@@ -1639,6 +1639,41 @@ export const StyleOnLinksSetsTheTextStyle: Story = {
   },
 };
 
+export const FrostedInForcedColours: Story = {
+  name: "A frosted bar is an opaque Canvas surface with no blur in forced colours, and keeps its line",
+  render: () => (
+    <NavbarStage minBlockSize="14rem">
+      {(menuContainer) => (
+        <div style={{ position: "relative", inlineSize: "100%", alignSelf: "start", background: "var(--dbm-bg-brand)" }}>
+          <DemoNavbar variant="frosted" menuContainer={menuContainer} collapseBelow="never" />
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const row = within(canvasElement).getByRole("banner").firstElementChild as HTMLElement;
+    // by default it is blurred and translucent
+    expect(getComputedStyle(row).backdropFilter).toMatch(/blur\(/);
+    const emulate = (value: "active" | "none") => send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value }] });
+    await emulate("active");
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      expect(window.matchMedia("(forced-colors: active)").matches).toBe(true);
+      const style = getComputedStyle(row);
+      expect(style.backdropFilter).toBe("none");
+      const probe = document.createElement("span");
+      probe.style.backgroundColor = "Canvas";
+      canvasElement.append(probe);
+      const canvasColor = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      expect(style.backgroundColor).toBe(canvasColor);
+      expect(px(style.borderBottomWidth)).toBeGreaterThan(0);
+    } finally {
+      await emulate("none");
+    }
+  },
+};
+
 export const FilledIsSurfaceAndBackgroundIsOverridable: Story = {
   name: "A filled bar is the surface with no line, and a style on the row (or on a ghost bar) changes its fill",
   render: () => (
