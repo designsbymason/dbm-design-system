@@ -11,6 +11,7 @@ export const propOrder = [
   "children",
   "external",
   "underline",
+  "size",
   "asChild",
   "disabled",
   "target",
@@ -94,6 +95,15 @@ Drive every prop live.
 
 <Canvas of={LinkStories.UnderlineVariants} />
 
+### size (the default inherits)
+
+With no `size`, a link has no font size of its own: it takes the size of the text around it, and with no text around it, of its nearest
+ancestor that sets one (the page's base size if none does). `size` sets it explicitly, on the scale `Text` and `Heading` use, and
+replaces whatever it would have inherited. The external-link icon is the size of the text, one to one (an `sm` link has an `sm` icon),
+whether the size is inherited or set.
+
+<Canvas of={LinkStories.Sizes} />
+
 ## Usage guidelines
 
 <div className="dbm-do-dont-grid">
@@ -133,6 +143,8 @@ Drive every prop live.
 - A disabled link is still perceivable and focusable (per WAI-ARIA APG guidance for
   `aria-disabled`) — screen reader and keyboard users can still find it and hear that it's
   unavailable, rather than it silently vanishing from the page.
+- Leave `size` out for a link inside a sentence, so it matches the words around it. Set it for a link that stands alone (a call to action,
+  a footer link) or that should differ from its text. With `asChild`, `size` is a class on your element, so it needs no text of its own.
 - When composing `asChild` with a real router's Link component, that component's own props (e.g. a
   router's `to`) still apply as usual — `Link`'s own `href`/`target`/`rel`/`aria-disabled`/`onClick`
   merge on top via Radix `Slot`, they don't replace the router component's own navigation behavior.
@@ -169,6 +181,11 @@ Drive every prop live.
 ```
 
 ```tsx
+// A link set apart from the text around it: size replaces the inherited font size, and the icon follows
+<Link href="https://example.com/guide" size="lg">Read the guide</Link>
+```
+
+```tsx
 // Composing with a router's own Link component
 <Link asChild href="/docs">
   <RouterLink to="/docs">Docs</RouterLink>
@@ -192,6 +209,8 @@ Drive every prop live.
 <TokenRow token="font-family.primary" usage="the link's own font family" />
 <TokenRow token="motion.duration.fast" usage="the hover-underline reveal transition (underline='hover')" />
 <TokenRow token="motion.easing.standard" usage="the hover-underline reveal transition" />
+<TokenRow token="link.icon-scale" usage="the external-link icon's size, one to one with the link's text (`1em`; component-layer token, em-relative so it follows inherited and set sizes)" />
+<TokenRow token="font-size.xs / font-size.sm / font-size.base / font-size.md / font-size.lg / font-size.xl / font-size.2xl / font-size.3xl / font-size.4xl / font-size.5xl / font-size.6xl" usage="the `size` prop's steps (left out, the link inherits and none of these applies)" />
 <TokenRow token="link.icon-offset-inline" usage="gap between the link text and the external-link icon (component-layer token, em-relative to scale with inherited font size)" />
 <TokenRow token="link.icon-vertical-align" usage="optical alignment of the external-link icon against the surrounding text (component-layer token)" />
 <TokenRow token="opacity.40" usage="the disabled state's dimmed opacity" />

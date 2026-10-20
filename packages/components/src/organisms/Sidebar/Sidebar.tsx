@@ -65,6 +65,9 @@ const sizeClass: Record<SidebarSize, string | undefined> = {
 
 const iconSizeFor: Record<SidebarSize, "sm" | "md"> = { xs: "sm", sm: "sm", md: "md", lg: "md" };
 
+/** The external-link mark and a group's caret, one step below the item's own icon (`icon-size`: 12, 16, 20px), so it reads as a marker beside the label and not as a second icon. */
+const externalIconSizeFor: Record<SidebarSize, "xs" | "sm"> = { xs: "xs", sm: "xs", md: "sm", lg: "sm" };
+
 const currentVariantClass: Record<SidebarCurrentVariant, string | undefined> = {
   subtle: undefined,
   bar: styles.currentBar,
@@ -572,7 +575,7 @@ const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
             {badgeNode}
             {isExternal && (
               <>
-                {!rail && <Icon icon={ArrowSquareOutIcon} size="xs" className={styles.trailingIcon} />}
+                {!rail && <Icon icon={ArrowSquareOutIcon} size={externalIconSizeFor[size]} className={styles.trailingIcon} />}
                 <VisuallyHidden> {labels.externalLink}</VisuallyHidden>
               </>
             )}
@@ -736,7 +739,7 @@ const SidebarGroup = forwardRef<HTMLButtonElement, SidebarGroupProps>(
         >
           {iconNode}
           <span className={styles.label}>{label}</span>
-          <Icon icon={CaretDownIcon} size="xs" className={styles.caret} />
+          <Icon icon={CaretDownIcon} size={externalIconSizeFor[size]} className={styles.caret} />
         </button>
         <Collapse asChild open={open}>
           {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}

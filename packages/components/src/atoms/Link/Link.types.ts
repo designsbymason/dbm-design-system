@@ -1,4 +1,5 @@
 import type { AnchorHTMLAttributes, ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
+import type { TextSize } from "../Text";
 
 /**
  * Controls when the underline is visible. `always` (the default) is the
@@ -14,6 +15,12 @@ import type { AnchorHTMLAttributes, ComponentPropsWithoutRef, CSSProperties, Rea
  * appropriate anyway.
  */
 export type LinkUnderline = "always" | "hover" | "none";
+
+/**
+ * An explicit font size for a link, on the same scale as `Text` and `Heading` (the font-size tokens, `xs` to `6xl`). Left out, a link
+ * has no size of its own: it takes the size of the text around it, and with no text around it, of its nearest ancestor that sets one.
+ */
+export type LinkSize = TextSize;
 
 export interface LinkProps extends ComponentPropsWithoutRef<"a"> {
   /** The link destination. */
@@ -33,6 +40,13 @@ export interface LinkProps extends ComponentPropsWithoutRef<"a"> {
    * @default 'always'
    */
   underline?: LinkUnderline;
+  /**
+   * The link's font size, replacing the one it would take from the text around it (and, with none around it, from its nearest ancestor
+   * that sets one). Left out, the link inherits, which is what a link inside a sentence wants. The external-link icon follows the text,
+   * one to one (the same size), whichever way the size is set.
+   * @default inherited
+   */
+  size?: LinkSize;
   /**
    * Merge props onto the single child element instead of rendering an
    * `<a>` (via Radix `Slot`). The external-link icon and the visually-hidden

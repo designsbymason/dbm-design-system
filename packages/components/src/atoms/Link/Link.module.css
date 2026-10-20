@@ -42,9 +42,59 @@
   text-decoration-line: none;
 }
 
-.icon {
+/* The external-link icon scales with the text: its width and height are `link.icon-scale` (1em: the same size as
+   the link's own text, whether inherited or set), and the offset and the vertical nudge below, in `em` too, are measured against the text.
+   The two-class selector outranks the `Icon` atom's own size class, which sets the box in fixed pixels. */
+.root .icon {
+  width: var(--dbm-link-icon-scale);
+  height: var(--dbm-link-icon-scale);
   margin-inline-start: var(--dbm-link-icon-offset-inline);
   vertical-align: var(--dbm-link-icon-vertical-align);
+}
+
+/* `size`: replaces the font size the link would otherwise inherit. With no `size` none of these classes is on the link. */
+.sizeXs {
+  font-size: var(--dbm-font-size-xs);
+}
+
+.sizeSm {
+  font-size: var(--dbm-font-size-sm);
+}
+
+.sizeBase {
+  font-size: var(--dbm-font-size-base);
+}
+
+.sizeMd {
+  font-size: var(--dbm-font-size-md);
+}
+
+.sizeLg {
+  font-size: var(--dbm-font-size-lg);
+}
+
+.sizeXl {
+  font-size: var(--dbm-font-size-xl);
+}
+
+.size2xl {
+  font-size: var(--dbm-font-size-2xl);
+}
+
+.size3xl {
+  font-size: var(--dbm-font-size-3xl);
+}
+
+.size4xl {
+  font-size: var(--dbm-font-size-4xl);
+}
+
+.size5xl {
+  font-size: var(--dbm-font-size-5xl);
+}
+
+.size6xl {
+  font-size: var(--dbm-font-size-6xl);
 }
 
 /* Mirrors Button's own `.disabled` treatment (`aria-disabled` +

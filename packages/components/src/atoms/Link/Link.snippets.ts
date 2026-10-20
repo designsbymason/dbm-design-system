@@ -10,7 +10,7 @@
 // `07-storybook-and-documentation-standards.md` §4.2.
 
 import { escapeJsxText, quote } from "../../snippetHelpers";
-import type { LinkUnderline } from "./Link.types";
+import type { LinkSize, LinkUnderline } from "./Link.types";
 
 export const linkSnippets = {
   internal: `<Link href="/docs">Internal link</Link>`,
@@ -41,6 +41,17 @@ export const linkSnippets = {
   <Link href="https://example.com">external reference</Link> for more detail.
 </p>`,
 
+  sizes: `{/* With no size, a link takes the font size of the text around it (or, with none around it, of its nearest ancestor that
+    sets one). size sets it on the scale Text and Heading use: "xs" | "sm" | "base" | "md" | "lg" | "xl" | "2xl" … "6xl". The
+    external-link icon is the size of the text, however the size is set. */}
+<p>
+  Read the <Link href="https://example.com">reference</Link> or the{" "}
+  <Link href="https://example.com/guide" size="lg">
+    guide
+  </Link>
+  .
+</p>`,
+
   underlineVariants: `{/* underline: "always" (default, and the safe choice inside body text) | "hover" | "none" (for
     navigation, where color and weight already set a link apart) */}
 <Link href="/docs" underline="hover">
@@ -57,6 +68,7 @@ export interface LinkPlaygroundSnippetArgs {
   children?: unknown;
   external?: boolean;
   underline?: LinkUnderline;
+  size?: LinkSize | "inherit";
   disabled?: boolean;
   "aria-label"?: string;
 }
@@ -73,6 +85,7 @@ export function linkPlaygroundSnippet(args: LinkPlaygroundSnippetArgs): string {
   if (args.external === true && !externalHref.test(href)) attributes.push("external");
   if (args.external === false && externalHref.test(href)) attributes.push("external={false}");
   if (args.underline && args.underline !== "always") attributes.push(`underline="${args.underline}"`);
+  if (args.size && args.size !== "inherit") attributes.push(`size="${args.size}"`);
   if (args.disabled) attributes.push("disabled");
   if (args["aria-label"]) attributes.push(`aria-label=${quote(args["aria-label"])}`);
   return `<Link ${attributes.join(" ")}>${escapeJsxText(String(args.children ?? "Documentation"))}</Link>`;

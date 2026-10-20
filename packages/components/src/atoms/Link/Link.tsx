@@ -6,7 +6,7 @@ import type { MouseEvent } from "react";
 import { Icon } from "../Icon";
 import { VisuallyHidden } from "../VisuallyHidden";
 import styles from "./Link.module.css";
-import type { LinkProps, LinkUnderline } from "./Link.types";
+import type { LinkProps, LinkSize, LinkUnderline } from "./Link.types";
 
 const EXTERNAL_HREF_PATTERN = /^(https?:)?\/\//i;
 
@@ -16,11 +16,29 @@ const underlineClass: Record<LinkUnderline, string | undefined> = {
   none: styles.underlineNone,
 };
 
+const sizeClass: Record<LinkSize, string | undefined> = {
+  xs: styles.sizeXs,
+  sm: styles.sizeSm,
+  base: styles.sizeBase,
+  md: styles.sizeMd,
+  lg: styles.sizeLg,
+  xl: styles.sizeXl,
+  "2xl": styles.size2xl,
+  "3xl": styles.size3xl,
+  "4xl": styles.size4xl,
+  "5xl": styles.size5xl,
+  "6xl": styles.size6xl,
+};
+
 /**
  * A styled anchor with automatic external-link affordances (new tab,
  * `rel="noopener noreferrer"`, a trailing icon, and a visually-hidden
  * "(opens in a new tab)" cue for screen reader users) and `asChild` support
  * for composing with routers (e.g. `<Link asChild><RouterLink to="/x" /></Link>`).
+ *
+ * `size` is left out by default: a link takes the font size of the text around it, or, with none around it, of its nearest ancestor that
+ * sets one. Pass `size` (the font-size scale `Text` and `Heading` use) to set it. The external-link icon is the size of
+ * the text, so it scales with it however the size is set.
  *
  * `underline` defaults to `"always"` — links inline within body text need
  * to stay distinguishable from surrounding text by more than color alone
@@ -40,6 +58,7 @@ const underlineClass: Record<LinkUnderline, string | undefined> = {
  * <Link href="/docs">Docs</Link>
  * <Link href="https://example.com">External</Link>
  * <Link href="/nav-item" underline="none">Nav item</Link>
+ * <Link href="/docs" size="lg">A larger link</Link>
  * <Link href="/docs" disabled>Unavailable right now</Link>
  * <Link asChild href="/docs"><RouterLink to="/docs">Docs</RouterLink></Link>
  * ```
@@ -50,6 +69,7 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
       href,
       external,
       underline = "always",
+      size,
       asChild = false,
       disabled = false,
       className,
@@ -98,7 +118,7 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
         rel={rel ?? (isExternal ? "noopener noreferrer" : undefined)}
         aria-disabled={disabled || undefined}
         onClickCapture={handleClickCapture}
-        className={cx(styles.root, underlineClass[underline], disabled && styles.disabled, className)}
+        className={cx(styles.root, size && sizeClass[size], underlineClass[underline], disabled && styles.disabled, className)}
       >
         {asChild ? (
           children
@@ -107,7 +127,7 @@ export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
             {children}
             {isExternal && (
               <>
-                <Icon icon={ArrowSquareOutIcon} size="xs" className={styles.icon} />
+                <Icon icon={ArrowSquareOutIcon} className={styles.icon} />
                 <VisuallyHidden> (opens in a new tab)</VisuallyHidden>
               </>
             )}

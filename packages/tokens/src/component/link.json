@@ -1,5 +1,10 @@
 {
   "link": {
+    "icon-scale": {
+      "$type": "dimension",
+      "$value": "1em",
+      "$description": "New token (2026-10-20), added when Link gained its `size` prop: the external-link icon's width and height, as a fraction of the link's own text. 1em, so the icon is the same size as the text it follows (a link at sm has an sm icon), at any size, whether inherited or set; it was first built one step of the type scale smaller (0.833em) and made one to one at the maintainer's direction. Replaces a fixed `xs` (12px) icon, which did not scale with the text. em-relative for the same reason as the two tokens below."
+    },
     "icon-offset-inline": {
       "$type": "dimension",
       "$value": "0.25em",

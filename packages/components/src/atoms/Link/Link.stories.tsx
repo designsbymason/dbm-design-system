@@ -1,4 +1,5 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
+import { expect, within } from "storybook/test";
 import { Link } from "./Link";
 import { linkPlaygroundSnippet, linkSnippets } from "./Link.snippets";
 
@@ -28,6 +29,13 @@ const meta: Meta<typeof Link> = {
       control: "radio",
       options: ["always", "hover", "none"],
       description: "Controls when the underline is visible.",
+    },
+    size: {
+      control: "select",
+      options: ["xs", "sm", "base", "md", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl"],
+      description:
+        "The link's font size, on the same scale as Text and Heading, replacing the size it would take from the text around it (and, with none around it, from its nearest ancestor that sets one). Left out, the link inherits. The external-link icon is the size of the text, however the size is set.",
+      table: { defaultValue: { summary: "inherited" } },
     },
     asChild: {
       control: false,
@@ -91,6 +99,7 @@ const meta: Meta<typeof Link> = {
     children: "Documentation",
     external: false,
     underline: "always",
+    size: undefined,
     disabled: false,
     "aria-label": "",
   },
@@ -102,6 +111,15 @@ type Story = StoryObj<typeof Link>;
 
 /** Drive every prop live. */
 export const Playground: Story = {
+  // "inherit" is the Playground's own choice for "leave size out", not a value the prop takes (07 §4.1), so it lives here and not on the meta.
+  argTypes: {
+    size: {
+      control: "select",
+      options: ["inherit", "xs", "sm", "base", "md", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl"],
+      mapping: { inherit: undefined },
+    },
+  },
+  args: { size: "inherit" as never },
   parameters: {
     docs: {
       source: {
@@ -119,6 +137,7 @@ export const Internal: Story = {
     children: { control: false },
     external: { control: false },
     underline: { control: false },
+    size: { control: false },
     disabled: { control: false },
     "aria-label": { control: false },
   },
@@ -133,6 +152,7 @@ export const External: Story = {
     children: { control: false },
     external: { control: false },
     underline: { control: false },
+    size: { control: false },
     disabled: { control: false },
     "aria-label": { control: false },
   },
@@ -147,6 +167,7 @@ export const ForcedExternal: Story = {
     children: { control: false },
     external: { control: false },
     underline: { control: false },
+    size: { control: false },
     disabled: { control: false },
     "aria-label": { control: false },
   },
@@ -165,6 +186,7 @@ export const AsChild: Story = {
     children: { control: false },
     external: { control: false },
     underline: { control: false },
+    size: { control: false },
     disabled: { control: false },
     "aria-label": { control: false },
   },
@@ -198,6 +220,7 @@ export const Disabled: Story = {
     children: { control: false },
     external: { control: false },
     underline: { control: false },
+    size: { control: false },
     disabled: { control: false },
     "aria-label": { control: false },
   },
@@ -216,6 +239,7 @@ export const InParagraph: Story = {
     children: { control: false },
     external: { control: false },
     underline: { control: false },
+    size: { control: false },
     disabled: { control: false },
     "aria-label": { control: false },
   },
@@ -235,6 +259,7 @@ export const UnderlineVariants: Story = {
     children: { control: false },
     external: { control: false },
     underline: { control: false },
+    size: { control: false },
     disabled: { control: false },
     "aria-label": { control: false },
   },
@@ -253,4 +278,79 @@ export const UnderlineVariants: Story = {
       </Link>
     </p>
   ),
+};
+
+export const Sizes: Story = {
+  name: "size (the default inherits)",
+  parameters: { docs: { source: { code: linkSnippets.sizes } } },
+  argTypes: {
+    href: { control: false },
+    children: { control: false },
+    external: { control: false },
+    underline: { control: false },
+    size: { control: false },
+    disabled: { control: false },
+    "aria-label": { control: false },
+  },
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-3)", color: "var(--dbm-text-primary)" }}>
+      <p style={{ margin: 0, fontSize: "var(--dbm-font-size-sm)" }}>
+        Small text with a <Link href="https://example.com/a">link that inherits it</Link> and a{" "}
+        <Link href="https://example.com/b" size="lg">
+          link set to lg
+        </Link>
+        .
+      </p>
+      <p style={{ margin: 0, fontSize: "var(--dbm-font-size-xl)" }}>
+        Large text with a <Link href="https://example.com/c">link that inherits it</Link> and a{" "}
+        <Link href="https://example.com/d" size="sm">
+          link set to sm
+        </Link>
+        .
+      </p>
+      {(["xs", "sm", "base", "md", "lg", "xl", "2xl"] as const).map((size) => (
+        <div key={size}>
+          <Link href="https://example.com/e" size={size}>
+            size=&quot;{size}&quot;
+          </Link>
+        </div>
+      ))}
+    </div>
+  ),
+};
+
+/** Hidden twin of "size": a link inherits the text around it unless `size` is set, and its icon is the size of the text. */
+export const SizesInteraction: Story = {
+  ...Sizes,
+  name: "size — interaction test",
+  tags: ["!dev"],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const fontSize = (element: Element) => Number.parseFloat(getComputedStyle(element).fontSize);
+    const tokenSize = (name: string) => {
+      const probe = document.createElement("span");
+      probe.style.fontSize = `var(--dbm-font-size-${name})`;
+      canvasElement.append(probe);
+      const size = fontSize(probe);
+      probe.remove();
+      return size;
+    };
+    // each unsized link takes its own paragraph's size (sm, then xl); an `lg` or `sm` link takes that token whatever the paragraph is
+    for (const link of canvas.getAllByRole("link", { name: /link that inherits it/ })) {
+      expect(fontSize(link)).toBe(fontSize(link.parentElement!));
+    }
+    const [small, large] = canvas.getAllByRole("link", { name: /link that inherits it/ }) as [HTMLElement, HTMLElement];
+    expect(fontSize(large)).toBeGreaterThan(fontSize(small));
+    expect(fontSize(canvas.getByRole("link", { name: /link set to lg/ }))).toBe(tokenSize("lg"));
+    expect(fontSize(canvas.getByRole("link", { name: /link set to sm/ }))).toBe(tokenSize("sm"));
+    // every external link's icon is the size of its own text, inherited or set
+    for (const link of canvas.getAllByRole("link")) {
+      const icon = link.querySelector("svg");
+      if (!icon) continue;
+      // the drawn box, not the icon's font size: the box is what a reader sees
+      const ratio = icon.getBoundingClientRect().width / fontSize(link);
+      expect(Math.abs(ratio - 1)).toBeLessThan(0.02);
+      expect(Math.abs(icon.getBoundingClientRect().height / fontSize(link) - 1)).toBeLessThan(0.02);
+    }
+  },
 };

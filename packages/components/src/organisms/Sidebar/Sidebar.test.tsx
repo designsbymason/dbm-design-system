@@ -155,6 +155,43 @@ describe("Sidebar", () => {
       expect(screen.getByRole("link", { name: "Plain" })).not.toHaveAttribute("target");
     });
 
+    it("draws the external-link mark one step below the item's own icon, at every item size", () => {
+      const sizes = { xs: ["sizeSm", "sizeXs"], sm: ["sizeSm", "sizeXs"], md: ["sizeMd", "sizeSm"], lg: ["sizeMd", "sizeSm"] } as const;
+      for (const [size, [leading, trailing]] of Object.entries(sizes)) {
+        const { unmount } = render(
+          <Sidebar collapseBelow="never" size={size as keyof typeof sizes}>
+            <Sidebar.Nav>
+              <Sidebar.Item href="https://example.com" icon={HouseIcon}>
+                Docs
+              </Sidebar.Item>
+            </Sidebar.Nav>
+          </Sidebar>,
+        );
+        const [icon, mark] = [...screen.getByRole("link").querySelectorAll("svg")];
+        expect(icon!.getAttribute("class"), size).toMatch(new RegExp(leading));
+        expect(mark!.getAttribute("class"), size).toMatch(new RegExp(trailing));
+        unmount();
+      }
+    });
+
+    it("draws a group's caret at the same size as the external-link mark", () => {
+      const sizes = { xs: "sizeXs", sm: "sizeXs", md: "sizeSm", lg: "sizeSm" } as const;
+      for (const [size, expected] of Object.entries(sizes)) {
+        const { unmount } = render(
+          <Sidebar collapseBelow="never" size={size as keyof typeof sizes}>
+            <Sidebar.Nav>
+              <Sidebar.Group label="Reports">
+                <Sidebar.Item href="/a">A</Sidebar.Item>
+              </Sidebar.Group>
+            </Sidebar.Nav>
+          </Sidebar>,
+        );
+        const icons = [...screen.getByRole("button", { name: "Reports" }).querySelectorAll("svg")];
+        expect(icons.at(-1)!.getAttribute("class"), size).toMatch(new RegExp(expected));
+        unmount();
+      }
+    });
+
     it("includes a badge in the item's name", () => {
       render(<Basic />);
       expect(screen.getByRole("link", { name: "Team 3" })).toBeInTheDocument();

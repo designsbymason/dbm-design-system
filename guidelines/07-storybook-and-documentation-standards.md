@@ -217,7 +217,7 @@ Foundational components first (prove the template before mass-applying it), then
 | Heading | Atom | Typography | ✅ | ✅ 2026-09-06 | [Heading.md](component-reviews/Heading.md) |
 | Highlight | Atom | Typography | ✅ | ✅ 2026-09-07 | [Highlight.md](component-reviews/Highlight.md) |
 | Kbd | Atom | Typography | ✅ | ✅ 2026-09-07 | [Kbd.md](component-reviews/Kbd.md) |
-| Link | Atom | Typography | ✅ | ✅ 2026-09-07 | [Link.md](component-reviews/Link.md) |
+| Link | Atom | Typography | ✅ | ✅ 2026-09-07 (optional `size` added and the external icon made to scale with the text 2026-10-20; re-verified: design quality, theming, responsiveness, Docs, tests) | [Link.md](component-reviews/Link.md) |
 | ListItem | Atom | Typography | ✅ | ✅ 2026-09-07 | [ListItem.md](component-reviews/ListItem.md) |
 | Text | Atom | Typography | ✅ | ✅ 2026-09-07 | [Text.md](component-reviews/Text.md) |
 | ClientOnly | Atom | Utility | ✅ | ✅ 2026-09-07 | [ClientOnly.md](component-reviews/ClientOnly.md) |

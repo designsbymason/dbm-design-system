@@ -1473,6 +1473,9 @@ describe("Playground snippets for the eight typography atoms", () => {
     expect(linkPlaygroundSnippet({ href: "https://example.com", children: "x", external: false })).toBe('<Link href="https://example.com" external={false}>x</Link>');
     expect(linkPlaygroundSnippet({ href: "//cdn.example.com/a", children: "x", external: false })).toContain("external={false}");
     expect(linkPlaygroundSnippet({ href: "/docs", children: "x", underline: "hover", disabled: true })).toBe('<Link href="/docs" underline="hover" disabled>x</Link>');
+    // size is written only when one is chosen: "inherit" is the Playground's word for leaving it out
+    expect(linkPlaygroundSnippet({ href: "/docs", children: "x", size: "inherit" })).toBe('<Link href="/docs">x</Link>');
+    expect(linkPlaygroundSnippet({ href: "/docs", children: "x", size: "lg" })).toBe('<Link href="/docs" size="lg">x</Link>');
   });
 
   it.each([{}, { children: "Inbox", interactive: true, selected: true, disabled: true, "aria-label": "Inbox" }])("ListItem %j is a real snippet", (args) => {

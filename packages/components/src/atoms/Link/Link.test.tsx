@@ -4,6 +4,29 @@ import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Link } from "./Link";
 
+describe("Link size", () => {
+  it("has no size class by default, so the link inherits its font size", () => {
+    render(<Link href="/docs">Docs</Link>);
+    expect(screen.getByRole("link").className).not.toMatch(/size/i);
+  });
+
+  it.each(["xs", "sm", "base", "md", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl"] as const)("size=%s sets its own class", (size) => {
+    render(<Link href="/docs" size={size}>Docs</Link>);
+    expect(screen.getByRole("link").className).toMatch(new RegExp(`size${size[0]!.toUpperCase()}${size.slice(1)}`));
+  });
+
+  it("puts the size class on the element asChild composes onto, and draws the icon the same either way", () => {
+    render(
+      <Link asChild href="/docs" size="lg">
+        <a href="/docs" data-testid="own">
+          Docs
+        </a>
+      </Link>,
+    );
+    expect(screen.getByTestId("own").className).toMatch(/sizeLg/);
+  });
+});
+
 describe("Link", () => {
   it("renders an anchor with the given href", () => {
     render(<Link href="/docs">Docs</Link>);
