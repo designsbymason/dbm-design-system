@@ -72,7 +72,10 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 //   composes are most of it, and an app that wants a table with a toolbar and paging would pay for them either way (ADR-0085).
 //   With the column menu (a `Menu` and a `Button`, 5KB and more), sorting by several columns, select all across pages and resizing
 //   columns (ADR-0087, ADR-0088): 23.59KB measured. The menu is the largest part, and every table pays for it whether or not it uses one.
-const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DataTable: 26, DatePicker: 18, Navbar: 22, TimeRangePicker: 12, Toolbar: 12 };
+//   Sidebar (2026-10-19): the phone panel is a `Drawer` and a group in the rail opens a `Menu`, an item's text in the rail is a
+//   `Tooltip`, and a group opens with `Collapse`, so its bundle holds those four and their stylesheets plus the `Badge`, `Icon` and
+//   `IconButton` it draws with, 16.80KB measured (the same parts as `Navbar`'s 19.50KB, less its search sheet and rows).
+const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DataTable: 26, DatePicker: 18, Navbar: 22, Sidebar: 20, TimeRangePicker: 12, Toolbar: 12 };
 
 // The same for CSS. `DataTable`'s bundle holds the stylesheets of the `Table`, `TableToolbar`, `Pagination`, `Select`,
 // `Checkbox` and `Menu` parts it draws with (6.30KB measured against 3.45KB for `TableToolbar`, the largest of them), plus its own; 8.10KB
@@ -81,7 +84,10 @@ const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DataTable: 26, DatePicker: 18, Na
 // `Navbar`'s bundle holds the `Drawer` its menu panel is and the `Menu` its groups open, with the `SearchInput` and the second `Drawer` of its search sheet (and the `IconButton`, `Container` and `Affix`
 // it draws with, and the `Badge` of its links' badges): 17.48KB of JS and 8.35KB of CSS first measured, 19.60KB and 10.00KB with the link
 // sizes, weights and cases, the columns, the frosted variant and the badge, the CSS being mostly the `Drawer`'s seven-breakpoint side classes. CSS budget 11KB.
-const CSS_BUDGET_OVERRIDES_KB = { DataTable: 9, Navbar: 11 };
+//
+// `Sidebar`'s bundle holds the `Drawer`'s seven-breakpoint side classes, as `Navbar`'s does, with the `Menu`, `Tooltip` and `Collapse` stylesheets
+// and its own: 8.52KB measured. CSS budget 10KB.
+const CSS_BUDGET_OVERRIDES_KB = { DataTable: 9, Navbar: 11, Sidebar: 10 };
 
 // Words only an opt-in extra's code contains, and the component whose bundle must not contain them: `CodeBlock`
 // ships Python, Go and Java as separate exports an app registers (ADR-0027). If a change makes the component

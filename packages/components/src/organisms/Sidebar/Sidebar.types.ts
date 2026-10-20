@@ -1,0 +1,442 @@
+import type { Breakpoint, SpaceValue } from "@dbm-design-system/primitives";
+import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type { AnchorHTMLAttributes, ComponentPropsWithoutRef, CSSProperties, HTMLAttributes, ReactNode } from "react";
+import type { ButtonSize, ButtonTone, ButtonVariant } from "../../atoms/Button";
+import type { DrawerOpenChangeDetails } from "../Drawer";
+
+/**
+ * The height of an item, on the same steps as `Navbar`'s links and the `IconButton` heights they follow: `xs` is a dense
+ * list, `md` the default, `lg` a roomy one. The expanded width is separate (`width`), and the collapsed rail is as wide as an
+ * item of the same step plus the sidebar's padding.
+ */
+export type SidebarSize = "xs" | "sm" | "md" | "lg";
+
+/**
+ * How the sidebar itself is drawn: `outlined` (a surface with a line along its inner edge), `filled` (the same surface with no
+ * line) or `ghost` (nothing of its own, the items sit on the page). The names `Card`, `EmptyState` and `Navbar` use for their
+ * `variant`.
+ */
+export type SidebarVariant = "outlined" | "filled" | "ghost";
+
+/**
+ * How the current page's item (and a group that holds it) is marked, beyond `aria-current="page"`, which is always set:
+ * `subtle` (a tinted pill with brand-coloured text), `bar` (a brand line along the item's start edge) or `solid` (a brand fill
+ * with the text on it). `bar` is the vertical counterpart of `Navbar`'s `underline`.
+ */
+export type SidebarCurrentVariant = "subtle" | "bar" | "solid";
+
+/** Which edge of the page the sidebar sits against, in the reading direction: `start` is the left in left-to-right text. */
+export type SidebarSide = "start" | "end";
+
+/**
+ * The width below which the sidebar leaves the page for a menu button and a panel: a breakpoint step (`"md"` is 768px), or
+ * `"never"` to keep the column on the page at every width. `"base"` is not an option, since it would mean never.
+ */
+export type SidebarCollapseBelow = Exclude<Breakpoint, "base"> | "never";
+
+/** The reading direction. Not read from the page: pass `"rtl"` on a right-to-left page. */
+export type SidebarDirection = "ltr" | "rtl";
+
+/** What closed (or opened) the phone panel: the same reasons `Drawer` reports. */
+export type SidebarMenuChangeDetails = DrawerOpenChangeDetails;
+
+/** The text `Sidebar` supplies itself, translatable through the `labels` prop. Nothing here needs a number. */
+export interface SidebarLabels {
+  /** The accessible name of a `Sidebar.Nav` that is given no other. @default 'Main' */
+  navigation: string;
+  /** The accessible name of the collapse button while the sidebar is expanded. @default 'Collapse sidebar' */
+  collapse: string;
+  /** The accessible name of the collapse button while the sidebar is a rail. @default 'Expand sidebar' */
+  expand: string;
+  /** The accessible name of the menu button, and the title of the panel that opens. @default 'Menu' */
+  menu: string;
+  /** The accessible name of the panel's close button. @default 'Close' */
+  close: string;
+  /** The visually hidden text after an external item's text. @default '(opens in a new tab)' */
+  externalLink: string;
+}
+
+/**
+ * The settings that decide whether the sidebar is a rail and whether the phone panel is open. They are the same on
+ * `Sidebar.Provider` and on `Sidebar` itself; a sidebar inside a provider uses the provider's.
+ */
+export interface SidebarStateProps {
+  /**
+   * Whether the sidebar is collapsed to a rail of icons (controlled). Pair with `onCollapsedChange`. The phone panel is never a rail.
+   */
+  collapsed?: boolean;
+  /**
+   * Whether the sidebar starts as a rail (uncontrolled).
+   * @default false
+   */
+  defaultCollapsed?: boolean;
+  /** Called with the new value when the collapse button is pressed or `setCollapsed` is called. */
+  onCollapsedChange?: (collapsed: boolean) => void;
+  /** Whether the phone panel is open (controlled). Pair with `onMenuOpenChange`. */
+  menuOpen?: boolean;
+  /**
+   * Whether the phone panel starts open (uncontrolled).
+   * @default false
+   */
+  defaultMenuOpen?: boolean;
+  /** Called when the phone panel opens or closes, with what caused it. */
+  onMenuOpenChange?: (open: boolean, details: SidebarMenuChangeDetails) => void;
+  /**
+   * The width below which the sidebar leaves the page for a menu button and a panel (see `SidebarCollapseBelow`).
+   * @default 'md'
+   */
+  collapseBelow?: SidebarCollapseBelow;
+  /** Text the sidebar supplies itself, such as the collapse button's name. Merged over the English defaults. */
+  labels?: Partial<SidebarLabels>;
+}
+
+/** What `useSidebar()` returns: the sidebar's state and the functions that change it. */
+export interface SidebarState {
+  /** Whether the sidebar you are inside is a rail. Always `false` in the phone panel, which is never one. */
+  collapsed: boolean;
+  /** Collapses to a rail, or expands. Reports through `onCollapsedChange`. */
+  setCollapsed: (collapsed: boolean) => void;
+  /** Flips `collapsed`. */
+  toggleCollapsed: () => void;
+  /** Whether the phone panel is open. */
+  menuOpen: boolean;
+  /** Opens or closes the phone panel. Reports through `onMenuOpenChange`. */
+  setMenuOpen: (open: boolean) => void;
+}
+
+export interface SidebarProviderProps extends SidebarStateProps {
+  /** The page shell: a `Sidebar`, and any `Sidebar.MenuButton` or `Sidebar.Toggle` that sits outside it (in a `Navbar`). */
+  children?: ReactNode;
+}
+
+export interface SidebarProps extends SidebarStateProps, Omit<ComponentPropsWithoutRef<"div">, "dir" | "children"> {
+  /**
+   * The sidebar's parts, in reading order: `Sidebar.Header`, `Sidebar.Content` holding a `Sidebar.Nav`, and `Sidebar.Footer`. The
+   * same children are drawn on the page and, below `collapseBelow`, in the phone panel.
+   */
+  children?: ReactNode;
+  /**
+   * How the sidebar itself is drawn: a surface with a line along its inner edge, the same surface with no line, or nothing of its own.
+   * @default 'outlined'
+   */
+  variant?: SidebarVariant;
+  /**
+   * The height of an item and its icon and text size, on the same scale as `Navbar`'s links. The rail is as wide as an item of this step plus the
+   * sidebar's padding.
+   * @default 'md'
+   */
+  size?: SidebarSize;
+  /**
+   * How the current item is marked: a tinted pill, a brand line along its start edge, or a brand fill. `aria-current` is set whichever
+   * it is, and the look is the same in the phone panel.
+   * @default 'subtle'
+   */
+  currentVariant?: SidebarCurrentVariant;
+  /**
+   * Fully rounded items: each item and group button is a pill, with the current item's tint or fill following the shape. The items round, not the
+   * sidebar.
+   * @default false
+   */
+  rounded?: boolean;
+  /**
+   * The expanded width: a number of pixels or any CSS length (`"18rem"`, `"min(20rem, 30vw)"`). Left out it is the `sidebar.width` token.
+   * The rail's width does not change with it.
+   */
+  width?: number | string;
+  /**
+   * Which edge of the page the sidebar sits against: it sets which edge its line is on and which side the phone panel slides in from.
+   * @default 'start'
+   */
+  side?: SidebarSide;
+  /** Called when the phone panel has finished opening or closing, after its animation. */
+  onMenuOpenChangeComplete?: (open: boolean) => void;
+  /**
+   * Whether to close the phone panel when a link in it is pressed, including a router's link that prevents the browser's own navigation.
+   * @default true
+   */
+  closeMenuOnNavigate?: boolean;
+  /**
+   * An element to draw the phone panel inside instead of the document body, so it stays within a frame. Mainly for demos and tests.
+   */
+  menuContainer?: HTMLElement | null;
+  /**
+   * Keeps the sidebar in view while the page scrolls: it sticks to the top of the page (below `stickyOffset`) and is as tall as the
+   * rest of the window, scrolling its own content.
+   * @default false
+   */
+  sticky?: boolean;
+  /**
+   * How far from the top of the page a sticky sidebar sticks, on the spacing scale: the height of a sticky `Navbar` above it.
+   * @default 0
+   */
+  stickyOffset?: SpaceValue;
+  /**
+   * The reading direction. Not read from the page: pass `"rtl"` on a right-to-left page.
+   * @default 'ltr'
+   */
+  dir?: SidebarDirection;
+  /** Standard DOM id. Avoid it: the sidebar's children are drawn twice while the phone panel is open. */
+  id?: string;
+  /** Additional CSS classes, on the sidebar's root. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface SidebarHeaderProps extends HTMLAttributes<HTMLDivElement> {
+  /** The top of the sidebar: a brand, a workspace switcher. Read `useSidebar().collapsed` to draw a smaller version in the rail. */
+  children?: ReactNode;
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface SidebarContentProps extends HTMLAttributes<HTMLDivElement> {
+  /** The middle of the sidebar, which scrolls on its own when its navigation is taller than the room. Holds `Sidebar.Nav`s. */
+  children?: ReactNode;
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface SidebarFooterProps extends HTMLAttributes<HTMLDivElement> {
+  /** The bottom of the sidebar, which stays in view: an account menu, a help link. Read `useSidebar().collapsed` to draw a smaller version in the rail. */
+  children?: ReactNode;
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface SidebarNavProps extends Omit<ComponentPropsWithoutRef<"nav">, "children"> {
+  /** A list of `Sidebar.Item`s, `Sidebar.Group`s, `Sidebar.Section`s and `Sidebar.Separator`s. */
+  children?: ReactNode;
+  /** The navigation's accessible name; defaults to `labels.navigation` ("Main"). Give each `Sidebar.Nav` its own, so they are told apart. */
+  "aria-label"?: string;
+  /** Names the navigation from an element on the page instead of a string. */
+  "aria-labelledby"?: string;
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface SidebarSectionProps extends Omit<HTMLAttributes<HTMLLIElement>, "children"> {
+  /** The section's heading, drawn above its items. In the rail it is hidden, and a line separates the sections; it still names the group. */
+  label: ReactNode;
+  /** The section's `Sidebar.Item`s and `Sidebar.Group`s. */
+  children?: ReactNode;
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface SidebarItemProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "children"> {
+  /** The item's text. In the rail it is hidden and shown in a tooltip, and it stays the item's accessible name. With `asChild`, the child's own content instead. */
+  children?: ReactNode;
+  /** Where the item goes. Without one, the item is a `<button>` (an action, such as "New project"). With `asChild`, put it on the child instead. */
+  href?: string;
+  /**
+   * An icon before the text, a component reference. It is all the rail shows, so give every item one; without it the rail shows the text's
+   * first character. It follows the text's colour, so it tracks hover and the current look.
+   */
+  icon?: PhosphorIcon;
+  /**
+   * What to show after the text, such as a count: plain text, drawn in `Badge`'s subtle brand look, or a `Badge` you pass, drawn as written.
+   * Pass the `Badge` element itself. It is part of the item's name, so a count is read with it ("Inbox 3"). In the rail it becomes a small
+   * mark on the icon.
+   */
+  badge?: ReactNode;
+  /**
+   * Marks the item as leading off the site: it opens in a new tab with `rel="noopener noreferrer"`, and gets a trailing icon and a
+   * visually hidden "(opens in a new tab)". Worked out from `href` when left out (an `http(s)://` or `//` address).
+   */
+  external?: boolean;
+  /**
+   * Marks the item as the page the reader is on: `aria-current="page"` and the sidebar's `currentVariant` look. The caller decides which one it
+   * is (from the router), so it stays correct on a server-rendered page.
+   * @default false
+   */
+  current?: boolean;
+  /**
+   * Makes the item inert: `aria-disabled` plus a blocked click, and it stays in the tab order, as `Link` does.
+   * @default false
+   */
+  disabled?: boolean;
+  /**
+   * Renders as a single provided child element (via Radix `Slot`) instead of the built-in `<a>` or `<button>`, to use a router's link.
+   * @default false
+   */
+  asChild?: boolean;
+  /** Names the item when its content is only an icon. */
+  "aria-label"?: string;
+  /** Standard DOM id. Avoid it: the sidebar's items are on the page twice while the phone panel is open. */
+  id?: string;
+  /** Additional CSS classes, on the item's element. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface SidebarGroupProps extends Omit<ComponentPropsWithoutRef<"button">, "children" | "type"> {
+  /** The group's text, on the button that opens it. In the rail it is the title of the flyout and the button's tooltip. */
+  label: ReactNode;
+  /** The group's `Sidebar.Item`s, and `Sidebar.Group`s nested in it (up to three levels). */
+  children?: ReactNode;
+  /** An icon before the label. It is all the rail shows, so give every top-level group one. */
+  icon?: PhosphorIcon;
+  /**
+   * Marks the group as holding the current page: the `currentVariant` look on its button while it is collapsed, and it starts open.
+   * It has no `aria-current`, since a button is not a page. The caller says it, as for an item.
+   * @default false
+   */
+  current?: boolean;
+  /** Whether the group is open (controlled). Pair with `onOpenChange`. Ignored in the rail, where the group is a flyout. */
+  open?: boolean;
+  /**
+   * Whether the group starts open (uncontrolled). Left out it starts open when `current`.
+   * @default false
+   */
+  defaultOpen?: boolean;
+  /** Called with the new value when the group's button is pressed. */
+  onOpenChange?: (open: boolean) => void;
+  /**
+   * Makes the group's button inert: a native `disabled` button, so it leaves the tab order, unlike a disabled item.
+   * @default false
+   */
+  disabled?: boolean;
+  /** Standard DOM id on the group's button. */
+  id?: string;
+  /** Additional CSS classes, on the group's button. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface SidebarSeparatorProps extends Omit<HTMLAttributes<HTMLLIElement>, "children"> {
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface SidebarToggleProps extends Omit<ComponentPropsWithoutRef<"button">, "children" | "type"> {
+  /**
+   * The button's look: any `IconButton` variant, so it can match the icon buttons beside it.
+   * @default 'ghost'
+   */
+  variant?: ButtonVariant;
+  /**
+   * The button's colour family: `brand` or `neutral`.
+   * @default 'neutral'
+   */
+  tone?: ButtonTone;
+  /** The button's size: the same scale as `IconButton`. Defaults to the sidebar's own `size`. */
+  size?: ButtonSize;
+  /** The button's accessible name. Defaults to `labels.collapse` or `labels.expand`, whichever the press would do. */
+  "aria-label"?: string;
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface SidebarMenuButtonProps extends Omit<ComponentPropsWithoutRef<"button">, "children" | "type"> {
+  /**
+   * The icon, a component reference.
+   * @default ListIcon
+   */
+  icon?: PhosphorIcon;
+  /**
+   * The button's look: any `IconButton` variant, so it can match the icon buttons beside it.
+   * @default 'ghost'
+   */
+  variant?: ButtonVariant;
+  /**
+   * The button's colour family: `brand` or `neutral`, so it can match the icon buttons beside it.
+   * @default 'brand'
+   */
+  tone?: ButtonTone;
+  /** The button's size, on the same scale as `IconButton`. Defaults to the sidebar's own `size`, or `md` outside one. */
+  size?: ButtonSize;
+  /** The button's accessible name. Defaults to `labels.menu` ("Menu"). */
+  "aria-label"?: string;
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}

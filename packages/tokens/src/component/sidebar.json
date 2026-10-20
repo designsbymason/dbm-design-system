@@ -1,0 +1,9 @@
+{
+  "sidebar": {
+    "width": {
+      "$type": "dimension",
+      "$value": "16rem",
+      "$description": "New token (2026-10-19), added for Sidebar — the width of the expanded navigation column, and the default for its `width` prop. A column holding an icon, a label, a badge and a nested level needs more room than the spacing scale offers (it tops out at 8rem). The collapsed rail is not a token: it is derived in CSS from the item height and the sidebar's own padding."
+    }
+  }
+}

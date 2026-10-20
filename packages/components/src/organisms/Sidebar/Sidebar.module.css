@@ -1,0 +1,574 @@
+/* --- The column --- */
+
+/* The sidebar is a flex column of three bands: a header, content that scrolls on its own and a footer, so the header and footer stay in
+   view. Its width is the `sidebar.width` token (or the `width` prop, as `--sidebar-width`); collapsed, it is as wide as one item plus the
+   padding around it, so an icon sits in the same place in both states and never moves as the column opens and closes. */
+.root {
+  --sidebar-line: 0px;
+
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  box-sizing: border-box;
+  inline-size: var(--sidebar-width, var(--dbm-sidebar-width));
+  min-block-size: 0;
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--sidebar-font);
+  font-weight: var(--dbm-font-weight-medium);
+  color: var(--dbm-text-primary);
+  transition: inline-size var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+/* `size`: an item is its icon plus the padding around it, so the rail (one item wide) is square and the icon is centred in it. */
+.sizeXs {
+  --sidebar-icon: var(--dbm-icon-size-sm);
+  --sidebar-pad: var(--dbm-space-1);
+  --sidebar-font: var(--dbm-font-size-xs);
+  --sidebar-badge: var(--dbm-space-4);
+}
+
+.sizeSm {
+  --sidebar-icon: var(--dbm-icon-size-sm);
+  --sidebar-pad: var(--dbm-space-2);
+  --sidebar-font: var(--dbm-font-size-sm);
+  --sidebar-badge: var(--dbm-space-5);
+}
+
+.sizeMd {
+  --sidebar-icon: var(--dbm-icon-size-md);
+  --sidebar-pad: var(--dbm-space-2);
+  --sidebar-font: var(--dbm-font-size-base);
+  --sidebar-badge: var(--dbm-space-5);
+}
+
+.sizeLg {
+  --sidebar-icon: var(--dbm-icon-size-md);
+  --sidebar-pad: var(--dbm-space-3);
+  --sidebar-font: var(--dbm-font-size-md);
+  --sidebar-badge: var(--dbm-space-6);
+}
+
+.rail {
+  inline-size: calc(var(--sidebar-icon) + 2 * var(--sidebar-pad) + 2 * var(--dbm-space-2) + var(--sidebar-line));
+}
+
+/* `variant`: `outlined` is a surface with a line along its inner edge (the edge it does not sit against, so `border-inline-end` on a
+   start-side sidebar and `border-inline-start` on an end-side one); `filled` the same surface with no line; `ghost` nothing of its own. */
+.outlined {
+  --sidebar-line: var(--dbm-border-width-1);
+
+  background-color: var(--dbm-bg-surface);
+  border-inline-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+.outlined[data-side="end"] {
+  border-inline-end: 0;
+  border-inline-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+.filled {
+  background-color: var(--dbm-bg-surface);
+}
+
+.ghost {
+  background-color: transparent;
+}
+
+/* `sticky`: the column sticks below the offset (the height of a sticky `Navbar`) and takes the rest of the window, so its content scrolls
+   on its own inside it instead of with the page. */
+.sticky {
+  position: sticky;
+  inset-block-start: var(--sidebar-sticky-offset, 0px);
+  align-self: flex-start;
+  block-size: calc(100dvh - var(--sidebar-sticky-offset, 0px));
+}
+
+/* --- Header, content and footer --- */
+
+.header,
+.footer {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--dbm-space-2);
+  padding: var(--dbm-space-2);
+}
+
+.rail .header,
+.rail .footer {
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* The content scrolls with the browser's own scrollbar, thin and in the quiet border colour, and keeps a scroll from chaining to the page
+   behind it. */
+.content {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dbm-border-default) transparent;
+}
+
+.nav {
+  box-sizing: border-box;
+  padding: var(--dbm-space-2);
+}
+
+.nav + .nav {
+  padding-block-start: 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbm-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.listItem {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbm-space-1);
+  padding-block-start: var(--dbm-space-3);
+}
+
+.section:first-child {
+  padding-block-start: 0;
+}
+
+.sectionLabel {
+  padding-block: var(--dbm-space-1);
+  padding-inline: var(--sidebar-pad);
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-xs);
+  font-weight: var(--dbm-font-weight-medium);
+}
+
+/* In the rail the heading has no room, so it is hidden (still the list's name) and a line sets the section apart. */
+.rail .sectionLabel,
+.hiddenText {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.rail .section {
+  margin-block-start: var(--dbm-space-2);
+  padding-block-start: var(--dbm-space-2);
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+.rail .section:first-child {
+  margin-block-start: 0;
+  padding-block-start: 0;
+  border-block-start: 0;
+}
+
+.separator {
+  margin-block: var(--dbm-space-1);
+  border-block-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+/* --- Items --- */
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--dbm-space-3);
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: calc(var(--sidebar-icon) + 2 * var(--sidebar-pad));
+  padding: var(--sidebar-pad);
+  border: 0;
+  border-radius: var(--dbm-radius-md);
+  background-color: transparent;
+  color: var(--dbm-text-secondary);
+  font: inherit;
+  line-height: var(--sidebar-icon);
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+/* Hovering an item tints it, and nothing else changes: the text and the icon keep their colour, as an item in a menu or a list does. The
+   tint is the signal; `text.secondary` on `bg.brand-subtle` is 6.0:1 or more in every theme. */
+.item:hover {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+/* The sidebar's content scrolls, and a box that scrolls clips what is drawn outside its edge, so the ring is drawn inside the item. */
+.item:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+  border-radius: var(--dbm-radius-sm);
+}
+
+.rounded,
+.rounded:focus-visible {
+  border-radius: var(--dbm-radius-full);
+}
+
+.icon {
+  flex: none;
+}
+
+/* The rail's stand-in for an icon an item was not given: its first letter, in a box the icon's size. */
+.initial {
+  display: inline-grid;
+  place-items: center;
+  inline-size: var(--sidebar-icon);
+  block-size: var(--sidebar-icon);
+  font-weight: var(--dbm-font-weight-bold);
+  line-height: 1;
+}
+
+.label {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trailingIcon {
+  flex: none;
+}
+
+/* A badge in an item is `Badge`'s subtle brand look, kept to the item's height: the atom's boxes are taller than a line of text. */
+.badge {
+  flex: none;
+  block-size: var(--sidebar-badge);
+  min-inline-size: var(--sidebar-badge);
+}
+
+/* In the rail the badge is a small mark on the icon's corner, so the count or dot is still seen without the room for a label. */
+.railBadge {
+  position: absolute;
+  inset-block-start: calc(-1 * var(--dbm-space-1));
+  inset-inline-end: calc(-1 * var(--dbm-space-1));
+  block-size: var(--dbm-space-4);
+  min-inline-size: var(--dbm-space-4);
+}
+
+.railItem {
+  inline-size: calc(var(--sidebar-icon) + 2 * var(--sidebar-pad));
+  justify-content: center;
+}
+
+/* --- The current page --- */
+
+.current,
+.current:hover {
+  background-color: var(--dbm-bg-brand-subtle);
+  color: var(--dbm-text-brand);
+}
+
+.current:hover {
+  background-color: var(--dbm-bg-brand-subtle-hover);
+}
+
+/* `bar`: no fill, a brand line along the item's start edge, text in the primary colour. */
+.currentBar,
+.currentBar:hover {
+  background-color: transparent;
+  color: var(--dbm-text-primary);
+}
+
+.currentBar:hover {
+  background-color: var(--dbm-bg-brand-subtle);
+}
+
+.currentBar::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: var(--dbm-space-1);
+  inline-size: var(--dbm-border-width-2);
+  border-radius: var(--dbm-radius-full);
+  background-color: var(--dbm-bg-brand);
+}
+
+/* The line grows in when an item becomes the current one (`currentGrow`, set only on that change, so not on a first paint or a panel that
+   opens on an item already current). Off under reduced motion, where the line is simply there. */
+@keyframes barGrow {
+  from {
+    transform: scaleY(0);
+  }
+
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.currentBar.currentGrow::before {
+  animation: barGrow var(--dbm-motion-duration-base) var(--dbm-motion-easing-emphasized) both;
+}
+
+/* `solid`: a brand fill with the text on it. Its focus ring is drawn inside the item in the on-brand colour, since the standard ring
+   (`border.focus`) is unreadable against a brand fill. */
+.currentSolid,
+.currentSolid:hover {
+  background-color: var(--dbm-bg-brand);
+  color: var(--dbm-text-on-brand);
+}
+
+.currentSolid:hover {
+  background-color: var(--dbm-bg-brand-hover);
+}
+
+.currentSolid:focus-visible {
+  outline-color: var(--dbm-icon-on-brand);
+}
+
+/* The current item as an item of a rail group's floating menu: the menu draws the item itself, so the look is a brand text colour and a
+   bar at the item's start edge (two cues, since colour alone can't be the only one). The attribute selector raises the specificity over
+   the menu's own item colour. The bar is a background gradient, which has no logical form, so right-to-left names the other edge. */
+.menuCurrent[role="menuitem"],
+.menuCurrent[role="menuitem"][data-state="open"] {
+  color: var(--dbm-text-brand);
+  background-image: linear-gradient(var(--dbm-bg-brand), var(--dbm-bg-brand));
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: var(--dbm-border-width-2) 60%;
+}
+
+.menuCurrent[role="menuitem"]:dir(rtl) {
+  background-position: right center;
+}
+
+/* Mirrors `Link`'s disabled treatment (`aria-disabled` plus a click guard, since `<a>` has no native `disabled`). */
+.disabled,
+.disabled:hover {
+  background-color: transparent;
+  color: var(--dbm-text-secondary);
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+/* --- Groups --- */
+
+.groupItem {
+  gap: var(--dbm-space-1);
+}
+
+.groupButton:disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+.groupButton:disabled:hover {
+  background-color: transparent;
+}
+
+.caret {
+  flex: none;
+  transition: transform var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.groupButton[aria-expanded="true"] .caret {
+  transform: rotate(180deg);
+}
+
+/* An opened group's items are indented under it, so their text lines up with the group's own text (the icon and the gap after it);
+   each deeper level adds one step. `Collapse` animates its height. */
+.groupList {
+  padding-inline-start: calc(var(--sidebar-icon) + var(--dbm-space-3));
+}
+
+.groupList .groupList {
+  padding-inline-start: var(--dbm-space-4);
+}
+
+/* The collapse button inside the sidebar is as big as an item, so in the rail it fills the column exactly like the items above it. */
+button.toggleBox {
+  box-sizing: border-box;
+  inline-size: calc(var(--sidebar-icon) + 2 * var(--sidebar-pad));
+  block-size: calc(var(--sidebar-icon) + 2 * var(--sidebar-pad));
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+
+/* --- The phone panel --- */
+
+.panelBody {
+  padding-inline: var(--dbm-space-2);
+}
+
+.panelRoot {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  font-family: var(--dbm-font-family-primary);
+  font-size: var(--sidebar-font);
+  font-weight: var(--dbm-font-weight-medium);
+  color: var(--dbm-text-primary);
+}
+
+.panelContent {
+  min-block-size: 0;
+}
+
+/* --- Collapsing: one class per step ---
+   Below the step the sidebar leaves the page (and the accessibility tree), the menu button shows and the toggle goes; at and above
+   it the reverse. Media queries can't read a custom property, so each width is the literal value of the matching breakpoint token (sm
+   640px, md 768px, lg 1024px, xl 1280px, 2xl 1536px, 3xl 1920px, in rem), as `Navbar` and `Drawer` write them. */
+@media not all and (min-width: 40rem) {
+  .collapseSm,
+  button.toggleSm {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 48rem) {
+  .collapseMd,
+  button.toggleMd {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 64rem) {
+  .collapseLg,
+  button.toggleLg {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 80rem) {
+  .collapseXl,
+  button.toggleXl {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 96rem) {
+  .collapse2xl,
+  button.toggle2xl {
+    display: none;
+  }
+}
+
+@media not all and (min-width: 120rem) {
+  .collapse3xl,
+  button.toggle3xl {
+    display: none;
+  }
+}
+
+@media (min-width: 40rem) {
+  button.menuButtonSm {
+    display: none;
+  }
+}
+
+@media (min-width: 48rem) {
+  button.menuButtonMd {
+    display: none;
+  }
+}
+
+@media (min-width: 64rem) {
+  button.menuButtonLg {
+    display: none;
+  }
+}
+
+@media (min-width: 80rem) {
+  button.menuButtonXl {
+    display: none;
+  }
+}
+
+@media (min-width: 96rem) {
+  button.menuButton2xl {
+    display: none;
+  }
+}
+
+@media (min-width: 120rem) {
+  button.menuButton3xl {
+    display: none;
+  }
+}
+
+button.menuButtonNever {
+  display: none;
+}
+
+/* --- Forced colours (Windows high contrast) ---
+   Forced colours replaces every background colour with the page's, so the current item, told apart by fill alone, gets a one-pixel
+   outline, and a `filled` sidebar a line along its inner edge. The outlined sidebar's line and the separators are borders, which forced
+   colours keeps. */
+@media (forced-colors: active) {
+  .filled {
+    border-inline-end: var(--dbm-border-width-1) solid CanvasText;
+  }
+
+  .filled[data-side="end"] {
+    border-inline-end: 0;
+    border-inline-start: var(--dbm-border-width-1) solid CanvasText;
+  }
+
+  .current {
+    outline: var(--dbm-border-width-1) solid Highlight;
+    outline-offset: calc(-1 * var(--dbm-border-width-1));
+  }
+
+  .current:focus-visible {
+    outline-width: var(--dbm-border-width-2);
+    outline-offset: calc(-1 * var(--dbm-border-width-2));
+  }
+
+  /* The bar is a background, which forced colours replaces, so it names a system colour; it marks the item by itself, so the outline the
+     other looks use is not drawn unless the item has focus. */
+  .currentBar::before {
+    background-color: Highlight;
+  }
+
+  .currentBar:not(:focus-visible) {
+    outline: none;
+  }
+
+  .currentSolid:focus-visible {
+    outline-color: HighlightText;
+  }
+
+  /* A background gradient is replaced in forced colours, so the current menu item gets an outline inside its box instead. */
+  .menuCurrent[role="menuitem"] {
+    background-image: none;
+    outline: var(--dbm-border-width-1) solid Highlight;
+    outline-offset: calc(-1 * var(--dbm-border-width-1));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root,
+  .item,
+  .caret {
+    transition: none;
+  }
+
+  .currentBar.currentGrow::before {
+    animation: none;
+  }
+}

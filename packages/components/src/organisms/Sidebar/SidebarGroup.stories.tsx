@@ -1,0 +1,58 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Sidebar } from "./Sidebar";
+import { preventNavigation } from "./SidebarStoryKit";
+
+// Docs-only (guidelines/adr/0013). This resolves Group's own argTypes for its Properties table on the main Docs page.
+const meta: Meta<typeof Sidebar.Group> = {
+  title: "Organisms/Navigation/Sidebar/Group",
+  component: Sidebar.Group,
+  tags: ["!dev"],
+  argTypes: {
+    label: { control: "text", description: "The group's text, on the button that opens it. In the rail it is the title of the flyout and the button's tooltip." },
+    children: { control: false, description: "The group's Sidebar.Items, and Sidebar.Groups nested in it (up to three levels)." },
+    icon: { control: false, description: "An icon before the label. It is all the rail shows, so give every top-level group one." },
+    current: {
+      control: "boolean",
+      description: "Marks the group as holding the current page: the currentVariant look on its button while it is shut, and it starts open. It has no aria-current, since a button is not a page.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    open: { control: false, description: "Whether the group is open (controlled). Pair with onOpenChange. Ignored in the rail, where the group is a flyout." },
+    defaultOpen: {
+      control: "boolean",
+      description: "Whether the group starts open (uncontrolled). Left out it starts open when current.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    onOpenChange: { control: false, description: "Called with the new value when the group's button is pressed." },
+    disabled: {
+      control: "boolean",
+      description: "Makes the group's button inert: a native disabled button, so it leaves the tab order, unlike a disabled item.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    id: { control: "text", description: "Standard DOM id, on the group's button." },
+    className: { control: false, description: "Additional CSS classes, on the group's button." },
+    style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },
+    "data-testid": {
+      control: false,
+      description:
+        "Test identifier for automated testing (e.g. Testing Library's getByTestId, Playwright/Cypress selectors). Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
+    },
+  },
+  args: { label: "Reports", current: false, disabled: false },
+};
+
+export default meta;
+
+type Story = StoryObj<typeof Sidebar.Group>;
+
+export const Default: Story = {
+  render: (args) => (
+    <Sidebar collapseBelow="never" onClick={preventNavigation}>
+      <Sidebar.Nav>
+        <Sidebar.Group {...args}>
+          <Sidebar.Item href="#sales">Sales</Sidebar.Item>
+          <Sidebar.Item href="#costs">Costs</Sidebar.Item>
+        </Sidebar.Group>
+      </Sidebar.Nav>
+    </Sidebar>
+  ),
+};

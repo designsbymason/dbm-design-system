@@ -67,6 +67,7 @@ import { dataTablePlaygroundSnippet } from "./organisms/DataTable/DataTable.snip
 import { dialogPlaygroundSnippet } from "./organisms/Dialog/Dialog.snippets";
 import { drawerPlaygroundSnippet } from "./organisms/Drawer/Drawer.snippets";
 import { navbarPlaygroundSnippet } from "./organisms/Navbar/Navbar.snippets";
+import { sidebarPlaygroundSnippet } from "./organisms/Sidebar/Sidebar.snippets";
 import { formPlaygroundSnippet } from "./organisms/Form/Form.snippets";
 import { toastPlaygroundSnippet } from "./organisms/Toast/Toast.snippets";
 import { radioGroupPlaygroundSnippet } from "./molecules/RadioGroup/RadioGroup.snippets";
@@ -1767,6 +1768,41 @@ describe("Playground snippet for Navbar", () => {
     expect(navbarPlaygroundSnippet({ currentVariant: "underline" })).toMatch(/^<Navbar>\n/);
     expect(navbarPlaygroundSnippet({ currentVariant: "solid" })).toContain('<Navbar currentVariant="solid">');
     expect(navbarPlaygroundSnippet({ currentVariant: "subtle" })).toContain('<Navbar currentVariant="subtle">');
+  });
+});
+
+describe("Playground snippet for Sidebar", () => {
+  const sidebarArgs = [
+    {},
+    { variant: "filled", size: "lg" },
+    { currentVariant: "bar", rounded: true },
+    { width: "18rem", side: "end", defaultCollapsed: true },
+    { sticky: true, stickyOffset: 6, defaultMenuOpen: true, id: "side" },
+    { stickyOffset: 6 },
+    { collapseBelow: "3xl", closeMenuOnNavigate: false, dir: "rtl", variant: "ghost", size: "xs" },
+    { width: 'min(20rem, "30vw")', id: 'A "b" & c' },
+  ] as const;
+
+  it.each(sidebarArgs)("Sidebar %j is a real snippet", (args) => {
+    expect(problemsIn(sidebarPlaygroundSnippet(args))).toEqual([]);
+  });
+
+  it("Sidebar writes only what differs from the defaults", () => {
+    const plain = sidebarPlaygroundSnippet({ variant: "outlined", size: "md", currentVariant: "subtle", side: "start", collapseBelow: "md", dir: "ltr" });
+    expect(plain).toContain("\n<Sidebar>\n");
+    expect(sidebarPlaygroundSnippet({ variant: "filled", size: "lg" })).toContain('<Sidebar variant="filled" size="lg">');
+    expect(sidebarPlaygroundSnippet({ closeMenuOnNavigate: false, sticky: true })).toContain("<Sidebar closeMenuOnNavigate={false} sticky>");
+    expect(sidebarPlaygroundSnippet({ dir: "rtl" })).toContain('<Sidebar dir="rtl">');
+    expect(sidebarPlaygroundSnippet({ rounded: true, currentVariant: "solid" })).toContain('<Sidebar currentVariant="solid" rounded>');
+    expect(sidebarPlaygroundSnippet({ width: "18rem", side: "end" })).toContain('<Sidebar width="18rem" side="end">');
+    expect(sidebarPlaygroundSnippet({ defaultCollapsed: true, defaultMenuOpen: true })).toContain("<Sidebar defaultCollapsed defaultMenuOpen>");
+    // `stickyOffset` needs `sticky`, so it is written only with it
+    expect(sidebarPlaygroundSnippet({ stickyOffset: 6 })).toContain("\n<Sidebar>\n");
+    expect(sidebarPlaygroundSnippet({ sticky: true, stickyOffset: 6 })).toContain("<Sidebar sticky stickyOffset={6}>");
+    // text with a quote or an ampersand is written as an expression, and an empty control writes nothing
+    expect(sidebarPlaygroundSnippet({ id: 'A "b"' })).toContain('id={"A \\"b\\""}');
+    expect(sidebarPlaygroundSnippet({ width: "", id: "" })).toContain("\n<Sidebar>\n");
+    expect(sidebarPlaygroundSnippet({ rounded: false })).toContain("\n<Sidebar>\n");
   });
 });
 

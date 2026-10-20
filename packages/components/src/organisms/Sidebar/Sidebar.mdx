@@ -1,0 +1,523 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../../atoms/Button";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import * as SidebarStories from "./Sidebar.stories";
+import * as SidebarRootStories from "./SidebarRoot.stories";
+import * as SidebarProviderStories from "./SidebarProvider.stories";
+import * as SidebarHeaderStories from "./SidebarHeader.stories";
+import * as SidebarContentStories from "./SidebarContent.stories";
+import * as SidebarFooterStories from "./SidebarFooter.stories";
+import * as SidebarNavStories from "./SidebarNav.stories";
+import * as SidebarSectionStories from "./SidebarSection.stories";
+import * as SidebarItemStories from "./SidebarItem.stories";
+import * as SidebarGroupStories from "./SidebarGroup.stories";
+import * as SidebarSeparatorStories from "./SidebarSeparator.stories";
+import * as SidebarToggleStories from "./SidebarToggle.stories";
+import * as SidebarMenuButtonStories from "./SidebarMenuButton.stories";
+
+export const propOrder = [
+  "children",
+  "variant",
+  "size",
+  "currentVariant",
+  "rounded",
+  "width",
+  "side",
+  "collapsed",
+  "defaultCollapsed",
+  "onCollapsedChange",
+  "collapseBelow",
+  "menuOpen",
+  "defaultMenuOpen",
+  "onMenuOpenChange",
+  "onMenuOpenChangeComplete",
+  "closeMenuOnNavigate",
+  "menuContainer",
+  "sticky",
+  "stickyOffset",
+  "dir",
+  "labels",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+export const playgroundOrder = [
+  "variant",
+  "size",
+  "currentVariant",
+  "rounded",
+  "width",
+  "side",
+  "defaultCollapsed",
+  "collapseBelow",
+  "defaultMenuOpen",
+  "closeMenuOnNavigate",
+  "sticky",
+  "stickyOffset",
+  "dir",
+  "id",
+];
+export const providerPropOrder = [
+  "children",
+  "collapsed",
+  "defaultCollapsed",
+  "onCollapsedChange",
+  "menuOpen",
+  "defaultMenuOpen",
+  "onMenuOpenChange",
+  "collapseBelow",
+  "labels",
+];
+export const headerPropOrder = ["children", "id", "className", "style", "data-testid"];
+export const contentPropOrder = ["children", "id", "className", "style", "data-testid"];
+export const footerPropOrder = ["children", "id", "className", "style", "data-testid"];
+export const navPropOrder = ["children", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
+export const sectionPropOrder = ["label", "children", "id", "className", "style", "data-testid"];
+export const itemPropOrder = ["children", "href", "icon", "badge", "external", "current", "disabled", "asChild", "aria-label", "id", "className", "style", "data-testid"];
+export const groupPropOrder = ["label", "children", "icon", "current", "open", "defaultOpen", "onOpenChange", "disabled", "id", "className", "style", "data-testid"];
+export const separatorPropOrder = ["id", "className", "style", "data-testid"];
+export const togglePropOrder = ["variant", "tone", "size", "aria-label", "id", "className", "style", "data-testid"];
+export const menuButtonPropOrder = ["icon", "variant", "tone", "size", "aria-label", "id", "className", "style", "data-testid"];
+
+<Meta of={SidebarStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="Sidebar" tier="Organism" />
+
+A page's persistent navigation column: a header, grouped and nested links with the current page marked, and a
+footer. It can collapse to a rail of icons, and below a width you choose it leaves the page for a menu button
+and a side panel, so a phone gets a list it can reach with a thumb. A compound component, meaning it is made of
+named sub-parts you compose together: `Sidebar.Header`, `Sidebar.Content` (which scrolls on its own) holding
+`Sidebar.Nav`s, and `Sidebar.Footer`; inside a `Sidebar.Nav`, `Sidebar.Section`s (a heading over a list),
+`Sidebar.Item`s, `Sidebar.Group`s of items that open and nest, and `Sidebar.Separator`s; `Sidebar.Toggle`, the rail
+button; `Sidebar.MenuButton`, which opens the phone panel; and `Sidebar.Provider`, which lets either button sit
+outside the sidebar.
+
+### Import
+
+```tsx
+import { Sidebar, useSidebar } from "@dbm-design-system/components";
+```
+
+## Playground
+
+Each demo is drawn inside a dashed box so that an open phone panel and its scrim cover the box and not this page.
+The width at which the sidebar gives way to the menu button is the **window's**, not the box's: narrow the window
+to see it. Press the arrows in the footer to collapse the sidebar to a rail and open it again.
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={SidebarStories.Playground} />
+
+</div>
+<PlaygroundControls of={SidebarStories.Playground} order={playgroundOrder} />
+
+## Properties
+
+`Sidebar` is a plain `<div>`, so it also accepts any other native `<div>` attribute beyond what's listed here (e.g.
+`onFocus`, `title`), passed straight through. `dir` is set by the sidebar and can't be replaced by a same-named
+attribute. It draws its children twice while the phone panel is open (on the page and in the panel), so give the
+items no `id`. Inside a `Sidebar.Provider` the provider holds the collapsed and open state, and the sidebar's own
+`collapsed`, `defaultCollapsed`, `menuOpen`, `defaultMenuOpen` and their change handlers are ignored, with a development
+warning.
+
+<PropertiesTable of={SidebarRootStories} order={propOrder} />
+
+### Sidebar.Provider properties
+
+Holds the collapsed and open state for a page, so a `Sidebar.Toggle` or `Sidebar.MenuButton` outside the sidebar acts on
+it. It draws nothing. Optional: a `Sidebar` with no provider around it holds its own state.
+
+<PropertiesTable of={SidebarProviderStories} order={providerPropOrder} />
+
+### Sidebar.Header properties
+
+The top of the sidebar, which stays in view above the scrolling content. Also accepts any other native `<div>`
+attribute beyond what's listed here.
+
+<PropertiesTable of={SidebarHeaderStories} order={headerPropOrder} />
+
+### Sidebar.Content properties
+
+The middle of the sidebar, which scrolls on its own. Also accepts any other native `<div>` attribute beyond what's listed
+here.
+
+<PropertiesTable of={SidebarContentStories} order={contentPropOrder} />
+
+### Sidebar.Footer properties
+
+The bottom of the sidebar, which stays in view below the scrolling content. Also accepts any other native `<div>`
+attribute beyond what's listed here.
+
+<PropertiesTable of={SidebarFooterStories} order={footerPropOrder} />
+
+### Sidebar.Nav properties
+
+A named `<nav>` holding a list. Also accepts any other native `<nav>` attribute beyond what's listed here (e.g.
+`onFocus`, `title`), passed straight through.
+
+<PropertiesTable of={SidebarNavStories} order={navPropOrder} />
+
+### Sidebar.Section properties
+
+A heading over a list of items, an `<li>` in the navigation's list. Also accepts any other native `<li>` attribute
+beyond what's listed here.
+
+<PropertiesTable of={SidebarSectionStories} order={sectionPropOrder} />
+
+### Sidebar.Item properties
+
+One item of the navigation, an `<li>` holding an `<a>` (or a `<button>` when it has no `href`). Everything below, and any
+other native `<a>` attribute beyond what's listed here (e.g. `target`, `title`), goes on that element.
+
+<PropertiesTable of={SidebarItemStories} order={itemPropOrder} />
+
+### Sidebar.Group properties
+
+An item that opens more items: a button with `aria-expanded`, and in the rail a button that opens a floating menu. Also
+accepts any other native `<button>` attribute beyond what's listed here (e.g. `onFocus`, `title`), passed straight through
+to its button. Its children are `Sidebar.Item`s and `Sidebar.Group`s.
+
+<PropertiesTable of={SidebarGroupStories} order={groupPropOrder} />
+
+### Sidebar.Separator properties
+
+A decorative line between parts of a list. Also accepts any other native `<li>` attribute beyond what's listed here.
+
+<PropertiesTable of={SidebarSeparatorStories} order={separatorPropOrder} />
+
+### Sidebar.Toggle properties
+
+The button that collapses the sidebar to a rail and expands it again. Also accepts any other native `<button>` attribute
+beyond what's listed here (e.g. `onFocus`, `title`), passed straight through.
+
+<PropertiesTable of={SidebarToggleStories} order={togglePropOrder} />
+
+### Sidebar.MenuButton properties
+
+The button that opens the phone panel. Also accepts any other native `<button>` attribute beyond what's listed here.
+
+<PropertiesTable of={SidebarMenuButtonStories} order={menuButtonPropOrder} />
+
+### useSidebar
+
+`useSidebar()` returns `{ collapsed, setCollapsed, toggleCollapsed, menuOpen, setMenuOpen }` from inside a `Sidebar` or
+a `Sidebar.Provider`, so your own parts can adapt: a header that draws a logo's mark alone in the rail, or a button of your
+own that opens the panel. `collapsed` is what the part calling it sees, so a part drawn in the phone panel, which is never a
+rail, always reads `false`.
+
+## Variants
+
+### Variants
+
+`outlined` is a surface with a line along its inner edge (the edge it does not sit against), `filled` the same
+surface with no line, and `ghost` nothing of its own, so the items sit on the page.
+
+<Canvas of={SidebarStories.Variants} />
+
+### Sizes
+
+`size` sets the height of an item with its icon and text, on the steps `Navbar`'s links use. The collapsed rail is one
+item wide, so a taller item makes a wider rail.
+
+<Canvas of={SidebarStories.Sizes} />
+
+### Marking the current page
+
+`subtle` is a tinted pill with brand-coloured text, `bar` a brand line along the item's start edge, and `solid` a brand
+fill with the text on it. `aria-current="page"` is set whichever it is, and `rounded` makes each item a pill.
+
+<Canvas of={SidebarStories.CurrentVariants} />
+
+### Collapsed to a rail
+
+The rail is as wide as one item plus the sidebar's padding, so an icon stays exactly where it was as the sidebar opens
+and closes. An item's text moves into a tooltip and stays its accessible name, a count becomes a mark on the icon, a
+heading is replaced by a line between sections, and a group opens a floating menu beside the rail.
+
+<Canvas of={SidebarStories.Rail} />
+
+### Sections and separators
+
+A `Sidebar.Section` is a heading over a list and names it; a `Sidebar.Separator` is a plain line when a heading would be
+too much.
+
+<Canvas of={SidebarStories.Sections} />
+
+### Groups that open
+
+A group opens its items beneath it, animated, with their text lined up under the group's own. Groups nest, up to three
+deep; the group that holds the current page starts open, and marks its own button only while it is shut.
+
+<Canvas of={SidebarStories.Groups} />
+
+### Kinds of item
+
+An item with an `href` is a link, one without is a button (an action), an `http(s)://` address is marked external
+(a new tab, a trailing icon and a hidden cue), `disabled` keeps the item focusable, and `asChild` puts the look on your
+router's link.
+
+<Canvas of={SidebarStories.Items} />
+
+### On the end side, and right to left
+
+`side="end"` puts the sidebar against the end edge: its line moves and the phone panel slides in from that side. With
+`dir="rtl"` the start edge is the right and the indent and arrows mirror.
+
+<Canvas of={SidebarStories.Sides} />
+
+### The phone panel
+
+Below `collapseBelow` the sidebar is no longer on the page and a `Sidebar.MenuButton` opens the same sidebar in a side panel.
+This demo collapses below the widest step so the menu button shows on any window narrower than 1920px; the second button
+opens the panel with `useSidebar().setMenuOpen(true)`. The panel is never a rail.
+
+<Canvas of={SidebarStories.Panel} />
+
+### In a page, with the controls outside
+
+A `Sidebar.Provider` around the page lets the collapse button and the menu button sit in the page's own header, outside
+the sidebar.
+
+<Canvas of={SidebarStories.PageShell} />
+
+### Controlled from your own state
+
+`collapsed` and `menuOpen` can be held in your own state, as `Dialog`'s `open` is, and `onMenuOpenChange` says why the panel
+changed.
+
+<Canvas of={SidebarStories.ControlledPanel} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use one `Sidebar` for the navigation a person needs on every screen of an application, beside the page's content.
+- Give every item and top-level group an `icon`: it is all the rail shows.
+- Mark the current page with `current`, from your router, so it is right on a server-rendered page.
+- Use `Sidebar.Section` headings to break a long list into a few named lists.
+- Put a `Sidebar.Toggle` in the footer, or in the page's header inside a `Sidebar.Provider`.
+- Use `asChild` with your router's link so navigation stays client-side.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't use a `Sidebar` for a bar of links across the top: that is a `Navbar`.
+- Don't use it for a data hierarchy with selection and a tree's keyboard model: that is a `Tree`.
+- Don't give a `Sidebar.Item` an `id`: the same items are drawn on the page and in the phone panel.
+- Don't nest groups more than three deep, or put a whole site map in one: flatten it.
+- Don't put controls that need arrow keys inside it: it is a list of ordinary tab stops, not a toolbar.
+- Don't make a group also a page: put the page as its first item.
+
+</Callout>
+</div>
+
+## Best practices
+
+- The root is a plain box and each `Sidebar.Nav` is the landmark, so a sidebar with a main navigation and a settings one is two
+  named navigations. Give each its own `aria-label`, so a screen reader's list of landmarks tells them apart.
+- The collapse follows the window width, so a narrow window on a desktop gets the same panel a phone does. If the panel is
+  open when the window grows past the step, it closes.
+- The same children are drawn on the page and in the panel, so state an item holds is not shared between the two: a group
+  opened on the page starts shut or open again, by `current` and `defaultOpen`, in the panel. Keep state that matters (which
+  page is current, which groups are open) in your own state and pass it down.
+- A header or footer that should change in the rail reads `useSidebar().collapsed`, or styles itself from the
+  `data-collapsed` attribute on the sidebar.
+- To remember the rail across visits, hold `collapsed` in your own state and store it where your app keeps preferences (a
+  cookie, if the server should draw the right one first); the sidebar does not store anything itself.
+- `side="end"` and `dir="rtl"` are separate: `side` says which edge of the layout, `dir` which way text runs, and `start` is the right
+  in right-to-left text. Pass `dir` on the sidebar and it reaches the panel too, which is drawn in a portal and would otherwise follow
+  the page.
+- A sticky sidebar is as tall as the rest of the window (`stickyOffset` is the height of a sticky `Navbar` above it) and scrolls its
+  own content, so it needs no height from you. A sidebar that is not sticky takes the height of its row.
+- To make the sidebar resizable, put it in a `Splitter` pane rather than adding a drag handle of its own.
+- Use `labels` to translate the collapse and expand names, the menu button's name and the panel's title, the close button and
+  the external-link cue.
+
+## Accessibility
+
+<Callout tone="info" title="A named navigation holding a list, with the current page marked and the rail still named">
+
+- The root is a plain `<div>` with no landmark, since a navigation is not a "complementary" region. Each `Sidebar.Nav` is a
+  `<nav>` with a name (`labels.navigation`, "Main", unless you pass `aria-label`) holding a `role="list"` list; each item is a
+  `role="listitem"`, which keeps list semantics under Safari with VoiceOver, where a list without markers loses them.
+- A `Sidebar.Section` is a list item holding a heading and a list named by it, so a screen reader announces "Workspace, list".
+- The current page is `aria-current="page"`. A disabled item is `aria-disabled` and stays focusable, with its click blocked; a
+  disabled group is a native disabled button and leaves the tab order.
+- An external item's new tab is announced: a visually hidden "(opens in a new tab)" follows its text, and a count in `badge` is part
+  of the name ("Inbox 12"). Both stay in the name in the rail.
+- In the rail an item's text is clipped to a pixel, not removed, so it is still the item's accessible name, and it is shown in a tooltip on
+  hover and on keyboard focus.
+- A group is a button with `aria-expanded` and `aria-controls` pointing at its list of items, which are out of the tab order and the
+  accessibility tree while it is shut. In the rail it is a button with `aria-haspopup="menu"` that opens a menu: `Enter`, `Space` and
+  `ArrowDown` open it, the arrow keys and typeahead move through the items, `Escape` closes it and focus returns to the button.
+- Keys: `Tab` and `Shift+Tab` move through the header, the items, any open group's items and the footer in order; there are no arrow-key
+  shortcuts in the expanded sidebar, because this is a navigation and not a toolbar or a tree. `Enter` follows a link or presses a button.
+- `Sidebar.Toggle` is an `IconButton` named "Collapse sidebar" or "Expand sidebar" for the press it would answer to, with a tooltip. It is
+  not drawn in the phone panel and is hidden below `collapseBelow`.
+- `Sidebar.MenuButton` is an `IconButton` named "Menu" with `aria-expanded` and `aria-haspopup="dialog"`. The panel is a modal dialog named
+  "Menu" with focus held inside; `Escape`, the scrim and the close button close it, and focus returns to the button that opened it, even one
+  outside the sidebar.
+- Below the collapse width the sidebar on the page is `display: none`, so it leaves the tab order and the accessibility tree; the panel's
+  copy is what a screen reader finds.
+- Every control is at least 24 by 24 pixels, in the rail too. The focus ring is the standard two-pixel outline in `border.focus`, drawn
+  inside the item because the content scrolls and would clip a ring drawn outside it.
+- The motion is the width changing as the rail opens and closes, a short fade of the tint on hover, a group's height, the caret turning, and
+  the bar growing in when an item becomes the current one; all are removed under `prefers-reduced-motion`. In forced-colours mode a
+  filled sidebar gets a line, the current item an outline, and the `bar` look a system colour, since a fill alone would vanish.
+- `subtle` uses `text.brand` on `bg.brand-subtle`, the pairing `Tabs` uses; `solid` uses `text.on-brand` on `bg.brand`, the pairing a primary
+  `Button` uses, with its focus ring drawn inside the item in `icon.on-brand`; `bar` keeps `text.primary` and draws a `bg.brand` line.
+
+</Callout>
+
+## Code examples
+
+```tsx
+<Sidebar>
+  <Sidebar.Header>dbM Cloud</Sidebar.Header>
+  <Sidebar.Content>
+    <Sidebar.Nav>
+      <Sidebar.Item href="/" icon={HouseIcon} current>
+        Home
+      </Sidebar.Item>
+      <Sidebar.Item href="/inbox" icon={TrayIcon} badge="12">
+        Inbox
+      </Sidebar.Item>
+      <Sidebar.Group label="Reports" icon={ChartBarIcon}>
+        <Sidebar.Item href="/reports/sales">Sales</Sidebar.Item>
+        <Sidebar.Item href="/reports/costs">Costs</Sidebar.Item>
+      </Sidebar.Group>
+    </Sidebar.Nav>
+  </Sidebar.Content>
+  <Sidebar.Footer>
+    <Sidebar.Toggle />
+  </Sidebar.Footer>
+</Sidebar>
+```
+
+A sidebar in a page with a sticky `Navbar`, the menu and collapse buttons in the bar, and the state held in a provider:
+
+```tsx
+<Sidebar.Provider>
+  <Navbar sticky>
+    <Navbar.Brand href="/">dbM</Navbar.Brand>
+    <Navbar.Actions>
+      <Sidebar.MenuButton />
+      <Sidebar.Toggle />
+    </Navbar.Actions>
+  </Navbar>
+  <div style={{ display: "flex" }}>
+    <Sidebar sticky stickyOffset={16}>
+      {/* … */}
+    </Sidebar>
+    <main id="main">{/* … */}</main>
+  </div>
+</Sidebar.Provider>
+```
+
+A native attribute on an item, here a `title` and a `target` on the link it draws:
+
+```tsx
+<Sidebar.Item href="https://status.example.com" title="Opens the status page" target="_blank" icon={HeartbeatIcon}>
+  Status
+</Sidebar.Item>
+```
+
+Your router's link, with its own component where the `<a>` is:
+
+```tsx
+<Sidebar.Item asChild icon={UsersIcon} current={pathname === "/team"}>
+  <RouterLink to="/team">Team</RouterLink>
+</Sidebar.Item>
+```
+
+Holding the rail in your own state, so you can keep it between visits:
+
+```tsx
+const [collapsed, setCollapsed] = useState(initialCollapsed);
+
+<Sidebar collapsed={collapsed} onCollapsedChange={setCollapsed}>
+  {/* … */}
+</Sidebar>
+```
+
+A header that draws the mark alone in the rail:
+
+```tsx
+function Brand() {
+  const { collapsed } = useSidebar();
+  return collapsed ? <Logo /> : <Logo withName />;
+}
+```
+
+## Design tokens used
+
+<TokenRow token="bg.surface" usage="an outlined or filled sidebar's surface" />
+<TokenRow token="bg.brand-subtle / bg.brand-subtle-hover" usage="an item's hover, and the current item's fill and its hover in the subtle look" />
+<TokenRow token="text.primary" usage="the sidebar's text, and the current item's in the bar look" />
+<TokenRow token="text.secondary" usage="an item at rest, a section's heading, and a disabled one" />
+<TokenRow token="text.brand" usage="the current item, in the subtle look" />
+<TokenRow token="text.on-brand" usage="the current item's text in the solid look" />
+<TokenRow token="bg.brand / bg.brand-hover" usage="the solid look's fill and its hover, and the bar look's line" />
+<TokenRow token="icon.on-brand" usage="the focus ring on the solid look, drawn inside the item where the standard ring would be unreadable" />
+<TokenRow token="border.default" usage="the outlined sidebar's line, the line between sections in the rail, a separator, and the scrollbar's thumb" />
+<TokenRow token="border.focus" usage="the focus ring on an item" />
+<TokenRow token="border-width.1" usage="the outlined sidebar's line, a separator and the rail's section lines" />
+<TokenRow token="border-width.2" usage="the focus ring's width, and the bar look's line thickness" />
+<TokenRow token="radius.md" usage="an item's corners" />
+<TokenRow token="radius.full" usage="the bar look's line, and an item's pill shape when rounded" />
+<TokenRow token="radius.sm" usage="the focus ring's corners" />
+<TokenRow token="font-family.primary" usage="the sidebar's typography" />
+<TokenRow token="font-size.xs / font-size.sm / font-size.base / font-size.md" usage="an item's text at the `xs`, `sm`, `md` and `lg` sizes (a section's heading is `font-size.xs`)" />
+<TokenRow token="font-weight.bold" usage="the rail's letter for an item with no icon" />
+<TokenRow token="font-weight.medium" usage="an item, and the sidebar's own text" />
+<TokenRow token="icon-size.sm / icon-size.md" usage="an item's icon at each size, which with its padding is the item's height and the rail's width" />
+<TokenRow token="sidebar.width" usage="the expanded width, which the `width` prop replaces" />
+<TokenRow token="space.1" usage="the gap between items, a thin item's padding and a section's heading, the rail badge's offset" />
+<TokenRow token="space.2" usage="the sidebar's inner padding, an item's padding at the `sm` and `md` sizes, and the rail's margins" />
+<TokenRow token="space.3" usage="the gap between an item's icon and text, a section's top spacing, and an item's padding at `lg`" />
+<TokenRow token="space.4" usage="a nested group's indent, and the height of a badge at the `xs` size and in the rail" />
+<TokenRow token="space.5" usage="the height of a badge in an item at the `sm` and `md` sizes" />
+<TokenRow token="space.6" usage="the height of a badge in an item at the `lg` size" />
+<TokenRow token="opacity.40" usage="a disabled item" />
+<TokenRow token="motion.duration.fast" usage="an item's colour change and the caret turning" />
+<TokenRow token="motion.duration.base" usage="the rail opening and closing, and the bar growing in when an item becomes the current one" />
+<TokenRow token="motion.easing.standard" usage="the width, the colour change and the caret" />
+<TokenRow token="motion.easing.emphasized" usage="the bar growing in" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Navbar"
+  description="The header across the top of a page, the sibling that sits beside or above a sidebar"
+  href="/?path=/docs/organisms-navigation-navbar--docs"
+>
+  <Button variant="secondary" size="sm">Navbar</Button>
+</RelatedCard>
+<RelatedCard
+  name="Drawer"
+  description="The side panel the phone layout is drawn in, and for other work beside the page"
+  href="/?path=/docs/organisms-overlay-drawer--docs"
+>
+  <Button variant="secondary" size="sm">Drawer</Button>
+</RelatedCard>
+<RelatedCard
+  name="Menu"
+  description="The floating list a group opens in the rail"
+  href="/?path=/docs/organisms-navigation-menu--docs"
+>
+  <Button variant="secondary" size="sm">Menu</Button>
+</RelatedCard>
+<RelatedCard
+  name="Splitter"
+  description="Resizable panes, for a sidebar the reader can drag wider"
+  href="/?path=/docs/molecules-layout-splitter--docs"
+>
+  <Button variant="secondary" size="sm">Splitter</Button>
+</RelatedCard>
+</div>
