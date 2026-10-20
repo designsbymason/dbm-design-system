@@ -913,6 +913,7 @@ describe("DatePicker unavailable reasons", () => {
     render(
       <DatePicker
         aria-label="d"
+        today="2026-10-16"
         defaultValue="2026-10-15"
         unavailableReason={reason}
         calendarProps={{ labels: { day: (info) => `D${info.day}` } }}
