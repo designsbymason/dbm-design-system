@@ -1,6 +1,6 @@
 # Navbar — review findings
 
-Eleventh organism, built 2026-10-17 with the `06-engineering-standards.md` §9 checklist applied as it was written. **Not Finalized:** the build is complete and checked, and the review pass is the maintainer's to declare.
+Eleventh organism, built 2026-10-17 with the `06-engineering-standards.md` §9 checklist applied as it was written. **Finalized 2026-10-19**, at the maintainer's declaration after the review rounds below and a final documentation pass (the Docs page, prop descriptions and snippets checked against the code and each story's bar), with the items under "Open at Finalization" accepted as open: none changes the component.
 
 ## Decisions
 - Collapses by a CSS breakpoint and draws its links in the bar and in the menu panel, with plain tab order: [ADR-0091](../adr/0091-navbar-collapses-by-a-css-breakpoint-and-draws-its-links-in-the-bar-and-in-the-menu-panel-over-measuring-its-width-or-writing-two-lists.md).
@@ -120,8 +120,14 @@ Eleventh organism, built 2026-10-17 with the `06-engineering-standards.md` §9 c
 - 22 real-browser checks (`Navbar.checks.stories.tsx`): the wide layout and its order, the bar's height against its token at each size, every target 24px or more in the bar and the panel, link contrast of 4.5:1 or more on each variant's surface, right-to-left order, a sticky bar at the top of its box with a shadow while stuck and an outline in emulated forced colours (the current link too), an account menu opening above a sticky bar and returning focus, and the panel's links, edge and Escape; plus a phone-width interaction test (`On a phone — interaction test`) of the button, the panel and a chosen link. Four of them failed on the first run (the brand's height, the test's own units, a hidden element's name, and the stage's edge), which is how they were known to bite.
 - 7 sub-part stories for the Properties tables (ADR-0013), a Docs-token test, the Playground snippet guard, the snippets typechecked against the real components with a planted bad prop, `pnpm lint`, the build, `check-guidelines` and the bundle-size check (JS 22KB and CSS 10KB budgets, since the bundle holds `Drawer` (twice, for the panel and the search sheet), `Menu` and `SearchInput`; 17.5KB and 8.4KB measured).
 - Looked at in Purple light, Emerald dark and at a phone's width.
+- At Finalization (2026-10-19): the Navbar folder's 227 unit tests (the component, server render and hydration, the overlays keeping their default size, and the Docs guards) and its 92 real-browser checks pass, as do the whole library's (9,024 unit, 1,929 browser) and the 8 visual tests; lint, the build and `check-guidelines` are clean; JS 19.50KB and CSS 9.93KB against the 22KB and 11KB budgets.
 
-## Open at review
+## Open at Finalization
 - A window resized across the collapse step hides the focused link with the rest of the bar's links (the same as any responsive layout); the panel's own focus handling covers the open case. Not asserted, since a story can't resize the window.
 - Link contrast is asserted in Purple light by the checks, and was measured by hand in all four themes (Purple and Emerald, light and dark) for the three current looks: link text 6.9–10.5:1, current text 5.8–14.1:1, and the underline line and solid fill 6.1–8.5:1 against the bar, all above the 4.5:1 and 3:1 floors.
 - A real finger on the panel's swipe-to-dismiss is `Drawer`'s open item, not repeated here.
+- Not run: a screen reader (VoiceOver, NVDA) over the bar, the panel, the search sheet and a group; a real touch device; and a window resized across the collapse step with focus inside the bar.
+- Emerald has not been looked at in a browser for the later passes (frosted, the three-column rows, the link sizes, the hover tint); its contrast is computed from the primitives, as for the other themes.
+- The Docs page has been read against the code but not looked at in a running Storybook after the last round.
+- `Navbar.Search` has the most props of any part (a judgement call, kept: each one names something it does that the neighbouring buttons need to match). The CSS budget (11KB) has about 1KB of headroom (9.93KB measured, JS 19.50KB), so another feature should come with a look at what the stylesheet repeats.
+- Tabs and ToggleGroup still darken a hovered item's text, where `Navbar`'s hover is a tint only: a separate pass on two Finalized components, not started.
