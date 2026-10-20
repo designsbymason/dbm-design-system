@@ -34,6 +34,9 @@ const meta: Meta<typeof Sidebar> = {
         "How the current item is marked: a tinted pill, a brand line along its start edge, or a brand fill. aria-current is set whichever it is, and the look is the same in the phone panel.",
       table: { defaultValue: { summary: '"subtle"' } },
     },
+    currentPath: readOnly(
+      "The path of the page the reader is on (from your router), so each item marks itself from its href with no current written on it, and a group that holds one is current too. The Playground's items are marked by hand, so see the story below.",
+    ),
     rounded: {
       control: "boolean",
       description:

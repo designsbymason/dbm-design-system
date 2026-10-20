@@ -40,6 +40,8 @@ export const SidebarStateContext = createContext<SidebarStateContextValue | null
 export interface SidebarContextValue {
   size: SidebarSize;
   currentVariant: SidebarCurrentVariant;
+  /** The page the reader is on, so an item can work out whether it is current. */
+  currentPath: string | undefined;
   rounded: boolean;
   side: SidebarSide;
   dir: SidebarDirection;

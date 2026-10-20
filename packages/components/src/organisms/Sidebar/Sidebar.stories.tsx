@@ -2,10 +2,12 @@ import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { Fragment, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import { BellIcon, BookOpenIcon, HouseIcon, PlusIcon, ReceiptIcon, TrayIcon, UsersIcon } from "@dbm-design-system/icons";
+import { BellIcon, BookOpenIcon, ChartBarIcon, DotsThreeIcon, FolderSimpleIcon, GearIcon, HouseIcon, PlusIcon, ReceiptIcon, TrayIcon, UsersIcon } from "@dbm-design-system/icons";
 import type { SpaceValue } from "@dbm-design-system/primitives";
 import { Badge } from "../../atoms/Badge";
 import { Icon } from "../../atoms/Icon";
+import { IconButton } from "../../atoms/IconButton";
+import { Menu } from "../Menu";
 import { Sidebar } from "./Sidebar";
 import { sidebarPlaygroundSnippet, sidebarSnippets } from "./Sidebar.snippets";
 import type {
@@ -26,6 +28,7 @@ interface PlaygroundArgs {
   variant: SidebarVariant;
   size: SidebarSize;
   currentVariant: SidebarCurrentVariant;
+  currentPath?: string;
   rounded: boolean;
   width: string;
   side: SidebarSide;
@@ -118,6 +121,9 @@ const meta: Meta<PlaygroundArgs> = {
         "How the current item is marked: a tinted pill, a brand line along its start edge, or a brand fill. aria-current is set whichever it is, and the look is the same in the phone panel.",
       table: { defaultValue: { summary: '"subtle"' } },
     },
+    currentPath: readOnly(
+      "The path of the page the reader is on (from your router), so each item marks itself from its href with no current written on it, and a group that holds one is current too. The Playground's items are marked by hand, so see the story below.",
+    ),
     rounded: {
       control: "boolean",
       description:
@@ -204,6 +210,7 @@ const meta: Meta<PlaygroundArgs> = {
     variant: "outlined",
     size: "md",
     currentVariant: "subtle",
+    currentPath: undefined,
     rounded: false,
     width: "",
     side: "start",
@@ -479,6 +486,136 @@ export const Items: Story = {
   ),
 };
 
+export const RowActions: Story = {
+  name: "A control at the end of a row",
+  parameters: { docs: { source: { code: sidebarSnippets.actions } } },
+  argTypes: { ...noControls },
+  render: (args) => (
+    <SidebarStage minBlockSize="30rem">
+      {(menuContainer) => (
+        <SidebarFrame height="28rem" contentLabel="Hover or tab to a row to see its control. On a touch screen they are always shown.">
+          <Sidebar collapseBelow={args.collapseBelow} menuContainer={menuContainer} width="16rem">
+            <Sidebar.Content>
+              <Sidebar.Nav aria-label="Rows with a control">
+                <Sidebar.Section label="Projects" action={<IconButton icon={PlusIcon} aria-label="New project" />}>
+                  <Sidebar.Item
+                    href="#website"
+                    icon={FolderSimpleIcon}
+                    onClick={(event) => event.preventDefault()}
+                    action={
+                      <Menu>
+                        <Menu.Trigger asChild>
+                          <IconButton icon={DotsThreeIcon} aria-label="More options for Website" />
+                        </Menu.Trigger>
+                        <Menu.Content>
+                          <Menu.Item>Rename</Menu.Item>
+                          <Menu.Item>Archive</Menu.Item>
+                        </Menu.Content>
+                      </Menu>
+                    }
+                  >
+                    Website
+                  </Sidebar.Item>
+                  <Sidebar.Item
+                    href="#mobile"
+                    icon={FolderSimpleIcon}
+                    badge="3"
+                    onClick={(event) => event.preventDefault()}
+                    action={<IconButton icon={PlusIcon} aria-label="Add a task to Mobile app" />}
+                  >
+                    Mobile app
+                  </Sidebar.Item>
+                  <Sidebar.Group
+                    label="Reports"
+                    icon={ChartBarIcon}
+                    defaultOpen
+                    action={<IconButton icon={PlusIcon} aria-label="New report" />}
+                  >
+                    <Sidebar.Item href="#sales" onClick={(event) => event.preventDefault()}>
+                      Sales
+                    </Sidebar.Item>
+                  </Sidebar.Group>
+                </Sidebar.Section>
+              </Sidebar.Nav>
+            </Sidebar.Content>
+          </Sidebar>
+        </SidebarFrame>
+      )}
+    </SidebarStage>
+  ),
+};
+
+export const LongLabels: Story = {
+  name: "Labels longer than the room",
+  parameters: { docs: { source: { code: sidebarSnippets.longLabels } } },
+  argTypes: { ...noControls },
+  render: (args) => (
+    <SidebarStage minBlockSize="22rem">
+      {(menuContainer) => (
+        <SidebarFrame height="18rem" contentLabel="Hover or tab to a cut-off label to read all of it. A label that fits gets no tooltip.">
+          <Sidebar collapseBelow={args.collapseBelow} menuContainer={menuContainer} width="13rem">
+            <Sidebar.Content>
+              <Sidebar.Nav aria-label="Long labels">
+                <Sidebar.Item href="#a" icon={FolderSimpleIcon} badge="12" onClick={(event) => event.preventDefault()}>
+                  Quarterly planning and budget review
+                </Sidebar.Item>
+                <Sidebar.Item href="#b" icon={GearIcon} onClick={(event) => event.preventDefault()}>
+                  Settings
+                </Sidebar.Item>
+                <Sidebar.Group label="Customer success and account management" icon={UsersIcon}>
+                  <Sidebar.Item href="#c" onClick={(event) => event.preventDefault()}>
+                    Onboarding checklists for new enterprise accounts
+                  </Sidebar.Item>
+                </Sidebar.Group>
+              </Sidebar.Nav>
+            </Sidebar.Content>
+          </Sidebar>
+        </SidebarFrame>
+      )}
+    </SidebarStage>
+  ),
+};
+
+export const CurrentFromPath: Story = {
+  name: "Current page from the path",
+  parameters: { docs: { source: { code: sidebarSnippets.currentPath } } },
+  argTypes: { ...noControls },
+  render: function CurrentFromPathDemo(args) {
+    const [path, setPath] = useState("/reports/sales");
+    const go = (href: string) => ({
+      href,
+      onClick: (event: { preventDefault: () => void }) => {
+        event.preventDefault();
+        setPath(href);
+      },
+    });
+    return (
+      <SidebarStage minBlockSize="26rem">
+        {(menuContainer) => (
+          <SidebarFrame height="22rem" contentLabel={`currentPath="${path}". No item or group has current written on it: choose one.`}>
+            <Sidebar collapseBelow={args.collapseBelow} menuContainer={menuContainer} currentPath={path} width="15rem">
+              <Sidebar.Content>
+                <Sidebar.Nav aria-label="Marked from the path">
+                  <Sidebar.Item icon={HouseIcon} {...go("/")}>
+                    Home
+                  </Sidebar.Item>
+                  <Sidebar.Item icon={FolderSimpleIcon} match="prefix" {...go("/projects")}>
+                    Projects (and below)
+                  </Sidebar.Item>
+                  <Sidebar.Group label="Reports" icon={ChartBarIcon}>
+                    <Sidebar.Item {...go("/reports/sales")}>Sales</Sidebar.Item>
+                    <Sidebar.Item {...go("/reports/costs")}>Costs</Sidebar.Item>
+                  </Sidebar.Group>
+                </Sidebar.Nav>
+              </Sidebar.Content>
+            </Sidebar>
+          </SidebarFrame>
+        )}
+      </SidebarStage>
+    );
+  },
+};
+
 export const Sides: Story = {
   name: "On the end side, and right to left",
   parameters: { docs: { source: { code: sidebarSnippets.side } } },
@@ -639,5 +776,20 @@ export const PanelInteraction: Story = {
     const dialog = await within(document.body).findByRole("dialog", { name: "Menu" });
     await userEvent.click(within(dialog).getByRole("link", { name: /^Inbox/ }));
     await waitFor(() => expect(within(document.body).queryByRole("dialog")).not.toBeInTheDocument());
+  },
+};
+
+/** Hidden twin of "Current page from the path": choosing an item moves the mark, and a group holding the page marks itself. */
+export const CurrentFromPathInteraction: Story = {
+  ...CurrentFromPath,
+  name: "Current page from the path — interaction test",
+  tags: ["!dev"],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(await canvas.findByRole("link", { name: "Sales" })).toHaveAttribute("aria-current", "page");
+    expect(canvas.getByRole("link", { name: "Costs" })).not.toHaveAttribute("aria-current");
+    await userEvent.click(canvas.getByRole("link", { name: "Home" }));
+    expect(canvas.getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "page");
+    expect(canvas.getByRole("link", { name: /Projects/ })).not.toHaveAttribute("aria-current");
   },
 };

@@ -9,6 +9,7 @@ export type {
   SidebarHeaderProps,
   SidebarItemProps,
   SidebarLabels,
+  SidebarMatch,
   SidebarMenuButtonProps,
   SidebarMenuChangeDetails,
   SidebarNavProps,

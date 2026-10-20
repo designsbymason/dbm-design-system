@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Badge } from "../../atoms/Badge";
+import { IconButton } from "../../atoms/IconButton";
 import { Sidebar } from "./Sidebar";
-import { BellIcon } from "@dbm-design-system/icons";
+import { BellIcon, FolderSimpleIcon, PlusIcon } from "@dbm-design-system/icons";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { DemoSidebar, SidebarFrame, SidebarStage, SidebarViewModeContext } from "./SidebarStoryKit";
 
@@ -766,5 +767,157 @@ export const CountBadgeIsBadgesOwnCircle: Story = {
       expect(Math.abs(badge.width - badge.height)).toBeLessThanOrEqual(2.5);
       expect(Math.abs(inbox.getBoundingClientRect().height - within(root).getByRole("link", { name: "Plain" }).getBoundingClientRect().height)).toBeLessThan(1);
     }
+  },
+};
+
+export const PanelOpensOnItsFirstItem: Story = {
+  name: "The phone panel opens with focus on its first item, wherever a group or the close button comes in the page",
+  render: () => (
+    <SidebarStage minBlockSize="30rem">
+      {(menuContainer) => (
+        <Sidebar.Provider collapseBelow="3xl">
+          <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+            <Sidebar.MenuButton />
+            <Sidebar collapseBelow="3xl" menuContainer={menuContainer}>
+              <Sidebar.Content>
+                <Sidebar.Nav aria-label="Main">
+                  <Sidebar.Item href="#a" onClick={(event) => event.preventDefault()}>
+                    First link
+                  </Sidebar.Item>
+                  <Sidebar.Group label="Group">
+                    <Sidebar.Item href="#b">B</Sidebar.Item>
+                  </Sidebar.Group>
+                </Sidebar.Nav>
+              </Sidebar.Content>
+            </Sidebar>
+          </div>
+        </Sidebar.Provider>
+      )}
+    </SidebarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Menu" }));
+    const panel = await canvas.findByRole("dialog", { name: "Menu" });
+    await settled(panel);
+    expect(within(panel).getByRole("link", { name: "First link" })).toHaveFocus();
+    // Tab goes on through the navigation in order, and the close button is not first
+    await userEvent.tab();
+    expect(within(panel).getByRole("button", { name: "Group" })).toHaveFocus();
+  },
+};
+
+export const CutLabelHasATooltip: Story = {
+  name: "A label cut with an ellipsis shows all of its text in a tooltip on keyboard focus, and one that fits shows none",
+  render: () => (
+    <SidebarStage minBlockSize="22rem">
+      {(menuContainer) => (
+        <SidebarFrame height="16rem">
+          <Sidebar collapseBelow="never" menuContainer={menuContainer} width="13rem">
+            <Sidebar.Content>
+              <Sidebar.Nav aria-label="Long">
+                <Sidebar.Item href="#a" icon={FolderSimpleIcon} badge="12" onClick={(event) => event.preventDefault()}>
+                  Quarterly planning and budget review
+                </Sidebar.Item>
+                <Sidebar.Item href="#b" icon={FolderSimpleIcon} onClick={(event) => event.preventDefault()}>
+                  Short
+                </Sidebar.Item>
+                <Sidebar.Group label="Customer success and account management" icon={FolderSimpleIcon}>
+                  <Sidebar.Item href="#c">Inside</Sidebar.Item>
+                </Sidebar.Group>
+              </Sidebar.Nav>
+            </Sidebar.Content>
+          </Sidebar>
+        </SidebarFrame>
+      )}
+    </SidebarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const label = (element: HTMLElement) => [...element.querySelectorAll("span")].find((span) => span.className.includes("label"))!;
+    const long = canvas.getByRole("link", { name: /Quarterly/ });
+    expect(label(long).scrollWidth).toBeGreaterThan(label(long).clientWidth);
+    expect(label(canvas.getByRole("link", { name: "Short" })).scrollWidth).toBeLessThanOrEqual(label(canvas.getByRole("link", { name: "Short" })).clientWidth);
+    await userEvent.tab();
+    expect(long).toHaveFocus();
+    const tooltip = await within(document.body).findByRole("tooltip");
+    expect(tooltip).toHaveTextContent("Quarterly planning and budget review");
+    await waitFor(() => expect(isOnTop(tooltip.parentElement ?? tooltip)).toBe(true));
+    await userEvent.tab();
+    expect(canvas.getByRole("link", { name: "Short" })).toHaveFocus();
+    await waitFor(() => expect(within(document.body).queryByRole("tooltip")).not.toBeInTheDocument());
+    await userEvent.tab();
+    const group = canvas.getByRole("button", { name: /Customer success/ });
+    expect(group).toHaveFocus();
+    expect(await within(document.body).findByRole("tooltip")).toHaveTextContent("Customer success and account management");
+    await userEvent.keyboard("{Escape}");
+  },
+};
+
+export const RowActionIsShownOnHoverAndFocus: Story = {
+  name: "A row's control is faint until the row is hovered or focused, makes room for itself, and never changes the row's height",
+  render: () => (
+    <SidebarStage minBlockSize="22rem">
+      {(menuContainer) => (
+        <SidebarFrame height="16rem">
+          <Sidebar collapseBelow="never" menuContainer={menuContainer} width="16rem">
+            <Sidebar.Content>
+              <Sidebar.Nav aria-label="Actions">
+                <Sidebar.Section label="Projects" action={<IconButton icon={PlusIcon} aria-label="New project" />}>
+                  <Sidebar.Item href="#a" icon={FolderSimpleIcon} onClick={(event) => event.preventDefault()}>
+                    Plain
+                  </Sidebar.Item>
+                  <Sidebar.Item
+                    href="#b"
+                    icon={FolderSimpleIcon}
+                    badge="12"
+                    onClick={(event) => event.preventDefault()}
+                    action={<IconButton icon={PlusIcon} aria-label="Add to Alpha" />}
+                  >
+                    Alpha
+                  </Sidebar.Item>
+                </Sidebar.Section>
+              </Sidebar.Nav>
+            </Sidebar.Content>
+          </Sidebar>
+        </SidebarFrame>
+      )}
+    </SidebarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const alpha = canvas.getByRole("link", { name: /^Alpha/ });
+    const add = canvas.getByRole("button", { name: "Add to Alpha" });
+    const slot = add.parentElement!;
+    const root = rootOf(canvasElement);
+    // at rest it is faint, but present and focusable
+    expect(Number(getComputedStyle(slot).opacity)).toBe(0);
+    // the row is the height of a plain one, and the control sits inside it at its end
+    const plain = canvas.getByRole("link", { name: "Plain" }).getBoundingClientRect();
+    expect(Math.abs(alpha.getBoundingClientRect().height - plain.height)).toBeLessThan(1);
+    const row = alpha.parentElement!.getBoundingClientRect();
+    expect(slot.getBoundingClientRect().right).toBeLessThanOrEqual(row.right + 0.5);
+    expect(slot.getBoundingClientRect().top).toBeGreaterThanOrEqual(row.top - 0.5);
+    // the link leaves the control's room: its badge ends before the control begins
+    const badge = within(alpha).getByText("12").getBoundingClientRect();
+    expect(badge.right).toBeLessThanOrEqual(slot.getBoundingClientRect().left + 0.5);
+    // focus brings it in (and a real pointer over the row does too)
+    add.focus();
+    await waitFor(() => expect(Number(getComputedStyle(slot).opacity)).toBe(1));
+    (document.activeElement as HTMLElement).blur();
+    await waitFor(() => expect(Number(getComputedStyle(slot).opacity)).toBe(0));
+    const rect = alpha.getBoundingClientRect();
+    const frame = window.frameElement?.getBoundingClientRect();
+    const scale = frame ? frame.width / window.innerWidth : 1;
+    await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: (frame?.left ?? 0) + (rect.left + 40) * scale, y: (frame?.top ?? 0) + (rect.top + rect.height / 2) * scale });
+    await waitFor(() => expect(Number(getComputedStyle(slot).opacity)).toBe(1));
+    expect(isOnTop(add)).toBe(true);
+    // the section heading's control sits in the heading's row and is shown the same way
+    const heading = canvas.getByRole("button", { name: "New project" });
+    expect(heading.getBoundingClientRect().right).toBeLessThanOrEqual(root.getBoundingClientRect().right);
+    // pressing it does not follow the link
+    const address = window.location.href;
+    await userEvent.click(add);
+    expect(window.location.href).toBe(address);
   },
 };

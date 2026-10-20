@@ -48,6 +48,14 @@
   --sidebar-badge-height: var(--dbm-badge-size-xs);
 }
 
+/* An item is its icon plus equal padding on every side: this is that square, which a row's end control is as wide as. */
+.sizeXs,
+.sizeSm,
+.sizeMd,
+.sizeLg {
+  --sidebar-item-box: calc(var(--sidebar-icon) + 2 * var(--sidebar-pad));
+}
+
 .rail {
   inline-size: calc(var(--sidebar-icon) + 2 * var(--sidebar-pad) + 2 * var(--dbm-space-2) + var(--sidebar-line));
 }
@@ -130,6 +138,7 @@
 }
 
 .listItem {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-inline-size: 0;
@@ -144,6 +153,14 @@
 
 .section:first-child {
   padding-block-start: 0;
+}
+
+.sectionHead {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dbm-space-2);
 }
 
 .sectionLabel {
@@ -281,6 +298,50 @@
   block-size: var(--dbm-space-5);
   min-inline-size: var(--dbm-space-5);
   padding-inline: calc(var(--dbm-space-1) / 2);
+}
+
+/* --- A control at the end of a row (`action`) ---
+   A sibling of the link, never inside it, drawn over the row's end, which the link leaves room for. It is shown while the row is hovered or
+   anything in it has focus (and while a menu it opened is open), always on a screen with no hover, and in the phone panel. It stays
+   focusable while it is faint, so a keyboard user reaches it, and focus brings it in. */
+.action {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--sidebar-item-box);
+  block-size: var(--sidebar-item-box);
+  opacity: 0;
+  transition: opacity var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.listItem:hover > .action,
+.listItem:focus-within > .action,
+.sectionHead:hover > .action,
+.sectionHead:focus-within > .action,
+.action:has([data-state="open"]),
+.panelRoot .action {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .action {
+    opacity: 1;
+  }
+}
+
+/* The heading's control sits in the heading's own row, not over a list item's end. */
+.sectionAction {
+  position: static;
+  flex: none;
+  inline-size: auto;
+  block-size: auto;
+}
+
+.item.hasAction {
+  padding-inline-end: var(--sidebar-item-box);
 }
 
 .railItem {
@@ -576,7 +637,8 @@ button.menuButtonNever {
 @media (prefers-reduced-motion: reduce) {
   .root,
   .item,
-  .caret {
+  .caret,
+  .action {
     transition: none;
   }
 

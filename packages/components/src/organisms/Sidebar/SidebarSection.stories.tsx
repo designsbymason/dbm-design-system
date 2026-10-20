@@ -9,6 +9,10 @@ const meta: Meta<typeof Sidebar.Section> = {
   tags: ["!dev"],
   argTypes: {
     label: { control: "text", description: "The section's heading, drawn above its items. In the rail it is hidden and a line sets the sections apart; it still names the list." },
+    action: {
+      control: false,
+      description: "A control drawn at the end of the heading, such as an add IconButton: as Sidebar.Item's action. Not drawn in the rail.",
+    },
     children: { control: false, description: "The section's Sidebar.Items and Sidebar.Groups." },
     id: { control: "text", description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },

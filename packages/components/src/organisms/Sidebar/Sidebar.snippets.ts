@@ -166,6 +166,74 @@ ${sidebar("", { current: "emea", footer: "none" })}`,
   </Sidebar.Item>
 </Sidebar.Nav>`,
 
+  actions: `{/* action is a control at the end of a row, beside the link and not inside it: an IconButton, or a Menu's trigger. It shows while the row
+    is hovered or has focus (always on a touch screen and in the phone panel), and its buttons default to ghost, neutral and xs. Items, groups and
+    sections take one; the rail draws none. */}
+<Sidebar.Nav>
+  <Sidebar.Section label="Projects" action={<IconButton icon={PlusIcon} aria-label="New project" />}>
+    <Sidebar.Item
+      href="/website"
+      icon={FolderSimpleIcon}
+      action={
+        <Menu>
+          <Menu.Trigger asChild>
+            <IconButton icon={DotsThreeIcon} aria-label="More options for Website" />
+          </Menu.Trigger>
+          <Menu.Content>
+            <Menu.Item>Rename</Menu.Item>
+            <Menu.Item>Archive</Menu.Item>
+          </Menu.Content>
+        </Menu>
+      }
+    >
+      Website
+    </Sidebar.Item>
+    <Sidebar.Item href="/mobile" icon={FolderSimpleIcon} badge="3" action={<IconButton icon={PlusIcon} aria-label="Add a task to Mobile app" />}>
+      Mobile app
+    </Sidebar.Item>
+    <Sidebar.Group label="Reports" icon={ChartBarIcon} defaultOpen action={<IconButton icon={PlusIcon} aria-label="New report" />}>
+      <Sidebar.Item href="/reports/sales">Sales</Sidebar.Item>
+    </Sidebar.Group>
+  </Sidebar.Section>
+</Sidebar.Nav>`,
+
+  longLabels: `{/* A label longer than the room is cut with an ellipsis, and a tooltip shows all of it on hover and focus. A label that fits gets none. */}
+<Sidebar width="13rem">
+  <Sidebar.Content>
+    <Sidebar.Nav aria-label="Long labels">
+      <Sidebar.Item href="/planning" icon={FolderSimpleIcon} badge="12">
+        Quarterly planning and budget review
+      </Sidebar.Item>
+      <Sidebar.Item href="/settings" icon={GearIcon}>
+        Settings
+      </Sidebar.Item>
+      <Sidebar.Group label="Customer success and account management" icon={UsersIcon}>
+        <Sidebar.Item href="/onboarding">Onboarding checklists for new enterprise accounts</Sidebar.Item>
+      </Sidebar.Group>
+    </Sidebar.Nav>
+  </Sidebar.Content>
+</Sidebar>`,
+
+  currentPath: `{/* currentPath is the page the reader is on, from your router (here a made-up usePathname()), so each item marks itself from its href with no
+    current written on it, and a group that holds one is current too. An item's own current always wins; match="prefix" also matches the pages below
+    it. Query strings, hashes and trailing slashes are ignored. */}
+<Sidebar currentPath={usePathname()}>
+  <Sidebar.Content>
+    <Sidebar.Nav>
+      <Sidebar.Item href="/" icon={HouseIcon}>
+        Home
+      </Sidebar.Item>
+      <Sidebar.Item href="/projects" icon={FolderSimpleIcon} match="prefix">
+        Projects (and below)
+      </Sidebar.Item>
+      <Sidebar.Group label="Reports" icon={ChartBarIcon}>
+        <Sidebar.Item href="/reports/sales">Sales</Sidebar.Item>
+        <Sidebar.Item href="/reports/costs">Costs</Sidebar.Item>
+      </Sidebar.Group>
+    </Sidebar.Nav>
+  </Sidebar.Content>
+</Sidebar>`,
+
   side: `{/* side: "start" (default) | "end". The line moves to the inner edge and the phone panel slides in from that side. */}
 ${sidebar('side="end"')}
 

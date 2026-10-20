@@ -24,6 +24,11 @@ const meta: Meta<typeof Sidebar.Item> = {
       description:
         "What to show after the text, such as a count: plain text drawn in Badge's solid brand look (subtle on a current item drawn as a brand fill), or a Badge you pass, drawn as written. It is part of the item's name. In the rail it becomes a small mark on the icon.",
     },
+    action: {
+      control: false,
+      description:
+        "A control drawn at the end of the item's row, outside the link: an IconButton for add, or a menu's trigger. Shown while the row is hovered or has focus (always on a touch screen and in the phone panel); the buttons in it default to ghost, neutral and xs. A sibling of the link, never inside it. Not drawn in the rail.",
+    },
     external: {
       control: "boolean",
       description:
@@ -32,8 +37,15 @@ const meta: Meta<typeof Sidebar.Item> = {
     },
     current: {
       control: "boolean",
-      description: "Marks the item as the page the reader is on: aria-current=\"page\" and the sidebar's currentVariant look. The caller decides which one it is.",
+      description: "Marks the item as the page the reader is on: aria-current=\"page\" and the sidebar's currentVariant look. Left out, it is worked out from the sidebar's currentPath and this item's href; true or false here always wins.",
       table: { defaultValue: { summary: "false" } },
+    },
+    match: {
+      control: "radio",
+      options: ["exact", "prefix"],
+      description:
+        "How href is compared with the sidebar's currentPath: the same path, or also any page below it. No effect when current is set or the sidebar has no currentPath.",
+      table: { defaultValue: { summary: '"exact"' } },
     },
     disabled: {
       control: "boolean",

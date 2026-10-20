@@ -7,9 +7,10 @@ import {
 } from "@dbm-design-system/icons";
 import { cx, mergeDefined } from "@dbm-design-system/primitives";
 import { Slot } from "@radix-ui/react-slot";
-import { cloneElement, forwardRef, isValidElement, useCallback, useContext, useEffect, useId, useMemo, useState } from "react";
-import type { CSSProperties, ElementType, MouseEvent, ReactElement } from "react";
+import { cloneElement, forwardRef, isValidElement, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
+import type { CSSProperties, ElementType, MouseEvent, ReactElement, ReactNode } from "react";
 import { Badge } from "../../atoms/Badge";
+import { ButtonGroupProvider, useButtonGroup } from "../../atoms/Button/buttonGroupContext";
 import type { BadgeProps } from "../../atoms/Badge";
 import { Collapse } from "../../atoms/Collapse";
 import { Icon } from "../../atoms/Icon";
@@ -20,6 +21,7 @@ import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Drawer } from "../Drawer";
 import { Menu } from "../Menu";
 import styles from "./Sidebar.module.css";
+import { holdsPath, matchesPath } from "./Sidebar.paths";
 import {
   SidebarContext,
   SidebarLevelContext,
@@ -142,6 +144,35 @@ function useOutwardSide(): Extract<TooltipSide, "left" | "right"> {
 }
 
 /**
+ * What an item or group needs to show the full text of a label the sidebar has cut short with an ellipsis: a ref for the label, and the
+ * open state of a tooltip that opens only when the label really is cut (its content is wider than its box), so a short label never gets one.
+ */
+function useTruncationTooltip(enabled: boolean) {
+  // The label is held in state through a callback ref, so reading it later (when the tooltip is asked to open) is an ordinary read.
+  const [label, setLabel] = useState<HTMLSpanElement | null>(null);
+  const [open, setOpen] = useState(false);
+  const onOpenChange = useCallback(
+    (next: boolean) => setOpen(next && enabled && label !== null && label.scrollWidth > label.clientWidth),
+    [enabled, label],
+  );
+  return { setLabel, open, onOpenChange };
+}
+
+/**
+ * The control a `Sidebar.Item`, `Sidebar.Group` or `Sidebar.Section` draws at the end of its row, beside the link and not inside it. The
+ * buttons in it default to ghost, neutral and `xs`, through the same context a `ButtonGroup` hands its buttons (a button's own props win).
+ */
+function SidebarActionSlot({ children, className }: { children: ReactNode; className?: string }) {
+  const parent = useButtonGroup();
+  const buttons = useMemo(() => ({ ...parent, size: "xs" as const, variant: "ghost" as const, tone: "neutral" as const }), [parent]);
+  return (
+    <ButtonGroupProvider value={buttons}>
+      <span className={cx(styles.action, className)}>{children}</span>
+    </ButtonGroupProvider>
+  );
+}
+
+/**
  * A page's persistent navigation column: a header, grouped and nested links with a current-page marker, and a footer. It can collapse
  * to a rail of icons (`collapsed`, the `Sidebar.Toggle` button) and, below the `collapseBelow` width, leaves the page for a menu
  * button and a side panel (a `Drawer`), so a phone gets a list it can reach with a thumb and the first paint of a server-rendered
@@ -186,6 +217,7 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
       variant = "outlined",
       size = "md",
       currentVariant = "subtle",
+      currentPath,
       rounded = false,
       width,
       side = "start",
@@ -265,8 +297,8 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
     );
 
     const contextValue = useMemo<SidebarContextValue>(
-      () => ({ size, currentVariant, rounded, side, dir, railed, closeMenuOnNavigate, menuContainer, closeMenu }),
-      [size, currentVariant, rounded, side, dir, railed, closeMenuOnNavigate, menuContainer, closeMenu],
+      () => ({ size, currentVariant, currentPath, rounded, side, dir, railed, closeMenuOnNavigate, menuContainer, closeMenu }),
+      [size, currentVariant, currentPath, rounded, side, dir, railed, closeMenuOnNavigate, menuContainer, closeMenu],
     );
     // The panel is never a rail, whatever the page's sidebar is.
     const panelContextValue = useMemo<SidebarContextValue>(() => ({ ...contextValue, railed: false }), [contextValue]);
@@ -285,6 +317,17 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
       if (button?.isConnected) {
         event.preventDefault();
         button.focus();
+      }
+    };
+
+    // The panel opens with focus on its first item, not on whatever the browser would pick: Radix's focus scope skips links when it chooses
+    // where to begin, which would land a keyboard user on the first group's button, or on the close button, below the navigation they came for.
+    const panelRef = useRef<HTMLDivElement>(null);
+    const focusFirstItem = (event: Event) => {
+      const first = panelRef.current?.querySelector<HTMLElement>("nav a[href], nav button:not([disabled])");
+      if (first) {
+        event.preventDefault();
+        first.focus();
       }
     };
 
@@ -322,6 +365,7 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
                 container={menuContainer}
                 labels={{ close: resolvedLabels.close }}
                 aria-describedby={undefined}
+                onOpenAutoFocus={focusFirstItem}
                 onCloseAutoFocus={returnFocus}
               >
                 <Drawer.Header>
@@ -330,7 +374,9 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
                 <Drawer.Body className={styles.panelBody}>
                   <SidebarContext.Provider value={panelContextValue}>
                     <SidebarPanelContext.Provider value>
-                      <div className={cx(styles.panelRoot, sizeClass[size])}>{children}</div>
+                      <div ref={panelRef} className={cx(styles.panelRoot, sizeClass[size])}>
+                        {children}
+                      </div>
                     </SidebarPanelContext.Provider>
                   </SidebarContext.Provider>
                 </Drawer.Body>
@@ -421,14 +467,18 @@ SidebarNav.displayName = "Sidebar.Nav";
  * A heading over a list of items. In the rail the heading is hidden (it still names the list) and a line sets the section apart from the
  * one before it.
  */
-const SidebarSection = forwardRef<HTMLLIElement, SidebarSectionProps>(({ label, children, className, ...props }, ref) => {
+const SidebarSection = forwardRef<HTMLLIElement, SidebarSectionProps>(({ label, action, children, className, ...props }, ref) => {
   const headingId = useId();
+  const { railed } = useSidebarContext("Sidebar.Section");
   return (
     // `role="listitem"` and `role="list"` are redundant on paper; see `Sidebar.Nav`.
     // eslint-disable-next-line jsx-a11y/no-redundant-roles
     <li {...props} ref={ref} role="listitem" className={cx(styles.section, className)}>
-      <div id={headingId} className={styles.sectionLabel}>
-        {label}
+      <div className={styles.sectionHead}>
+        <div id={headingId} className={styles.sectionLabel}>
+          {label}
+        </div>
+        {action !== undefined && action !== null && !railed && <SidebarActionSlot className={styles.sectionAction}>{action}</SidebarActionSlot>}
       </div>
       {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}
       <ul role="list" aria-labelledby={headingId} className={styles.list}>
@@ -455,11 +505,13 @@ SidebarSeparator.displayName = "Sidebar.Separator";
 const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
   (
     {
-      current = false,
+      current: currentProp,
+      match,
       disabled = false,
       asChild = false,
       icon,
       badge,
+      action,
       external,
       href,
       target,
@@ -472,8 +524,10 @@ const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
     },
     ref,
   ) => {
-    const { size, currentVariant, rounded, railed, closeMenuOnNavigate, closeMenu } = useSidebarContext("Sidebar.Item");
+    const { size, currentVariant, currentPath, rounded, railed, closeMenuOnNavigate, closeMenu } = useSidebarContext("Sidebar.Item");
     const { labels } = useSidebarStateContext("Sidebar.Item");
+    // An item's own `current` always wins; left out, the sidebar's `currentPath` decides.
+    const current = currentProp ?? matchesPath(href, currentPath, match);
     const inPanel = useContext(SidebarPanelContext);
     const closeFlyout = useContext(SidebarMenuContext);
     const inMenu = closeFlyout !== null;
@@ -485,6 +539,8 @@ const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
     const Component: ElementType = asChild ? Slot : isLink ? "a" : "button";
     const rail = railed && !inMenu;
     const label = typeof children === "string" || typeof children === "number" ? String(children) : null;
+    const { setLabel, open: tipOpen, onOpenChange: onTipOpenChange } = useTruncationTooltip(!rail && !inMenu && !asChild && label !== null);
+    const hasAction = action !== undefined && action !== null && !rail && !inMenu;
 
     useEffect(() => {
       if (process.env.NODE_ENV === "production") return;
@@ -547,6 +603,7 @@ const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
       !inMenu && current && currentVariantClass[currentVariant],
       !inMenu && current && grows && styles.currentGrow,
       inMenu && current && styles.menuCurrent,
+      hasAction && styles.hasAction,
       disabled && styles.disabled,
       className,
     );
@@ -571,7 +628,9 @@ const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
         ) : (
           <>
             {iconNode}
-            <span className={cx(styles.label, rail && styles.hiddenText)}>{children}</span>
+            <span ref={setLabel} className={cx(styles.label, rail && styles.hiddenText)}>
+              {children}
+            </span>
             {badgeNode}
             {isExternal && (
               <>
@@ -594,9 +653,14 @@ const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
     }
 
     const tooltipContent = asChild ? props["aria-label"] : children;
+    // In the rail the text is the tooltip. Expanded, it is one only when the label is cut with an ellipsis, so the full text can still be read.
     const withTooltip =
       rail && tooltipContent !== undefined && tooltipContent !== null ? (
         <Tooltip content={tooltipContent} side={tooltipSide}>
+          {element}
+        </Tooltip>
+      ) : label !== null && !rail && !asChild ? (
+        <Tooltip content={label} side={tooltipSide} open={tipOpen} onOpenChange={onTipOpenChange}>
           {element}
         </Tooltip>
       ) : (
@@ -608,6 +672,7 @@ const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
       // eslint-disable-next-line jsx-a11y/no-redundant-roles
       <li role="listitem" className={styles.listItem}>
         {withTooltip}
+        {hasAction && <SidebarActionSlot>{action}</SidebarActionSlot>}
       </li>
     );
   },
@@ -625,7 +690,8 @@ const SidebarGroup = forwardRef<HTMLButtonElement, SidebarGroupProps>(
     {
       label,
       icon,
-      current = false,
+      action,
+      current: currentProp,
       open: openProp,
       defaultOpen,
       onOpenChange,
@@ -637,7 +703,9 @@ const SidebarGroup = forwardRef<HTMLButtonElement, SidebarGroupProps>(
     },
     ref,
   ) => {
-    const { size, currentVariant, rounded, railed, dir, menuContainer } = useSidebarContext("Sidebar.Group");
+    const { size, currentVariant, currentPath, rounded, railed, dir, menuContainer } = useSidebarContext("Sidebar.Group");
+    // A group's own `current` always wins; left out, it holds the current page when one of the items written inside it is.
+    const current = currentProp ?? holdsPath(children, currentPath);
     const level = useContext(SidebarLevelContext);
     const closeFlyout = useContext(SidebarMenuContext);
     const tooltipSide = useOutwardSide();
@@ -648,6 +716,8 @@ const SidebarGroup = forwardRef<HTMLButtonElement, SidebarGroupProps>(
     const grows = useBecameCurrent(current);
     const regionId = useId();
     const closeThisFlyout = useCallback(() => setFlyoutOpen(false), []);
+    const { setLabel, open: tipOpen, onOpenChange: onTipOpenChange } = useTruncationTooltip(!railed && closeFlyout === null && typeof label === "string");
+    const hasAction = action !== undefined && action !== null && !railed && closeFlyout === null;
 
     useEffect(() => {
       if (process.env.NODE_ENV === "production") return;
@@ -684,6 +754,7 @@ const SidebarGroup = forwardRef<HTMLButtonElement, SidebarGroupProps>(
       cx(
         styles.item,
         styles.groupButton,
+        hasAction && styles.hasAction,
         railed && styles.railItem,
         rounded && styles.rounded,
         marked && styles.current,
@@ -722,25 +793,30 @@ const SidebarGroup = forwardRef<HTMLButtonElement, SidebarGroupProps>(
     return (
       // eslint-disable-next-line jsx-a11y/no-redundant-roles
       <li role="listitem" className={cx(styles.listItem, styles.groupItem)}>
-        <button
-          {...props}
-          ref={ref}
-          type="button"
-          disabled={disabled}
-          aria-expanded={open}
-          aria-controls={regionId}
-          className={buttonClass(current && !open)}
-          onClick={(event) => {
-            onClick?.(event);
-            const next = !open;
-            if (!isControlled) setUncontrolledOpen(next);
-            onOpenChange?.(next);
-          }}
-        >
-          {iconNode}
-          <span className={styles.label}>{label}</span>
-          <Icon icon={CaretDownIcon} size={externalIconSizeFor[size]} className={styles.caret} />
-        </button>
+        <Tooltip content={label} side={tooltipSide} open={tipOpen} onOpenChange={onTipOpenChange}>
+          <button
+            {...props}
+            ref={ref}
+            type="button"
+            disabled={disabled}
+            aria-expanded={open}
+            aria-controls={regionId}
+            className={buttonClass(current && !open)}
+            onClick={(event) => {
+              onClick?.(event);
+              const next = !open;
+              if (!isControlled) setUncontrolledOpen(next);
+              onOpenChange?.(next);
+            }}
+          >
+            {iconNode}
+            <span ref={setLabel} className={styles.label}>
+              {label}
+            </span>
+            <Icon icon={CaretDownIcon} size={externalIconSizeFor[size]} className={styles.caret} />
+          </button>
+        </Tooltip>
+        {hasAction && <SidebarActionSlot>{action}</SidebarActionSlot>}
         <Collapse asChild open={open}>
           {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}
           <ul role="list" id={regionId} className={cx(styles.list, styles.groupList)}>

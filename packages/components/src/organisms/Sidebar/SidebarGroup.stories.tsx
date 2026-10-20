@@ -11,9 +11,13 @@ const meta: Meta<typeof Sidebar.Group> = {
     label: { control: "text", description: "The group's text, on the button that opens it. In the rail it is the title of the flyout and the button's tooltip." },
     children: { control: false, description: "The group's Sidebar.Items, and Sidebar.Groups nested in it (up to three levels)." },
     icon: { control: false, description: "An icon before the label. It is all the rail shows, so give every top-level group one." },
+    action: {
+      control: false,
+      description: "A control drawn at the end of the group's button, outside it, such as an add IconButton: as Sidebar.Item's action. Not drawn in the rail.",
+    },
     current: {
       control: "boolean",
-      description: "Marks the group as holding the current page: the currentVariant look on its button while it is shut, and it starts open. It has no aria-current, since a button is not a page.",
+      description: "Marks the group as holding the current page: the currentVariant look on its button while it is shut, and it starts open. It has no aria-current, since a button is not a page. Left out, it is worked out from the sidebar's currentPath and the href of the items written inside it; true or false here always wins.",
       table: { defaultValue: { summary: "false" } },
     },
     open: { control: false, description: "Whether the group is open (controlled). Pair with onOpenChange. Ignored in the rail, where the group is a flyout." },

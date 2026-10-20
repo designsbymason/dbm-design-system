@@ -21,6 +21,7 @@ export const propOrder = [
   "variant",
   "size",
   "currentVariant",
+  "currentPath",
   "rounded",
   "width",
   "side",
@@ -74,9 +75,9 @@ export const headerPropOrder = ["children", "id", "className", "style", "data-te
 export const contentPropOrder = ["children", "id", "className", "style", "data-testid"];
 export const footerPropOrder = ["children", "id", "className", "style", "data-testid"];
 export const navPropOrder = ["children", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
-export const sectionPropOrder = ["label", "children", "id", "className", "style", "data-testid"];
-export const itemPropOrder = ["children", "href", "icon", "badge", "external", "current", "disabled", "asChild", "aria-label", "id", "className", "style", "data-testid"];
-export const groupPropOrder = ["label", "children", "icon", "current", "open", "defaultOpen", "onOpenChange", "disabled", "id", "className", "style", "data-testid"];
+export const sectionPropOrder = ["label", "action", "children", "id", "className", "style", "data-testid"];
+export const itemPropOrder = ["children", "href", "icon", "badge", "action", "external", "current", "match", "disabled", "asChild", "aria-label", "id", "className", "style", "data-testid"];
+export const groupPropOrder = ["label", "children", "icon", "action", "current", "open", "defaultOpen", "onOpenChange", "disabled", "id", "className", "style", "data-testid"];
 export const separatorPropOrder = ["id", "className", "style", "data-testid"];
 export const togglePropOrder = ["variant", "tone", "size", "aria-label", "id", "className", "style", "data-testid"];
 export const menuButtonPropOrder = ["icon", "variant", "tone", "size", "aria-label", "id", "className", "style", "data-testid"];
@@ -264,6 +265,33 @@ fills in only its `size` and height where it sets none, and in the rail it becom
 
 <Canvas of={SidebarStories.Items} />
 
+### A control at the end of a row
+
+`action` draws a control (an `IconButton` to add something, a `Menu`'s trigger for more options) at the end of an item's row, a group's
+button or a section's heading. It sits beside the link, not inside it, so it stays a separate control a screen reader and a keyboard can
+reach. It shows while the row is hovered or has focus (and while a menu it opened is open), is always shown on a screen with no hover and in the
+phone panel, and is not drawn in the rail. The row leaves room for it, so a badge or an external mark moves aside, and the buttons in it
+default to ghost, neutral and `xs`.
+
+<Canvas of={SidebarStories.RowActions} />
+
+### Labels longer than the room
+
+A label that does not fit is cut with an ellipsis, and a tooltip shows all of it on hover and keyboard focus. A label that fits gets no
+tooltip, and the rail keeps its own (the label is the tooltip there).
+
+<Canvas of={SidebarStories.LongLabels} />
+
+### Current page from the path
+
+Pass the page's path (from your router) as `currentPath` and each item marks itself from its `href`, with no `current` written on it; a group
+that holds one is current too. An item's own `current` always wins, and `match="prefix"` also matches the pages below it, at a path-segment
+boundary (so `/projects` is current at `/projects/active`, and the root only matches itself). Query strings, hashes and trailing slashes are
+ignored, and an address on another site never matches. A group finds its items by reading the elements written inside it, so an item drawn
+by a component of your own is not seen: set the group's `current` yourself then.
+
+<Canvas of={SidebarStories.CurrentFromPath} />
+
 ### On the end side, and right to left
 
 `side="end"` puts the sidebar against the end edge: its line moves and the phone panel slides in from that side. With
@@ -300,7 +328,8 @@ changed.
 
 - Use one `Sidebar` for the navigation a person needs on every screen of an application, beside the page's content.
 - Give every item and top-level group an `icon`: it is all the rail shows.
-- Mark the current page with `current`, from your router, so it is right on a server-rendered page.
+- Pass `currentPath` from your router so items and groups mark themselves, or set `current` yourself; either way it is right on a server-rendered page.
+- Put the controls that act on a row (add, more options) in its `action`, not inside the link.
 - Use `Sidebar.Section` headings to break a long list into a few named lists.
 - Put a `Sidebar.Toggle` in the footer, or in the page's header inside a `Sidebar.Provider`.
 - Use `asChild` with your router's link so navigation stays client-side.
@@ -310,6 +339,7 @@ changed.
 
 - Don't use a `Sidebar` for a bar of links across the top: that is a `Navbar`.
 - Don't use it for a data hierarchy with selection and a tree's keyboard model: that is a `Tree`.
+- Don't put a button inside a `Sidebar.Item`'s content: a control in a link is invalid and can't be reached on its own. Use `action`.
 - Don't give a `Sidebar.Item` an `id`: the same items are drawn on the page and in the phone panel.
 - Don't nest groups more than three deep, or put a whole site map in one: flatten it.
 - Don't put controls that need arrow keys inside it: it is a list of ordinary tab stops, not a toolbar.
@@ -348,6 +378,11 @@ changed.
   `<nav>` with a name (`labels.navigation`, "Main", unless you pass `aria-label`) holding a `role="list"` list; each item is a
   `role="listitem"`, which keeps list semantics under Safari with VoiceOver, where a list without markers loses them.
 - A `Sidebar.Section` is a list item holding a heading and a list named by it, so a screen reader announces "Workspace, list".
+- The phone panel opens with focus on its first item (not on the close button or whichever control the browser would pick), so a keyboard or
+  screen-reader user begins in the navigation they opened it for.
+- A row's `action` is a separate control beside the link, never inside it, so it has its own name (give its `IconButton` an `aria-label`) and
+  its own tab stop. It is faint while the row is not hovered or focused, and focus brings it in; it is never hidden from the tab order.
+- A tooltip on a cut-off label opens on hover and on keyboard focus and describes the item, so the full text is available without a mouse.
 - The current page is `aria-current="page"`. A disabled item is `aria-disabled` and stays focusable, with its click blocked; a
   disabled group is a native disabled button and leaves the tab order.
 - An external item's new tab is announced: a visually hidden "(opens in a new tab)" follows its text, and a count in `badge` is part

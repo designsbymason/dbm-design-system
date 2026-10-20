@@ -25,6 +25,12 @@ export type SidebarVariant = "outlined" | "filled" | "ghost";
  */
 export type SidebarCurrentVariant = "subtle" | "bar" | "solid";
 
+/**
+ * How an item's `href` is compared with the sidebar's `currentPath`: `exact` (the same path) or `prefix` (the same path, or a page below
+ * it, so `/reports` is current at `/reports/sales`).
+ */
+export type SidebarMatch = "exact" | "prefix";
+
 /** Which edge of the page the sidebar sits against, in the reading direction: `start` is the left in left-to-right text. */
 export type SidebarSide = "start" | "end";
 
@@ -132,6 +138,13 @@ export interface SidebarProps extends SidebarStateProps, Omit<ComponentPropsWith
    * @default 'subtle'
    */
   currentVariant?: SidebarCurrentVariant;
+  /**
+   * The path of the page the reader is on (from your router), so each item marks itself: an item whose `href` is that path is current, and a
+   * group that holds one is current too, with no `current` written on either. An item's own `current` always wins, and `match="prefix"` on an
+   * item also matches the pages below it. Query strings, hashes and trailing slashes are ignored, and an address on another site never
+   * matches. Left out, nothing is current until you say so.
+   */
+  currentPath?: string;
   /**
    * Fully rounded items: each item and group button is a pill, with the current item's tint or fill following the shape. The items round, not the
    * sidebar.
@@ -259,6 +272,8 @@ export interface SidebarNavProps extends Omit<ComponentPropsWithoutRef<"nav">, "
 export interface SidebarSectionProps extends Omit<HTMLAttributes<HTMLLIElement>, "children"> {
   /** The section's heading, drawn above its items. In the rail it is hidden, and a line separates the sections; it still names the group. */
   label: ReactNode;
+  /** A control drawn at the end of the heading, such as an "add" `IconButton`: as `Sidebar.Item`'s `action`. Not drawn in the rail. */
+  action?: ReactNode;
   /** The section's `Sidebar.Item`s and `Sidebar.Group`s. */
   children?: ReactNode;
   /** Standard DOM id. */
@@ -291,16 +306,27 @@ export interface SidebarItemProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEl
    */
   badge?: ReactNode;
   /**
+   * A control drawn at the end of the item's row, outside the link: an `IconButton` for "add" or a menu's trigger. It is shown while the row is
+   * hovered or has focus (always on a touch screen and in the phone panel), the row leaves room for it, and the buttons in it default to ghost,
+   * neutral and `xs`. It is not drawn in the rail. It is a sibling of the link, never inside it, so it stays a valid, separate control.
+   */
+  action?: ReactNode;
+  /**
    * Marks the item as leading off the site: it opens in a new tab with `rel="noopener noreferrer"`, and gets a trailing icon and a
    * visually hidden "(opens in a new tab)". Worked out from `href` when left out (an `http(s)://` or `//` address).
    */
   external?: boolean;
   /**
-   * Marks the item as the page the reader is on: `aria-current="page"` and the sidebar's `currentVariant` look. The caller decides which one it
-   * is (from the router), so it stays correct on a server-rendered page.
-   * @default false
+   * Marks the item as the page the reader is on: `aria-current="page"` and the sidebar's `currentVariant` look. Left out, it is worked out from
+   * the sidebar's `currentPath` and this item's `href` (never current when the sidebar has none); `true` or `false` here always wins.
    */
   current?: boolean;
+  /**
+   * How `href` is compared with the sidebar's `currentPath`: the same path, or also any page below it. Has no effect when `current` is set or
+   * the sidebar has no `currentPath`.
+   * @default 'exact'
+   */
+  match?: SidebarMatch;
   /**
    * Makes the item inert: `aria-disabled` plus a blocked click, and it stays in the tab order, as `Link` does.
    * @default false
@@ -333,10 +359,12 @@ export interface SidebarGroupProps extends Omit<ComponentPropsWithoutRef<"button
   children?: ReactNode;
   /** An icon before the label. It is all the rail shows, so give every top-level group one. */
   icon?: PhosphorIcon;
+  /** A control drawn at the end of the group's button, outside it, such as an "add" `IconButton`: as `Sidebar.Item`'s `action`. Not drawn in the rail. */
+  action?: ReactNode;
   /**
    * Marks the group as holding the current page: the `currentVariant` look on its button while it is collapsed, and it starts open.
-   * It has no `aria-current`, since a button is not a page. The caller says it, as for an item.
-   * @default false
+   * It has no `aria-current`, since a button is not a page. Left out, it is worked out from the sidebar's `currentPath` and the `href` of the
+   * items written inside it; `true` or `false` here always wins.
    */
   current?: boolean;
   /** Whether the group is open (controlled). Pair with `onOpenChange`. Ignored in the rail, where the group is a flyout. */
