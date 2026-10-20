@@ -397,8 +397,8 @@ export interface NavbarLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEle
   /** An icon before the text, a component reference. It follows the text's colour, so it tracks the current look. */
   icon?: PhosphorIcon;
   /**
-   * What to show after the text, such as a count or a dot: plain text, drawn in `Badge`'s solid brand look at the link's size (its subtle look on a current link drawn as a brand fill, where a solid pill would vanish), or a
-   * `Badge` you pass, drawn as written (its `tone`, `variant`, `max`…) with the link's `size` where it sets none. Pass the `Badge`
+   * What to show after the text, such as a count or a dot: plain text, drawn in `Badge`'s solid brand look as a round 20px at every link size (its subtle look on a current link drawn as a brand fill, where a solid pill would vanish), or a
+   * `Badge` you pass, drawn as written (its `tone`, `variant`, `max`…) with `size="xs"` where it sets none. Pass the `Badge`
    * element itself, not a component that returns one. It is part of the link's name, so a count is read with it ("Inbox 3"); give a
    * bare dot its own visually hidden text.
    */

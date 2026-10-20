@@ -540,7 +540,7 @@ describe("Navbar linkSize", () => {
 describe("Navbar link extras and the frosted variant", () => {
   const nav = (name: string) => screen.getByRole("navigation", { name, hidden: true });
 
-  it("draws a link's badge with the Badge atom, sized by the link, and a trailing arrow a step behind its icon", () => {
+  it("draws a link's badge with the Badge atom, at its xs size whatever the link size, and a trailing arrow a step behind its icon", () => {
     render(
       <Navbar linkSize="xl" collapseBelow="never">
         <Navbar.Links aria-label="Main">
@@ -552,7 +552,7 @@ describe("Navbar link extras and the frosted variant", () => {
     );
     const link = nav("Main").querySelector("a")!;
     const badge = [...link.querySelectorAll("span")].find((span) => span.textContent === "New")!;
-    expect(badge.className).toMatch(/sizeMd/);
+    expect(badge.className).toMatch(/sizeXs/);
     const [leading, trailing] = [...link.querySelectorAll("svg")];
     expect(leading!.getAttribute("class")).toMatch(/sizeLg/);
     expect(trailing!.getAttribute("class")).toMatch(/sizeMd/);
@@ -579,7 +579,7 @@ describe("Navbar link extras and the frosted variant", () => {
     expect(pill("Alerts", "2")).toHaveLength(1);
     expect(pill("Alerts", "2")[0]!.parentElement!.tagName).toBe("A");
     expect(pill("Alerts", "2")[0]!.className).toMatch(/Danger/i);
-    expect(pill("Alerts", "2")[0]!.className).toMatch(/sizeMd/);
+    expect(pill("Alerts", "2")[0]!.className).toMatch(/sizeXs/);
     // its own size wins over the link's
     expect(pill("Orders", "9")[0]!.className).toMatch(/sizeXs/);
     expect(pill("Orders", "9")[0]!.className).toMatch(/Success/i);

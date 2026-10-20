@@ -1904,7 +1904,7 @@ export const SearchSheetIsCompact: Story = {
 };
 
 export const CountBadgeIsACircleAtEveryLinkSize: Story = {
-  name: "A two-digit count is Badge's own circle at every link size, and a badged link is as tall as a plain one",
+  name: "A two-digit count is a round 20px at every link size, and a badged link is as tall as a plain one",
   render: () => (
     <NavbarStage minBlockSize="30rem">
       {() => (
@@ -1927,13 +1927,14 @@ export const CountBadgeIsACircleAtEveryLinkSize: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const token = { xs: "--dbm-badge-size-xs", sm: "--dbm-badge-size-xs", md: "--dbm-badge-size-sm", lg: "--dbm-badge-size-md", xl: "--dbm-badge-size-md" } as const;
+    const token = { xs: "--dbm-space-5", sm: "--dbm-space-5", md: "--dbm-space-5", lg: "--dbm-space-5", xl: "--dbm-space-5" } as const;
     for (const step of ["xs", "sm", "md", "lg", "xl"] as const) {
       const nav = canvas.getByRole("navigation", { name: `${step} counts` });
       const inbox = within(nav).getByRole("link", { name: /Inbox/ });
       const badge = within(inbox).getByText("12");
       const box = badge.getBoundingClientRect();
-      expect(Math.round(box.height)).toBe(Math.round(tokenPx(token[step])));
+      // `space.N` tokens are in rem
+      expect(Math.round(box.height)).toBe(Math.round(tokenPx(token[step]) * 16));
       // round: as wide as it is tall (a glyph or two wider than the diameter's own room would make an oval)
       expect(Math.abs(box.width - box.height)).toBeLessThanOrEqual(2.5);
       expect(Math.abs(inbox.getBoundingClientRect().height - within(nav).getByRole("link", { name: "Plain" }).getBoundingClientRect().height)).toBeLessThan(1);

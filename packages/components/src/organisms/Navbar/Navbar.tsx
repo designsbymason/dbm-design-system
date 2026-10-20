@@ -25,7 +25,7 @@ import {
   useNavbarContext,
 } from "./NavbarContext";
 import type { NavbarContextValue } from "./NavbarContext";
-import { defaultLinkSize, linkBadgeSize, linkIconSize, linkTrailingIconSize, stepDown } from "./linkSizes";
+import { defaultLinkSize, linkIconSize, linkTrailingIconSize, stepDown } from "./linkSizes";
 import { Badge } from "../../atoms/Badge";
 import type { BadgeProps } from "../../atoms/Badge";
 import { NavbarRow } from "./NavbarRow";
@@ -509,7 +509,6 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
     const sized = linkSize && !inPanel && !inMenu ? linkSize.size : undefined;
     const iconSize = sized ? linkIconSize[sized] : "sm";
     const trailingIconSize = sized ? linkTrailingIconSize[sized] : "xs";
-    const badgeSize = sized ? linkBadgeSize[sized] : "sm";
     const grows = useBecameCurrent(current);
     const Component = asChild ? Slot : "a";
 
@@ -565,11 +564,11 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
               // brand pill would vanish), so a pill is never inside a pill.
               (isValidElement(badge) && badge.type === Badge ? (
                 cloneElement(badge as ReactElement<BadgeProps>, {
-                  size: (badge as ReactElement<BadgeProps>).props.size ?? badgeSize,
+                  size: (badge as ReactElement<BadgeProps>).props.size ?? "xs",
                   className: cx(styles.linkBadge, (badge as ReactElement<BadgeProps>).props.className),
                 })
               ) : (
-                <Badge tone="brand" variant={current && currentVariant === "solid" ? "subtle" : "solid"} size={badgeSize} className={styles.linkBadge}>
+                <Badge tone="brand" variant={current && currentVariant === "solid" ? "subtle" : "solid"} size="xs" className={cx(styles.linkBadge, styles.linkBadgeOwn)}>
                   {badge}
                 </Badge>
               ))}

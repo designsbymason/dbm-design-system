@@ -33,12 +33,3 @@ export const linkTrailingIconSize: Record<NavbarLinkSize, Extract<IconSize, "xs"
   lg: "sm",
   xl: "md",
 };
-
-/** A link's badge, on `Badge`'s own scale: its text is a little under the link's. */
-export const linkBadgeSize: Record<NavbarLinkSize, "xs" | "sm" | "md"> = {
-  xs: "xs",
-  sm: "xs",
-  md: "sm",
-  lg: "md",
-  xl: "md",
-};

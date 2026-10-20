@@ -273,14 +273,14 @@
 }
 
 /* In the rail the badge is a small mark on the icon's corner, so the count or dot is still seen without the room for a label. It is smaller than
-   `Badge`'s own `xs`: a round 20px with no side padding, so a one- or two-digit count stays a circle over the corner of the icon. */
+   `Badge`'s own `xs`: a round 20px with 2px of side padding (half of `space.1`), so a one- or two-digit count stays a circle over the corner of the icon and a word is not touching the ends. */
 .item .railBadge {
   position: absolute;
   inset-block-start: calc(-1 * var(--dbm-space-1));
   inset-inline-end: calc(-1 * var(--dbm-space-1));
   block-size: var(--dbm-space-5);
   min-inline-size: var(--dbm-space-5);
-  padding-inline: 0;
+  padding-inline: calc(var(--dbm-space-1) / 2);
 }
 
 .railItem {

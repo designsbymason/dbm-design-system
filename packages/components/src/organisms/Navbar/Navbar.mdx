@@ -288,8 +288,8 @@ floor that a taller link still grows.
 
 <Canvas of={NavbarStories.LinkSizes} />
 
-A link's `icon`, its trailing arrow and its `badge` follow the link size too: the arrow is a step behind the icon, and the badge is
-`Badge`'s solid brand look at the step that goes with the text.
+A link's `icon`, its trailing arrow and its `badge` follow the link size too: the arrow is a step behind the icon. The badge does not: it is
+`Badge`'s solid brand look as a round 20px at every link size.
 
 The links' weight and case are not props: a link takes its text style from its set, so one `style` on `Navbar.Links` sets them for the
 whole set, on the tokens:
@@ -332,7 +332,7 @@ A link takes an `icon` before its text, a `badge` after it (a count is read as p
 is marked `external` when its `href` starts `http://`, `https://` or `//`: it opens in a new tab with a trailing
 icon and a hidden "(opens in a new tab)".
 
-A `badge` that is plain text or a number is drawn in `Badge`'s solid brand look, at the size that goes with the link (its subtle look on a current link drawn as a brand fill, where a solid pill would vanish). To choose its tone
+A `badge` that is plain text or a number is drawn in `Badge`'s solid brand look, as a round 20px (its subtle look on a current link drawn as a brand fill, where a solid pill would vanish). To choose its tone
 or variant, pass a `Badge` yourself (`badge={<Badge tone="danger" variant="solid">2</Badge>}`): it is drawn as written, with the link's size
 where it sets none, and a margin that keeps the link as tall as a plain one. Pass the `Badge` element itself, not a component that returns one, or it is taken for
 content and drawn inside the link's own.
@@ -707,7 +707,8 @@ This story is shown at a phone's width when opened on its own; on this page, nar
 <TokenRow token="space.2" usage="the gap inside a link and between actions; the room above and below a bar; a link's vertical padding" />
 <TokenRow token="space.3" usage="a link's inline padding" />
 <TokenRow token="space.4" usage="the gap between the bar's zones, and its inline padding" />
-<TokenRow token="badge.size.xs / badge.size.sm / badge.size.md" usage="the height of a badge in a link, which is `Badge`'s own so a count is its circle (`xs` at the `xs` and `sm` link sizes, `sm` at `md`, `md` at `lg` and `xl`); a negative block margin derived from it keeps a badged link as tall as a plain one" />
+<TokenRow token="badge.size.xs" usage="the height of a badge you pass in a link, which is `Badge`'s own `xs` by default so a count is its circle; a negative block margin derived from it keeps a badged link as tall as a plain one" />
+<TokenRow token="space.5" usage="the height of the link's own badge, a round mark with 2px of side padding (half of `space.1`) so a one- or two-digit count stays a circle" />
 <TokenRow token="space.6" usage="a link's smallest height, which keeps it a 24 pixel target" />
 <TokenRow token="opacity.40" usage="a disabled link" />
 <TokenRow token="motion.duration.fast" usage="a link's colour change" />
