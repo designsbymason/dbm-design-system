@@ -64,7 +64,7 @@
    principle that section already documents. No hover background — this is a
    purely decorative, non-interactive chevron, not a button. */
 .icon {
-  color: var(--dbm-icon-default);
+  color: var(--dbm-icon-secondary);
   flex-shrink: 0;
   /* the caret is the field's own step, which at some sizes is taller than a line of text; the margin keeps it from making the trigger taller */
   margin-block: calc(-1 * var(--dbm-space-2));

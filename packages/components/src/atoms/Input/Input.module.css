@@ -52,9 +52,9 @@
 /* Neutral, not brand — `icon.default`, not `text.tertiary` (2026-09-14,
    user-directed; see `05-component-api-conventions.md` §6): `.affix` wraps
    both `prefix` and `suffix` content, most commonly a plain, decorative
-   `Icon` inheriting this `color` via `currentColor` (e.g. a search icon in
-   `prefix`) — `icon.default` is the semantically correct token family for
-   that case, per the same "icon color always comes from `icon.*`, never
+   `Icon` (e.g. a search icon in `prefix`; see the `icon.secondary` rule
+   above for its colour) — `icon.default` is the semantically correct token family for
+   the text that case shares this slot with, per the same "icon color always comes from `icon.*`, never
    `text.*`" principle `05-component-api-conventions.md` §6 already
    documents elsewhere (found via `Image`). The two tokens share an
    identical resolved value in every theme (`03-token-system-spec.md`), so
@@ -64,6 +64,13 @@
    plain prefix/suffix icon isn't itself interactive. */
 /* `block-size: 0` with centred items: a slot's content is centred on the row but adds nothing to its height, so an icon the size of the
    input's own step (16px at `sm`, taller than that step's line) never makes the field taller than one without it. */
+/* A decorative icon placed straight in a slot is `icon.secondary` (3.25:1 on the surface in light mode, 4.34:1 in dark). `:where` keeps this at no
+   specificity, so an `Icon`'s own `tone` wins, and only a direct child svg matches: the icon inside a button in a slot (a toggle, a stepper) is
+   interactive and keeps its own, stronger `icon.default`. Plain text in a slot stays `icon.default` too, since text needs 4.5:1. */
+:where(.affix > svg) {
+  color: var(--dbm-icon-secondary);
+}
+
 .affix {
   align-items: center;
   block-size: 0;

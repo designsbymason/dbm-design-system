@@ -185,3 +185,7 @@ Same review as `Card`'s and `Table`'s (standard: `07-storybook-and-documentation
 ## Icons at the input's own step, 2026-10-19 (visual change; stays Finalized)
 
 At explicit direction, following `Input`'s own change (see [Input](Input.md)): the icons this component draws in the field (the leading and trailing icons, the clear and loading ones) are the same step as the field's `size` (`xs` 12px … `xl` 32px) instead of one step below it. The compensating margin and, at `lg` and `xl`, the smaller padding of its button are recomputed as `Input`'s clear button's are. A real-browser check in `Input.checks.stories.tsx` measures the icons and the field's height at every size.
+
+## Decorative icons are `icon.secondary`, 2026-10-19 (visual change; stays Finalized)
+
+At explicit direction: the icons that only decorate a field are `icon.secondary` (`gray.500`) instead of `icon.default`, so the controls beside them read as the stronger ones. The leading magnifier; the clear icon and the spinner keep `icon.default`. Measured contrast on the field's own backgrounds, computed from the primitives: 3.25:1 on the light surface and 4.34:1 on the dark one, and 3.12:1 / 3.10:1 on `bg.neutral-subtle`, all over the 3:1 non-text floor; the deeper `bg.neutral-subtle-hover` (2.86:1 light, 2.12:1 dark) is not under any decorative icon. Clickable icons (clear, show/hide, steppers, pickers' buttons, the `Combobox` caret) stay `icon.default`, and so does text in a slot (it needs 4.5:1). A real-browser check in `Input.checks.stories.tsx` reads the computed colours.

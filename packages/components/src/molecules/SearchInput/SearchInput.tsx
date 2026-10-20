@@ -171,7 +171,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
             <Icon
               icon={MagnifyingGlassIcon}
               size={prefixSizeForInputSize[size]}
-              tone="default"
+              tone="secondary"
             />
           )
         }

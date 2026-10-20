@@ -26,6 +26,18 @@ export default meta;
 
 type Story = StoryObj;
 
+/** Reads any CSS colour (the tokens are OKLCH) as sRGB channels, by painting one pixel of it. */
+function toRgb(color: string): [number, number, number] {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1;
+  canvas.height = 1;
+  const context = canvas.getContext("2d", { willReadFrequently: true })!;
+  context.fillStyle = color;
+  context.fillRect(0, 0, 1, 1);
+  const [r, g, b] = context.getImageData(0, 0, 1, 1).data;
+  return [r!, g!, b!];
+}
+
 const sizes = ["xs", "sm", "md", "lg", "xl"] as const satisfies readonly InputSize[];
 const token = (name: string) => parseFloat(getComputedStyle(document.documentElement).getPropertyValue(name)) * (getComputedStyle(document.documentElement).getPropertyValue(name).trim().endsWith("rem") ? parseFloat(getComputedStyle(document.documentElement).fontSize) : 1);
 
@@ -200,5 +212,55 @@ export const OtherFieldsUseTheSameSteps: Story = {
         }
       }
     }
+  },
+};
+
+export const DecorativeIconsAreSecondary: Story = {
+  name: "Decorative icons are icon.secondary and clearable ones icon.default, and both clear 3:1 on the surface",
+  render: () => (
+    <div style={{ display: "grid", gap: "var(--dbm-space-2)", maxInlineSize: "24rem", background: "var(--dbm-bg-surface)" }}>
+      <div data-field="prefix">
+        <Input aria-label="prefix" prefix={<Icon icon={MagnifyingGlassIcon} />} value="x" onChange={() => {}} onClear={() => {}} suffix="@example.com" />
+      </div>
+      <div data-field="own tone">
+        <Input aria-label="own tone" prefix={<Icon icon={MagnifyingGlassIcon} tone="brand" />} />
+      </div>
+      <div data-field="search">
+        <SearchInput aria-label="search" />
+      </div>
+      <div data-field="select">
+        <Select aria-label="select" defaultValue="a">
+          <Select.Option value="a">A</Select.Option>
+        </Select>
+      </div>
+      <div data-field="password">
+        <PasswordInput aria-label="password" defaultValue="x" />
+      </div>
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const color = (element: Element) => getComputedStyle(element).color;
+    const named = (variable: string) => toRgb(getComputedStyle(document.documentElement).getPropertyValue(variable)).join();
+    const rgb = (element: Element) => toRgb(color(element)).join();
+    const secondary = named("--dbm-icon-secondary");
+    const strong = named("--dbm-icon-default");
+    const field = (name: string) => canvasElement.querySelector(`[data-field="${name}"]`)!;
+    expect(rgb(field("prefix").querySelector("svg")!), "prefix icon").toBe(secondary);
+    expect(rgb(field("prefix").querySelector("button svg")!), "clear icon").toBe(strong);
+    expect(rgb(field("search").querySelector("svg")!), "search icon").toBe(secondary);
+    expect(rgb(field("select").querySelector("svg")!), "caret").toBe(secondary);
+    expect(rgb(field("password").querySelector("button svg")!), "toggle icon").toBe(strong);
+    expect(rgb(field("own tone").querySelector("svg")!), "an icon with its own tone").not.toBe(secondary);
+    // the text in a slot is still the stronger colour, since text needs 4.5:1
+    const suffix = Array.from(field("prefix").querySelectorAll("span")).filter((span) => span.textContent === "@example.com").pop()!;
+    expect(rgb(suffix), "suffix text").toBe(strong);
+    // decorative icons keep the 3:1 non-text floor on the field's surface
+    const surface = toRgb(getComputedStyle(document.documentElement).getPropertyValue("--dbm-bg-surface"));
+    const lum = ([r, g, b]: [number, number, number]) => {
+      const c = (v: number) => (v / 255 <= 0.03928 ? v / 255 / 12.92 : ((v / 255 + 0.055) / 1.055) ** 2.4);
+      return 0.2126 * c(r) + 0.7152 * c(g) + 0.0722 * c(b);
+    };
+    const [a, b] = [lum(toRgb(color(field("prefix").querySelector("svg")!))), lum(surface)];
+    expect((Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)).toBeGreaterThanOrEqual(3);
   },
 };

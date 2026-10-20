@@ -476,7 +476,7 @@ export const EditableText = forwardRef<HTMLDivElement, EditableTextProps>(
               <Spinner size={iconSizeForSize[size]} className={styles.spinner} />
             ) : (
               showEditIcon && (
-                <Icon className={styles.icon} icon={PencilSimpleIcon} size={iconSizeForSize[size]} tone="default" />
+                <Icon className={styles.icon} icon={PencilSimpleIcon} size={iconSizeForSize[size]} tone="secondary" />
               )
             )}
           </button>
