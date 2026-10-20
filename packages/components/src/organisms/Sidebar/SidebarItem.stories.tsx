@@ -22,7 +22,7 @@ const meta: Meta<typeof Sidebar.Item> = {
     badge: {
       control: "text",
       description:
-        "What to show after the text, such as a count: plain text drawn in Badge's subtle brand look, or a Badge you pass, drawn as written. It is part of the item's name. In the rail it becomes a small mark on the icon.",
+        "What to show after the text, such as a count: plain text drawn in Badge's solid brand look (subtle on a current item drawn as a brand fill), or a Badge you pass, drawn as written. It is part of the item's name. In the rail it becomes a small mark on the icon.",
     },
     external: {
       control: "boolean",

@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
+import { Badge } from "../../atoms/Badge";
 import { Sidebar } from "./Sidebar";
+import { BellIcon } from "@dbm-design-system/icons";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { DemoSidebar, SidebarFrame, SidebarStage, SidebarViewModeContext } from "./SidebarStoryKit";
 
@@ -313,9 +315,9 @@ export const GroupsAlign: Story = {
 export const ContentScrollsOnItsOwn: Story = {
   name: "Taller than its frame, the content scrolls and the header and footer stay in view",
   render: () => (
-    <SidebarStage minBlockSize="16rem">
+    <SidebarStage minBlockSize="14rem">
       {(menuContainer) => (
-        <SidebarFrame height="14rem">
+        <SidebarFrame height="14rem" fixed>
           <DemoSidebar menuContainer={menuContainer} />
         </SidebarFrame>
       )}
@@ -649,5 +651,120 @@ export const StickyStaysInView: Story = {
     // the footer is still in view at the bottom of the window, and the content scrolls inside it
     expect(root.lastElementChild!.getBoundingClientRect().bottom).toBeLessThanOrEqual(window.innerHeight);
     window.scrollTo(0, 0);
+  },
+};
+
+export const PassedBadgeIsDrawnAsWritten: Story = {
+  name: "A Badge passed as an item's badge keeps its own tone and variant, is one pill, and stays within the item's height, expanded and in the rail",
+  render: () => (
+    <SidebarStage minBlockSize="16rem">
+      {(menuContainer) => (
+        <div style={{ display: "flex", gap: "1rem" }}>
+          {[false, true].map((collapsed) => (
+            <SidebarFrame key={String(collapsed)} height="10rem" contentLabel="">
+              <Sidebar collapseBelow="never" defaultCollapsed={collapsed} menuContainer={menuContainer} width="14rem">
+                <Sidebar.Content>
+                  <Sidebar.Nav aria-label={collapsed ? "Rail" : "Expanded"}>
+                    <Sidebar.Item href="#a" icon={BellIcon} badge="4" onClick={(event) => event.preventDefault()}>
+                      Plain
+                    </Sidebar.Item>
+                    <Sidebar.Item
+                      href="#b"
+                      icon={BellIcon}
+                      badge={<Badge tone="danger" variant="solid">9</Badge>}
+                      onClick={(event) => event.preventDefault()}
+                    >
+                      Alerts
+                    </Sidebar.Item>
+                  </Sidebar.Nav>
+                </Sidebar.Content>
+              </Sidebar>
+            </SidebarFrame>
+          ))}
+        </div>
+      )}
+    </SidebarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const root of canvasElement.querySelectorAll<HTMLElement>("[data-variant]")) {
+      const plain = within(root).getByRole("link", { name: /^Plain/ });
+      const alerts = within(root).getByRole("link", { name: /^Alerts/ });
+      const builtIn = within(plain).getByText("4");
+      const own = within(alerts).getByText("9");
+      // different fills: the passed Badge is danger-solid, the plain text is the built-in solid brand pill
+      expect(getComputedStyle(own).backgroundColor).not.toBe(getComputedStyle(builtIn).backgroundColor);
+      expect(toRgb(getComputedStyle(own).backgroundColor)).not.toEqual(toRgb(getComputedStyle(builtIn).backgroundColor));
+      // one pill, not a pill in a pill, and no taller than its item
+      expect(own.querySelector("span")).toBeNull();
+      expect(own.getBoundingClientRect().height).toBeLessThanOrEqual(alerts.getBoundingClientRect().height);
+      // within the sidebar
+      expect(own.getBoundingClientRect().right).toBeLessThanOrEqual(root.getBoundingClientRect().right);
+    }
+  },
+};
+
+export const FillsTheDemoBox: Story = {
+  name: "A sidebar fills the height of the box it is drawn in, and a section's heading is in capitals",
+  render: () => (
+    <SidebarStage minBlockSize="40rem">
+      {(menuContainer) => (
+        <SidebarFrame height="12rem">
+          <DemoSidebar menuContainer={menuContainer} />
+        </SidebarFrame>
+      )}
+    </SidebarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const root = rootOf(canvasElement);
+    const frame = root.parentElement!;
+    const box = frame.parentElement!.parentElement!;
+    // the frame takes the box's whole height (less its own border), and the sidebar the frame's
+    expect(Math.abs(frame.getBoundingClientRect().height - box.clientHeight)).toBeLessThanOrEqual(2);
+    expect(root.getBoundingClientRect().height).toBeGreaterThan(tokenPx("--dbm-space-1") * 150);
+    expect(root.getBoundingClientRect().height).toBe(frame.clientHeight);
+    expect(getComputedStyle(within(root).getByText("Workspace")).textTransform).toBe("uppercase");
+  },
+};
+
+export const CountBadgeIsBadgesOwnCircle: Story = {
+  name: "A two-digit count is a circle (Badge's xs in an item, a smaller 20px mark in the rail), and a badged row is as tall as a plain one",
+  render: () => (
+    <SidebarStage minBlockSize="26rem">
+      {(menuContainer) => (
+        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+          {(["xs", "sm", "md", "lg"] as const).flatMap((size) =>
+            [false, true].map((collapsed) => (
+              <SidebarFrame key={`${size}${collapsed}`} height="9rem" contentLabel="">
+                <Sidebar collapseBelow="never" size={size} defaultCollapsed={collapsed} menuContainer={menuContainer} width="12rem">
+                  <Sidebar.Content>
+                    <Sidebar.Nav aria-label={`${size}${collapsed ? " rail" : ""}`}>
+                      <Sidebar.Item href="#a" icon={BellIcon} onClick={(event) => event.preventDefault()}>
+                        Plain
+                      </Sidebar.Item>
+                      <Sidebar.Item href="#b" icon={BellIcon} badge="12" onClick={(event) => event.preventDefault()}>
+                        Inbox
+                      </Sidebar.Item>
+                    </Sidebar.Nav>
+                  </Sidebar.Content>
+                </Sidebar>
+              </SidebarFrame>
+            )),
+          )}
+        </div>
+      )}
+    </SidebarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    for (const root of canvasElement.querySelectorAll<HTMLElement>("[data-variant]")) {
+      const rail = root.hasAttribute("data-collapsed");
+      const size = within(root).getByRole("navigation").getAttribute("aria-label")!.split(" ")[0]!;
+      const inbox = within(root).getByRole("link", { name: /Inbox/ });
+      const badge = within(inbox).getByText("12").getBoundingClientRect();
+      // an `xs` item's row is a pixel shorter than the smallest badge, so there it is held to 24px (`space.6`); the rail's mark is 20px (`space.5`)
+      const expected = rail ? tokenPx("--dbm-space-5") : size === "xs" ? tokenPx("--dbm-space-6") : tokenPx("--dbm-badge-size-xs");
+      expect(Math.round(badge.height)).toBe(Math.round(expected));
+      expect(Math.abs(badge.width - badge.height)).toBeLessThanOrEqual(2.5);
+      expect(Math.abs(inbox.getBoundingClientRect().height - within(root).getByRole("link", { name: "Plain" }).getBoundingClientRect().height)).toBeLessThan(1);
+    }
   },
 };

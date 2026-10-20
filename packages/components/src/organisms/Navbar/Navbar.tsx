@@ -561,14 +561,15 @@ const NavbarLink = forwardRef<HTMLAnchorElement, NavbarLinkProps>(
             {badge !== undefined &&
               badge !== null &&
               // A `Badge` passed as the badge is drawn as written (its tone, variant, `max`…), with the link's size and height rule filled in
-              // where it didn't say; anything else is the content of the link's own badge (subtle, brand), so a pill is never inside a pill.
+              // where it didn't say; anything else is the content of the link's own badge (solid, brand; subtle on a current link drawn as a brand fill, where a solid
+              // brand pill would vanish), so a pill is never inside a pill.
               (isValidElement(badge) && badge.type === Badge ? (
                 cloneElement(badge as ReactElement<BadgeProps>, {
                   size: (badge as ReactElement<BadgeProps>).props.size ?? badgeSize,
                   className: cx(styles.linkBadge, (badge as ReactElement<BadgeProps>).props.className),
                 })
               ) : (
-                <Badge tone="brand" variant="subtle" size={badgeSize} className={styles.linkBadge}>
+                <Badge tone="brand" variant={current && currentVariant === "solid" ? "subtle" : "solid"} size={badgeSize} className={styles.linkBadge}>
                   {badge}
                 </Badge>
               ))}

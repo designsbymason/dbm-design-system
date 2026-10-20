@@ -2,7 +2,10 @@ import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { Fragment, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
+import { BellIcon, BookOpenIcon, HouseIcon, PlusIcon, ReceiptIcon, TrayIcon, UsersIcon } from "@dbm-design-system/icons";
 import type { SpaceValue } from "@dbm-design-system/primitives";
+import { Badge } from "../../atoms/Badge";
+import { Icon } from "../../atoms/Icon";
 import { Sidebar } from "./Sidebar";
 import { sidebarPlaygroundSnippet, sidebarSnippets } from "./Sidebar.snippets";
 import type {
@@ -253,7 +256,7 @@ function Gallery({ children, columns = 3 }: { children: ReactNode; columns?: num
         display: "grid",
         gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
         gap: "var(--dbm-space-4)",
-        alignItems: "start",
+        alignItems: "stretch",
       }}
     >
       {children}
@@ -263,7 +266,7 @@ function Gallery({ children, columns = 3 }: { children: ReactNode; columns?: num
 
 function Labelled({ name, children }: { name: string; children: ReactNode }) {
   return (
-    <figure style={{ margin: 0, display: "grid", gap: "var(--dbm-space-2)", minInlineSize: 0 }}>
+    <figure style={{ margin: 0, display: "grid", gridTemplateRows: "auto minmax(0, 1fr)", gap: "var(--dbm-space-2)", minInlineSize: 0 }}>
       <figcaption style={{ fontSize: "var(--dbm-font-size-sm)", color: "var(--dbm-text-secondary)" }}>{name}</figcaption>
       {children}
     </figure>
@@ -372,7 +375,7 @@ export const Rail: Story = {
   render: (args) => (
     <SidebarStage minBlockSize="34rem">
       {(menuContainer) => (
-        <SidebarFrame height="32rem" contentLabel="Press the arrows in the footer to collapse the sidebar and expand it again.">
+        <SidebarFrame height="32rem" contentLabel="Press the caret button in the footer to collapse the sidebar and expand it again.">
           <DemoSidebar defaultCollapsed menuContainer={menuContainer} collapseBelow={args.collapseBelow} />
         </SidebarFrame>
       )}
@@ -436,21 +439,34 @@ export const Items: Story = {
           <Sidebar collapseBelow="never" menuContainer={menuContainer} width="16rem">
             <Sidebar.Content>
               <Sidebar.Nav aria-label="Kinds of item">
-                <Sidebar.Item href="#home" current onClick={(event) => event.preventDefault()}>
+                <Sidebar.Item href="#home" icon={HouseIcon} current onClick={(event) => event.preventDefault()}>
                   A link, the current page
                 </Sidebar.Item>
-                <Sidebar.Item href="#inbox" badge="12" onClick={(event) => event.preventDefault()}>
+                <Sidebar.Item href="#inbox" icon={TrayIcon} badge="12" onClick={(event) => event.preventDefault()}>
                   A link with a count
                 </Sidebar.Item>
-                <Sidebar.Item>A button (an action)</Sidebar.Item>
-                <Sidebar.Item href="https://example.com/docs" onClick={(event) => event.preventDefault()}>
+                <Sidebar.Item
+                  href="#alerts"
+                  icon={BellIcon}
+                  badge={
+                    <Badge tone="danger" variant="solid">
+                      3
+                    </Badge>
+                  }
+                  onClick={(event) => event.preventDefault()}
+                >
+                  A link with a Badge
+                </Sidebar.Item>
+                <Sidebar.Item icon={PlusIcon}>A button (an action)</Sidebar.Item>
+                <Sidebar.Item href="https://example.com/docs" icon={BookOpenIcon} onClick={(event) => event.preventDefault()}>
                   An external link
                 </Sidebar.Item>
-                <Sidebar.Item href="#billing" disabled>
+                <Sidebar.Item href="#billing" icon={ReceiptIcon} disabled>
                   A disabled link
                 </Sidebar.Item>
                 <Sidebar.Item asChild>
                   <a href="#routed" onClick={(event) => event.preventDefault()}>
+                    <Icon icon={UsersIcon} size="md" />
                     A router&apos;s link (asChild)
                   </a>
                 </Sidebar.Item>
@@ -535,7 +551,7 @@ export const PageShell: Story = {
             <DemoTopBar>
               <Sidebar.Toggle aria-label="Collapse or expand the sidebar" />
             </DemoTopBar>
-            <SidebarFrame height="100%" contentLabel="The collapse button and the menu button live in the page's header, outside the sidebar.">
+            <SidebarFrame height="20rem" contentLabel="The collapse button and the menu button live in the page's header, outside the sidebar.">
               <DemoSidebar toggle={false} menuContainer={menuContainer} />
             </SidebarFrame>
           </div>

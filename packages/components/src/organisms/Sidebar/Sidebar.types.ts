@@ -285,7 +285,7 @@ export interface SidebarItemProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEl
    */
   icon?: PhosphorIcon;
   /**
-   * What to show after the text, such as a count: plain text, drawn in `Badge`'s subtle brand look, or a `Badge` you pass, drawn as written.
+   * What to show after the text, such as a count: plain text, drawn in `Badge`'s solid brand look (its subtle look on a current item drawn as a brand fill, where a solid pill would vanish), or a `Badge` you pass, drawn as written.
    * Pass the `Badge` element itself. It is part of the item's name, so a count is read with it ("Inbox 3"). In the rail it becomes a small
    * mark on the icon.
    */

@@ -8,34 +8,92 @@
 import { quote } from "../../snippetHelpers";
 import type { SidebarCollapseBelow, SidebarCurrentVariant, SidebarSide, SidebarSize, SidebarVariant } from "./Sidebar.types";
 
-const header = `  <Sidebar.Header>dbM Cloud</Sidebar.Header>`;
+const iconsNote = `{/* The icons (HouseIcon, TrayIcon, FolderSimpleIcon, ChartBarIcon, UsersIcon, GearIcon, BookOpenIcon) come from @dbm-design-system/icons */}`;
 
-const nav = `  <Sidebar.Content>
-    <Sidebar.Nav>
-      <Sidebar.Item href="/" icon={HouseIcon} current>
+const indent = (code: string, spaces: number) =>
+  code
+    .split("\n")
+    .map((line) => (line ? " ".repeat(spaces) + line : line))
+    .join("\n");
+
+/** What the demo sidebar draws, so a snippet shows what its story shows: the header, two sections of items and groups, and the footer. */
+interface DemoOptions {
+  /** The item that is the current page. */
+  current?: "home" | "sales" | "emea";
+  /** Whether the footer holds the collapse button, or there is no footer at all. */
+  footer?: "toggle" | "account" | "none";
+}
+
+const demoBody = ({ current = "home", footer = "toggle" }: DemoOptions = {}) => {
+  const home = current === "home" ? " current" : "";
+  const sales = current === "sales" ? " current" : "";
+  const emea = current === "emea" ? " current" : "";
+  const holdsSales = current === "sales" || current === "emea" ? " current" : "";
+  const holdsRegional = current === "emea" ? " current" : "";
+  const parts = [
+    `<Sidebar.Header>
+  <Avatar name="dbM" shape="square" size="sm" colorful />
+  dbM Cloud
+</Sidebar.Header>`,
+    `<Sidebar.Content>
+  <Sidebar.Nav>
+    <Sidebar.Section label="Workspace">
+      <Sidebar.Item href="/" icon={HouseIcon}${home}>
         Home
       </Sidebar.Item>
       <Sidebar.Item href="/inbox" icon={TrayIcon} badge="12">
         Inbox
       </Sidebar.Item>
-      <Sidebar.Group label="Reports" icon={ChartBarIcon}>
-        <Sidebar.Item href="/reports/sales">Sales</Sidebar.Item>
-        <Sidebar.Item href="/reports/costs">Costs</Sidebar.Item>
+      <Sidebar.Group label="Projects" icon={FolderSimpleIcon}>
+        <Sidebar.Item href="/projects/active">Active</Sidebar.Item>
+        <Sidebar.Item href="/projects/archived">Archived</Sidebar.Item>
+      </Sidebar.Group>
+      <Sidebar.Group label="Reports" icon={ChartBarIcon}${holdsSales}>
+        <Sidebar.Item href="/reports/sales"${sales}>
+          Sales
+        </Sidebar.Item>
+        <Sidebar.Group label="Regional"${holdsRegional}>
+          <Sidebar.Item href="/reports/emea"${emea}>
+            EMEA
+          </Sidebar.Item>
+          <Sidebar.Item href="/reports/apac">APAC</Sidebar.Item>
+        </Sidebar.Group>
       </Sidebar.Group>
       <Sidebar.Item href="/team" icon={UsersIcon}>
         Team
       </Sidebar.Item>
-    </Sidebar.Nav>
-  </Sidebar.Content>`;
+    </Sidebar.Section>
+    <Sidebar.Section label="Admin">
+      <Sidebar.Item href="/settings" icon={GearIcon}>
+        Settings
+      </Sidebar.Item>
+      <Sidebar.Item href="https://example.com/docs" icon={BookOpenIcon}>
+        Documentation
+      </Sidebar.Item>
+    </Sidebar.Section>
+  </Sidebar.Nav>
+</Sidebar.Content>`,
+  ];
+  if (footer === "toggle") {
+    parts.push(`<Sidebar.Footer>
+  <Avatar name="John Doe" size="sm" />
+  John Doe
+  <Sidebar.Toggle />
+</Sidebar.Footer>`);
+  } else if (footer === "account") {
+    parts.push(`<Sidebar.Footer>
+  <Avatar name="John Doe" size="sm" />
+  John Doe
+</Sidebar.Footer>`);
+  }
+  return parts.map((part) => indent(part, 2)).join("\n");
+};
 
-const footer = `  <Sidebar.Footer>
-    <Sidebar.Toggle />
-  </Sidebar.Footer>`;
-
-const sidebar = (attributes: string, inner = `${header}\n${nav}\n${footer}`) =>
-  `{/* HouseIcon, TrayIcon, ChartBarIcon and UsersIcon come from @dbm-design-system/icons */}
+/** The demo sidebar with the given attributes: what the Playground and the gallery stories draw. */
+const sidebar = (attributes: string, options?: DemoOptions) =>
+  `${iconsNote}
 <Sidebar${attributes ? ` ${attributes}` : ""}>
-${inner}
+${demoBody(options)}
 </Sidebar>`;
 
 export const sidebarSnippets = {
@@ -46,97 +104,96 @@ ${sidebar('variant="filled"')}`,
   sizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" sets the height of an item, its icon and its text. The collapsed rail is one item wide. */}
 ${sidebar('size="lg"')}`,
 
-  currentVariants: `{/* currentVariant: "subtle" (default) | "bar" | "solid". aria-current="page" is set whichever it is; rounded makes each item a pill. */}
-${sidebar('currentVariant="solid" rounded')}`,
+  currentVariants: `{/* currentVariant: "subtle" (default) | "bar" | "solid". aria-current="page" is set whichever it is; rounded makes each item a pill.
+    A group that holds the current page starts open and says so with current. */}
+${sidebar('currentVariant="solid" rounded', { current: "sales" })}`,
 
-  rail: `{/* The Sidebar.Toggle in the footer collapses it to a rail of icons and back. defaultCollapsed starts it as a rail, or hold the
-    state yourself: const [collapsed, setCollapsed] = useState(false); */}
-${sidebar("collapsed={collapsed} onCollapsedChange={setCollapsed}")}`,
+  rail: `{/* The Sidebar.Toggle in the footer collapses it to a rail of icons and back. defaultCollapsed starts it as a rail; to hold the state
+    yourself, pass collapsed and onCollapsedChange instead. */}
+${sidebar("defaultCollapsed")}`,
 
-  sections: `{/* A Sidebar.Section is a heading over a list, and Sidebar.Separator a line between parts of one. In the rail the headings are hidden and a line sets the sections apart. */}
+  sections: `{/* A Sidebar.Section is a heading over a list, drawn in capitals, and Sidebar.Separator a plain line between parts of one. In the rail the
+    headings are hidden and a line sets the sections apart. */}
+${sidebar("")}
+
+{/* One list and a separator, with no headings. */}
 <Sidebar>
   <Sidebar.Content>
-    <Sidebar.Nav aria-label="Workspace">
-      <Sidebar.Section label="Workspace">
-        <Sidebar.Item href="/" icon={HouseIcon} current>
-          Home
-        </Sidebar.Item>
-        <Sidebar.Item href="/team" icon={UsersIcon}>
-          Team
-        </Sidebar.Item>
-      </Sidebar.Section>
-      <Sidebar.Section label="Admin">
-        <Sidebar.Item href="/settings" icon={GearIcon}>
-          Settings
-        </Sidebar.Item>
-      </Sidebar.Section>
+    <Sidebar.Nav aria-label="Plain navigation">
+      <Sidebar.Item href="/" icon={HouseIcon} current>
+        Home
+      </Sidebar.Item>
+      <Sidebar.Item href="/team" icon={UsersIcon}>
+        Team
+      </Sidebar.Item>
+      <Sidebar.Separator />
+      <Sidebar.Item href="/settings" icon={GearIcon}>
+        Settings
+      </Sidebar.Item>
     </Sidebar.Nav>
   </Sidebar.Content>
 </Sidebar>`,
 
-  groups: `{/* A Sidebar.Group opens its items beneath it, animated, and nests up to three deep. current starts it open and marks its button while it is shut.
+  groups: `{/* A Sidebar.Group opens its items beneath it, animated, and nests up to three deep. current starts a group open and marks its button while it is shut.
     In the rail a top-level group is an icon button that opens a floating menu, and a nested group a submenu. */}
-<Sidebar>
-  <Sidebar.Content>
-    <Sidebar.Nav>
-      <Sidebar.Group label="Reports" icon={ChartBarIcon} current>
-        <Sidebar.Item href="/reports/sales" current>
-          Sales
-        </Sidebar.Item>
-        <Sidebar.Group label="Regional">
-          <Sidebar.Item href="/reports/emea">EMEA</Sidebar.Item>
-          <Sidebar.Item href="/reports/apac">APAC</Sidebar.Item>
-        </Sidebar.Group>
-      </Sidebar.Group>
-    </Sidebar.Nav>
-  </Sidebar.Content>
-</Sidebar>`,
+${sidebar("", { current: "emea", footer: "none" })}`,
 
-  items: `{/* An item with an href is a link; without one it is a button (an action). badge is a count or a Badge you pass; an http(s) address is external
-    (a new tab, a trailing icon, a hidden cue). disabled keeps it focusable, as Link does. */}
+  items: `{/* An item with an href is a link; without one it is a button (an action). badge is a count, or a Badge you pass, drawn as written (its tone, variant,
+    size, className and style win over the built-in badge). An http(s) address is external (a new tab, a trailing icon, a hidden cue). disabled keeps it
+    focusable, as Link does. asChild puts the look on your router's link: put its component where the <a> is (here a plain anchor); the item's icon and text are then the child's own. */}
 <Sidebar.Nav>
   <Sidebar.Item href="/" icon={HouseIcon} current>
-    Home
+    A link, the current page
   </Sidebar.Item>
   <Sidebar.Item href="/inbox" icon={TrayIcon} badge="12">
-    Inbox
+    A link with a count
   </Sidebar.Item>
-  <Sidebar.Item icon={PlusIcon}>New project</Sidebar.Item>
+  <Sidebar.Item href="/alerts" icon={BellIcon} badge={<Badge tone="danger" variant="solid">3</Badge>}>
+    A link with a Badge
+  </Sidebar.Item>
+  <Sidebar.Item icon={PlusIcon}>A button (an action)</Sidebar.Item>
   <Sidebar.Item href="https://example.com/docs" icon={BookOpenIcon}>
-    Documentation
+    An external link
   </Sidebar.Item>
   <Sidebar.Item href="/billing" icon={ReceiptIcon} disabled>
-    Billing
+    A disabled link
   </Sidebar.Item>
-  {/* asChild puts the look on your router's link: put its component where the <a> is (here a plain anchor). */}
-  <Sidebar.Item asChild icon={UsersIcon}>
-    <a href="/team">Team</a>
+  <Sidebar.Item asChild>
+    <a href="/team">
+      <Icon icon={UsersIcon} size="md" />
+      A router's link (asChild)
+    </a>
   </Sidebar.Item>
 </Sidebar.Nav>`,
 
-  side: `{/* side: "start" (default) | "end". The line moves to the inner edge and the phone panel slides in from that side. In right-to-left text start is the right. */}
+  side: `{/* side: "start" (default) | "end". The line moves to the inner edge and the phone panel slides in from that side. */}
 ${sidebar('side="end"')}
 
 {/* dir="rtl": the sidebar sits at the right, indents and arrows mirror, and side="start" is the right edge. */}
 ${sidebar('dir="rtl" labels={{ collapse: "طي الشريط الجانبي", expand: "توسيع الشريط الجانبي", menu: "القائمة", navigation: "الرئيسية", close: "إغلاق" }}')}`,
 
   panel: `{/* Below collapseBelow ("md" = 768px) the sidebar leaves the page and a Sidebar.MenuButton opens it in a side panel. The same children are drawn
-    in both, so give the items no id. The panel is never a rail. A button of your own can open it with useSidebar().setMenuOpen(true). */}
-<Sidebar.Provider collapseBelow="md">
+    in both, so give the items no id. The panel is never a rail. A button of your own can open it with useSidebar().setMenuOpen(true). This demo
+    collapses below the widest step ("3xl") so the menu button shows on any window narrower than 1920px. */}
+<Sidebar.Provider collapseBelow="3xl">
   <header>
     <Sidebar.MenuButton />
+    <Button size="sm" variant="secondary" onClick={() => setMenuOpen(true)}>
+      Open the panel
+    </Button>
   </header>
-${sidebar("")}
+${indent(sidebar(""), 2)}
 </Sidebar.Provider>`,
 
-  pageShell: `{/* A Sidebar.Provider holds the state for the page, so a Sidebar.Toggle or Sidebar.MenuButton outside the sidebar (here in the page header) acts on it. */}
+  pageShell: `{/* A Sidebar.Provider holds the state for the page, so a Sidebar.Toggle or Sidebar.MenuButton outside the sidebar (here in the page header) acts on it.
+    The sidebar has no toggle of its own here. */}
 <Sidebar.Provider>
   <header>
     <Sidebar.MenuButton />
-    <Sidebar.Toggle />
+    <Sidebar.Toggle aria-label="Collapse or expand the sidebar" />
   </header>
   <div style={{ display: "flex" }}>
-${sidebar("sticky")}
+${indent(sidebar("", { footer: "account" }), 4)}
     <main id="main">Page content</main>
   </div>
 </Sidebar.Provider>`,
@@ -147,8 +204,8 @@ ${sidebar("sticky")}
   {!collapsed && "dbM Cloud"}
 </Sidebar.Header>`,
 
-  controlledPanel: `{/* const [open, setOpen] = useState(false); and the reason for the last change: const [reason, setReason] = useState(""); */}
-${sidebar("menuOpen={open} onMenuOpenChange={(next, details) => { setOpen(next); setReason(details.reason); }}")}`,
+  controlledPanel: `{/* const [collapsed, setCollapsed] = useState(false); and the reason the panel last changed: const [reason, setReason] = useState(""); */}
+${sidebar("collapsed={collapsed} onCollapsedChange={setCollapsed} onMenuOpenChange={(open, details) => setReason(details.reason)}")}`,
 } as const;
 
 /** The Playground's live controls, as far as the snippet cares. */

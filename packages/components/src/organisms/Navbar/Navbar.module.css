@@ -681,35 +681,35 @@ a.brand:focus-visible,
    keeps the panel's own sizing: these properties are set on the bar's `<nav>`, which the panel's copy is not inside. The defaults
    `sm` and `md` are today's two text sizes, so a bar that sets none is as it was. */
 .linkSizeXs {
-  --navbar-link-badge: var(--dbm-space-4);
+  --navbar-link-badge: var(--dbm-badge-size-xs);
   --navbar-link-font: var(--dbm-font-size-xs);
   --navbar-link-pad-block: var(--dbm-space-1);
   --navbar-link-pad-inline: var(--dbm-space-2);
 }
 
 .linkSizeSm {
-  --navbar-link-badge: var(--dbm-space-5);
+  --navbar-link-badge: var(--dbm-badge-size-xs);
   --navbar-link-font: var(--dbm-font-size-sm);
   --navbar-link-pad-block: var(--dbm-space-2);
   --navbar-link-pad-inline: var(--dbm-space-3);
 }
 
 .linkSizeMd {
-  --navbar-link-badge: var(--dbm-space-5);
+  --navbar-link-badge: var(--dbm-badge-size-sm);
   --navbar-link-font: var(--dbm-font-size-base);
   --navbar-link-pad-block: var(--dbm-space-2);
   --navbar-link-pad-inline: var(--dbm-space-3);
 }
 
 .linkSizeLg {
-  --navbar-link-badge: var(--dbm-space-6);
+  --navbar-link-badge: var(--dbm-badge-size-md);
   --navbar-link-font: var(--dbm-font-size-md);
   --navbar-link-pad-block: var(--dbm-space-3);
   --navbar-link-pad-inline: var(--dbm-space-4);
 }
 
 .linkSizeXl {
-  --navbar-link-badge: var(--dbm-space-6);
+  --navbar-link-badge: var(--dbm-badge-size-md);
   --navbar-link-font: var(--dbm-font-size-lg);
   --navbar-link-pad-block: var(--dbm-space-3);
   --navbar-link-pad-inline: var(--dbm-space-4);
@@ -747,11 +747,24 @@ a.brand:focus-visible,
     color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
 }
 
-/* A badge in a link is `Badge`'s subtle brand look, kept to the link's own height: the atom's boxes are taller than a line of link text, so
-   its height (and the least width it keeps, so a single character is still a round pill) follow the link size instead. */
+/* A badge in a link is `Badge`'s solid brand look at `Badge`'s own size for the link's step, so a one- or two-digit count is the circle `Badge`
+   draws (its diameter is sized to hold the widest glyph with room to spare). `Badge`'s boxes are taller than a line of link text, so a negative
+   block margin of half the difference makes the badge's margin box one line tall: a badged link is the height of a plain one, and the badge
+   overflows into the link's padding. `1lh` is the link's own line height, read where it is set (the registered property below resolves it to a
+   length there, since on the badge itself `1lh` would be the badge's). */
+@property --navbar-link-line {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+.link {
+  --navbar-link-line: 1lh;
+}
+
 .link .linkBadge {
-  block-size: var(--navbar-link-badge, var(--dbm-space-5));
-  min-inline-size: var(--navbar-link-badge, var(--dbm-space-5));
+  flex: none;
+  margin-block: calc((var(--navbar-link-line) - var(--navbar-link-badge, var(--dbm-badge-size-sm))) / 2);
 }
 
 /* Hovering a link tints it, and nothing else changes: the text and the icon keep their colour, as an item in a menu or a list does. The

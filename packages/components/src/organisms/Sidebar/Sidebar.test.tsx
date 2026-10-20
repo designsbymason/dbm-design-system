@@ -6,6 +6,7 @@ import { createRef, StrictMode, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Badge } from "../../atoms/Badge";
 import { Sidebar, useSidebar } from "./Sidebar";
+import badgeStyles from "../../atoms/Badge/Badge.module.css";
 import styles from "./Sidebar.module.css";
 import type { SidebarProps } from "./Sidebar.types";
 
@@ -159,17 +160,67 @@ describe("Sidebar", () => {
       expect(screen.getByRole("link", { name: "Team 3" })).toBeInTheDocument();
     });
 
-    it("draws a passed Badge as written, with the item's size where it sets none", () => {
+    it("draws a passed Badge as written: its own tone, variant, size, class and style win over the built-in badge", () => {
       render(
         <Sidebar collapseBelow="never">
           <Sidebar.Nav>
-            <Sidebar.Item href="/a" badge={<Badge tone="danger">9</Badge>}>
+            <Sidebar.Item href="/plain" badge="4">
+              Plain
+            </Sidebar.Item>
+            <Sidebar.Item href="/a" badge={<Badge tone="danger" variant="solid" className="mine" style={{ opacity: 0.5 }}>9</Badge>}>
+              Alerts
+            </Sidebar.Item>
+            <Sidebar.Item href="/b" badge={<Badge size="lg">7</Badge>}>
+              Sized
+            </Sidebar.Item>
+          </Sidebar.Nav>
+        </Sidebar>,
+      );
+      const own = screen.getByText("9");
+      const builtIn = screen.getByText("4");
+      expect(screen.getByRole("link", { name: "Alerts 9" })).toBeInTheDocument();
+      // its own look, not the built-in solid brand one, and one pill (the text is in the badge itself, not a badge inside a badge)
+      expect(own).toHaveClass(badgeStyles.solidDanger!);
+      expect(own).not.toHaveClass(badgeStyles.solidBrand!);
+      expect(builtIn).toHaveClass(badgeStyles.solidBrand!);
+      expect(own.querySelector(`.${badgeStyles.root}`)).toBeNull();
+      expect(own).toHaveClass("mine");
+      expect(own.style.opacity).toBe("0.5");
+      // the item's size and height rule fill in only what the badge didn't set
+      expect(own).toHaveClass(styles.badge!);
+      expect(screen.getByText("7")).toHaveClass(badgeStyles.sizeLg!);
+      expect(screen.getByText("7")).not.toHaveClass(badgeStyles.sizeSm!);
+    });
+
+    it("draws the built-in badge subtle on a current item drawn as a brand fill, where a solid one would vanish", () => {
+      render(
+        <Sidebar collapseBelow="never" currentVariant="solid">
+          <Sidebar.Nav>
+            <Sidebar.Item href="/a" current badge="2">
+              Here
+            </Sidebar.Item>
+            <Sidebar.Item href="/b" badge="5">
+              There
+            </Sidebar.Item>
+          </Sidebar.Nav>
+        </Sidebar>,
+      );
+      expect(screen.getByText("2")).toHaveClass(badgeStyles.subtleBrand!);
+      expect(screen.getByText("5")).toHaveClass(badgeStyles.solidBrand!);
+    });
+
+    it("draws a passed Badge as the rail's mark, still in the item's name", () => {
+      render(
+        <Sidebar collapseBelow="never" defaultCollapsed>
+          <Sidebar.Nav>
+            <Sidebar.Item href="/a" icon={HouseIcon} badge={<Badge tone="danger" variant="solid">9</Badge>}>
               Alerts
             </Sidebar.Item>
           </Sidebar.Nav>
         </Sidebar>,
       );
       expect(screen.getByRole("link", { name: "Alerts 9" })).toBeInTheDocument();
+      expect(screen.getByText("9")).toHaveClass(badgeStyles.solidDanger!, styles.railBadge!);
     });
 
     it("blocks a disabled item's click and keeps it focusable", async () => {

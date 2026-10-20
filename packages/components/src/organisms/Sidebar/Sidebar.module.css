@@ -24,28 +24,28 @@
   --sidebar-icon: var(--dbm-icon-size-sm);
   --sidebar-pad: var(--dbm-space-1);
   --sidebar-font: var(--dbm-font-size-xs);
-  --sidebar-badge: var(--dbm-space-4);
+  --sidebar-badge-height: var(--dbm-space-6);
 }
 
 .sizeSm {
   --sidebar-icon: var(--dbm-icon-size-sm);
   --sidebar-pad: var(--dbm-space-2);
   --sidebar-font: var(--dbm-font-size-sm);
-  --sidebar-badge: var(--dbm-space-5);
+  --sidebar-badge-height: var(--dbm-badge-size-xs);
 }
 
 .sizeMd {
   --sidebar-icon: var(--dbm-icon-size-md);
   --sidebar-pad: var(--dbm-space-2);
   --sidebar-font: var(--dbm-font-size-base);
-  --sidebar-badge: var(--dbm-space-5);
+  --sidebar-badge-height: var(--dbm-badge-size-xs);
 }
 
 .sizeLg {
   --sidebar-icon: var(--dbm-icon-size-md);
   --sidebar-pad: var(--dbm-space-3);
   --sidebar-font: var(--dbm-font-size-md);
-  --sidebar-badge: var(--dbm-space-6);
+  --sidebar-badge-height: var(--dbm-badge-size-xs);
 }
 
 .rail {
@@ -152,6 +152,7 @@
   color: var(--dbm-text-secondary);
   font-size: var(--dbm-font-size-xs);
   font-weight: var(--dbm-font-weight-medium);
+  text-transform: uppercase;
 }
 
 /* In the rail the heading has no room, so it is hidden (still the list's name) and a line sets the section apart. */
@@ -255,20 +256,31 @@
   flex: none;
 }
 
-/* A badge in an item is `Badge`'s subtle brand look, kept to the item's height: the atom's boxes are taller than a line of text. */
-.badge {
+/* A badge in an item is `Badge`'s solid brand look at its `xs` size, so a one- or two-digit count is the circle `Badge` draws (its
+   diameter is sized to hold the widest glyph with room to spare). `Badge`'s boxes are taller than the icon that sets the row's height, so a
+   negative block margin of half the difference makes the badge's margin box the icon's height: a badged row is the height of a plain one and the
+   badge overflows into the item's padding. At `xs` the smallest badge (25px) is a pixel taller than the padding allows, so there it is held to
+   24px, with its side padding cut to keep two digits round. */
+.item .badge {
   flex: none;
-  block-size: var(--sidebar-badge);
-  min-inline-size: var(--sidebar-badge);
+  margin-block: calc((var(--sidebar-icon) - var(--sidebar-badge-height)) / 2);
 }
 
-/* In the rail the badge is a small mark on the icon's corner, so the count or dot is still seen without the room for a label. */
-.railBadge {
+.sizeXs .item .badge {
+  block-size: var(--sidebar-badge-height);
+  min-inline-size: var(--sidebar-badge-height);
+  padding-inline: var(--dbm-space-1);
+}
+
+/* In the rail the badge is a small mark on the icon's corner, so the count or dot is still seen without the room for a label. It is smaller than
+   `Badge`'s own `xs`: a round 20px with no side padding, so a one- or two-digit count stays a circle over the corner of the icon. */
+.item .railBadge {
   position: absolute;
   inset-block-start: calc(-1 * var(--dbm-space-1));
   inset-inline-end: calc(-1 * var(--dbm-space-1));
-  block-size: var(--dbm-space-4);
-  min-inline-size: var(--dbm-space-4);
+  block-size: var(--dbm-space-5);
+  min-inline-size: var(--dbm-space-5);
+  padding-inline: 0;
 }
 
 .railItem {

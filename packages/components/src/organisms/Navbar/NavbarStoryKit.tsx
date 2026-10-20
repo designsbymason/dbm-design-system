@@ -60,7 +60,7 @@ export function DemoNavbar({
   skipLink?: boolean;
   /** Gives the links an icon, a count and an external destination, to show those. */
   extras?: boolean;
-  /** What the Pricing link shows as its badge with `extras`; "New" (the link's own subtle brand badge) unless a story passes a `Badge`. */
+  /** What the Pricing link shows as its badge with `extras`; "New" (the link's own solid brand badge) unless a story passes a `Badge`. */
   pricingBadge?: ReactNode;
   /** Where the links sit between the brand and the actions. */
   linksAlign?: "start" | "center" | "end";

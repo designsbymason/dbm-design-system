@@ -15,7 +15,31 @@ import { Text } from "../../atoms/Text";
 import { Sidebar, useSidebar } from "./Sidebar";
 import type { SidebarProps } from "./Sidebar.types";
 
-export { DrawerStage as SidebarStage, DrawerViewModeContext as SidebarViewModeContext } from "../Drawer/DrawerStoryKit";
+import { DrawerStage } from "../Drawer/DrawerStoryKit";
+
+export { DrawerViewModeContext as SidebarViewModeContext } from "../Drawer/DrawerStoryKit";
+
+/**
+ * The dashed box a demo is drawn in (`DrawerStage`, which keeps an open phone panel inside it), with its one child stretched to fill the
+ * box in both directions, so a sidebar is as tall as the box whatever height the box takes.
+ */
+export function SidebarStage({
+  children,
+  minBlockSize,
+}: {
+  children: (container: HTMLElement | null) => ReactNode;
+  minBlockSize?: string;
+}) {
+  return (
+    <DrawerStage minBlockSize={minBlockSize}>
+      {(container) => (
+        <div style={{ alignSelf: "stretch", justifySelf: "stretch", display: "grid", gridTemplateRows: "minmax(0, 1fr)", minInlineSize: 0 }}>
+          {children(container)}
+        </div>
+      )}
+    </DrawerStage>
+  );
+}
 
 /**
  * What a demo sidebar's items share so that choosing one moves the "current" mark to it instead of leaving the page, the way a router
@@ -57,12 +81,8 @@ export function DemoAccount() {
   const { collapsed } = useSidebar();
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--dbm-space-2)", minInlineSize: 0 }}>
-      <Avatar name="Mason Reed" size="sm" />
-      {!collapsed && (
-        <Text size="sm" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-          Mason Reed
-        </Text>
-      )}
+      <Avatar name="John Doe" size="sm" />
+      {!collapsed && <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>John Doe</span>}
     </span>
   );
 }
@@ -171,8 +191,8 @@ const frameStyle: CSSProperties = {
 };
 
 /**
- * A box shaped like a page: the sidebar at one edge and a placeholder for the content beside it, a fixed height so the sidebar's own
- * scrolling shows. The content area is the page's, so it grows as the sidebar shrinks to a rail.
+ * A box shaped like a page: the sidebar at one edge and a placeholder for the content beside it, at least `height` tall (so the sidebar's own
+ * scrolling shows) and as tall as the demo box when that is taller. The content area is the page's, so it grows as the sidebar shrinks to a rail.
  */
 export function SidebarFrame({
   children,
@@ -180,6 +200,7 @@ export function SidebarFrame({
   contentLabel = "Page content",
   reverse = false,
   dir,
+  fixed = false,
 }: {
   children: ReactNode;
   height?: string;
@@ -188,9 +209,11 @@ export function SidebarFrame({
   reverse?: boolean;
   /** The frame's reading direction, so a right-to-left page puts its start edge on the right. */
   dir?: "ltr" | "rtl";
+  /** Holds the frame at exactly `height`, so a sidebar taller than it scrolls inside it instead of growing it. */
+  fixed?: boolean;
 }) {
   return (
-    <div dir={dir} style={{ ...frameStyle, blockSize: height, flexDirection: reverse ? "row-reverse" : "row" }}>
+    <div dir={dir} style={{ ...frameStyle, ...(fixed ? { blockSize: height } : { minBlockSize: height }), flexDirection: reverse ? "row-reverse" : "row" }}>
       {children}
       <div style={{ flex: "1 1 auto", minInlineSize: 0, padding: "var(--dbm-space-6)" }}>
         <Text color="secondary">{contentLabel}</Text>

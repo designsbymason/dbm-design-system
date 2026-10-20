@@ -117,7 +117,7 @@ ${navbar('currentVariant="solid"')}`,
   linkExtras: `{/* icon goes before the text; badge after it, and is part of the link's name ("Inbox 3"); an href starting http(s):// or //
     is external (a new tab, a trailing icon and a hidden cue), or say it with external. */}
 <Navbar.Links>
-  {/* plain text is drawn in the link's own subtle brand badge; a Badge you pass is drawn as written, so its tone and variant are yours
+  {/* plain text is drawn in the link's own solid brand badge; a Badge you pass is drawn as written, so its tone and variant are yours
       (its size is the link's unless it sets one) */}
   <Navbar.Link href="/pricing" badge={<Badge tone="success" variant="subtle">New</Badge>}>
     Pricing

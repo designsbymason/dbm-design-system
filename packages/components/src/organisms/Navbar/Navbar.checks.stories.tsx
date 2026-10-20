@@ -1744,7 +1744,7 @@ export const PassedBadgeIsDrawnAsWritten: Story = {
     const canvas = within(canvasElement);
     const pill = (link: string, text: string) =>
       [...within(canvas.getByRole("link", { name: new RegExp(link) })).getAllByText(text)].filter((element) => element.tagName === "SPAN");
-    // the passed Badge is danger-solid (its own fill), the plain text is the link's subtle brand one: different fills
+    // the passed Badge is danger-solid (its own fill), the plain text is the link's solid brand one: different fills
     const danger = pill("Alerts", "2");
     expect(danger).toHaveLength(1);
     expect(getComputedStyle(danger[0]!).backgroundColor).toBe(tokenColorOf("--dbm-bg-danger"));
@@ -1900,5 +1900,43 @@ export const SearchSheetIsCompact: Story = {
     await userEvent.keyboard("{Escape}");
     // end with the sheet gone: an accessibility check run mid-exit sees the page still hidden behind it
     await waitFor(() => expect(canvas.queryByRole("dialog")).not.toBeInTheDocument());
+  },
+};
+
+export const CountBadgeIsACircleAtEveryLinkSize: Story = {
+  name: "A two-digit count is Badge's own circle at every link size, and a badged link is as tall as a plain one",
+  render: () => (
+    <NavbarStage minBlockSize="30rem">
+      {() => (
+        <div style={{ inlineSize: "100%", display: "grid", gap: "1rem", alignSelf: "start" }}>
+          {(["xs", "sm", "md", "lg", "xl"] as const).map((linkSize) => (
+            <GalleryBar key={linkSize} name={`${linkSize} links`}>
+              <Navbar collapseBelow="never" linkSize={linkSize}>
+                <Navbar.Links aria-label={`${linkSize} counts`}>
+                  <Navbar.Link href="#a">Plain</Navbar.Link>
+                  <Navbar.Link href="#b" badge="12" current={linkSize === "md"}>
+                    Inbox
+                  </Navbar.Link>
+                </Navbar.Links>
+              </Navbar>
+            </GalleryBar>
+          ))}
+        </div>
+      )}
+    </NavbarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const token = { xs: "--dbm-badge-size-xs", sm: "--dbm-badge-size-xs", md: "--dbm-badge-size-sm", lg: "--dbm-badge-size-md", xl: "--dbm-badge-size-md" } as const;
+    for (const step of ["xs", "sm", "md", "lg", "xl"] as const) {
+      const nav = canvas.getByRole("navigation", { name: `${step} counts` });
+      const inbox = within(nav).getByRole("link", { name: /Inbox/ });
+      const badge = within(inbox).getByText("12");
+      const box = badge.getBoundingClientRect();
+      expect(Math.round(box.height)).toBe(Math.round(tokenPx(token[step])));
+      // round: as wide as it is tall (a glyph or two wider than the diameter's own room would make an oval)
+      expect(Math.abs(box.width - box.height)).toBeLessThanOrEqual(2.5);
+      expect(Math.abs(inbox.getBoundingClientRect().height - within(nav).getByRole("link", { name: "Plain" }).getBoundingClientRect().height)).toBeLessThan(1);
+    }
   },
 };

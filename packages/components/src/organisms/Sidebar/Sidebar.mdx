@@ -106,7 +106,7 @@ import { Sidebar, useSidebar } from "@dbm-design-system/components";
 
 Each demo is drawn inside a dashed box so that an open phone panel and its scrim cover the box and not this page.
 The width at which the sidebar gives way to the menu button is the **window's**, not the box's: narrow the window
-to see it. Press the arrows in the footer to collapse the sidebar to a rail and open it again.
+to see it. Press the caret button in the footer to collapse the sidebar to a rail and open it again.
 
 <div className="dbm-playground-canvas">
 
@@ -242,7 +242,7 @@ heading is replaced by a line between sections, and a group opens a floating men
 
 ### Sections and separators
 
-A `Sidebar.Section` is a heading over a list and names it; a `Sidebar.Separator` is a plain line when a heading would be
+A `Sidebar.Section` is a heading over a list, set in capitals, and names it; a `Sidebar.Separator` is a plain line when a heading would be
 too much.
 
 <Canvas of={SidebarStories.Sections} />
@@ -258,14 +258,16 @@ deep; the group that holds the current page starts open, and marks its own butto
 
 An item with an `href` is a link, one without is a button (an action), an `http(s)://` address is marked external
 (a new tab, a trailing icon and a hidden cue), `disabled` keeps the item focusable, and `asChild` puts the look on your
-router's link.
+router's link (its text and any icon are then the child's own). A `badge` is a count or text in the built-in solid brand badge (its subtle look on a current item drawn as a brand fill, where a solid pill would vanish), or a
+`Badge` you pass, which is drawn as written: its own `tone`, `variant`, `size`, `className` and `style` win over the built-in look, the item
+fills in only its `size` and height where it sets none, and in the rail it becomes the mark on the icon.
 
 <Canvas of={SidebarStories.Items} />
 
 ### On the end side, and right to left
 
 `side="end"` puts the sidebar against the end edge: its line moves and the phone panel slides in from that side. With
-`dir="rtl"` the start edge is the right and the indent and arrows mirror.
+`dir="rtl"` the start edge is the right and the indent and the toggle's caret mirror.
 
 <Canvas of={SidebarStories.Sides} />
 
@@ -476,13 +478,14 @@ function Brand() {
 <TokenRow token="font-weight.bold" usage="the rail's letter for an item with no icon" />
 <TokenRow token="font-weight.medium" usage="an item, and the sidebar's own text" />
 <TokenRow token="icon-size.sm / icon-size.md" usage="an item's icon at each size, which with its padding is the item's height and the rail's width" />
+<TokenRow token="badge.size.xs" usage="the height a count badge's row margin is worked from: `Badge`'s own `xs` size in an item, so a count is its circle and a badged row is as tall as a plain one" />
 <TokenRow token="sidebar.width" usage="the expanded width, which the `width` prop replaces" />
 <TokenRow token="space.1" usage="the gap between items, a thin item's padding and a section's heading, the rail badge's offset" />
 <TokenRow token="space.2" usage="the sidebar's inner padding, an item's padding at the `sm` and `md` sizes, and the rail's margins" />
 <TokenRow token="space.3" usage="the gap between an item's icon and text, a section's top spacing, and an item's padding at `lg`" />
-<TokenRow token="space.4" usage="a nested group's indent, and the height of a badge at the `xs` size and in the rail" />
-<TokenRow token="space.5" usage="the height of a badge in an item at the `sm` and `md` sizes" />
-<TokenRow token="space.6" usage="the height of a badge in an item at the `lg` size" />
+<TokenRow token="space.4" usage="a nested group's indent" />
+<TokenRow token="space.5" usage="the height of the badge mark in the rail, smaller than `Badge`'s `xs` so it sits on the icon's corner" />
+<TokenRow token="space.6" usage="the height of a count badge in an `xs` item, held to the row" />
 <TokenRow token="opacity.40" usage="a disabled item" />
 <TokenRow token="motion.duration.fast" usage="an item's colour change and the caret turning" />
 <TokenRow token="motion.duration.base" usage="the rail opening and closing, and the bar growing in when an item becomes the current one" />

@@ -1,7 +1,7 @@
 import {
   ArrowSquareOutIcon,
-  CaretDoubleLeftIcon,
-  CaretDoubleRightIcon,
+  CaretLeftIcon,
+  CaretRightIcon,
   CaretDownIcon,
   ListIcon,
 } from "@dbm-design-system/icons";
@@ -64,8 +64,6 @@ const sizeClass: Record<SidebarSize, string | undefined> = {
 };
 
 const iconSizeFor: Record<SidebarSize, "sm" | "md"> = { xs: "sm", sm: "sm", md: "md", lg: "md" };
-
-const badgeSizeFor: Record<SidebarSize, "xs" | "sm"> = { xs: "xs", sm: "xs", md: "sm", lg: "sm" };
 
 const currentVariantClass: Record<SidebarCurrentVariant, string | undefined> = {
   subtle: undefined,
@@ -521,14 +519,18 @@ const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
     const badgeNode =
       badge !== undefined && badge !== null ? (
         // A `Badge` passed as the badge is drawn as written (its tone, variant, `max`…), with the item's size filled in where it didn't say;
-        // anything else is the content of the item's own badge (subtle, brand), so a pill is never inside a pill.
+        // anything else is the content of the item's own badge (solid, brand; subtle on a current item drawn as a brand fill, where a solid
+        // brand pill would vanish), so a pill is never inside a pill.
         isValidElement(badge) && badge.type === Badge ? (
           cloneElement(badge as ReactElement<BadgeProps>, {
-            size: (badge as ReactElement<BadgeProps>).props.size ?? (rail ? "xs" : badgeSizeFor[size]),
+            size: (badge as ReactElement<BadgeProps>).props.size ?? "xs",
             className: cx(rail ? styles.railBadge : styles.badge, (badge as ReactElement<BadgeProps>).props.className),
           })
         ) : (
-          <Badge tone="brand" variant="subtle" size={rail ? "xs" : badgeSizeFor[size]} className={rail ? styles.railBadge : styles.badge}>
+          <Badge
+            tone="brand"
+            variant={current && currentVariant === "solid" ? "subtle" : "solid"}
+            size="xs" className={rail ? styles.railBadge : styles.badge}>
             {badge}
           </Badge>
         )
@@ -749,7 +751,7 @@ const SidebarGroup = forwardRef<HTMLButtonElement, SidebarGroupProps>(
 SidebarGroup.displayName = "Sidebar.Group";
 
 /**
- * The button that collapses the sidebar to a rail and expands it again: an `IconButton` whose arrows point toward the edge the
+ * The button that collapses the sidebar to a rail and expands it again: an `IconButton` whose caret points toward the edge the
  * sidebar sits against while it is open. It is hidden below the `collapseBelow` width, where the sidebar is a panel and has no rail, and
  * in the panel itself. Put it in the header or the footer, or outside the sidebar inside a `Sidebar.Provider`.
  */
@@ -761,7 +763,7 @@ const SidebarToggle = forwardRef<HTMLButtonElement, SidebarToggleProps>(
     if (inPanel) return null;
     const side = sidebar?.side ?? "start";
     const dir = sidebar?.dir ?? "ltr";
-    // The arrows point toward the edge the sidebar sits against while it is open (to collapse it), and away from it while it is a rail.
+    // The caret points toward the edge the sidebar sits against while it is open (to collapse it), and away from it while it is a rail.
     const towardEdgeIsLeft = (side === "start") === (dir === "ltr");
     const pointsLeft = state.collapsed ? !towardEdgeIsLeft : towardEdgeIsLeft;
     const name = ariaLabel ?? (state.collapsed ? labels.expand : labels.collapse);
@@ -769,7 +771,7 @@ const SidebarToggle = forwardRef<HTMLButtonElement, SidebarToggleProps>(
       <IconButton
         {...props}
         ref={ref}
-        icon={pointsLeft ? CaretDoubleLeftIcon : CaretDoubleRightIcon}
+        icon={pointsLeft ? CaretLeftIcon : CaretRightIcon}
         variant={variant}
         tone={tone}
         size={ownSize ?? sidebar?.size ?? "md"}

@@ -583,8 +583,26 @@ describe("Navbar link extras and the frosted variant", () => {
     // its own size wins over the link's
     expect(pill("Orders", "9")[0]!.className).toMatch(/sizeXs/);
     expect(pill("Orders", "9")[0]!.className).toMatch(/Success/i);
-    // plain content is the link's own subtle brand badge
-    expect(pill("Pricing", "New")[0]!.className).toMatch(/Brand/i);
+    // plain content is the link's own solid brand badge
+    expect(pill("Pricing", "New")[0]!.className).toMatch(/solidBrand/i);
+  });
+
+  it("draws the link's own badge subtle on a current link drawn as a brand fill, where a solid one would vanish", () => {
+    render(
+      <Navbar collapseBelow="never" currentVariant="solid">
+        <Navbar.Links aria-label="Main">
+          <Navbar.Link href="/a" current badge="2">
+            Here
+          </Navbar.Link>
+          <Navbar.Link href="/b" badge="5">
+            There
+          </Navbar.Link>
+        </Navbar.Links>
+      </Navbar>,
+    );
+    const pill = (text: string) => screen.getAllByText(text).find((element) => element.tagName === "SPAN")!;
+    expect(pill("2").className).toMatch(/subtleBrand/);
+    expect(pill("5").className).toMatch(/solidBrand/);
   });
 
   it("draws the frosted variant's class on a row and its bar", () => {

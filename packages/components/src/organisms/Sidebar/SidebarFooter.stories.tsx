@@ -17,7 +17,7 @@ const meta: Meta<typeof Sidebar.Footer> = {
         "Test identifier for automated testing (e.g. Testing Library's getByTestId, Playwright/Cypress selectors). Rendered as the DOM data-testid attribute; has no visual or behavioral effect.",
     },
   },
-  args: { children: "Mason Reed" },
+  args: { children: "John Doe" },
 };
 
 export default meta;
