@@ -19,6 +19,11 @@ const meta: Meta<typeof Sidebar.Item> = {
       description:
         "An icon before the text, a component reference. It is all the rail shows, so give every item one; without it the rail shows the text's first character. It follows the text's colour, so it tracks hover and the current look.",
     },
+    description: {
+      control: "text",
+      description:
+        "A second line under the text, in smaller, quieter type: what the page is for. It describes the item (aria-describedby) rather than naming it, so the item's name stays short, and it is cut with an ellipsis like the text. Not shown in the rail.",
+    },
     badge: {
       control: "text",
       description:

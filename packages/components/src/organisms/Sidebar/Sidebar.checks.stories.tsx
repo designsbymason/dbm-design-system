@@ -2,8 +2,9 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Badge } from "../../atoms/Badge";
 import { IconButton } from "../../atoms/IconButton";
+import { Menu } from "../Menu";
 import { Sidebar } from "./Sidebar";
-import { BellIcon, FolderSimpleIcon, PlusIcon } from "@dbm-design-system/icons";
+import { BellIcon, FolderSimpleIcon, GearIcon, HouseIcon, PlusIcon, TrayIcon } from "@dbm-design-system/icons";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { DemoSidebar, SidebarFrame, SidebarStage, SidebarViewModeContext } from "./SidebarStoryKit";
 
@@ -270,7 +271,7 @@ export const LongLabelsTruncate: Story = {
     const root = rootOf(canvasElement);
     expect(Math.round(root.getBoundingClientRect().width)).toBe(Math.round(tokenPx("--dbm-sidebar-width")));
     const item = within(canvasElement).getByRole("link");
-    const label = item.querySelector<HTMLElement>("span")!;
+    const label = [...item.querySelectorAll<HTMLElement>("span")].find((span) => span.className.includes("label"))!;
     expect(label.scrollWidth).toBeGreaterThan(label.clientWidth);
     expect(getComputedStyle(label).textOverflow).toBe("ellipsis");
     expect(item.getBoundingClientRect().right).toBeLessThanOrEqual(root.getBoundingClientRect().right);
@@ -919,5 +920,228 @@ export const RowActionIsShownOnHoverAndFocus: Story = {
     const address = window.location.href;
     await userEvent.click(add);
     expect(window.location.href).toBe(address);
+  },
+};
+
+/** A real pointer moved over a point of an element (the page of a test scales its iframe). */
+async function realMove(x: number, y: number) {
+  const frame = window.frameElement?.getBoundingClientRect();
+  const scale = frame ? frame.width / window.innerWidth : 1;
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: (frame?.left ?? 0) + x * scale, y: (frame?.top ?? 0) + y * scale });
+}
+
+export const PeekOpensOverThePage: Story = {
+  name: "A rail that peeks opens over the page without moving it, shows the labels, and closes when the pointer leaves",
+  render: () => (
+    <SidebarStage minBlockSize="30rem">
+      {(menuContainer) => (
+        <SidebarFrame height="24rem" contentLabel="Page content that stays where it is">
+          <DemoSidebar defaultCollapsed peek menuContainer={menuContainer} />
+        </SidebarFrame>
+      )}
+    </SidebarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const root = rootOf(canvasElement);
+    const page = root.nextElementSibling as HTMLElement;
+    const railWidth = root.getBoundingClientRect().width;
+    const pageLeft = page.getBoundingClientRect().left;
+    const home = within(root).getByRole("link", { name: "Home" });
+    // at rest: the rail's own width, labels hidden
+    expect(home.getBoundingClientRect().width).toBeLessThan(railWidth);
+    // a real pointer over the rail opens it
+    const rect = root.getBoundingClientRect();
+    await realMove(rect.left + 20, rect.top + 120);
+    await waitFor(() => expect(root).toHaveAttribute("data-peeking"));
+    await settled(root);
+    const surface = getComputedStyle(root, "::before");
+    await waitFor(() => expect(Math.round(Number.parseFloat(getComputedStyle(root, "::before").width))).toBe(Math.round(tokenPx("--dbm-sidebar-width"))));
+    // the rail and the page beside it did not move, and the open sidebar is over the page and on top
+    expect(root.getBoundingClientRect().width).toBe(railWidth);
+    expect(page.getBoundingClientRect().left).toBe(pageLeft);
+    expect(home.getBoundingClientRect().width).toBeGreaterThan(railWidth);
+    expect(home.getBoundingClientRect().right).toBeGreaterThan(pageLeft);
+    expect(isOnTop(home)).toBe(true);
+    expect(surface.boxShadow).not.toBe("none");
+    // the labels are shown
+    expect(within(root).getByText("Inbox").getBoundingClientRect().width).toBeGreaterThan(8);
+    // and it closes when the pointer goes
+    // well clear of the open sidebar, which is drawn over the page for its full width
+    await realMove(rect.left + tokenPx("--dbm-sidebar-width") + 300, rect.top + 120);
+    await waitFor(() => expect(root).not.toHaveAttribute("data-peeking"), { timeout: 2000 });
+    await settled(root);
+    await waitFor(() => expect(Math.round(Number.parseFloat(getComputedStyle(root, "::before").width))).toBe(Math.round(railWidth)));
+  },
+};
+
+export const PeekOnTheEndSide: Story = {
+  name: "On the end side a peeking rail opens toward the start, over the page, and stays against its edge",
+  render: () => (
+    <SidebarStage minBlockSize="30rem">
+      {(menuContainer) => (
+        <SidebarFrame height="24rem" reverse>
+          <DemoSidebar defaultCollapsed peek side="end" menuContainer={menuContainer} />
+        </SidebarFrame>
+      )}
+    </SidebarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const root = rootOf(canvasElement);
+    const rect = root.getBoundingClientRect();
+    await userEvent.tab();
+    await waitFor(() => expect(root).toHaveAttribute("data-peeking"));
+    await settled(root);
+    const home = within(root).getByRole("link", { name: "Home" });
+    // opened toward the start: the link's far edge is at the rail's, and it reaches left over the page
+    expect(home.getBoundingClientRect().right).toBeLessThanOrEqual(rect.right + 1);
+    expect(home.getBoundingClientRect().left).toBeLessThan(rect.left);
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(root).not.toHaveAttribute("data-peeking"));
+  },
+};
+
+export const AccountsAreAnItemWide: Story = {
+  name: "An account button is one avatar wide in the rail, a menu opens beside it with a real mouse, and above it when expanded",
+  render: () => (
+    <SidebarStage minBlockSize="26rem">
+      {(menuContainer) => (
+        <div style={{ display: "flex", gap: "1rem" }}>
+          {[false, true].map((collapsed) => (
+            <SidebarFrame key={String(collapsed)} height="20rem" contentLabel="">
+              <Sidebar collapseBelow="never" defaultCollapsed={collapsed} menuContainer={menuContainer} width="15rem">
+                <Sidebar.Content>
+                  <Sidebar.Nav aria-label={collapsed ? "Rail" : "Expanded"}>
+                    <Sidebar.Item href="#a" icon={HouseIcon} onClick={(event) => event.preventDefault()}>
+                      Home
+                    </Sidebar.Item>
+                  </Sidebar.Nav>
+                </Sidebar.Content>
+                <Sidebar.Footer>
+                  <Sidebar.Account name={collapsed ? "Rail John" : "Open John"} description="john@acme.com">
+                    <Menu.Item>Profile</Menu.Item>
+                    <Menu.Item>Sign out</Menu.Item>
+                  </Sidebar.Account>
+                </Sidebar.Footer>
+              </Sidebar>
+            </SidebarFrame>
+          ))}
+        </div>
+      )}
+    </SidebarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const [expanded, rail] = [...canvasElement.querySelectorAll<HTMLElement>("[data-variant]")] as [HTMLElement, HTMLElement];
+    const body = within(document.body);
+    const railButton = within(rail).getByRole("button", { name: /Rail John/ });
+    const box = itemBox(steps.md.icon, steps.md.pad);
+    expect(Math.abs(railButton.getBoundingClientRect().width - box)).toBeLessThanOrEqual(1);
+    expect(railButton.getBoundingClientRect().right).toBeLessThanOrEqual(rail.getBoundingClientRect().right);
+    // the rail's menu opens beside the rail, with a real pointer
+    await realClick(railButton);
+    const menu = await body.findByRole("menu");
+    await settled(menu);
+    expect(menu.getBoundingClientRect().left).toBeGreaterThanOrEqual(railButton.getBoundingClientRect().right);
+    await waitFor(() => expect(isOnTop(within(menu).getByRole("menuitem", { name: "Profile" }))).toBe(true));
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body.queryByRole("menu")).not.toBeInTheDocument());
+    // the expanded footer's menu opens above the button
+    const openButton = within(expanded).getByRole("button", { name: /Open John/ });
+    await realClick(openButton);
+    const above = await body.findByRole("menu");
+    await settled(above);
+    expect(above.getBoundingClientRect().bottom).toBeLessThanOrEqual(openButton.getBoundingClientRect().top + 1);
+    await userEvent.keyboard("{Escape}");
+    // end with the menu gone: a modal menu hides the page from assistive technology while it is open
+    await waitFor(() => expect(body.queryByRole("menu")).not.toBeInTheDocument());
+  },
+};
+
+export const DescriptionsKeepRowsTidy: Story = {
+  name: "A description is a quieter second line, cut with an ellipsis, outside the name, and a row with one is taller than one without",
+  render: () => (
+    <SidebarStage minBlockSize="20rem">
+      {(menuContainer) => (
+        <SidebarFrame height="14rem">
+          <Sidebar collapseBelow="never" menuContainer={menuContainer} width="14rem">
+            <Sidebar.Content>
+              <Sidebar.Nav aria-label="Described">
+                <Sidebar.Item href="#a" icon={TrayIcon} description="Requests waiting on you" onClick={(event) => event.preventDefault()}>
+                  Inbox
+                </Sidebar.Item>
+                <Sidebar.Item href="#b" icon={GearIcon} description="Invoices, plans and payment methods for the whole account" onClick={(event) => event.preventDefault()}>
+                  Billing
+                </Sidebar.Item>
+                <Sidebar.Item href="#c" icon={HouseIcon} onClick={(event) => event.preventDefault()}>
+                  Plain
+                </Sidebar.Item>
+              </Sidebar.Nav>
+            </Sidebar.Content>
+          </Sidebar>
+        </SidebarFrame>
+      )}
+    </SidebarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const root = rootOf(canvasElement);
+    const inbox = canvas.getByRole("link", { name: "Inbox" });
+    const billing = canvas.getByRole("link", { name: "Billing" });
+    const plain = canvas.getByRole("link", { name: "Plain" });
+    const line = (link: HTMLElement) => [...link.querySelectorAll<HTMLElement>("span")].find((span) => span.className.includes("description"))!;
+    // quieter and smaller than the label, and cut when it is too long
+    expect(Number.parseFloat(getComputedStyle(line(inbox)).fontSize)).toBeLessThan(Number.parseFloat(getComputedStyle(inbox).fontSize));
+    expect(line(billing).scrollWidth).toBeGreaterThan(line(billing).clientWidth);
+    expect(getComputedStyle(line(billing)).textOverflow).toBe("ellipsis");
+    // the row grows by the second line, and the sidebar does not widen
+    expect(inbox.getBoundingClientRect().height).toBeGreaterThan(plain.getBoundingClientRect().height);
+    expect(root.getBoundingClientRect().width).toBe(Math.round(tokenPx("--dbm-space-1") * 56));
+    // the description describes the link, and is not part of its name
+    expect(inbox).toHaveAccessibleDescription("Requests waiting on you");
+    expect(canvas.queryByRole("link", { name: /Requests waiting/ })).not.toBeInTheDocument();
+  },
+};
+
+export const SectionsFold: Story = {
+  name: "A collapsible section's heading folds its list away with an animation and brings it back, and the rail shows every list",
+  render: () => (
+    <SidebarStage minBlockSize="26rem">
+      {(menuContainer) => (
+        <div style={{ display: "flex", gap: "1rem" }}>
+          {[false, true].map((collapsed) => (
+            <SidebarFrame key={String(collapsed)} height="16rem" contentLabel="">
+              <Sidebar collapseBelow="never" defaultCollapsed={collapsed} menuContainer={menuContainer} width="14rem">
+                <Sidebar.Content>
+                  <Sidebar.Nav aria-label={collapsed ? "Rail" : "Expanded"}>
+                    <Sidebar.Section label="Workspace" collapsible defaultOpen={collapsed}>
+                      <Sidebar.Item href="#a" icon={HouseIcon} onClick={(event) => event.preventDefault()}>
+                        Home
+                      </Sidebar.Item>
+                    </Sidebar.Section>
+                  </Sidebar.Nav>
+                </Sidebar.Content>
+              </Sidebar>
+            </SidebarFrame>
+          ))}
+        </div>
+      )}
+    </SidebarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const [expanded, rail] = [...canvasElement.querySelectorAll<HTMLElement>("[data-variant]")] as [HTMLElement, HTMLElement];
+    // the rail has no heading to press and shows its list even though the section says it starts folded in another state
+    expect(within(rail).queryByRole("button", { name: "Workspace" })).not.toBeInTheDocument();
+    expect(within(rail).getByRole("link", { name: "Home" })).toBeInTheDocument();
+    // expanded, it starts folded (defaultOpen false), and the heading opens it
+    const heading = within(expanded).getByRole("button", { name: "Workspace" });
+    expect(heading).toHaveAttribute("aria-expanded", "false");
+    expect(within(expanded).queryByRole("link", { name: "Home" })).not.toBeInTheDocument();
+    await userEvent.click(heading);
+    const link = await within(expanded).findByRole("link", { name: "Home" });
+    await waitFor(() => expect(link.closest("ul")!.getAnimations().length).toBe(0));
+    expect(link.getBoundingClientRect().height).toBeGreaterThanOrEqual(24);
+    // the caret turns with it
+    expect(getComputedStyle(heading.querySelector("svg")!).transform).not.toBe("none");
+    await userEvent.click(heading);
+    await waitFor(() => expect(within(expanded).queryByRole("link", { name: "Home" })).not.toBeInTheDocument());
   },
 };

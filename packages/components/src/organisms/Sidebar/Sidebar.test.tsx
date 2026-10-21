@@ -6,6 +6,7 @@ import { createRef, StrictMode, useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Badge } from "../../atoms/Badge";
 import { IconButton } from "../../atoms/IconButton";
+import { Menu } from "../Menu";
 import { Sidebar, useSidebar } from "./Sidebar";
 import badgeStyles from "../../atoms/Badge/Badge.module.css";
 import styles from "./Sidebar.module.css";
@@ -1013,5 +1014,449 @@ describe("Sidebar phone panel's first focus", () => {
     );
     const dialog = await screen.findByRole("dialog");
     await waitFor(() => expect(within(dialog).getByRole("button", { name: "Group first" })).toHaveFocus());
+  });
+});
+
+describe("Sidebar shared group and section state", () => {
+  function Groups(props: Partial<SidebarProps>) {
+    return (
+      <Sidebar collapseBelow="md" {...props}>
+        <Sidebar.Nav>
+          <Sidebar.Group label="Projects">
+            <Sidebar.Item href="/p">P</Sidebar.Item>
+            <Sidebar.Group label="Archive">
+              <Sidebar.Item href="/pa">PA</Sidebar.Item>
+            </Sidebar.Group>
+          </Sidebar.Group>
+          <Sidebar.Group label="Reports">
+            <Sidebar.Item href="/r">R</Sidebar.Item>
+            <Sidebar.Group label="Archive">
+              <Sidebar.Item href="/ra">RA</Sidebar.Item>
+            </Sidebar.Group>
+          </Sidebar.Group>
+        </Sidebar.Nav>
+      </Sidebar>
+    );
+  }
+
+  it("shares a group's open state between the page's copy and the phone panel's", async () => {
+    const user = userEvent.setup();
+    render(<Groups defaultMenuOpen />);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Projects" }));
+    // the page's own copy (hidden below the step in jsdom) is open too
+    expect(screen.getAllByRole("button", { name: "Projects", hidden: true })[0]).toHaveAttribute("aria-expanded", "true");
+    expect(within(dialog).getByRole("button", { name: "Projects" })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("keeps what was open across a collapse to the rail and an expand", async () => {
+    const user = userEvent.setup();
+    render(
+      <Sidebar collapseBelow="never">
+        <Sidebar.Nav>
+          <Sidebar.Group label="Projects" icon={ChartBarIcon}>
+            <Sidebar.Item href="/p">P</Sidebar.Item>
+          </Sidebar.Group>
+        </Sidebar.Nav>
+        <Sidebar.Footer>
+          <Sidebar.Toggle />
+        </Sidebar.Footer>
+      </Sidebar>,
+    );
+    await user.click(screen.getByRole("button", { name: "Projects" }));
+    await user.click(screen.getByRole("button", { name: "Collapse sidebar" }));
+    await user.click(screen.getByRole("button", { name: "Expand sidebar" }));
+    expect(screen.getByRole("button", { name: "Projects" })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("names a nested group by the labels around it, so two with the same label are two", async () => {
+    const user = userEvent.setup();
+    render(<Groups collapseBelow="never" />);
+    await user.click(screen.getByRole("button", { name: "Projects" }));
+    await user.click(screen.getAllByRole("button", { name: "Archive" })[0]!);
+    await user.click(screen.getByRole("button", { name: "Reports" }));
+    const archives = screen.getAllByRole("button", { name: "Archive" });
+    expect(archives[0]).toHaveAttribute("aria-expanded", "true");
+    expect(archives[1]).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("lets value tell two groups with the same label apart", async () => {
+    const user = userEvent.setup();
+    render(
+      <Sidebar collapseBelow="never">
+        <Sidebar.Nav>
+          <Sidebar.Group label="More" value="first">
+            <Sidebar.Item href="/a">A</Sidebar.Item>
+          </Sidebar.Group>
+          <Sidebar.Group label="More" value="second">
+            <Sidebar.Item href="/b">B</Sidebar.Item>
+          </Sidebar.Group>
+        </Sidebar.Nav>
+      </Sidebar>,
+    );
+    await user.click(screen.getAllByRole("button", { name: "More" })[0]!);
+    expect(screen.getAllByRole("button", { name: "More" })[0]).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getAllByRole("button", { name: "More" })[1]).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("follows current while the reader has not touched the group, and then the reader's choice", async () => {
+    const user = userEvent.setup();
+    function Page({ path }: { path: string }) {
+      return (
+        <Sidebar collapseBelow="never" currentPath={path}>
+          <Sidebar.Nav>
+            <Sidebar.Group label="Reports">
+              <Sidebar.Item href="/reports/sales">Sales</Sidebar.Item>
+            </Sidebar.Group>
+          </Sidebar.Nav>
+        </Sidebar>
+      );
+    }
+    const { rerender } = render(<Page path="/" />);
+    const group = screen.getByRole("button", { name: "Reports" });
+    expect(group).toHaveAttribute("aria-expanded", "false");
+    rerender(<Page path="/reports/sales" />);
+    expect(group).toHaveAttribute("aria-expanded", "true");
+    await user.click(group);
+    rerender(<Page path="/" />);
+    rerender(<Page path="/reports/sales" />);
+    expect(group).toHaveAttribute("aria-expanded", "false");
+  });
+});
+
+describe("Sidebar exclusive groups", () => {
+  function Three(props: Partial<SidebarProps>) {
+    return (
+      <Sidebar collapseBelow="never" {...props}>
+        <Sidebar.Nav>
+          {["One", "Two", "Three"].map((label) => (
+            <Sidebar.Group key={label} label={label}>
+              <Sidebar.Item href={`/${label}`}>{label} item</Sidebar.Item>
+              <Sidebar.Group label="Inner">
+                <Sidebar.Item href={`/${label}/inner`}>{label} inner item</Sidebar.Item>
+              </Sidebar.Group>
+            </Sidebar.Group>
+          ))}
+        </Sidebar.Nav>
+      </Sidebar>
+    );
+  }
+
+  it("shuts the other groups beside the one that is opened", async () => {
+    const user = userEvent.setup();
+    render(<Three exclusive />);
+    await user.click(screen.getByRole("button", { name: "One" }));
+    await user.click(screen.getByRole("button", { name: "Two" }));
+    expect(screen.getByRole("button", { name: "One" })).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("button", { name: "Two" })).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: "Three" })).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("leaves a group nested in an open group alone", async () => {
+    const user = userEvent.setup();
+    render(<Three exclusive />);
+    await user.click(screen.getByRole("button", { name: "One" }));
+    await user.click(screen.getByRole("button", { name: "Inner" }));
+    expect(screen.getByRole("button", { name: "One" })).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: "Inner" })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("closes a group that started open for the current page, when another is opened", async () => {
+    const user = userEvent.setup();
+    render(<Three exclusive currentPath="/One" />);
+    expect(screen.getByRole("button", { name: "One" })).toHaveAttribute("aria-expanded", "true");
+    await user.click(screen.getByRole("button", { name: "Three" }));
+    expect(screen.getByRole("button", { name: "One" })).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("lets several groups be open without it", async () => {
+    const user = userEvent.setup();
+    render(<Three />);
+    await user.click(screen.getByRole("button", { name: "One" }));
+    await user.click(screen.getByRole("button", { name: "Two" }));
+    expect(screen.getByRole("button", { name: "One" })).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: "Two" })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("still shuts the others when the phone panel's copy of the groups is also drawn", async () => {
+    const user = userEvent.setup();
+    render(<Three collapseBelow="md" exclusive defaultMenuOpen />);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "One" }));
+    await user.click(within(dialog).getByRole("button", { name: "Two" }));
+    expect(within(dialog).getByRole("button", { name: "One" })).toHaveAttribute("aria-expanded", "false");
+  });
+});
+
+describe("Sidebar collapsible sections", () => {
+  function Folding(props: Partial<SidebarProps> & { open?: boolean; defaultOpen?: boolean; onOpenChange?: (open: boolean) => void }) {
+    const { open, defaultOpen, onOpenChange, ...rest } = props;
+    return (
+      <Sidebar collapseBelow="never" {...rest}>
+        <Sidebar.Nav>
+          <Sidebar.Section label="Workspace" collapsible open={open} defaultOpen={defaultOpen} onOpenChange={onOpenChange}>
+            <Sidebar.Item href="/a" icon={HouseIcon}>
+              Home
+            </Sidebar.Item>
+          </Sidebar.Section>
+          <Sidebar.Section label="Plain">
+            <Sidebar.Item href="/b">Other</Sidebar.Item>
+          </Sidebar.Section>
+        </Sidebar.Nav>
+      </Sidebar>
+    );
+  }
+
+  it("makes the heading a button that folds its list and brings it back, and names the list from it", async () => {
+    const user = userEvent.setup();
+    render(<Folding />);
+    const heading = screen.getByRole("button", { name: "Workspace" });
+    expect(heading).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("list", { name: "Workspace" })).toBeInTheDocument();
+    await user.click(heading);
+    expect(heading).toHaveAttribute("aria-expanded", "false");
+    await waitFor(() => expect(screen.queryByRole("link", { name: "Home" })).not.toBeInTheDocument());
+    await user.click(heading);
+    expect(await screen.findByRole("link", { name: "Home" })).toBeInTheDocument();
+  });
+
+  it("leaves a section that is not collapsible with a plain heading", () => {
+    render(<Folding />);
+    expect(screen.queryByRole("button", { name: "Plain" })).not.toBeInTheDocument();
+    expect(screen.getByText("Plain")).toBeInTheDocument();
+  });
+
+  it("starts folded with defaultOpen false, and is controllable with open", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+    const { unmount } = render(<Folding defaultOpen={false} />);
+    expect(screen.getByRole("button", { name: "Workspace" })).toHaveAttribute("aria-expanded", "false");
+    unmount();
+    render(<Folding open onOpenChange={onOpenChange} />);
+    await user.click(screen.getByRole("button", { name: "Workspace" }));
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(screen.getByRole("button", { name: "Workspace" })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("always shows every list in the rail, with no heading to press", () => {
+    render(<Folding defaultOpen={false} defaultCollapsed />);
+    expect(screen.getByRole("link", { name: "Home" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Workspace" })).not.toBeInTheDocument();
+  });
+
+  it("shares a fold with the phone panel", async () => {
+    const user = userEvent.setup();
+    render(<Folding collapseBelow="md" defaultMenuOpen />);
+    const dialog = await screen.findByRole("dialog");
+    await user.click(within(dialog).getByRole("button", { name: "Workspace" }));
+    expect(screen.getAllByRole("button", { name: "Workspace", hidden: true })[0]).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("has no axe violations folded or open", async () => {
+    const { container } = render(<Folding />);
+    expect(await axe(container)).toHaveNoViolations();
+    await userEvent.click(screen.getByRole("button", { name: "Workspace" }));
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe("Sidebar item descriptions", () => {
+  it("describes the item without naming it", () => {
+    render(
+      <Sidebar collapseBelow="never">
+        <Sidebar.Nav>
+          <Sidebar.Item href="/a" description="Everything at a glance" aria-describedby="extra">
+            Overview
+          </Sidebar.Item>
+        </Sidebar.Nav>
+      </Sidebar>,
+    );
+    const link = screen.getByRole("link", { name: "Overview" });
+    expect(link).toHaveAccessibleDescription(/Everything at a glance/);
+    expect(link.getAttribute("aria-describedby")).toMatch(/extra/);
+  });
+
+  it("keeps it in the DOM, hidden, in the rail, and not for an asChild item", () => {
+    render(
+      <Sidebar collapseBelow="never" defaultCollapsed>
+        <Sidebar.Nav>
+          <Sidebar.Item href="/a" icon={HouseIcon} description="Everything at a glance">
+            Overview
+          </Sidebar.Item>
+          <Sidebar.Item asChild description="Ignored">
+            <a href="/b">Plain</a>
+          </Sidebar.Item>
+        </Sidebar.Nav>
+      </Sidebar>,
+    );
+    expect(screen.getByRole("link", { name: "Overview" })).toHaveAccessibleDescription(/Everything at a glance/);
+    expect(screen.queryByText("Ignored")).not.toBeInTheDocument();
+  });
+});
+
+describe("Sidebar.Account", () => {
+  it("draws an avatar, a name and a line under it, and opens a menu of its items", async () => {
+    const user = userEvent.setup();
+    render(
+      <Sidebar collapseBelow="never">
+        <Sidebar.Footer>
+          <Sidebar.Account name="John Doe" description="john@acme.com">
+            <Menu.Item>Profile</Menu.Item>
+            <Menu.Item>Sign out</Menu.Item>
+          </Sidebar.Account>
+        </Sidebar.Footer>
+      </Sidebar>,
+    );
+    const button = screen.getByRole("button", { name: /John Doe/ });
+    expect(button).toHaveTextContent("john@acme.com");
+    expect(button).toHaveAttribute("aria-haspopup", "menu");
+    await user.click(button);
+    expect(await screen.findByRole("menuitem", { name: "Profile" })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("menu")).not.toBeInTheDocument());
+    expect(button).toHaveFocus();
+  });
+
+  it("is a plain button with no children, for your own onClick", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    render(
+      <Sidebar collapseBelow="never">
+        <Sidebar.Footer>
+          <Sidebar.Account name="John Doe" onClick={onClick} />
+        </Sidebar.Footer>
+      </Sidebar>,
+    );
+    const button = screen.getByRole("button", { name: /John Doe/ });
+    expect(button).not.toHaveAttribute("aria-haspopup");
+    await user.click(button);
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it("is the avatar alone in the rail, still named, with the name as its tooltip", async () => {
+    const user = userEvent.setup();
+    render(
+      <Sidebar collapseBelow="never" defaultCollapsed>
+        <Sidebar.Footer>
+          <Sidebar.Account name="John Doe" description="john@acme.com">
+            <Menu.Item>Profile</Menu.Item>
+          </Sidebar.Account>
+        </Sidebar.Footer>
+      </Sidebar>,
+    );
+    const button = screen.getByRole("button", { name: /John Doe/ });
+    expect(button.querySelector(`.${styles.hiddenText}`)).not.toBeNull();
+    await user.tab();
+    expect(button).toHaveFocus();
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("John Doe");
+  });
+
+  it("takes your own avatar in place of the default one", () => {
+    render(
+      <Sidebar collapseBelow="never">
+        <Sidebar.Footer>
+          <Sidebar.Account name="Acme" avatar={<span data-testid="logo">A</span>} />
+        </Sidebar.Footer>
+      </Sidebar>,
+    );
+    expect(screen.getByTestId("logo")).toBeInTheDocument();
+  });
+
+  it("has no axe violations", async () => {
+    const { container } = render(
+      <Sidebar collapseBelow="never">
+        <Sidebar.Footer>
+          <Sidebar.Account name="John Doe" description="john@acme.com">
+            <Menu.Item>Profile</Menu.Item>
+          </Sidebar.Account>
+        </Sidebar.Footer>
+      </Sidebar>,
+    );
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe("Sidebar peek", () => {
+  function Rail(props: Partial<SidebarProps>) {
+    return (
+      <Sidebar collapseBelow="never" defaultCollapsed data-testid="sidebar" {...props}>
+        <Sidebar.Header>
+          <Probe />
+        </Sidebar.Header>
+        <Sidebar.Nav>
+          <Sidebar.Item href="/a" icon={HouseIcon}>
+            Home
+          </Sidebar.Item>
+        </Sidebar.Nav>
+      </Sidebar>
+    );
+  }
+  function Probe() {
+    const { collapsed } = useSidebar();
+    return <span data-testid="probe">{collapsed ? "rail" : "full"}</span>;
+  }
+
+  it("does nothing without peek", async () => {
+    const user = userEvent.setup();
+    render(<Rail />);
+    await user.hover(screen.getByTestId("sidebar"));
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(screen.getByTestId("sidebar")).not.toHaveAttribute("data-peeking");
+  });
+
+  it("opens over the page while the pointer is on it, shows the labels, and closes when it leaves", async () => {
+    const user = userEvent.setup();
+    render(<Rail peek />);
+    const sidebar = screen.getByTestId("sidebar");
+    expect(sidebar).toHaveClass(styles.peekable!);
+    await user.hover(sidebar);
+    await waitFor(() => expect(sidebar).toHaveAttribute("data-peeking"));
+    expect(sidebar).toHaveClass(styles.peeking!);
+    // inside it is expanded: the label is shown, and a part reading the state sees a sidebar that is not collapsed
+    expect(screen.getByRole("link", { name: "Home" }).querySelector(`.${styles.hiddenText}`)).toBeNull();
+    expect(screen.getByTestId("probe")).toHaveTextContent("full");
+    // while it is still the collapsed state's: the toggle's name and the data attribute
+    expect(sidebar).toHaveAttribute("data-collapsed");
+    await user.unhover(sidebar);
+    await waitFor(() => expect(sidebar).not.toHaveAttribute("data-peeking"));
+    expect(screen.getByTestId("probe")).toHaveTextContent("rail");
+  });
+
+  it("opens on keyboard focus at once, and closes with Escape", async () => {
+    // jsdom does not tell keyboard focus from other focus, so it is told: this focus is the keyboard's.
+    const matches = Element.prototype.matches;
+    vi.spyOn(Element.prototype, "matches").mockImplementation(function (this: Element, selector: string) {
+      return selector === ":focus-visible" ? true : matches.call(this, selector);
+    });
+    const user = userEvent.setup();
+    render(<Rail peek />);
+    const sidebar = screen.getByTestId("sidebar");
+    await user.tab();
+    expect(screen.getByRole("link", { name: "Home" })).toHaveFocus();
+    await waitFor(() => expect(sidebar).toHaveAttribute("data-peeking"));
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(sidebar).not.toHaveAttribute("data-peeking"));
+  });
+
+  it("is not peeking once the sidebar is expanded for good", async () => {
+    const user = userEvent.setup();
+    render(
+      <Sidebar collapseBelow="never" peek defaultCollapsed data-testid="sidebar">
+        <Sidebar.Nav>
+          <Sidebar.Item href="/a" icon={HouseIcon}>
+            Home
+          </Sidebar.Item>
+        </Sidebar.Nav>
+        <Sidebar.Footer>
+          <Sidebar.Toggle />
+        </Sidebar.Footer>
+      </Sidebar>,
+    );
+    const sidebar = screen.getByTestId("sidebar");
+    await user.hover(sidebar);
+    await waitFor(() => expect(sidebar).toHaveAttribute("data-peeking"));
+    await user.click(screen.getByRole("button", { name: "Expand sidebar" }));
+    expect(sidebar).not.toHaveAttribute("data-peeking");
+    expect(sidebar).not.toHaveClass(styles.peekable!);
   });
 });

@@ -13,6 +13,19 @@ const meta: Meta<typeof Sidebar.Section> = {
       control: false,
       description: "A control drawn at the end of the heading, such as an add IconButton: as Sidebar.Item's action. Not drawn in the rail.",
     },
+    collapsible: {
+      control: "boolean",
+      description:
+        "Makes the heading a button that folds the section's list away and brings it back, with a caret. The rail has no headings, so it always shows every list. The state is kept for the whole sidebar, so a fold on the page is the same in the phone panel.",
+      table: { defaultValue: { summary: "false" } },
+    },
+    open: { control: false, description: "Whether a collapsible section is open (controlled). Pair with onOpenChange." },
+    defaultOpen: {
+      control: "boolean",
+      description: "Whether a collapsible section starts open (uncontrolled).",
+      table: { defaultValue: { summary: "true" } },
+    },
+    onOpenChange: { control: false, description: "Called with the new value when a collapsible section's heading is pressed." },
     children: { control: false, description: "The section's Sidebar.Items and Sidebar.Groups." },
     id: { control: "text", description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },

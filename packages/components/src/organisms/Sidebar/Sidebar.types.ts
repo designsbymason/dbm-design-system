@@ -161,6 +161,13 @@ export interface SidebarProps extends SidebarStateProps, Omit<ComponentPropsWith
    * @default 'start'
    */
   side?: SidebarSide;
+  /**
+   * Lets a sidebar collapsed to a rail open as an overlay while the pointer is over it or focus is inside it, so the labels can be read without
+   * committing to expand it: the rail keeps its width in the page and the open sidebar is drawn over the content beside it, then closes when the
+   * pointer and focus leave. A mouse only (a touch screen has no hover; focus works everywhere). It stays open while a menu opened from it is open.
+   * @default false
+   */
+  peek?: boolean;
   /** Called when the phone panel has finished opening or closing, after its animation. */
   onMenuOpenChangeComplete?: (open: boolean) => void;
   /**
@@ -168,6 +175,12 @@ export interface SidebarProps extends SidebarStateProps, Omit<ComponentPropsWith
    * @default true
    */
   closeMenuOnNavigate?: boolean;
+  /**
+   * Keeps one group open at a time among the groups that share a parent: opening one closes the others beside it. A group that starts open
+   * because it holds the current page is closed when another is opened.
+   * @default false
+   */
+  exclusive?: boolean;
   /**
    * An element to draw the phone panel inside instead of the document body, so it stays within a frame. Mainly for demos and tests.
    */
@@ -274,6 +287,21 @@ export interface SidebarSectionProps extends Omit<HTMLAttributes<HTMLLIElement>,
   label: ReactNode;
   /** A control drawn at the end of the heading, such as an "add" `IconButton`: as `Sidebar.Item`'s `action`. Not drawn in the rail. */
   action?: ReactNode;
+  /**
+   * Makes the heading a button that folds the section's list away and brings it back, with a caret. The rail has no headings, so it always shows
+   * every list. The state is kept for the whole sidebar, so a fold on the page is the same in the phone panel.
+   * @default false
+   */
+  collapsible?: boolean;
+  /** Whether a collapsible section is open (controlled). Pair with `onOpenChange`. */
+  open?: boolean;
+  /**
+   * Whether a collapsible section starts open (uncontrolled).
+   * @default true
+   */
+  defaultOpen?: boolean;
+  /** Called with the new value when a collapsible section's heading is pressed. */
+  onOpenChange?: (open: boolean) => void;
   /** The section's `Sidebar.Item`s and `Sidebar.Group`s. */
   children?: ReactNode;
   /** Standard DOM id. */
@@ -299,6 +327,11 @@ export interface SidebarItemProps extends Omit<AnchorHTMLAttributes<HTMLAnchorEl
    * first character. It follows the text's colour, so it tracks hover and the current look.
    */
   icon?: PhosphorIcon;
+  /**
+   * A second line under the text, in smaller, quieter type: what the page is for. It describes the item (the link's `aria-describedby`) rather than
+   * naming it, so the item's name stays short, and it is cut with an ellipsis like the text. It is not shown in the rail.
+   */
+  description?: ReactNode;
   /**
    * What to show after the text, such as a count: plain text, drawn in `Badge`'s solid brand look (its subtle look on a current item drawn as a brand fill, where a solid pill would vanish), or a `Badge` you pass, drawn as written.
    * Pass the `Badge` element itself. It is part of the item's name, so a count is read with it ("Inbox 3"). In the rail it becomes a small
@@ -381,6 +414,11 @@ export interface SidebarGroupProps extends Omit<ComponentPropsWithoutRef<"button
    * @default false
    */
   disabled?: boolean;
+  /**
+   * A name for this group's open state, kept for the whole sidebar so the page and the phone panel share it. Left out, it is the label (and the
+   * labels of the groups it is inside), which is enough unless two groups beside each other have the same label.
+   */
+  value?: string;
   /** Standard DOM id on the group's button. */
   id?: string;
   /** Additional CSS classes, on the group's button. */
@@ -456,6 +494,35 @@ export interface SidebarMenuButtonProps extends Omit<ComponentPropsWithoutRef<"b
   size?: ButtonSize;
   /** The button's accessible name. Defaults to `labels.menu` ("Menu"). */
   "aria-label"?: string;
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface SidebarAccountProps extends Omit<ComponentPropsWithoutRef<"button">, "children" | "type" | "name"> {
+  /** The account's or workspace's name, beside its avatar. In the rail it is hidden and is the button's tooltip and name. */
+  name: string;
+  /** A quieter line under the name, such as an email address or a plan. Not shown in the rail. */
+  description?: string;
+  /** What to draw in place of the avatar: a workspace logo, an icon. Left out, an `Avatar` made from `name` (and `src`). */
+  avatar?: ReactNode;
+  /** The image for the default avatar. Left out, it shows the name's initials. */
+  src?: string;
+  /**
+   * Which side of the button its menu opens toward. Left out, it opens above the button on the page and toward the page in the rail, which is
+   * right for a footer; give `"bottom"` for one in the header.
+   */
+  menuSide?: "top" | "right" | "bottom" | "left";
+  /** The menu's items (`Menu.Item`s, `Menu.Separator`s…). Left out, the button opens nothing, so put your own action on it with `onClick`. */
+  children?: ReactNode;
   /** Standard DOM id. */
   id?: string;
   /** Additional CSS classes for customization. */

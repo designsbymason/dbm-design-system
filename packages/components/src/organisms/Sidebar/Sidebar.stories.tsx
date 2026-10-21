@@ -4,6 +4,7 @@ import { Fragment, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { BellIcon, BookOpenIcon, ChartBarIcon, DotsThreeIcon, FolderSimpleIcon, GearIcon, HouseIcon, PlusIcon, ReceiptIcon, TrayIcon, UsersIcon } from "@dbm-design-system/icons";
 import type { SpaceValue } from "@dbm-design-system/primitives";
+import { Avatar } from "../../atoms/Avatar";
 import { Badge } from "../../atoms/Badge";
 import { Icon } from "../../atoms/Icon";
 import { IconButton } from "../../atoms/IconButton";
@@ -32,6 +33,7 @@ interface PlaygroundArgs {
   rounded: boolean;
   width: string;
   side: SidebarSide;
+  peek: boolean;
   collapsed?: boolean;
   defaultCollapsed: boolean;
   onCollapsedChange: (collapsed: boolean) => void;
@@ -41,6 +43,7 @@ interface PlaygroundArgs {
   onMenuOpenChange: (open: boolean) => void;
   onMenuOpenChangeComplete: (open: boolean) => void;
   closeMenuOnNavigate: boolean;
+  exclusive: boolean;
   menuContainer?: HTMLElement | null;
   sticky: boolean;
   stickyOffset: SpaceValue;
@@ -65,10 +68,12 @@ const editableArgs = [
   "rounded",
   "width",
   "side",
+  "peek",
   "defaultCollapsed",
   "collapseBelow",
   "defaultMenuOpen",
   "closeMenuOnNavigate",
+  "exclusive",
   "sticky",
   "stickyOffset",
   "dir",
@@ -144,6 +149,12 @@ const meta: Meta<PlaygroundArgs> = {
         "Which edge of the page the sidebar sits against: it sets which edge its line is on and which side the phone panel slides in from. start is the right in right-to-left text.",
       table: { defaultValue: { summary: '"start"' } },
     },
+    peek: {
+      control: "boolean",
+      description:
+        "Lets a sidebar collapsed to a rail open as an overlay while the pointer is over it or focus is inside it, so the labels can be read without expanding it for good. The rail keeps its width in the page; the open sidebar is drawn over the content. A mouse only (focus works everywhere).",
+      table: { defaultValue: { summary: "false" } },
+    },
     collapsed: readOnly(
       "Whether the sidebar is a rail of icons (controlled). Pair with onCollapsedChange. The Playground lets the sidebar manage it (see defaultCollapsed).",
     ),
@@ -174,6 +185,11 @@ const meta: Meta<PlaygroundArgs> = {
       control: "boolean",
       description: "Closes the phone panel when a link in it is chosen, including a router's link that prevents the browser's own navigation.",
       table: { defaultValue: { summary: "true" } },
+    },
+    exclusive: {
+      control: "boolean",
+      description: "Keeps one group open at a time among the groups that share a parent: opening one closes the others beside it.",
+      table: { defaultValue: { summary: "false" } },
     },
     menuContainer: readOnly("The element the phone panel is drawn into instead of document.body. The Playground gives it its own frame."),
     sticky: {
@@ -214,6 +230,7 @@ const meta: Meta<PlaygroundArgs> = {
     rounded: false,
     width: "",
     side: "start",
+    peek: false,
     collapsed: undefined,
     defaultCollapsed: false,
     onCollapsedChange: fn(),
@@ -223,6 +240,7 @@ const meta: Meta<PlaygroundArgs> = {
     onMenuOpenChange: fn(),
     onMenuOpenChangeComplete: fn(),
     closeMenuOnNavigate: true,
+    exclusive: false,
     menuContainer: undefined,
     sticky: false,
     stickyOffset: 0,
@@ -614,6 +632,174 @@ export const CurrentFromPath: Story = {
       </SidebarStage>
     );
   },
+};
+
+export const Peek: Story = {
+  name: "A rail that opens over the page",
+  parameters: { docs: { source: { code: sidebarSnippets.peek } } },
+  argTypes: { ...noControls },
+  render: (args) => (
+    <SidebarStage minBlockSize="34rem">
+      {(menuContainer) => (
+        <SidebarFrame height="32rem" contentLabel="Hover the rail, or tab into it: it opens over this page without moving it, and closes when you leave.">
+          <DemoSidebar defaultCollapsed peek menuContainer={menuContainer} collapseBelow={args.collapseBelow} />
+        </SidebarFrame>
+      )}
+    </SidebarStage>
+  ),
+};
+
+export const Descriptions: Story = {
+  name: "A second line under an item",
+  parameters: { docs: { source: { code: sidebarSnippets.descriptions } } },
+  argTypes: { ...noControls },
+  render: (args) => (
+    <SidebarStage minBlockSize="24rem">
+      {(menuContainer) => (
+        <SidebarFrame height="20rem" contentLabel="">
+          <Sidebar collapseBelow={args.collapseBelow} menuContainer={menuContainer} width="18rem">
+            <Sidebar.Content>
+              <Sidebar.Nav aria-label="With descriptions">
+                <Sidebar.Item href="#overview" icon={HouseIcon} description="Everything at a glance" current onClick={(event) => event.preventDefault()}>
+                  Overview
+                </Sidebar.Item>
+                <Sidebar.Item href="#inbox" icon={TrayIcon} description="Requests waiting on you" badge="12" onClick={(event) => event.preventDefault()}>
+                  Inbox
+                </Sidebar.Item>
+                <Sidebar.Item href="#billing" icon={ReceiptIcon} description="Invoices, plans and payment methods for the whole account" onClick={(event) => event.preventDefault()}>
+                  Billing
+                </Sidebar.Item>
+                <Sidebar.Item href="#team" icon={UsersIcon} onClick={(event) => event.preventDefault()}>
+                  Team (no description)
+                </Sidebar.Item>
+              </Sidebar.Nav>
+            </Sidebar.Content>
+          </Sidebar>
+        </SidebarFrame>
+      )}
+    </SidebarStage>
+  ),
+};
+
+export const Accounts: Story = {
+  name: "Account and workspace switchers",
+  parameters: { docs: { source: { code: sidebarSnippets.account } } },
+  argTypes: { ...noControls },
+  render: (args) => (
+    <SidebarStage minBlockSize="34rem">
+      {(menuContainer) => (
+        <SidebarFrame height="30rem" contentLabel="The workspace in the header and the account in the footer each open a menu. In the rail they are the avatar alone.">
+          <Sidebar collapseBelow={args.collapseBelow} menuContainer={menuContainer} width="16rem">
+            <Sidebar.Header>
+              <Sidebar.Account name="Acme Inc" description="Workspace · Pro plan" menuSide="bottom" avatar={<Avatar name="Acme" shape="square" colorful size="xs" />}>
+                <Menu.Label>Workspaces</Menu.Label>
+                <Menu.Item>Acme Inc</Menu.Item>
+                <Menu.Item>Acme Labs</Menu.Item>
+                <Menu.Separator />
+                <Menu.Item icon={PlusIcon}>New workspace</Menu.Item>
+              </Sidebar.Account>
+            </Sidebar.Header>
+            <Sidebar.Content>
+              <Sidebar.Nav aria-label="Main">
+                <Sidebar.Item href="#home" icon={HouseIcon} current onClick={(event) => event.preventDefault()}>
+                  Home
+                </Sidebar.Item>
+                <Sidebar.Item href="#inbox" icon={TrayIcon} onClick={(event) => event.preventDefault()}>
+                  Inbox
+                </Sidebar.Item>
+              </Sidebar.Nav>
+            </Sidebar.Content>
+            <Sidebar.Footer>
+              <Sidebar.Account name="John Doe" description="john@acme.com">
+                <Menu.Item icon={UsersIcon}>Profile</Menu.Item>
+                <Menu.Item icon={GearIcon}>Settings</Menu.Item>
+                <Menu.Separator />
+                <Menu.Item>Sign out</Menu.Item>
+              </Sidebar.Account>
+              <Sidebar.Toggle />
+            </Sidebar.Footer>
+          </Sidebar>
+        </SidebarFrame>
+      )}
+    </SidebarStage>
+  ),
+};
+
+export const ExclusiveGroups: Story = {
+  name: "One group open at a time",
+  parameters: { docs: { source: { code: sidebarSnippets.exclusive } } },
+  argTypes: { ...noControls },
+  render: (args) => (
+    <SidebarStage minBlockSize="26rem">
+      {(menuContainer) => (
+        <SidebarFrame height="22rem" contentLabel="Open one group and the others close.">
+          <Sidebar exclusive collapseBelow={args.collapseBelow} menuContainer={menuContainer} width="15rem">
+            <Sidebar.Content>
+              <Sidebar.Nav aria-label="One at a time">
+                <Sidebar.Group label="Projects" icon={FolderSimpleIcon} defaultOpen>
+                  <Sidebar.Item href="#active" onClick={(event) => event.preventDefault()}>
+                    Active
+                  </Sidebar.Item>
+                  <Sidebar.Item href="#archived" onClick={(event) => event.preventDefault()}>
+                    Archived
+                  </Sidebar.Item>
+                </Sidebar.Group>
+                <Sidebar.Group label="Reports" icon={ChartBarIcon}>
+                  <Sidebar.Item href="#sales" onClick={(event) => event.preventDefault()}>
+                    Sales
+                  </Sidebar.Item>
+                  <Sidebar.Item href="#costs" onClick={(event) => event.preventDefault()}>
+                    Costs
+                  </Sidebar.Item>
+                </Sidebar.Group>
+                <Sidebar.Group label="Settings" icon={GearIcon}>
+                  <Sidebar.Item href="#profile" onClick={(event) => event.preventDefault()}>
+                    Profile
+                  </Sidebar.Item>
+                </Sidebar.Group>
+              </Sidebar.Nav>
+            </Sidebar.Content>
+          </Sidebar>
+        </SidebarFrame>
+      )}
+    </SidebarStage>
+  ),
+};
+
+export const CollapsibleSections: Story = {
+  name: "Sections that fold",
+  parameters: { docs: { source: { code: sidebarSnippets.collapsibleSections } } },
+  argTypes: { ...noControls },
+  render: (args) => (
+    <SidebarStage minBlockSize="26rem">
+      {(menuContainer) => (
+        <SidebarFrame height="22rem" contentLabel="Press a heading to fold its list away. The rail always shows every list.">
+          <Sidebar collapseBelow={args.collapseBelow} menuContainer={menuContainer} width="15rem">
+            <Sidebar.Content>
+              <Sidebar.Nav aria-label="Folding sections">
+                <Sidebar.Section label="Workspace" collapsible>
+                  <Sidebar.Item href="#home" icon={HouseIcon} current onClick={(event) => event.preventDefault()}>
+                    Home
+                  </Sidebar.Item>
+                  <Sidebar.Item href="#inbox" icon={TrayIcon} onClick={(event) => event.preventDefault()}>
+                    Inbox
+                  </Sidebar.Item>
+                </Sidebar.Section>
+                <Sidebar.Section label="Admin" collapsible defaultOpen={false}>
+                  <Sidebar.Item href="#settings" icon={GearIcon} onClick={(event) => event.preventDefault()}>
+                    Settings
+                  </Sidebar.Item>
+                  <Sidebar.Item href="#billing" icon={ReceiptIcon} onClick={(event) => event.preventDefault()}>
+                    Billing
+                  </Sidebar.Item>
+                </Sidebar.Section>
+              </Sidebar.Nav>
+            </Sidebar.Content>
+          </Sidebar>
+        </SidebarFrame>
+      )}
+    </SidebarStage>
+  ),
 };
 
 export const Sides: Story = {

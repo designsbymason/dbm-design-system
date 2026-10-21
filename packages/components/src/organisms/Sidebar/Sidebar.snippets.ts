@@ -234,6 +234,93 @@ ${sidebar("", { current: "emea", footer: "none" })}`,
   </Sidebar.Content>
 </Sidebar>`,
 
+  peek: `{/* peek lets a sidebar collapsed to a rail open as an overlay while the pointer is over it or focus is inside it, so the labels can be read
+    without expanding it for good. The rail keeps its width in the page and the open sidebar is drawn over the content; it closes when the pointer and
+    focus leave, and stays open while a menu opened from it is. A mouse only: a touch screen has no hover, and focus works everywhere. */}
+${sidebar("defaultCollapsed peek")}`,
+
+  descriptions: `{/* description is a second line under the item's text, in quieter type: what the page is for. It describes the item (aria-describedby)
+    and does not name it, it is cut with an ellipsis like the text, and the rail does not show it. */}
+<Sidebar.Nav>
+  <Sidebar.Item href="/" icon={HouseIcon} description="Everything at a glance" current>
+    Overview
+  </Sidebar.Item>
+  <Sidebar.Item href="/inbox" icon={TrayIcon} description="Requests waiting on you" badge="12">
+    Inbox
+  </Sidebar.Item>
+  <Sidebar.Item href="/billing" icon={ReceiptIcon} description="Invoices, plans and payment methods for the whole account">
+    Billing
+  </Sidebar.Item>
+  <Sidebar.Item href="/team" icon={UsersIcon}>
+    Team (no description)
+  </Sidebar.Item>
+</Sidebar.Nav>`,
+
+  account: `{/* Sidebar.Account is a switcher: an avatar, a name and a quieter line, opening a Menu of the items inside it. It goes in a Header or Footer.
+    In the rail it is the avatar alone, with the name as its tooltip and name, and the menu opens beside the rail. menuSide defaults to above the
+    button (right for a footer); give "bottom" for one in the header. Give avatar your own (a logo) or leave it for one made from name and src. */}
+<Sidebar>
+  <Sidebar.Header>
+    <Sidebar.Account name="Acme Inc" description="Workspace · Pro plan" menuSide="bottom" avatar={<Avatar name="Acme" shape="square" colorful size="xs" />}>
+      <Menu.Label>Workspaces</Menu.Label>
+      <Menu.Item>Acme Inc</Menu.Item>
+      <Menu.Item>Acme Labs</Menu.Item>
+      <Menu.Separator />
+      <Menu.Item icon={PlusIcon}>New workspace</Menu.Item>
+    </Sidebar.Account>
+  </Sidebar.Header>
+  <Sidebar.Footer>
+    <Sidebar.Account name="John Doe" description="john@acme.com">
+      <Menu.Item icon={UsersIcon}>Profile</Menu.Item>
+      <Menu.Item icon={GearIcon}>Settings</Menu.Item>
+      <Menu.Separator />
+      <Menu.Item>Sign out</Menu.Item>
+    </Sidebar.Account>
+    <Sidebar.Toggle />
+  </Sidebar.Footer>
+</Sidebar>`,
+
+  exclusive: `{/* exclusive keeps one group open at a time among the groups that share a parent: opening one closes the others beside it. A group's state is
+    kept for the whole sidebar under its label (give value to tell two groups with the same label apart), so the page and the phone panel share it. */}
+<Sidebar exclusive>
+  <Sidebar.Content>
+    <Sidebar.Nav>
+      <Sidebar.Group label="Projects" icon={FolderSimpleIcon} defaultOpen>
+        <Sidebar.Item href="/projects/active">Active</Sidebar.Item>
+        <Sidebar.Item href="/projects/archived">Archived</Sidebar.Item>
+      </Sidebar.Group>
+      <Sidebar.Group label="Reports" icon={ChartBarIcon}>
+        <Sidebar.Item href="/reports/sales">Sales</Sidebar.Item>
+        <Sidebar.Item href="/reports/costs">Costs</Sidebar.Item>
+      </Sidebar.Group>
+      <Sidebar.Group label="Settings" icon={GearIcon}>
+        <Sidebar.Item href="/settings/profile">Profile</Sidebar.Item>
+      </Sidebar.Group>
+    </Sidebar.Nav>
+  </Sidebar.Content>
+</Sidebar>`,
+
+  collapsibleSections: `{/* collapsible makes a section's heading a button that folds its list away and brings it back; defaultOpen={false} starts one folded. The rail
+    has no headings, so it always shows every list. The fold is kept for the whole sidebar, so the page and the phone panel agree. */}
+<Sidebar.Nav>
+  <Sidebar.Section label="Workspace" collapsible>
+    <Sidebar.Item href="/" icon={HouseIcon} current>
+      Home
+    </Sidebar.Item>
+    <Sidebar.Item href="/inbox" icon={TrayIcon}>
+      Inbox
+    </Sidebar.Item>
+  </Sidebar.Section>
+  <Sidebar.Section label="Admin" collapsible defaultOpen={false}>
+    <Sidebar.Item href="/settings" icon={GearIcon}>
+      Settings
+    </Sidebar.Item>
+    <Sidebar.Item href="/billing" icon={ReceiptIcon}>
+      Billing
+    </Sidebar.Item>
+  </Sidebar.Section>
+</Sidebar.Nav>`,
+
   side: `{/* side: "start" (default) | "end". The line moves to the inner edge and the phone panel slides in from that side. */}
 ${sidebar('side="end"')}
 
@@ -284,10 +371,12 @@ export interface SidebarPlaygroundSnippetArgs {
   rounded?: boolean;
   width?: string;
   side?: SidebarSide;
+  peek?: boolean;
   defaultCollapsed?: boolean;
   collapseBelow?: SidebarCollapseBelow;
   defaultMenuOpen?: boolean;
   closeMenuOnNavigate?: boolean;
+  exclusive?: boolean;
   sticky?: boolean;
   stickyOffset?: number;
   dir?: "ltr" | "rtl";
@@ -307,10 +396,12 @@ export function sidebarPlaygroundSnippet(args: SidebarPlaygroundSnippetArgs): st
   if (args.rounded) attributes.push("rounded");
   if (args.width) attributes.push(`width=${quote(args.width)}`);
   if (args.side && args.side !== "start") attributes.push(`side="${args.side}"`);
+  if (args.peek) attributes.push("peek");
   if (args.defaultCollapsed) attributes.push("defaultCollapsed");
   if (args.collapseBelow && args.collapseBelow !== "md") attributes.push(`collapseBelow="${args.collapseBelow}"`);
   if (args.defaultMenuOpen) attributes.push("defaultMenuOpen");
   if (args.closeMenuOnNavigate === false) attributes.push("closeMenuOnNavigate={false}");
+  if (args.exclusive) attributes.push("exclusive");
   if (args.sticky) {
     attributes.push("sticky");
     if (args.stickyOffset) attributes.push(`stickyOffset={${args.stickyOffset}}`);

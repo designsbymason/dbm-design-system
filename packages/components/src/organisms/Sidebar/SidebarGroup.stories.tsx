@@ -32,6 +32,11 @@ const meta: Meta<typeof Sidebar.Group> = {
       description: "Makes the group's button inert: a native disabled button, so it leaves the tab order, unlike a disabled item.",
       table: { defaultValue: { summary: "false" } },
     },
+    value: {
+      control: "text",
+      description:
+        "A name for this group's open state, kept for the whole sidebar so the page and the phone panel share it. Left out, it is the label (under the labels of the groups it is inside), which is enough unless two groups beside each other have the same label.",
+    },
     id: { control: "text", description: "Standard DOM id, on the group's button." },
     className: { control: false, description: "Additional CSS classes, on the group's button." },
     style: { control: false, description: "Inline styles, merged onto the component's own internal styles." },

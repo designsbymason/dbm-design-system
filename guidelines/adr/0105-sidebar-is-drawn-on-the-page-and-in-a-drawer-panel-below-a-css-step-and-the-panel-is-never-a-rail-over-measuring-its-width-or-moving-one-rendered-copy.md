@@ -1,6 +1,6 @@
 # 0105 — `Sidebar` is drawn on the page and in a `Drawer` panel below a CSS step, and the panel is never a rail, over measuring its width or moving one rendered copy
 
-**Status:** Accepted · **Date:** 2026-10-19
+**Status:** Accepted, the clause on a group's state in the two copies superseded by [0110](./0110-sidebar-keeps-group-and-section-state-for-the-whole-sidebar-draws-a-rail-open-over-the-page-with-its-surface-in-a-pseudo-element-and-adds-descriptions-and-an-account-part-over-per-copy-state-a-wrapper-or-a-menu-per-consumer.md) · **Date:** 2026-10-19
 
 ## Context
 On a phone a navigation column has no room beside the page and becomes a side panel opened from a menu button. [ADR-0061](./0061-drawer-is-attached-to-a-logical-side-that-can-change-with-the-screen-with-its-own-size-tokens-and-no-swipe-yet.md) names `Sidebar` as a consumer of `Drawer` for this, and [ADR-0091](./0091-navbar-collapses-by-a-css-breakpoint-and-draws-its-links-in-the-bar-and-in-the-menu-panel-over-measuring-its-width-or-writing-two-lists.md) decided the same question for `Navbar`'s links. A sidebar differs in two ways: what it holds is large and stateful (groups that are open, an account menu, a search field of the consumer's), and it has a collapsed form (the rail) that makes no sense in a panel.

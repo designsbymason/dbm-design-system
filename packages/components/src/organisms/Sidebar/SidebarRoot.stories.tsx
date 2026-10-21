@@ -57,6 +57,12 @@ const meta: Meta<typeof Sidebar> = {
         "Which edge of the page the sidebar sits against: it sets which edge its line is on and which side the phone panel slides in from. start is the right in right-to-left text.",
       table: { defaultValue: { summary: '"start"' } },
     },
+    peek: {
+      control: "boolean",
+      description:
+        "Lets a sidebar collapsed to a rail open as an overlay while the pointer is over it or focus is inside it, so the labels can be read without expanding it for good. The rail keeps its width in the page; the open sidebar is drawn over the content. A mouse only (focus works everywhere).",
+      table: { defaultValue: { summary: "false" } },
+    },
     collapsed: readOnly(
       "Whether the sidebar is a rail of icons (controlled). Pair with onCollapsedChange. The Playground lets the sidebar manage it (see defaultCollapsed).",
     ),
@@ -87,6 +93,11 @@ const meta: Meta<typeof Sidebar> = {
       control: "boolean",
       description: "Closes the phone panel when a link in it is chosen, including a router's link that prevents the browser's own navigation.",
       table: { defaultValue: { summary: "true" } },
+    },
+    exclusive: {
+      control: "boolean",
+      description: "Keeps one group open at a time among the groups that share a parent: opening one closes the others beside it.",
+      table: { defaultValue: { summary: "false" } },
     },
     menuContainer: readOnly("The element the phone panel is drawn into instead of document.body. The Playground gives it its own frame."),
     sticky: {

@@ -12,6 +12,7 @@ import * as SidebarNavStories from "./SidebarNav.stories";
 import * as SidebarSectionStories from "./SidebarSection.stories";
 import * as SidebarItemStories from "./SidebarItem.stories";
 import * as SidebarGroupStories from "./SidebarGroup.stories";
+import * as SidebarAccountStories from "./SidebarAccount.stories";
 import * as SidebarSeparatorStories from "./SidebarSeparator.stories";
 import * as SidebarToggleStories from "./SidebarToggle.stories";
 import * as SidebarMenuButtonStories from "./SidebarMenuButton.stories";
@@ -25,6 +26,7 @@ export const propOrder = [
   "rounded",
   "width",
   "side",
+  "peek",
   "collapsed",
   "defaultCollapsed",
   "onCollapsedChange",
@@ -34,6 +36,7 @@ export const propOrder = [
   "onMenuOpenChange",
   "onMenuOpenChangeComplete",
   "closeMenuOnNavigate",
+  "exclusive",
   "menuContainer",
   "sticky",
   "stickyOffset",
@@ -51,10 +54,12 @@ export const playgroundOrder = [
   "rounded",
   "width",
   "side",
+  "peek",
   "defaultCollapsed",
   "collapseBelow",
   "defaultMenuOpen",
   "closeMenuOnNavigate",
+  "exclusive",
   "sticky",
   "stickyOffset",
   "dir",
@@ -75,9 +80,10 @@ export const headerPropOrder = ["children", "id", "className", "style", "data-te
 export const contentPropOrder = ["children", "id", "className", "style", "data-testid"];
 export const footerPropOrder = ["children", "id", "className", "style", "data-testid"];
 export const navPropOrder = ["children", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
-export const sectionPropOrder = ["label", "action", "children", "id", "className", "style", "data-testid"];
-export const itemPropOrder = ["children", "href", "icon", "badge", "action", "external", "current", "match", "disabled", "asChild", "aria-label", "id", "className", "style", "data-testid"];
-export const groupPropOrder = ["label", "children", "icon", "action", "current", "open", "defaultOpen", "onOpenChange", "disabled", "id", "className", "style", "data-testid"];
+export const sectionPropOrder = ["label", "action", "collapsible", "open", "defaultOpen", "onOpenChange", "children", "id", "className", "style", "data-testid"];
+export const itemPropOrder = ["children", "href", "icon", "description", "badge", "action", "external", "current", "match", "disabled", "asChild", "aria-label", "id", "className", "style", "data-testid"];
+export const groupPropOrder = ["label", "children", "icon", "action", "current", "open", "defaultOpen", "onOpenChange", "disabled", "value", "id", "className", "style", "data-testid"];
+export const accountPropOrder = ["name", "description", "avatar", "src", "menuSide", "children", "id", "className", "style", "data-testid"];
 export const separatorPropOrder = ["id", "className", "style", "data-testid"];
 export const togglePropOrder = ["variant", "tone", "size", "aria-label", "id", "className", "style", "data-testid"];
 export const menuButtonPropOrder = ["icon", "variant", "tone", "size", "aria-label", "id", "className", "style", "data-testid"];
@@ -183,6 +189,14 @@ accepts any other native `<button>` attribute beyond what's listed here (e.g. `o
 to its button. Its children are `Sidebar.Item`s and `Sidebar.Group`s.
 
 <PropertiesTable of={SidebarGroupStories} order={groupPropOrder} />
+
+### Sidebar.Account properties
+
+An account or workspace switcher: a button with an avatar, a name and a quieter line, opening a `Menu` of the items you put inside it. Also
+accepts any other native `<button>` attribute beyond what's listed here (e.g. `onFocus`, `title`), passed straight through. It goes in a
+`Sidebar.Header` or `Sidebar.Footer`.
+
+<PropertiesTable of={SidebarAccountStories} order={accountPropOrder} />
 
 ### Sidebar.Separator properties
 
@@ -292,6 +306,45 @@ by a component of your own is not seen: set the group's `current` yourself then.
 
 <Canvas of={SidebarStories.CurrentFromPath} />
 
+### A rail that opens over the page
+
+With `peek`, a sidebar collapsed to a rail opens as an overlay while the pointer is over it or focus is inside it, so the labels can be read
+without expanding it for good. The rail keeps its width in the page, so nothing beside it moves; the open sidebar is drawn over the content
+with a shadow, and closes when the pointer and focus leave. It stays open while a menu opened from it is open, closes with `Escape`, and is a
+mouse and keyboard feature (a touch screen has no hover, so it is the toggle there).
+
+<Canvas of={SidebarStories.Peek} />
+
+### A second line under an item
+
+`description` adds a line of quieter text under an item's label. It describes the item (`aria-describedby`) and does not name it, so the item's
+name stays short; it is cut with an ellipsis like the label, and the rail does not show it.
+
+<Canvas of={SidebarStories.Descriptions} />
+
+### Account and workspace switchers
+
+`Sidebar.Account` is the switcher most application sidebars end with (or begin with): an avatar, a name and a quieter line, opening a `Menu`
+of whatever you put inside it. In the rail it is the avatar alone, with the name as its tooltip and its accessible name, and the menu opens
+beside the rail. It suits the `md` and `lg` sizes, whose rail is as wide as its avatar; for a smaller sidebar pass a smaller `avatar`.
+
+<Canvas of={SidebarStories.Accounts} />
+
+### One group open at a time
+
+`exclusive` keeps one group open among the groups that share a parent: opening one closes the others beside it. A group's open state is kept
+for the whole sidebar, under its label (and the labels of the groups it is inside; give `value` to tell two groups with the same label apart),
+so the page and the phone panel agree, and a rail that expands again keeps what was open.
+
+<Canvas of={SidebarStories.ExclusiveGroups} />
+
+### Sections that fold
+
+`collapsible` makes a section's heading a button that folds its list away and brings it back, and `defaultOpen={false}` starts one folded. The
+rail has no headings, so it always shows every list. The fold is kept for the whole sidebar, like a group's.
+
+<Canvas of={SidebarStories.CollapsibleSections} />
+
 ### On the end side, and right to left
 
 `side="end"` puts the sidebar against the end edge: its line moves and the phone panel slides in from that side. With
@@ -354,9 +407,12 @@ changed.
   named navigations. Give each its own `aria-label`, so a screen reader's list of landmarks tells them apart.
 - The collapse follows the window width, so a narrow window on a desktop gets the same panel a phone does. If the panel is
   open when the window grows past the step, it closes.
-- The same children are drawn on the page and in the panel, so state an item holds is not shared between the two: a group
-  opened on the page starts shut or open again, by `current` and `defaultOpen`, in the panel. Keep state that matters (which
-  page is current, which groups are open) in your own state and pass it down.
+- The same children are drawn on the page and in the panel. Which groups and collapsible sections are open is kept for the whole sidebar
+  (by label, or by `value`), so the two agree; state of your own inside an item (a search field, say) is not shared, so keep what matters
+  in your own state and pass it down.
+- `peek` is for a rail that people open to find something, not for one they keep open: it closes when the pointer and focus leave, and a
+  touch screen has no hover, so the toggle stays the way to expand it there. Keep the content beside it from depending on the sidebar's
+  width, since the rail's width is what it keeps.
 - A header or footer that should change in the rail reads `useSidebar().collapsed`, or styles itself from the
   `data-collapsed` attribute on the sidebar.
 - To remember the rail across visits, hold `collapsed` in your own state and store it where your app keeps preferences (a
@@ -511,6 +567,9 @@ function Brand() {
 <TokenRow token="font-family.primary" usage="the sidebar's typography" />
 <TokenRow token="font-size.xs / font-size.sm / font-size.base / font-size.md" usage="an item's text at the `xs`, `sm`, `md` and `lg` sizes (a section's heading is `font-size.xs`)" />
 <TokenRow token="font-weight.bold" usage="the rail's letter for an item with no icon" />
+<TokenRow token="font-weight.regular" usage="an item's description and an account's quieter line" />
+<TokenRow token="shadow.light.lg / shadow.dark.lg" usage="the elevation of a rail that is peeking open over the page" />
+<TokenRow token="z-index.sticky" usage="a peeking rail, drawn over the page's content and under overlays" />
 <TokenRow token="font-weight.medium" usage="an item, and the sidebar's own text" />
 <TokenRow token="icon-size.sm / icon-size.md" usage="an item's icon at each size, which with its padding is the item's height and the rail's width" />
 <TokenRow token="badge.size.xs" usage="the height a count badge's row margin is worked from: `Badge`'s own `xs` size in an item, so a count is its circle and a badged row is as tall as a plain one" />

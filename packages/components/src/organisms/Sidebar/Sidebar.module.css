@@ -56,7 +56,8 @@
   --sidebar-item-box: calc(var(--sidebar-icon) + 2 * var(--sidebar-pad));
 }
 
-.rail {
+.rail,
+.peeking {
   inline-size: calc(var(--sidebar-icon) + 2 * var(--sidebar-pad) + 2 * var(--dbm-space-2) + var(--sidebar-line));
 }
 
@@ -172,6 +173,36 @@
   text-transform: uppercase;
 }
 
+/* A collapsible section's heading is a button that spans the heading's row, with the caret at its end. */
+.sectionToggle {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dbm-space-2);
+  min-inline-size: 0;
+  border: 0;
+  border-radius: var(--dbm-radius-sm);
+  background-color: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.sectionToggle:hover .sectionLabel {
+  color: var(--dbm-text-primary);
+}
+
+.sectionToggle:focus-visible {
+  outline: var(--dbm-border-width-2) solid var(--dbm-border-focus);
+  outline-offset: calc(-1 * var(--dbm-border-width-2));
+}
+
+.sectionToggle[aria-expanded="true"] .caret {
+  transform: rotate(180deg);
+}
+
 /* In the rail the heading has no room, so it is hidden (still the list's name) and a line sets the section apart. */
 .rail .sectionLabel,
 .hiddenText {
@@ -269,6 +300,32 @@
   white-space: nowrap;
 }
 
+/* The text of an item: its label and, under it, an optional description. The label keeps its ellipsis; the description is quieter and also cut. */
+.itemText {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.itemText > .label {
+  flex: none;
+}
+
+.description {
+  overflow: hidden;
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-xs);
+  font-weight: var(--dbm-font-weight-regular);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* On the current item the description follows the item's own colour, so it stays readable on the tint or the brand fill. */
+.current .description {
+  color: inherit;
+}
+
 .trailingIcon {
   flex: none;
 }
@@ -347,6 +404,8 @@
 .railItem {
   inline-size: calc(var(--sidebar-icon) + 2 * var(--sidebar-pad));
   justify-content: center;
+  /* The rail draws the icon alone: the text is clipped to a pixel, but it is still a flex item, and a gap before it would push the icon off centre. */
+  gap: 0;
 }
 
 /* --- The current page --- */
@@ -502,6 +561,116 @@ button.toggleBox {
   min-block-size: 0;
 }
 
+/* --- An account or workspace switcher --- */
+
+/* A button drawn like an item, with the avatar where the icon is: the avatar's own box replaces the icon-and-padding square, so the rail is
+   still one item wide (the `xs` avatar is the `md` item's box exactly). */
+.account {
+  padding: var(--dbm-space-1);
+}
+
+.account.railItem {
+  padding: 0;
+}
+
+.accountAvatar {
+  display: inline-flex;
+  flex: none;
+}
+
+.accountText {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.accountName {
+  overflow: hidden;
+  color: var(--dbm-text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accountDescription {
+  overflow: hidden;
+  color: var(--dbm-text-secondary);
+  font-size: var(--dbm-font-size-xs);
+  font-weight: var(--dbm-font-weight-regular);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- `peek`: a rail that opens over the page ---
+   The rail keeps its width in the page, so nothing beside it moves. Its surface (the fill and the line) is drawn by a pseudo-element, which is
+   as wide as the rail at rest and as wide as the sidebar while it peeks, with a shadow; what is inside is drawn at the sidebar's width over it.
+   Without `peek` none of these classes is on the sidebar. */
+.peekable {
+  isolation: isolate;
+}
+
+.peekable:not(.sticky) {
+  position: relative;
+}
+
+.peekable.outlined,
+.peekable.filled {
+  background-color: transparent;
+  border: 0;
+}
+
+.peekable::before {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: -1;
+  box-sizing: border-box;
+  inline-size: 100%;
+  transition: inline-size var(--dbm-motion-duration-base) var(--dbm-motion-easing-standard);
+}
+
+.peekable[data-side="end"]::before {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+}
+
+.peekable.outlined::before,
+.peekable.filled::before {
+  background-color: var(--dbm-bg-surface);
+}
+
+.peekable.outlined::before {
+  border-inline-end: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+.peekable.outlined[data-side="end"]::before {
+  border-inline-end: 0;
+  border-inline-start: var(--dbm-border-width-1) solid var(--dbm-border-default);
+}
+
+.peeking {
+  z-index: var(--dbm-z-index-sticky);
+}
+
+.peeking::before {
+  inline-size: var(--sidebar-width, var(--dbm-sidebar-width));
+  box-shadow: var(--dbm-shadow-light-lg);
+}
+
+[data-theme$="-dark"] .peeking::before {
+  box-shadow: var(--dbm-shadow-dark-lg);
+}
+
+.peeking > * {
+  inline-size: var(--sidebar-width, var(--dbm-sidebar-width));
+}
+
+/* An end-side sidebar opens toward the start, so what is inside is pulled out by the width it gains. */
+.peeking[data-side="end"] > * {
+  margin-inline-start: calc(100% - var(--sidebar-width, var(--dbm-sidebar-width)));
+}
+
 /* --- Collapsing: one class per step ---
    Below the step the sidebar leaves the page (and the accessibility tree), the menu button shows and the toggle goes; at and above
    it the reverse. Media queries can't read a custom property, so each width is the literal value of the matching breakpoint token (sm
@@ -593,6 +762,11 @@ button.menuButtonNever {
    outline, and a `filled` sidebar a line along its inner edge. The outlined sidebar's line and the separators are borders, which forced
    colours keeps. */
 @media (forced-colors: active) {
+  .peeking::before {
+    border: var(--dbm-border-width-1) solid CanvasText;
+    background-color: Canvas;
+  }
+
   .filled {
     border-inline-end: var(--dbm-border-width-1) solid CanvasText;
   }
@@ -638,7 +812,8 @@ button.menuButtonNever {
   .root,
   .item,
   .caret,
-  .action {
+  .action,
+  .peekable::before {
     transition: none;
   }
 

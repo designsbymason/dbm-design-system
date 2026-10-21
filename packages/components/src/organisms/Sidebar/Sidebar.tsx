@@ -3,12 +3,14 @@ import {
   CaretLeftIcon,
   CaretRightIcon,
   CaretDownIcon,
+  CaretUpDownIcon,
   ListIcon,
 } from "@dbm-design-system/icons";
-import { cx, mergeDefined } from "@dbm-design-system/primitives";
+import { cx, mergeDefined, mergeRefs } from "@dbm-design-system/primitives";
 import { Slot } from "@radix-ui/react-slot";
 import { cloneElement, forwardRef, isValidElement, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ElementType, MouseEvent, ReactElement, ReactNode } from "react";
+import { Avatar } from "../../atoms/Avatar";
 import { Badge } from "../../atoms/Badge";
 import { ButtonGroupProvider, useButtonGroup } from "../../atoms/Button/buttonGroupContext";
 import type { BadgeProps } from "../../atoms/Badge";
@@ -24,6 +26,7 @@ import styles from "./Sidebar.module.css";
 import { holdsPath, matchesPath } from "./Sidebar.paths";
 import {
   SidebarContext,
+  SidebarGroupKeyContext,
   SidebarLevelContext,
   SidebarMenuContext,
   SidebarPanelContext,
@@ -36,6 +39,7 @@ import {
 import type { SidebarContextValue, SidebarStateContextValue } from "./SidebarContext";
 import type {
   SidebarCollapseBelow,
+  SidebarAccountProps,
   SidebarContentProps,
   SidebarCurrentVariant,
   SidebarFooterProps,
@@ -221,6 +225,8 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
       rounded = false,
       width,
       side = "start",
+      peek = false,
+      exclusive = false,
       collapsed,
       defaultCollapsed,
       onCollapsedChange,
@@ -247,7 +253,11 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
     const { state, changeMenu, menuButtonRef } = parent ?? own;
     const collapseBelow = ownCollapseBelow ?? parent?.collapseBelow ?? "md";
     const resolvedLabels = mergeDefined(parent?.labels ?? defaultLabels, labels);
-    const railed = state.collapsed;
+    // A rail with `peek` opens as an overlay while the pointer is over it or focus is inside it; to the parts inside it, it is then expanded.
+    const [peeking, setPeeking] = useState(false);
+    if (peeking && !(peek && state.collapsed)) setPeeking(false);
+    const peekOpen = peek && state.collapsed && peeking;
+    const railed = state.collapsed && !peekOpen;
     const closeMenu = useCallback(() => changeMenu(false, { reason: "close" }), [changeMenu]);
 
     useEffect(() => {
@@ -278,6 +288,49 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
       return () => query.removeEventListener("change", handleChange);
     }, [menuIsOpen, collapseBelow, closeMenu]);
 
+    // Which groups and collapsible sections are open, kept here (not in each copy) so the page and the phone panel agree and a rail that
+    // expands keeps them; and the groups registered under each parent, so `exclusive` can shut a group's siblings.
+    const [openState, setOpenStateRaw] = useState<Record<string, boolean>>({});
+    const groups = useRef(new Map<string, { parent: string; count: number }>());
+    const setOpenState = useCallback(
+      (key: string, open: boolean, parentKey: string) =>
+        setOpenStateRaw((previous) => {
+          const next = { ...previous, [key]: open };
+          if (open && exclusive) {
+            for (const [other, { parent }] of groups.current) if (parent === parentKey && other !== key) next[other] = false;
+          }
+          return next;
+        }),
+      [exclusive],
+    );
+    const registerGroup = useCallback((key: string, parentKey: string) => {
+      // The page's copy and the phone panel's copy of a group are two mounted components with one key.
+      const known = groups.current.get(key);
+      groups.current.set(key, { parent: parentKey, count: (known?.count ?? 0) + 1 });
+      return () => {
+        const entry = groups.current.get(key);
+        if (!entry) return;
+        if (entry.count <= 1) groups.current.delete(key);
+        else groups.current.set(key, { ...entry, count: entry.count - 1 });
+      };
+    }, []);
+
+    const rootRef = useRef<HTMLDivElement | null>(null);
+    const rootMergedRef = useMemo(() => mergeRefs(ref, rootRef), [ref]);
+    const peekTimer = useRef<number | undefined>(undefined);
+    useEffect(() => () => window.clearTimeout(peekTimer.current), []);
+    // Pointer and focus decide whether the rail peeks open. It closes only when neither is on it, and not while a menu opened from it is open
+    // (the menu is drawn outside the sidebar, so the pointer is "outside" while it is in use).
+    const askPeek = (open: boolean, delay: number) => {
+      if (!peek || !state.collapsed) return;
+      window.clearTimeout(peekTimer.current);
+      peekTimer.current = window.setTimeout(() => {
+        const element = rootRef.current;
+        if (!open && element && (element.matches(":hover") || element.querySelector(":focus-visible") || element.querySelector("[aria-haspopup][aria-expanded='true']"))) return;
+        setPeeking(open);
+      }, delay);
+    };
+
     const stateValue = useMemo<SidebarStateContextValue>(
       () => ({ state, changeMenu, collapseBelow, labels: resolvedLabels, menuButtonRef, hasSidebar: true }),
       // `mergeDefined` returns a fresh object each render; its strings are what the value really depends on.
@@ -297,8 +350,23 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
     );
 
     const contextValue = useMemo<SidebarContextValue>(
-      () => ({ size, currentVariant, currentPath, rounded, side, dir, railed, closeMenuOnNavigate, menuContainer, closeMenu }),
-      [size, currentVariant, currentPath, rounded, side, dir, railed, closeMenuOnNavigate, menuContainer, closeMenu],
+      () => ({
+        size,
+        currentVariant,
+        currentPath,
+        rounded,
+        side,
+        dir,
+        railed,
+        closeMenuOnNavigate,
+        menuContainer,
+        closeMenu,
+        exclusive,
+        openState,
+        setOpenState,
+        registerGroup,
+      }),
+      [size, currentVariant, currentPath, rounded, side, dir, railed, closeMenuOnNavigate, menuContainer, closeMenu, exclusive, openState, setOpenState, registerGroup],
     );
     // The panel is never a rail, whatever the page's sidebar is.
     const panelContextValue = useMemo<SidebarContextValue>(() => ({ ...contextValue, railed: false }), [contextValue]);
@@ -334,13 +402,36 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
     return (
       <SidebarStateContext.Provider value={stateValue}>
         <SidebarContext.Provider value={contextValue}>
+          {/* The pointer and focus handlers only listen, to let a rail peek open (`peek`); the box is not a control, and everything in it is. */}
+          {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
           <div
             {...props}
-            ref={ref}
+            ref={rootMergedRef}
             dir={dir}
             data-variant={variant}
             data-side={side}
-            data-collapsed={railed ? "" : undefined}
+            data-collapsed={state.collapsed ? "" : undefined}
+            data-peeking={peekOpen ? "" : undefined}
+            onPointerEnter={(event) => {
+              props.onPointerEnter?.(event);
+              if (event.pointerType === "mouse") askPeek(true, 120);
+            }}
+            onPointerLeave={(event) => {
+              props.onPointerLeave?.(event);
+              askPeek(false, 200);
+            }}
+            onFocus={(event) => {
+              props.onFocus?.(event);
+              if (event.target.matches(":focus-visible")) askPeek(true, 0);
+            }}
+            onBlur={(event) => {
+              props.onBlur?.(event);
+              if (!event.currentTarget.contains(event.relatedTarget)) askPeek(false, 200);
+            }}
+            onKeyDown={(event) => {
+              props.onKeyDown?.(event);
+              if (event.key === "Escape" && peekOpen) setPeeking(false);
+            }}
             className={cx(
               styles.root,
               sizeClass[size],
@@ -348,6 +439,8 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
               variant === "filled" && styles.filled,
               variant === "ghost" && styles.ghost,
               railed && styles.rail,
+              peek && state.collapsed && styles.peekable,
+              peekOpen && styles.peeking,
               sticky && styles.sticky,
               collapseClass[collapseBelow],
               className,
@@ -467,26 +560,57 @@ SidebarNav.displayName = "Sidebar.Nav";
  * A heading over a list of items. In the rail the heading is hidden (it still names the list) and a line sets the section apart from the
  * one before it.
  */
-const SidebarSection = forwardRef<HTMLLIElement, SidebarSectionProps>(({ label, action, children, className, ...props }, ref) => {
-  const headingId = useId();
-  const { railed } = useSidebarContext("Sidebar.Section");
-  return (
-    // `role="listitem"` and `role="list"` are redundant on paper; see `Sidebar.Nav`.
-    // eslint-disable-next-line jsx-a11y/no-redundant-roles
-    <li {...props} ref={ref} role="listitem" className={cx(styles.section, className)}>
-      <div className={styles.sectionHead}>
-        <div id={headingId} className={styles.sectionLabel}>
-          {label}
-        </div>
-        {action !== undefined && action !== null && !railed && <SidebarActionSlot className={styles.sectionAction}>{action}</SidebarActionSlot>}
-      </div>
-      {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}
-      <ul role="list" aria-labelledby={headingId} className={styles.list}>
+const SidebarSection = forwardRef<HTMLLIElement, SidebarSectionProps>(
+  ({ label, action, collapsible = false, open: openProp, defaultOpen = true, onOpenChange, children, className, ...props }, ref) => {
+    const headingId = useId();
+    const listId = useId();
+    const { railed, size, openState, setOpenState } = useSidebarContext("Sidebar.Section");
+    // A collapsible section's fold is kept for the whole sidebar, by its label, so the page and the phone panel agree.
+    const key = typeof label === "string" ? `section:${label}` : undefined;
+    const [localOpen, setLocalOpen] = useState(defaultOpen);
+    const stored = key !== undefined ? openState[key] : undefined;
+    const open = openProp ?? stored ?? (key !== undefined ? defaultOpen : localOpen);
+    // The rail has no headings to press, so it always shows every list.
+    const folds = collapsible && !railed;
+    const toggle = () => {
+      const next = !open;
+      if (openProp === undefined) {
+        if (key !== undefined) setOpenState(key, next, "");
+        else setLocalOpen(next);
+      }
+      onOpenChange?.(next);
+    };
+    const list = (
+      // `role="list"` is redundant on paper; see `Sidebar.Nav`.
+      // eslint-disable-next-line jsx-a11y/no-redundant-roles
+      <ul role="list" id={listId} aria-labelledby={headingId} className={styles.list}>
         {children}
       </ul>
-    </li>
-  );
-});
+    );
+    return (
+      // `role="listitem"` and `role="list"` are redundant on paper; see `Sidebar.Nav`.
+      // eslint-disable-next-line jsx-a11y/no-redundant-roles
+      <li {...props} ref={ref} role="listitem" className={cx(styles.section, className)}>
+        <div className={styles.sectionHead}>
+          {folds ? (
+            <button type="button" className={styles.sectionToggle} aria-expanded={open} aria-controls={listId} onClick={toggle}>
+              <span id={headingId} className={styles.sectionLabel}>
+                {label}
+              </span>
+              <Icon icon={CaretDownIcon} size={externalIconSizeFor[size]} className={styles.caret} />
+            </button>
+          ) : (
+            <div id={headingId} className={styles.sectionLabel}>
+              {label}
+            </div>
+          )}
+          {action !== undefined && action !== null && !railed && <SidebarActionSlot className={styles.sectionAction}>{action}</SidebarActionSlot>}
+        </div>
+        {folds ? <Collapse asChild open={open}>{list}</Collapse> : list}
+      </li>
+    );
+  },
+);
 SidebarSection.displayName = "Sidebar.Section";
 
 /** A line between two parts of a list. Decorative: it is not announced. */
@@ -510,6 +634,7 @@ const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
       disabled = false,
       asChild = false,
       icon,
+      description,
       badge,
       action,
       external,
@@ -541,6 +666,9 @@ const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
     const label = typeof children === "string" || typeof children === "number" ? String(children) : null;
     const { setLabel, open: tipOpen, onOpenChange: onTipOpenChange } = useTruncationTooltip(!rail && !inMenu && !asChild && label !== null);
     const hasAction = action !== undefined && action !== null && !rail && !inMenu;
+    const descriptionId = useId();
+    const hasDescription = description !== undefined && description !== null && !asChild && !inMenu;
+    const describedBy = [props["aria-describedby"], hasDescription ? descriptionId : undefined].filter(Boolean).join(" ") || undefined;
 
     useEffect(() => {
       if (process.env.NODE_ENV === "production") return;
@@ -619,6 +747,7 @@ const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
         ref={ref as never}
         aria-current={current ? "page" : undefined}
         aria-disabled={disabled || undefined}
+        aria-describedby={describedBy}
         onClick={handleClick}
         onClickCapture={handleClickCapture}
         className={itemClass}
@@ -628,8 +757,15 @@ const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
         ) : (
           <>
             {iconNode}
-            <span ref={setLabel} className={cx(styles.label, rail && styles.hiddenText)}>
-              {children}
+            <span className={cx(styles.itemText, hasDescription && styles.hasDescription)}>
+              <span ref={setLabel} className={cx(styles.label, rail && styles.hiddenText)}>
+                {children}
+              </span>
+              {hasDescription && (
+                <span id={descriptionId} aria-hidden="true" className={cx(styles.description, rail && styles.hiddenText)}>
+                  {description}
+                </span>
+              )}
             </span>
             {badgeNode}
             {isExternal && (
@@ -691,6 +827,7 @@ const SidebarGroup = forwardRef<HTMLButtonElement, SidebarGroupProps>(
       label,
       icon,
       action,
+      value,
       current: currentProp,
       open: openProp,
       defaultOpen,
@@ -703,16 +840,24 @@ const SidebarGroup = forwardRef<HTMLButtonElement, SidebarGroupProps>(
     },
     ref,
   ) => {
-    const { size, currentVariant, currentPath, rounded, railed, dir, menuContainer } = useSidebarContext("Sidebar.Group");
+    const { size, currentVariant, currentPath, rounded, railed, dir, menuContainer, openState, setOpenState, registerGroup } =
+      useSidebarContext("Sidebar.Group");
     // A group's own `current` always wins; left out, it holds the current page when one of the items written inside it is.
     const current = currentProp ?? holdsPath(children, currentPath);
     const level = useContext(SidebarLevelContext);
     const closeFlyout = useContext(SidebarMenuContext);
     const tooltipSide = useOutwardSide();
+    // A group is named by its value, or by its label under the labels of the groups it is inside. That name keys its open state in the sidebar, so
+    // the page's copy and the phone panel's copy share it (and a rail that expands keeps it); a group whose label is not text has no name and
+    // keeps its own.
+    const parentKey = useContext(SidebarGroupKeyContext);
+    const key = value ?? (typeof label === "string" ? `${parentKey}/${label}` : undefined);
     const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen ?? current);
     const [flyoutOpen, setFlyoutOpen] = useState(false);
     const isControlled = openProp !== undefined;
-    const open = isControlled ? openProp : uncontrolledOpen;
+    const stored = key !== undefined ? openState[key] : undefined;
+    const open = isControlled ? openProp : (stored ?? (key !== undefined ? (defaultOpen ?? current) : uncontrolledOpen));
+    useEffect(() => (key !== undefined ? registerGroup(key, parentKey) : undefined), [key, parentKey, registerGroup]);
     const grows = useBecameCurrent(current);
     const regionId = useId();
     const closeThisFlyout = useCallback(() => setFlyoutOpen(false), []);
@@ -805,7 +950,10 @@ const SidebarGroup = forwardRef<HTMLButtonElement, SidebarGroupProps>(
             onClick={(event) => {
               onClick?.(event);
               const next = !open;
-              if (!isControlled) setUncontrolledOpen(next);
+              if (!isControlled) {
+                if (key !== undefined) setOpenState(key, next, parentKey);
+                else setUncontrolledOpen(next);
+              }
               onOpenChange?.(next);
             }}
           >
@@ -820,7 +968,9 @@ const SidebarGroup = forwardRef<HTMLButtonElement, SidebarGroupProps>(
         <Collapse asChild open={open}>
           {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}
           <ul role="list" id={regionId} className={cx(styles.list, styles.groupList)}>
-            <SidebarLevelContext.Provider value={level + 1}>{children}</SidebarLevelContext.Provider>
+            <SidebarGroupKeyContext.Provider value={key ?? parentKey}>
+              <SidebarLevelContext.Provider value={level + 1}>{children}</SidebarLevelContext.Provider>
+            </SidebarGroupKeyContext.Provider>
           </ul>
         </Collapse>
       </li>
@@ -828,6 +978,49 @@ const SidebarGroup = forwardRef<HTMLButtonElement, SidebarGroupProps>(
   },
 );
 SidebarGroup.displayName = "Sidebar.Group";
+
+/**
+ * An account or workspace switcher: a button with an avatar, a name and a quieter line beneath it, which opens a `Menu` of the items you
+ * put inside it (the account's profile, a workspace to switch to, sign out). It goes in a `Sidebar.Header` or `Sidebar.Footer`. In the rail
+ * it is the avatar alone, with the name as its tooltip and its accessible name, and the menu opens beside the rail. With no children it is a
+ * plain button for your own `onClick`.
+ */
+const SidebarAccount = forwardRef<HTMLButtonElement, SidebarAccountProps>(
+  ({ name, description, avatar, src, menuSide, children, className, ...props }, ref) => {
+    const { railed, dir, menuContainer } = useSidebarContext("Sidebar.Account");
+    const outward = useOutwardSide();
+    const [menuOpen, setMenuOpen] = useState(false);
+    const button = (
+      <button {...props} ref={ref} type="button" className={cx(styles.item, styles.account, railed && styles.railItem, className)}>
+        <span className={styles.accountAvatar}>{avatar ?? <Avatar name={name} src={src} size="xs" />}</span>
+        <span className={cx(styles.accountText, railed && styles.hiddenText)}>
+          <span className={styles.accountName}>{name}</span>
+          {description && <span className={styles.accountDescription}>{description}</span>}
+        </span>
+        {!railed && children !== undefined && <Icon icon={CaretUpDownIcon} size="xs" className={styles.trailingIcon} />}
+      </button>
+    );
+    // In the rail the name is the tooltip; a menu's trigger sits inside it as the rail's groups' do.
+    const withTooltip = (trigger: ReactElement) =>
+      railed ? (
+        <Tooltip content={name} side={outward}>
+          {trigger}
+        </Tooltip>
+      ) : (
+        trigger
+      );
+    if (children === undefined || children === null) return withTooltip(button);
+    return (
+      <Menu dir={dir} open={menuOpen} onOpenChange={setMenuOpen}>
+        {withTooltip(<Menu.Trigger asChild>{button}</Menu.Trigger>)}
+        <Menu.Content side={menuSide ?? (railed ? outward : "top")} align="start" container={menuContainer}>
+          <SidebarMenuContext.Provider value={() => setMenuOpen(false)}>{children}</SidebarMenuContext.Provider>
+        </Menu.Content>
+      </Menu>
+    );
+  },
+);
+SidebarAccount.displayName = "Sidebar.Account";
 
 /**
  * The button that collapses the sidebar to a rail and expands it again: an `IconButton` whose caret points toward the edge the
@@ -914,6 +1107,7 @@ type SidebarComponent = typeof SidebarRoot & {
   Section: typeof SidebarSection;
   Item: typeof SidebarItem;
   Group: typeof SidebarGroup;
+  Account: typeof SidebarAccount;
   Separator: typeof SidebarSeparator;
   Toggle: typeof SidebarToggle;
   MenuButton: typeof SidebarMenuButton;
@@ -928,6 +1122,7 @@ export const Sidebar: SidebarComponent = Object.assign(SidebarRoot, {
   Section: SidebarSection,
   Item: SidebarItem,
   Group: SidebarGroup,
+  Account: SidebarAccount,
   Separator: SidebarSeparator,
   Toggle: SidebarToggle,
   MenuButton: SidebarMenuButton,

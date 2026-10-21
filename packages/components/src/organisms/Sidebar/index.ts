@@ -1,5 +1,6 @@
 export { Sidebar, useSidebar } from "./Sidebar";
 export type {
+  SidebarAccountProps,
   SidebarCollapseBelow,
   SidebarContentProps,
   SidebarCurrentVariant,
