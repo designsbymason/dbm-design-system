@@ -14,6 +14,7 @@ import * as SidebarItemStories from "./SidebarItem.stories";
 import * as SidebarGroupStories from "./SidebarGroup.stories";
 import * as SidebarAccountStories from "./SidebarAccount.stories";
 import * as SidebarSeparatorStories from "./SidebarSeparator.stories";
+import * as SidebarSkeletonStories from "./SidebarSkeleton.stories";
 import * as SidebarToggleStories from "./SidebarToggle.stories";
 import * as SidebarMenuButtonStories from "./SidebarMenuButton.stories";
 
@@ -82,9 +83,10 @@ export const footerPropOrder = ["children", "id", "className", "style", "data-te
 export const navPropOrder = ["children", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
 export const sectionPropOrder = ["label", "action", "collapsible", "open", "defaultOpen", "onOpenChange", "children", "id", "className", "style", "data-testid"];
 export const itemPropOrder = ["children", "href", "icon", "description", "badge", "action", "external", "current", "match", "disabled", "asChild", "aria-label", "id", "className", "style", "data-testid"];
-export const groupPropOrder = ["label", "children", "icon", "action", "current", "open", "defaultOpen", "onOpenChange", "disabled", "value", "id", "className", "style", "data-testid"];
+export const groupPropOrder = ["label", "children", "icon", "badge", "action", "current", "open", "defaultOpen", "onOpenChange", "disabled", "value", "id", "className", "style", "data-testid"];
 export const accountPropOrder = ["name", "description", "avatar", "src", "menuSide", "children", "id", "className", "style", "data-testid"];
 export const separatorPropOrder = ["id", "className", "style", "data-testid"];
+export const skeletonPropOrder = ["rows", "animated", "id", "className", "style", "data-testid"];
 export const togglePropOrder = ["variant", "tone", "size", "aria-label", "id", "className", "style", "data-testid"];
 export const menuButtonPropOrder = ["icon", "variant", "tone", "size", "aria-label", "id", "className", "style", "data-testid"];
 
@@ -204,6 +206,12 @@ A decorative line between parts of a list. Also accepts any other native `<li>` 
 
 <PropertiesTable of={SidebarSeparatorStories} order={separatorPropOrder} />
 
+### Sidebar.Skeleton properties
+
+A placeholder for navigation that is still loading. Also accepts any other native `<li>` attribute beyond what's listed here.
+
+<PropertiesTable of={SidebarSkeletonStories} order={skeletonPropOrder} />
+
 ### Sidebar.Toggle properties
 
 The button that collapses the sidebar to a rail and expands it again. Also accepts any other native `<button>` attribute
@@ -229,7 +237,9 @@ rail, always reads `false`.
 ### Variants
 
 `outlined` is a surface with a line along its inner edge (the edge it does not sit against), `filled` the same
-surface with no line, and `ghost` nothing of its own, so the items sit on the page.
+surface with no line, `ghost` nothing of its own, so the items sit on the page, and `floating` an inset card: the surface set in from
+the page's edges by a margin, with rounded corners, a line all round and a soft shadow. A floating sidebar keeps its margin, so a
+`sticky` one sticks that far below `stickyOffset`, and the rail and `peek` keep the card's shape.
 
 <Canvas of={SidebarStories.Variants} />
 
@@ -345,6 +355,116 @@ rail has no headings, so it always shows every list. The fold is kept for the wh
 
 <Canvas of={SidebarStories.CollapsibleSections} />
 
+### Counts on a group
+
+A group shows a badge while its items are out of sight: after its label while it is shut, and on its icon in the rail, where its items
+are in a flyout. Left out, the badge is the total of its items' numeric `badge`s, so a group of inboxes reports what is unread inside;
+`badge` sets one (any `Badge`, or content for the sidebar's own), and `badge={null}` shows none. In the rail a number over 99 reads
+"99+", and a mark wider than a circle is set further out over the icon's corner so it does not cover the icon. A rail group's flyout opens
+from the rail's own edge, not from the icon's.
+
+<Canvas of={SidebarStories.GroupBadges} />
+
+### While the navigation loads
+
+`Sidebar.Skeleton` stands in for the items while they load: rows the height of an item, each an icon and a line of text of a different
+length, that pulse. In the rail only the icons are drawn. It is announced once as "Loading" (`labels.loading`) and the rest is hidden from
+assistive technology. Swap it for the real items when they arrive.
+
+<Canvas of={SidebarStories.Loading} />
+
+### Recipe: remember the collapsed state
+
+The sidebar stores nothing itself: hold `collapsed` in your own state and keep it where your app keeps preferences. This recipe uses
+`localStorage` through `useSyncExternalStore`, so the server's markup and the first client render agree and the saved value follows, and a
+store that is blocked or full is ignored. To avoid the brief flash of the default, keep the value in a cookie your server reads and pass it as `defaultCollapsed`.
+
+<Canvas of={SidebarStories.RememberCollapsed} />
+
+The hook behind it:
+
+```tsx
+const savedCollapsed = new Map<string, boolean>();
+const collapsedListeners = new Set<() => void>();
+
+function subscribeToCollapsed(notify: () => void) {
+  collapsedListeners.add(notify);
+  window.addEventListener("storage", notify);
+  return () => {
+    collapsedListeners.delete(notify);
+    window.removeEventListener("storage", notify);
+  };
+}
+
+function useRememberedCollapsed(storageKey: string, fallback = false) {
+  // The server (and the first client render) draw `fallback`; the saved value is read right after, so the markup agrees.
+  const collapsed = useSyncExternalStore(
+    subscribeToCollapsed,
+    () => {
+      try {
+        const saved = window.localStorage.getItem(storageKey);
+        if (saved !== null) return saved === "true";
+      } catch {
+        // Storage is blocked (a private window, a policy): use what this visit has chosen.
+      }
+      return savedCollapsed.get(storageKey) ?? fallback;
+    },
+    () => fallback,
+  );
+
+  const change = useCallback(
+    (next: boolean) => {
+      savedCollapsed.set(storageKey, next);
+      try {
+        window.localStorage.setItem(storageKey, String(next));
+      } catch {
+        // Not saved: the sidebar still changes for this visit.
+      }
+      collapsedListeners.forEach((notify) => notify());
+    },
+    [storageKey],
+  );
+
+  return [collapsed, change] as const;
+}
+
+function AppSidebar() {
+  const [collapsed, setCollapsed] = useRememberedCollapsed("app:sidebar-collapsed");
+  return (
+    <Sidebar collapsed={collapsed} onCollapsedChange={setCollapsed}>
+      {/* … */}
+    </Sidebar>
+  );
+}
+```
+
+### Recipe: filter the navigation
+
+A filter box at the top narrows the navigation as you type. The sidebar needs nothing for it: filter your own data, open the groups that
+still have a match (`open={query ? true : undefined}`, so an untouched group goes back to its own state when the box is cleared), and
+announce the number of matches in a status region. In the rail there is no room for the box, so an item takes its place and expands the
+sidebar. With very long lists, debounce the filter with `SearchInput`'s `onSearch`.
+
+<Canvas of={SidebarStories.FilterRecipe} />
+
+The data and the state it reads (`tree` and `flatLinks` are your own navigation data):
+
+```tsx
+function FilterState() {
+  const { collapsed, setCollapsed } = useSidebar();
+  const [query, setQuery] = useState("");
+  const needle = query.trim().toLowerCase();
+  const matches = (text: string) => text.toLowerCase().includes(needle);
+  const links = flatLinks.filter((link) => matches(link.label));
+  // A group whose own name matches shows all its items; otherwise the ones that match, and nothing when none do.
+  const groups = tree
+    .map((group) => ({ ...group, shown: matches(group.label) ? group.items : group.items.filter((item) => matches(item.label)) }))
+    .filter((group) => group.shown.length > 0);
+  const count = links.length + groups.reduce((total, group) => total + group.shown.length, 0);
+  // …then draw `links` and `groups` as the code above does.
+}
+```
+
 ### On the end side, and right to left
 
 `side="end"` puts the sidebar against the end edge: its line moves and the phone panel slides in from that side. With
@@ -416,15 +536,18 @@ changed.
 - A header or footer that should change in the rail reads `useSidebar().collapsed`, or styles itself from the
   `data-collapsed` attribute on the sidebar.
 - To remember the rail across visits, hold `collapsed` in your own state and store it where your app keeps preferences (a
-  cookie, if the server should draw the right one first); the sidebar does not store anything itself.
+  cookie, if the server should draw the right one first); the sidebar does not store anything itself. See the recipe above.
+- Show `Sidebar.Skeleton` while navigation that comes from a request loads, and put it where the items will be, so the sidebar does not
+  change size when they arrive. It is a placeholder, not a progress indicator: it says nothing about how long.
+- Use a group's rolled-up count for what a reader should look at when the group is shut (unread, to review), not for every number.
 - `side="end"` and `dir="rtl"` are separate: `side` says which edge of the layout, `dir` which way text runs, and `start` is the right
   in right-to-left text. Pass `dir` on the sidebar and it reaches the panel too, which is drawn in a portal and would otherwise follow
   the page.
 - A sticky sidebar is as tall as the rest of the window (`stickyOffset` is the height of a sticky `Navbar` above it) and scrolls its
   own content, so it needs no height from you. A sidebar that is not sticky takes the height of its row.
 - To make the sidebar resizable, put it in a `Splitter` pane rather than adding a drag handle of its own.
-- Use `labels` to translate the collapse and expand names, the menu button's name and the panel's title, the close button and
-  the external-link cue.
+- Use `labels` to translate the collapse and expand names, the menu button's name and the panel's title, the close button, the
+  external-link cue and the loading text.
 
 ## Accessibility
 
@@ -464,6 +587,9 @@ changed.
   filled sidebar gets a line, the current item an outline, and the `bar` look a system colour, since a fill alone would vanish.
 - `subtle` uses `text.brand` on `bg.brand-subtle`, the pairing `Tabs` uses; `solid` uses `text.on-brand` on `bg.brand`, the pairing a primary
   `Button` uses, with its focus ring drawn inside the item in `icon.on-brand`; `bar` keeps `text.primary` and draws a `bg.brand` line.
+- `Sidebar.Skeleton` is one `role="status"` "Loading" the screen reader announces, with `aria-busy` on its list item; the pulsing rows are
+  `aria-hidden`, so a screen reader is not asked to read a dozen empty lines. A group's rolled-up count is read as part of its button
+  ("Inbox 12") while the group is shut.
 
 </Callout>
 
@@ -562,6 +688,7 @@ function Brand() {
 <TokenRow token="border-width.1" usage="the outlined sidebar's line, a separator and the rail's section lines" />
 <TokenRow token="border-width.2" usage="the focus ring's width, and the bar look's line thickness" />
 <TokenRow token="radius.md" usage="an item's corners" />
+<TokenRow token="radius.lg" usage="a floating sidebar's corners" />
 <TokenRow token="radius.full" usage="the bar look's line, and an item's pill shape when rounded" />
 <TokenRow token="radius.sm" usage="the focus ring's corners" />
 <TokenRow token="font-family.primary" usage="the sidebar's typography" />
@@ -569,13 +696,14 @@ function Brand() {
 <TokenRow token="font-weight.bold" usage="the rail's letter for an item with no icon" />
 <TokenRow token="font-weight.regular" usage="an item's description and an account's quieter line" />
 <TokenRow token="shadow.light.lg / shadow.dark.lg" usage="the elevation of a rail that is peeking open over the page" />
+<TokenRow token="shadow.light.sm / shadow.dark.sm" usage="a floating sidebar's soft shadow" />
 <TokenRow token="z-index.sticky" usage="a peeking rail, drawn over the page's content and under overlays" />
 <TokenRow token="font-weight.medium" usage="an item, and the sidebar's own text" />
 <TokenRow token="icon-size.sm / icon-size.md" usage="an item's icon at each size, which with its padding is the item's height and the rail's width" />
 <TokenRow token="badge.size.xs" usage="the height a count badge's row margin is worked from: `Badge`'s own `xs` size in an item, so a count is its circle and a badged row is as tall as a plain one" />
 <TokenRow token="sidebar.width" usage="the expanded width, which the `width` prop replaces" />
 <TokenRow token="space.1" usage="the gap between items, a thin item's padding and a section's heading, the rail badge's offset" />
-<TokenRow token="space.2" usage="the sidebar's inner padding, an item's padding at the `sm` and `md` sizes, and the rail's margins" />
+<TokenRow token="space.2" usage="the sidebar's inner padding, an item's padding at the `sm` and `md` sizes, the rail's margins, and the margin round a floating sidebar" />
 <TokenRow token="space.3" usage="the gap between an item's icon and text, a section's top spacing, and an item's padding at `lg`" />
 <TokenRow token="space.4" usage="a nested group's indent" />
 <TokenRow token="space.5" usage="the height of the badge mark in the rail, smaller than `Badge`'s `xs` so it sits on the icon's corner" />

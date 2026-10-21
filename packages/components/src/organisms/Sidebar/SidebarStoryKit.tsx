@@ -4,14 +4,17 @@ import {
   FolderSimpleIcon,
   GearIcon,
   HouseIcon,
+  MagnifyingGlassIcon,
   TrayIcon,
   UsersIcon,
 } from "@dbm-design-system/icons";
-import { useState } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import { Avatar } from "../../atoms/Avatar";
 import { Button } from "../../atoms/Button";
 import { Text } from "../../atoms/Text";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { SearchInput } from "../../molecules/SearchInput";
 import { Sidebar, useSidebar } from "./Sidebar";
 import type { SidebarProps } from "./Sidebar.types";
 
@@ -248,4 +251,131 @@ export function DemoTopBar({ children }: { children?: ReactNode }) {
 /** Stops a demo link from navigating: a story's link goes nowhere, so it must not load another page. */
 export function preventNavigation(event: MouseEvent) {
   event.preventDefault();
+}
+
+/**
+ * A collapsed state that survives a reload: the value is kept in `localStorage` and read through `useSyncExternalStore`, so the server's markup and
+ * the first client render agree and the saved value follows. A store that is unavailable or full is ignored, leaving the sidebar working for the
+ * visit. This is the "Remember the collapsed state" recipe.
+ */
+const savedCollapsed = new Map<string, boolean>();
+const collapsedListeners = new Set<() => void>();
+
+function subscribeToCollapsed(notify: () => void) {
+  collapsedListeners.add(notify);
+  window.addEventListener("storage", notify);
+  return () => {
+    collapsedListeners.delete(notify);
+    window.removeEventListener("storage", notify);
+  };
+}
+
+export function useRememberedCollapsed(storageKey: string, fallback = false) {
+  // The server (and the first client render) draw `fallback`; the saved value is read right after, so the markup agrees.
+  const collapsed = useSyncExternalStore(
+    subscribeToCollapsed,
+    () => {
+      try {
+        const saved = window.localStorage.getItem(storageKey);
+        if (saved !== null) return saved === "true";
+      } catch {
+        // Storage is blocked (a private window, a policy): use what this visit has chosen.
+      }
+      return savedCollapsed.get(storageKey) ?? fallback;
+    },
+    () => fallback,
+  );
+
+  const change = useCallback(
+    (next: boolean) => {
+      savedCollapsed.set(storageKey, next);
+      try {
+        window.localStorage.setItem(storageKey, String(next));
+      } catch {
+        // Not saved: the sidebar still changes for this visit.
+      }
+      collapsedListeners.forEach((notify) => notify());
+    },
+    [storageKey],
+  );
+
+  return [collapsed, change] as const;
+}
+
+const filterTree = [
+  { label: "Projects", icon: FolderSimpleIcon, items: ["Active", "Archived", "Templates"] },
+  { label: "Reports", icon: ChartBarIcon, items: ["Sales", "Costs", "Forecast"] },
+];
+const filterLinks = [
+  { label: "Home", icon: HouseIcon },
+  { label: "Inbox", icon: TrayIcon },
+  { label: "Team", icon: UsersIcon },
+];
+
+function FilterBody() {
+  const { collapsed, setCollapsed } = useSidebar();
+  const [query, setQuery] = useState("");
+  const needle = query.trim().toLowerCase();
+  const matches = (text: string) => text.toLowerCase().includes(needle);
+  const links = filterLinks.filter((link) => matches(link.label));
+  // A group whose own name matches shows all its items; otherwise it shows the ones that match, and nothing when none do.
+  const groups = filterTree
+    .map((group) => ({ ...group, shown: matches(group.label) ? group.items : group.items.filter(matches) }))
+    .filter((group) => group.shown.length > 0);
+  const count = links.length + groups.reduce((total, group) => total + group.shown.length, 0);
+  return (
+    <>
+      <Sidebar.Header>
+        {collapsed ? (
+          <Sidebar.Item icon={MagnifyingGlassIcon} onClick={() => setCollapsed(false)}>
+            Search
+          </Sidebar.Item>
+        ) : (
+          <SearchInput
+            size="sm"
+            aria-label="Filter navigation"
+            placeholder="Filter…"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            onClear={() => setQuery("")}
+          />
+        )}
+      </Sidebar.Header>
+      <Sidebar.Content>
+        <Sidebar.Nav aria-label="Filtered navigation">
+          {links.map((link) => (
+            <Sidebar.Item key={link.label} icon={link.icon} href={`#${link.label.toLowerCase()}`} onClick={preventNavigation}>
+              {link.label}
+            </Sidebar.Item>
+          ))}
+          {groups.map((group) => (
+            <Sidebar.Group key={group.label} label={group.label} icon={group.icon} open={needle ? true : undefined}>
+              {group.shown.map((item) => (
+                <Sidebar.Item key={item} href={`#${item.toLowerCase()}`} onClick={preventNavigation}>
+                  {item}
+                </Sidebar.Item>
+              ))}
+            </Sidebar.Group>
+          ))}
+          {needle && count === 0 && (
+            <li style={{ padding: "var(--dbm-space-2)", color: "var(--dbm-text-secondary)", listStyle: "none" }}>Nothing matches “{query.trim()}”.</li>
+          )}
+        </Sidebar.Nav>
+        <VisuallyHidden role="status">{needle ? `${count} ${count === 1 ? "match" : "matches"}` : ""}</VisuallyHidden>
+      </Sidebar.Content>
+      <Sidebar.Footer style={{ justifyContent: "space-between" }}>
+        <DemoAccount />
+        <Sidebar.Toggle />
+      </Sidebar.Footer>
+    </>
+  );
+}
+
+/** A sidebar with a filter box at the top that narrows the navigation as you type, and opens the groups that still have a match. */
+export function FilterableSidebar(props: SidebarProps) {
+  return (
+    <Sidebar {...props}>
+      <FilterBody />
+    </Sidebar>
+  );
 }

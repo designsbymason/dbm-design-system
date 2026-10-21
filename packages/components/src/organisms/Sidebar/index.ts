@@ -19,6 +19,7 @@ export type {
   SidebarSectionProps,
   SidebarSeparatorProps,
   SidebarSide,
+  SidebarSkeletonProps,
   SidebarSize,
   SidebarState,
   SidebarStateProps,

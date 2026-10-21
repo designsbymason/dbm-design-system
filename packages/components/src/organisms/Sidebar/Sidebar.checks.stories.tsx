@@ -6,7 +6,7 @@ import { Menu } from "../Menu";
 import { Sidebar } from "./Sidebar";
 import { BellIcon, FolderSimpleIcon, GearIcon, HouseIcon, PlusIcon, TrayIcon } from "@dbm-design-system/icons";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
-import { DemoSidebar, SidebarFrame, SidebarStage, SidebarViewModeContext } from "./SidebarStoryKit";
+import { DemoSidebar, FilterableSidebar, SidebarFrame, SidebarStage, SidebarViewModeContext, useRememberedCollapsed } from "./SidebarStoryKit";
 
 // Hidden real-browser checks (guidelines/adr/0013): what jsdom can't do (layout, the cascade, a breakpoint, stacking, forced
 // colours). They run in the `storybook` (Chromium) project; the test window is 1200px wide unless a story pins another.
@@ -1143,5 +1143,246 @@ export const SectionsFold: Story = {
     expect(getComputedStyle(heading.querySelector("svg")!).transform).not.toBe("none");
     await userEvent.click(heading);
     await waitFor(() => expect(within(expanded).queryByRole("link", { name: "Home" })).not.toBeInTheDocument());
+  },
+};
+
+export const RailFlyoutStartsAtTheRailEdge: Story = {
+  name: "A rail group's menu opens four pixels from the rail's own edge, not from the icon's, and an account menu in the rail does the same",
+  render: () => (
+    <SidebarStage minBlockSize="22rem">
+      {(menuContainer) => (
+        <SidebarFrame height="18rem" contentLabel="">
+          <Sidebar collapseBelow="never" defaultCollapsed menuContainer={menuContainer} width="15rem">
+            <Sidebar.Content>
+              <Sidebar.Nav aria-label="Rail">
+                <Sidebar.Group label="Reports" icon={HouseIcon}>
+                  <Sidebar.Item href="#sales" onClick={(event) => event.preventDefault()}>
+                    Sales
+                  </Sidebar.Item>
+                </Sidebar.Group>
+              </Sidebar.Nav>
+            </Sidebar.Content>
+            <Sidebar.Footer>
+              <Sidebar.Account name="Rail John">
+                <Menu.Item>Profile</Menu.Item>
+              </Sidebar.Account>
+            </Sidebar.Footer>
+          </Sidebar>
+        </SidebarFrame>
+      )}
+    </SidebarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const root = canvasElement.querySelector<HTMLElement>("[data-variant]")!;
+    const body = within(document.body);
+    for (const name of [/Reports/, /Rail John/]) {
+      const trigger = within(root).getByRole("button", { name });
+      // the icon sits inside the rail's padding, so a menu measured from it alone would start over the rail's edge
+      expect(root.getBoundingClientRect().right - trigger.getBoundingClientRect().right).toBeGreaterThan(4);
+      await realClick(trigger);
+      const menu = await body.findByRole("menu");
+      await settled(menu);
+      expect(Math.abs(menu.getBoundingClientRect().left - (root.getBoundingClientRect().right + 4))).toBeLessThanOrEqual(1.5);
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => expect(body.queryByRole("menu")).not.toBeInTheDocument());
+    }
+  },
+};
+
+export const CountsStayInTheRail: Story = {
+  name: "A count over 99 reads 99+ in the rail, stays inside the rail's edge and off the label side, and a group's total shows only while it is shut",
+  render: () => (
+    <SidebarStage minBlockSize="26rem">
+      {(menuContainer) => (
+        <div style={{ display: "flex", gap: "1rem" }}>
+          {[true, false].map((collapsed) => (
+            <SidebarFrame key={String(collapsed)} height="22rem" contentLabel="">
+              <Sidebar collapseBelow="never" defaultCollapsed={collapsed} menuContainer={menuContainer} width="15rem">
+                <Sidebar.Content>
+                  <Sidebar.Nav aria-label={collapsed ? "Rail" : "Expanded"}>
+                    <Sidebar.Item href="#a" icon={HouseIcon} badge={12} onClick={(event) => event.preventDefault()}>
+                      Twelve
+                    </Sidebar.Item>
+                    <Sidebar.Item href="#b" icon={TrayIcon} badge={250} onClick={(event) => event.preventDefault()}>
+                      Many
+                    </Sidebar.Item>
+                    <Sidebar.Group label="Inbox" icon={BellIcon}>
+                      <Sidebar.Item href="#c" badge={3} onClick={(event) => event.preventDefault()}>
+                        Mentions
+                      </Sidebar.Item>
+                      <Sidebar.Item href="#d" badge={9} onClick={(event) => event.preventDefault()}>
+                        Assigned
+                      </Sidebar.Item>
+                    </Sidebar.Group>
+                  </Sidebar.Nav>
+                </Sidebar.Content>
+              </Sidebar>
+            </SidebarFrame>
+          ))}
+        </div>
+      )}
+    </SidebarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const [rail, expanded] = [...canvasElement.querySelectorAll<HTMLElement>("[data-variant]")] as [HTMLElement, HTMLElement];
+    const edge = rail.getBoundingClientRect().right;
+    const mark = (item: HTMLElement) => item.querySelector<HTMLElement>("[class*='railBadge']")!;
+    const twelve = mark(within(rail).getByRole("link", { name: /Twelve/ }));
+    const many = mark(within(rail).getByRole("link", { name: /Many/ }));
+    expect(many.textContent).toBe("99+");
+    // a two-digit count is a circle; the capped one is a wider pill, and both stay inside the rail's edge
+    expect(Math.abs(twelve.getBoundingClientRect().width - twelve.getBoundingClientRect().height)).toBeLessThanOrEqual(1);
+    expect(many.getBoundingClientRect().width).toBeGreaterThan(many.getBoundingClientRect().height);
+    expect(twelve.getBoundingClientRect().right).toBeLessThanOrEqual(edge);
+    expect(many.getBoundingClientRect().right).toBeLessThanOrEqual(edge);
+    // the group's total is on its icon in the rail
+    expect(mark(within(rail).getByRole("button", { name: /Inbox/ })).textContent).toBe("12");
+    // expanded: the shut group shows 12 after its label, and an open one does not
+    const group = within(expanded).getByRole("button", { name: /Inbox/ });
+    expect(group).toHaveTextContent("12");
+    expect(within(expanded).getByRole("link", { name: /Many/ })).toHaveTextContent("250");
+    await userEvent.click(group);
+    await waitFor(() => expect(group).not.toHaveTextContent("12"));
+  },
+};
+
+export const FloatingIsACard: Story = {
+  name: "A floating sidebar is set in by its margin with rounded corners, a line all round and a shadow, keeps the rail one item wide, and peeks as a card",
+  render: () => (
+    <SidebarStage minBlockSize="26rem">
+      {(menuContainer) => (
+        <div style={{ display: "flex", gap: "1rem" }}>
+          {[false, true].map((peek) => (
+            <SidebarFrame key={String(peek)} height="22rem" contentLabel="">
+              <DemoSidebar variant="floating" defaultCollapsed={peek} peek={peek} navLabel={peek ? "Floating rail" : "Floating card"} menuContainer={menuContainer} collapseBelow="never" />
+            </SidebarFrame>
+          ))}
+        </div>
+      )}
+    </SidebarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const [expanded, rail] = [...canvasElement.querySelectorAll<HTMLElement>("[data-variant]")] as [HTMLElement, HTMLElement];
+    const style = getComputedStyle(expanded);
+    const margin = tokenPx("--dbm-space-2");
+    expect(px(style.marginLeft)).toBeCloseTo(margin, 0);
+    expect(px(style.marginTop)).toBeCloseTo(margin, 0);
+    expect(px(style.borderRadius)).toBeGreaterThan(0);
+    for (const side of ["Top", "Right", "Bottom", "Left"] as const) {
+      expect(px(style[`border${side}Width`])).toBeGreaterThan(0);
+    }
+    expect(style.boxShadow).not.toBe("none");
+    // the rail's width is one item plus the padding round it, plus the line on both sides
+    const railWidth = rail.getBoundingClientRect().width;
+    const box = itemBox(steps.md.icon, steps.md.pad);
+    expect(Math.abs(railWidth - (box + 2 * tokenPx("--dbm-space-2") + 2))).toBeLessThanOrEqual(1.5);
+    // a peeking floating rail draws its card on a pseudo-element, so the box itself has no border or shadow
+    expect(getComputedStyle(rail).boxShadow).toBe("none");
+    const before = getComputedStyle(rail, "::before");
+    expect(px(before.borderTopWidth)).toBeGreaterThan(0);
+    expect(px(before.borderTopLeftRadius)).toBeGreaterThan(0);
+  },
+};
+
+export const SkeletonFillsTheRows: Story = {
+  name: "Skeleton rows are as tall as an item and as many as asked, the text lines differ in length, and the rail draws icons only inside its width",
+  render: () => (
+    <SidebarStage minBlockSize="26rem">
+      {(menuContainer) => (
+        <div style={{ display: "flex", gap: "1rem" }}>
+          {[false, true].map((collapsed) => (
+            <SidebarFrame key={String(collapsed)} height="22rem" contentLabel="">
+              <Sidebar collapseBelow="never" defaultCollapsed={collapsed} menuContainer={menuContainer} width="15rem">
+                <Sidebar.Content>
+                  <Sidebar.Nav aria-label={collapsed ? "Rail" : "Expanded"}>
+                    <Sidebar.Skeleton rows={5} />
+                  </Sidebar.Nav>
+                </Sidebar.Content>
+              </Sidebar>
+            </SidebarFrame>
+          ))}
+        </div>
+      )}
+    </SidebarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const [expanded, rail] = [...canvasElement.querySelectorAll<HTMLElement>("[data-variant]")] as [HTMLElement, HTMLElement];
+    const box = itemBox(steps.md.icon, steps.md.pad);
+    const rowsOf = (root: HTMLElement) => [...root.querySelectorAll<HTMLElement>("[class*='skeletonRow']:not([class*='skeletonRows'])")];
+    const wide = rowsOf(expanded);
+    expect(wide).toHaveLength(5);
+    for (const row of wide) expect(Math.abs(row.getBoundingClientRect().height - box)).toBeLessThanOrEqual(1);
+    const lines = wide.map((row) => row.querySelector<HTMLElement>("[class*='skeletonText']")!.getBoundingClientRect().width);
+    expect(new Set(lines.map((width) => Math.round(width))).size).toBeGreaterThan(2);
+    for (const row of wide) expect(row.querySelector<HTMLElement>("[class*='skeletonText']")!.getBoundingClientRect().right).toBeLessThanOrEqual(row.getBoundingClientRect().right);
+    const narrow = rowsOf(rail);
+    expect(narrow).toHaveLength(5);
+    for (const row of narrow) {
+      expect(row.querySelector("[class*='skeletonText']")).toBeNull();
+      expect(Math.abs(row.getBoundingClientRect().width - box)).toBeLessThanOrEqual(1);
+      expect(row.getBoundingClientRect().right).toBeLessThanOrEqual(rail.getBoundingClientRect().right);
+    }
+  },
+};
+
+export const FilterRecipeNarrows: Story = {
+  name: "Filter recipe: typing narrows the list, opens the groups with a match, announces the count, and clearing brings everything back",
+  render: () => (
+    <SidebarStage minBlockSize="28rem">
+      {(menuContainer) => (
+        <SidebarFrame height="24rem" contentLabel="">
+          <FilterableSidebar menuContainer={menuContainer} collapseBelow="never" width="16rem" />
+        </SidebarFrame>
+      )}
+    </SidebarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const box = canvas.getByRole("searchbox", { name: "Filter navigation" });
+    expect(canvas.getByRole("button", { name: "Projects" })).toHaveAttribute("aria-expanded", "false");
+    await userEvent.type(box, "arch");
+    // "Archived" is the one match, in a group that opens to show it; everything else is gone
+    await waitFor(() => expect(canvas.getByRole("link", { name: "Archived" })).toBeVisible());
+    expect(canvas.getByRole("button", { name: "Projects" })).toHaveAttribute("aria-expanded", "true");
+    expect(canvas.queryByRole("link", { name: "Home" })).not.toBeInTheDocument();
+    expect(canvas.queryByRole("button", { name: "Reports" })).not.toBeInTheDocument();
+    expect(canvas.getByRole("status")).toHaveTextContent("1 match");
+    await userEvent.clear(box);
+    await userEvent.type(box, "zzz");
+    await waitFor(() => expect(canvas.getByText(/Nothing matches/)).toBeVisible());
+    await userEvent.clear(box);
+    await waitFor(() => expect(canvas.getByRole("link", { name: "Home" })).toBeVisible());
+    expect(canvas.getByRole("button", { name: "Reports" })).toBeInTheDocument();
+    expect(canvas.getByRole("button", { name: "Projects" })).toHaveAttribute("aria-expanded", "false");
+  },
+};
+
+function RememberedFrame() {
+  const [collapsed, setCollapsed] = useRememberedCollapsed("dbm-sidebar-check-collapsed");
+  return (
+    <SidebarStage minBlockSize="24rem">
+      {(menuContainer) => (
+        <SidebarFrame height="20rem" contentLabel="">
+          <DemoSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} menuContainer={menuContainer} collapseBelow="never" />
+        </SidebarFrame>
+      )}
+    </SidebarStage>
+  );
+}
+
+export const RememberedCollapsedPersists: Story = {
+  name: "Remember recipe: a saved collapsed state is read back after the first render, and collapsing saves it",
+  render: () => <RememberedFrame />,
+  beforeEach: () => {
+    window.localStorage.setItem("dbm-sidebar-check-collapsed", "true");
+    return () => window.localStorage.removeItem("dbm-sidebar-check-collapsed");
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // it was saved as collapsed, so the sidebar is a rail once the saved value is read
+    await waitFor(() => expect(canvas.getByRole("button", { name: "Expand sidebar" })).toBeVisible());
+    await userEvent.click(canvas.getByRole("button", { name: "Expand sidebar" }));
+    await waitFor(() => expect(window.localStorage.getItem("dbm-sidebar-check-collapsed")).toBe("false"));
+    await waitFor(() => expect(canvas.getByRole("button", { name: "Collapse sidebar" })).toBeVisible());
   },
 };

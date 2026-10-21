@@ -12,6 +12,7 @@ import type {
 } from "./Sidebar.types";
 
 export const defaultLabels: SidebarLabels = {
+  loading: "Loading",
   navigation: "Main",
   collapse: "Collapse sidebar",
   expand: "Expand sidebar",

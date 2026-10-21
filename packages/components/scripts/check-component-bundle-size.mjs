@@ -75,7 +75,9 @@ const PER_COMPONENT_CSS_BUDGET_KB = 5;
 //   Sidebar (2026-10-19): the phone panel is a `Drawer` and a group in the rail opens a `Menu`, an item's text in the rail is a
 //   `Tooltip`, and a group opens with `Collapse`, so its bundle holds those four and their stylesheets plus the `Badge`, `Icon` and
 //   `IconButton` it draws with, 16.80KB measured (the same parts as `Navbar`'s 19.50KB, less its search sheet and rows).
-const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DataTable: 26, DatePicker: 18, Navbar: 22, Sidebar: 20, TimeRangePicker: 12, Toolbar: 12 };
+//   Sidebar (2026-10-21): shared group and section state, `peek`, the account part, group counts, the skeleton (the `Skeleton` atom) and the
+//   rail flyout's measured offset, 20.70KB measured; the budget is 22KB, the same as `Navbar`'s.
+const JS_BUDGET_OVERRIDES_KB = { Calendar: 12, DataTable: 26, DatePicker: 18, Navbar: 22, Sidebar: 22, TimeRangePicker: 12, Toolbar: 12 };
 
 // The same for CSS. `DataTable`'s bundle holds the stylesheets of the `Table`, `TableToolbar`, `Pagination`, `Select`,
 // `Checkbox` and `Menu` parts it draws with (6.30KB measured against 3.45KB for `TableToolbar`, the largest of them), plus its own; 8.10KB

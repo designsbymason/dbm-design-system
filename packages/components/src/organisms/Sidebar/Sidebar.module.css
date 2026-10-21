@@ -83,6 +83,22 @@
   background-color: transparent;
 }
 
+/* `floating`: an inset card. The surface is set in from the page's edges by a margin, with rounded corners, a line all round and a soft shadow. The
+   line is on both sides now, so the rail allows for two of it. */
+.floating {
+  --sidebar-line: calc(2 * var(--dbm-border-width-1));
+
+  margin: var(--dbm-space-2);
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-lg);
+  box-shadow: var(--dbm-shadow-light-sm);
+}
+
+[data-theme$="-dark"] .floating {
+  box-shadow: var(--dbm-shadow-dark-sm);
+}
+
 /* `sticky`: the column sticks below the offset (the height of a sticky `Navbar`) and takes the rest of the window, so its content scrolls
    on its own inside it instead of with the page. */
 .sticky {
@@ -90,6 +106,12 @@
   inset-block-start: var(--sidebar-sticky-offset, 0px);
   align-self: flex-start;
   block-size: calc(100dvh - var(--sidebar-sticky-offset, 0px));
+}
+
+/* A floating card keeps its margin all round, so a sticky one sticks that far below the offset and gives up that much height. */
+.sticky.floating {
+  inset-block-start: calc(var(--sidebar-sticky-offset, 0px) + var(--dbm-space-2));
+  block-size: calc(100dvh - var(--sidebar-sticky-offset, 0px) - 2 * var(--dbm-space-2));
 }
 
 /* --- Header, content and footer --- */
@@ -357,6 +379,12 @@
   padding-inline: calc(var(--dbm-space-1) / 2);
 }
 
+/* A count wider than a circle (a word, or "99+") is set further out over the icon's corner, so it covers less of the icon. It still stops short
+   of the rail's edge by half of `space.1`. */
+.item .railBadgeWide {
+  inset-inline-end: calc(-1 * (var(--dbm-space-2) - var(--dbm-space-1) / 2));
+}
+
 /* --- A control at the end of a row (`action`) ---
    A sibling of the link, never inside it, drawn over the row's end, which the link leaves room for. It is shown while the row is hovered or
    anything in it has focus (and while a menu it opened is open), always on a screen with no hover, and in the phone panel. It stays
@@ -601,6 +629,38 @@ button.toggleBox {
   white-space: nowrap;
 }
 
+/* --- `Sidebar.Skeleton`: a placeholder for navigation that is still loading ---
+   Rows the height of an item, each an icon and a line of text. The rows are the `Skeleton` atom, so they pulse (and stop for reduced motion). */
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.skeletonRows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbm-space-1);
+}
+
+.skeletonRow {
+  display: flex;
+  align-items: center;
+  gap: var(--dbm-space-3);
+  box-sizing: border-box;
+  min-block-size: var(--sidebar-item-box);
+  padding: var(--sidebar-pad);
+}
+
+.skeletonIcon {
+  flex: none;
+}
+
+.skeletonText {
+  flex: none;
+  max-inline-size: 100%;
+}
+
 /* --- `peek`: a rail that opens over the page ---
    The rail keeps its width in the page, so nothing beside it moves. Its surface (the fill and the line) is drawn by a pseudo-element, which is
    as wide as the rail at rest and as wide as the sidebar while it peeks, with a shadow; what is inside is drawn at the sidebar's width over it.
@@ -614,9 +674,11 @@ button.toggleBox {
 }
 
 .peekable.outlined,
-.peekable.filled {
+.peekable.filled,
+.peekable.floating {
   background-color: transparent;
   border: 0;
+  box-shadow: none;
 }
 
 .peekable::before {
@@ -636,8 +698,19 @@ button.toggleBox {
 }
 
 .peekable.outlined::before,
-.peekable.filled::before {
+.peekable.filled::before,
+.peekable.floating::before {
   background-color: var(--dbm-bg-surface);
+}
+
+.peekable.floating::before {
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-lg);
+  box-shadow: var(--dbm-shadow-light-sm);
+}
+
+[data-theme$="-dark"] .peekable.floating::before {
+  box-shadow: var(--dbm-shadow-dark-sm);
 }
 
 .peekable.outlined::before {
@@ -653,12 +726,14 @@ button.toggleBox {
   z-index: var(--dbm-z-index-sticky);
 }
 
-.peeking::before {
+.peeking::before,
+.peekable.floating.peeking::before {
   inline-size: var(--sidebar-width, var(--dbm-sidebar-width));
   box-shadow: var(--dbm-shadow-light-lg);
 }
 
-[data-theme$="-dark"] .peeking::before {
+[data-theme$="-dark"] .peeking::before,
+[data-theme$="-dark"] .peekable.floating.peeking::before {
   box-shadow: var(--dbm-shadow-dark-lg);
 }
 

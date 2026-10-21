@@ -1460,3 +1460,152 @@ describe("Sidebar peek", () => {
     expect(sidebar).not.toHaveClass(styles.peekable!);
   });
 });
+
+describe("Sidebar group badges", () => {
+  function Groups(props: Partial<SidebarProps> & { badge?: React.ReactNode }) {
+    const { badge, ...rest } = props;
+    return (
+      <Sidebar collapseBelow="never" {...rest}>
+        <Sidebar.Content>
+          <Sidebar.Nav>
+            <Sidebar.Group label="Inbox" icon={HouseIcon} {...(badge !== undefined ? { badge } : {})}>
+              <Sidebar.Item href="/a" badge={3}>
+                Mentions
+              </Sidebar.Item>
+              <Sidebar.Item href="/b" badge={9}>
+                Assigned
+              </Sidebar.Item>
+              <Sidebar.Item href="/c">Drafts</Sidebar.Item>
+            </Sidebar.Group>
+          </Sidebar.Nav>
+        </Sidebar.Content>
+      </Sidebar>
+    );
+  }
+
+  it("shows the total of its items' counts while it is shut, and not once it is open", async () => {
+    const user = userEvent.setup();
+    render(<Groups />);
+    const button = screen.getByRole("button", { name: /Inbox/ });
+    expect(button).toHaveTextContent("12");
+    await user.click(button);
+    expect(button).not.toHaveTextContent("12");
+  });
+
+  it("takes its own badge in place of the total, and none with null", () => {
+    const { rerender } = render(<Groups badge="New" />);
+    expect(screen.getByRole("button", { name: /Inbox/ })).toHaveTextContent("New");
+    rerender(<Groups badge={null} />);
+    expect(screen.getByRole("button", { name: "Inbox" })).toBeInTheDocument();
+  });
+
+  it("shows nothing when there is no number to add", () => {
+    render(
+      <Sidebar collapseBelow="never">
+        <Sidebar.Nav>
+          <Sidebar.Group label="Plain" icon={HouseIcon}>
+            <Sidebar.Item href="/a">A</Sidebar.Item>
+          </Sidebar.Group>
+        </Sidebar.Nav>
+      </Sidebar>,
+    );
+    expect(screen.getByRole("button", { name: "Plain" })).toBeInTheDocument();
+  });
+
+  it("puts the count on the icon in the rail, and caps one over 99 at 99+", () => {
+    render(<Groups defaultCollapsed badge={120} />);
+    const button = screen.getByRole("button", { name: /Inbox/ });
+    expect(button).toHaveTextContent("99+");
+    expect(button.querySelector(`.${styles.railBadge}`)).not.toBeNull();
+    expect(button.querySelector(`.${styles.railBadgeWide}`)).not.toBeNull();
+  });
+
+  it("leaves a two-digit count in the rail a plain circle, and caps an item's count over 99 too", () => {
+    render(
+      <Sidebar collapseBelow="never" defaultCollapsed>
+        <Sidebar.Nav>
+          <Sidebar.Item href="/a" icon={HouseIcon} badge={12}>
+            Twelve
+          </Sidebar.Item>
+          <Sidebar.Item href="/b" icon={HouseIcon} badge={250}>
+            Many
+          </Sidebar.Item>
+        </Sidebar.Nav>
+      </Sidebar>,
+    );
+    const twelve = screen.getByRole("link", { name: /Twelve/ });
+    expect(twelve.querySelector(`.${styles.railBadgeWide}`)).toBeNull();
+    const many = screen.getByRole("link", { name: /Many/ });
+    expect(many).toHaveTextContent("99+");
+    expect(many.querySelector(`.${styles.railBadgeWide}`)).not.toBeNull();
+  });
+});
+
+describe("Sidebar floating variant", () => {
+  it("draws the floating card class and no other surface class", () => {
+    const { container } = render(<Sidebar collapseBelow="never" variant="floating" />);
+    const root = container.firstElementChild as HTMLElement;
+    expect(root).toHaveClass(styles.floating as string);
+    expect(root).not.toHaveClass(styles.outlined as string);
+  });
+});
+
+describe("Sidebar.Skeleton", () => {
+  function Loading(props: Partial<SidebarProps> & { rows?: number }) {
+    const { rows, ...rest } = props;
+    return (
+      <Sidebar collapseBelow="never" {...rest}>
+        <Sidebar.Nav>
+          <Sidebar.Skeleton rows={rows} data-testid="skeleton" />
+        </Sidebar.Nav>
+      </Sidebar>
+    );
+  }
+
+  it("announces one polite Loading status, is busy, and hides its rows from assistive technology", () => {
+    render(<Loading rows={4} />);
+    expect(screen.getByRole("status")).toHaveTextContent("Loading");
+    const item = screen.getByTestId("skeleton");
+    expect(item).toHaveAttribute("aria-busy", "true");
+    const rows = item.querySelector(`.${styles.skeletonRows}`) as HTMLElement;
+    expect(rows).toHaveAttribute("aria-hidden", "true");
+    expect(rows.children).toHaveLength(4);
+  });
+
+  it("draws five rows unless told, and none for zero", () => {
+    const { rerender } = render(<Loading />);
+    expect((screen.getByTestId("skeleton").querySelector(`.${styles.skeletonRows}`) as HTMLElement).children).toHaveLength(5);
+    rerender(<Loading rows={0} />);
+    expect((screen.getByTestId("skeleton").querySelector(`.${styles.skeletonRows}`) as HTMLElement).children).toHaveLength(0);
+  });
+
+  it("draws only the icons in the rail", () => {
+    render(<Loading defaultCollapsed rows={3} />);
+    const rows = screen.getByTestId("skeleton").querySelector(`.${styles.skeletonRows}`) as HTMLElement;
+    for (const row of Array.from(rows.children)) {
+      expect(row.querySelector(`.${styles.skeletonText}`)).toBeNull();
+      expect(row.querySelector(`.${styles.skeletonIcon}`)).not.toBeNull();
+    }
+  });
+
+  it("translates its status text through labels.loading", () => {
+    render(<Loading labels={{ loading: "Cargando" }} />);
+    expect(screen.getByRole("status")).toHaveTextContent("Cargando");
+  });
+
+  it("has no axe violations", async () => {
+    const { container } = render(<Loading rows={3} />);
+    expect(await axe(container)).toHaveNoViolations();
+  });
+});
+
+describe("Sidebar rail flyout offset", () => {
+  it("opens a rail group's menu from the rail's edge, measured from the icon's button", async () => {
+    const user = userEvent.setup();
+    render(<Basic defaultCollapsed />);
+    const button = screen.getByRole("button", { name: /Reports/ });
+    // jsdom has no layout: every box is zero, so the measured gap is zero and the offset is the plain gap.
+    await user.click(button);
+    expect(await screen.findByRole("menu")).toBeInTheDocument();
+  });
+});

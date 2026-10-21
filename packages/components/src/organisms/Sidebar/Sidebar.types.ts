@@ -13,10 +13,11 @@ export type SidebarSize = "xs" | "sm" | "md" | "lg";
 
 /**
  * How the sidebar itself is drawn: `outlined` (a surface with a line along its inner edge), `filled` (the same surface with no
- * line) or `ghost` (nothing of its own, the items sit on the page). The names `Card`, `EmptyState` and `Navbar` use for their
+ * line), `ghost` (nothing of its own, the items sit on the page) or `floating` (an inset card: the surface set in from the page's edges, with
+ * rounded corners, a line all round and a soft shadow). The first three are the names `Card`, `EmptyState` and `Navbar` use for their
  * `variant`.
  */
-export type SidebarVariant = "outlined" | "filled" | "ghost";
+export type SidebarVariant = "outlined" | "filled" | "ghost" | "floating";
 
 /**
  * How the current page's item (and a group that holds it) is marked, beyond `aria-current="page"`, which is always set:
@@ -48,6 +49,8 @@ export type SidebarMenuChangeDetails = DrawerOpenChangeDetails;
 
 /** The text `Sidebar` supplies itself, translatable through the `labels` prop. Nothing here needs a number. */
 export interface SidebarLabels {
+  /** The visually hidden text a `Sidebar.Skeleton` announces while the navigation loads. @default 'Loading' */
+  loading: string;
   /** The accessible name of a `Sidebar.Nav` that is given no other. @default 'Main' */
   navigation: string;
   /** The accessible name of the collapse button while the sidebar is expanded. @default 'Collapse sidebar' */
@@ -122,7 +125,8 @@ export interface SidebarProps extends SidebarStateProps, Omit<ComponentPropsWith
    */
   children?: ReactNode;
   /**
-   * How the sidebar itself is drawn: a surface with a line along its inner edge, the same surface with no line, or nothing of its own.
+   * How the sidebar itself is drawn: a surface with a line along its inner edge, the same surface with no line, nothing of its own, or a
+   * floating card set in from the page's edges with rounded corners and a shadow.
    * @default 'outlined'
    */
   variant?: SidebarVariant;
@@ -392,6 +396,12 @@ export interface SidebarGroupProps extends Omit<ComponentPropsWithoutRef<"button
   children?: ReactNode;
   /** An icon before the label. It is all the rail shows, so give every top-level group one. */
   icon?: PhosphorIcon;
+  /**
+   * A badge for the group, shown while its items are out of sight: after the label while the group is shut, and on the icon in the rail, where
+   * its items are in a flyout. Anything `Sidebar.Item`'s `badge` takes. Left out, it is the sum of the numeric `badge`s of the items written inside
+   * it (none, when there is no number among them), so a group of inboxes shows the unread total; `null` shows nothing.
+   */
+  badge?: ReactNode;
   /** A control drawn at the end of the group's button, outside it, such as an "add" `IconButton`: as `Sidebar.Item`'s `action`. Not drawn in the rail. */
   action?: ReactNode;
   /**
@@ -433,6 +443,30 @@ export interface SidebarGroupProps extends Omit<ComponentPropsWithoutRef<"button
 }
 
 export interface SidebarSeparatorProps extends Omit<HTMLAttributes<HTMLLIElement>, "children"> {
+  /** Standard DOM id. */
+  id?: string;
+  /** Additional CSS classes for customization. */
+  className?: string;
+  /** Inline styles, merged onto the component's own internal styles. */
+  style?: CSSProperties;
+  /**
+   * Test identifier for automated testing (e.g. Testing Library's `getByTestId`, Playwright/Cypress selectors).
+   * Rendered as the DOM `data-testid` attribute; has no visual or behavioral effect.
+   */
+  "data-testid"?: string;
+}
+
+export interface SidebarSkeletonProps extends Omit<HTMLAttributes<HTMLLIElement>, "children"> {
+  /**
+   * How many placeholder rows to draw. Each is the height of an item, with an icon and a line of text whose width varies from row to row.
+   * @default 5
+   */
+  rows?: number;
+  /**
+   * Whether the placeholder is pulsing. Turn it off for a dense screen with many loading regions; the reduced-motion preference turns it off anyway.
+   * @default true
+   */
+  animated?: boolean;
   /** Standard DOM id. */
   id?: string;
   /** Additional CSS classes for customization. */

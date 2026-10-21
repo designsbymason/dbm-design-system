@@ -16,6 +16,7 @@ import { ButtonGroupProvider, useButtonGroup } from "../../atoms/Button/buttonGr
 import type { BadgeProps } from "../../atoms/Badge";
 import { Collapse } from "../../atoms/Collapse";
 import { Icon } from "../../atoms/Icon";
+import { Skeleton } from "../../atoms/Skeleton";
 import { IconButton } from "../../atoms/IconButton";
 import { Tooltip } from "../../atoms/Tooltip";
 import type { TooltipSide } from "../../atoms/Tooltip";
@@ -23,7 +24,7 @@ import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Drawer } from "../Drawer";
 import { Menu } from "../Menu";
 import styles from "./Sidebar.module.css";
-import { holdsPath, matchesPath } from "./Sidebar.paths";
+import { holdsPath, matchesPath, rolledUpCount } from "./Sidebar.paths";
 import {
   SidebarContext,
   SidebarGroupKeyContext,
@@ -53,6 +54,7 @@ import type {
   SidebarSectionProps,
   SidebarSeparatorProps,
   SidebarSize,
+  SidebarSkeletonProps,
   SidebarToggleProps,
 } from "./Sidebar.types";
 import { useSidebarState } from "./useSidebarState";
@@ -145,6 +147,66 @@ function useBecameCurrent(current: boolean): boolean {
 function useOutwardSide(): Extract<TooltipSide, "left" | "right"> {
   const { side, dir } = useSidebarContext("Sidebar");
   return (side === "start") === (dir === "ltr") ? "right" : "left";
+}
+
+/** The gap, in pixels, between a rail's edge and the flyout or menu that opens beside it: `Menu`'s own default, which a flyout measures from the rail and not from the icon. */
+const FLYOUT_GAP = 4;
+
+/** The most a rail's count shows before it reads "99+": three digits would be a wider mark than the rail has room for beside the icon. */
+const RAIL_COUNT_MAX = 99;
+
+/**
+ * What a rail's flyout needs to open from the rail's own edge and not from the icon's: a ref for the button that opens it, the offset to give the
+ * panel (the distance from the button to the rail's edge, plus the usual gap) and a function that measures it. The icon sits inside the rail's
+ * padding, so an offset taken from the button alone would put the panel over the rail's edge; measuring (when it opens) keeps it right at every
+ * size, and in a right-to-left or end-side sidebar, without a number of pixels written here.
+ */
+function useRailFlyoutOffset() {
+  const side = useOutwardSide();
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const [offset, setOffset] = useState(FLYOUT_GAP);
+  const measure = useCallback(() => {
+    const trigger = triggerRef.current;
+    const root = trigger?.closest<HTMLElement>(`.${styles.root}`);
+    if (!trigger || !root) return;
+    const button = trigger.getBoundingClientRect();
+    const rail = root.getBoundingClientRect();
+    const inset = side === "right" ? rail.right - button.right : button.left - rail.left;
+    setOffset(Math.max(0, Math.round(inset)) + FLYOUT_GAP);
+  }, [side]);
+  return { triggerRef, offset, measure };
+}
+
+/** Whether a count's text, once capped by `max`, is wider than two characters, so the rail's mark has to be a pill and not a circle. */
+function isWideCount(content: ReactNode, max: number | undefined): boolean {
+  if (typeof content === "number") return (max !== undefined && content > max ? `${max}+` : String(content)).length > 2;
+  return typeof content === "string" && content.length > 2;
+}
+
+/**
+ * The badge of an item or a group. A `Badge` passed as the badge is drawn as written (its tone, variant, `max`…), with the sidebar's size filled
+ * in where it didn't say; anything else is the content of the sidebar's own badge (solid, brand; subtle on a current item drawn as a brand fill,
+ * where a solid brand pill would vanish), so a pill is never inside a pill. In the rail a number over 99 reads "99+", and a mark wider than a
+ * circle is set further out over the icon's corner so it does not cover the icon.
+ */
+function renderBadge(badge: ReactNode, rail: boolean, onSolidFill: boolean): ReactNode {
+  if (badge === undefined || badge === null) return null;
+  const own = isValidElement(badge) && badge.type === Badge;
+  const props = own ? (badge as ReactElement<BadgeProps>).props : undefined;
+  const max = own ? props?.max : rail && typeof badge === "number" ? RAIL_COUNT_MAX : undefined;
+  const wide = rail && isWideCount(own ? props?.children : badge, max);
+  const className = cx(rail ? styles.railBadge : styles.badge, wide && styles.railBadgeWide);
+  if (own) {
+    return cloneElement(badge as ReactElement<BadgeProps>, {
+      size: props?.size ?? "xs",
+      className: cx(className, props?.className),
+    });
+  }
+  return (
+    <Badge tone="brand" variant={onSolidFill ? "subtle" : "solid"} size="xs" max={max} className={className}>
+      {badge}
+    </Badge>
+  );
 }
 
 /**
@@ -345,6 +407,7 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
         resolvedLabels.menu,
         resolvedLabels.close,
         resolvedLabels.externalLink,
+        resolvedLabels.loading,
         menuButtonRef,
       ],
     );
@@ -438,6 +501,7 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
               variant === "outlined" && styles.outlined,
               variant === "filled" && styles.filled,
               variant === "ghost" && styles.ghost,
+              variant === "floating" && styles.floating,
               railed && styles.rail,
               peek && state.collapsed && styles.peekable,
               peekOpen && styles.peeking,
@@ -504,6 +568,7 @@ function SidebarProvider({ children, collapseBelow = "md", labels, ...stateProps
       resolvedLabels.menu,
       resolvedLabels.close,
       resolvedLabels.externalLink,
+      resolvedLabels.loading,
       menuButtonRef,
     ],
   );
@@ -619,6 +684,34 @@ const SidebarSeparator = forwardRef<HTMLLIElement, SidebarSeparatorProps>(({ cla
 ));
 SidebarSeparator.displayName = "Sidebar.Separator";
 
+const SKELETON_WIDTHS = ["72%", "56%", "84%", "64%", "48%"];
+
+/**
+ * A placeholder for navigation that is still loading: rows the height of an item, each an icon and a line of text of a different length, that
+ * pulse. It goes where the items will, inside a `Sidebar.Nav` or a `Sidebar.Section`, and is replaced by them when they arrive. It is hidden from
+ * assistive technology except for one polite "Loading" status (the `loading` label), and is busy. In the rail only the icons are drawn.
+ */
+const SidebarSkeleton = forwardRef<HTMLLIElement, SidebarSkeletonProps>(({ rows = 5, animated = true, className, ...props }, ref) => {
+  const { railed } = useSidebarContext("Sidebar.Skeleton");
+  const { labels } = useSidebarStateContext("Sidebar.Skeleton");
+  const animation = animated ? "pulse" : "none";
+  return (
+    // eslint-disable-next-line jsx-a11y/no-redundant-roles
+    <li {...props} ref={ref} role="listitem" aria-busy="true" className={cx(styles.skeleton, className)}>
+      <VisuallyHidden role="status">{labels.loading}</VisuallyHidden>
+      <div aria-hidden="true" className={styles.skeletonRows}>
+        {Array.from({ length: Math.max(0, Math.floor(rows)) }, (_, index) => (
+          <div key={index} className={cx(styles.skeletonRow, railed && styles.railItem)}>
+            <Skeleton variant="circular" width="var(--sidebar-icon)" height="var(--sidebar-icon)" animation={animation} className={styles.skeletonIcon} />
+            {!railed && <Skeleton variant="text" width={SKELETON_WIDTHS[index % SKELETON_WIDTHS.length]} animation={animation} className={styles.skeletonText} />}
+          </div>
+        ))}
+      </div>
+    </li>
+  );
+});
+SidebarSkeleton.displayName = "Sidebar.Skeleton";
+
 /**
  * One item of the navigation: a link (`href`), or a button when it has none. `current` marks the page the reader is on
  * (`aria-current="page"`); `disabled` blocks the click and keeps the item in the tab order, as `Link` does; `asChild` puts the look on a
@@ -703,25 +796,7 @@ const SidebarItem = forwardRef<HTMLElement, SidebarItemProps>(
       </span>
     ) : null;
 
-    const badgeNode =
-      badge !== undefined && badge !== null ? (
-        // A `Badge` passed as the badge is drawn as written (its tone, variant, `max`…), with the item's size filled in where it didn't say;
-        // anything else is the content of the item's own badge (solid, brand; subtle on a current item drawn as a brand fill, where a solid
-        // brand pill would vanish), so a pill is never inside a pill.
-        isValidElement(badge) && badge.type === Badge ? (
-          cloneElement(badge as ReactElement<BadgeProps>, {
-            size: (badge as ReactElement<BadgeProps>).props.size ?? "xs",
-            className: cx(rail ? styles.railBadge : styles.badge, (badge as ReactElement<BadgeProps>).props.className),
-          })
-        ) : (
-          <Badge
-            tone="brand"
-            variant={current && currentVariant === "solid" ? "subtle" : "solid"}
-            size="xs" className={rail ? styles.railBadge : styles.badge}>
-            {badge}
-          </Badge>
-        )
-      ) : null;
+    const badgeNode = renderBadge(badge, rail, current && currentVariant === "solid");
 
     const itemClass = cx(
       !inMenu && styles.item,
@@ -826,6 +901,7 @@ const SidebarGroup = forwardRef<HTMLButtonElement, SidebarGroupProps>(
     {
       label,
       icon,
+      badge,
       action,
       value,
       current: currentProp,
@@ -863,6 +939,11 @@ const SidebarGroup = forwardRef<HTMLButtonElement, SidebarGroupProps>(
     const closeThisFlyout = useCallback(() => setFlyoutOpen(false), []);
     const { setLabel, open: tipOpen, onOpenChange: onTipOpenChange } = useTruncationTooltip(!railed && closeFlyout === null && typeof label === "string");
     const hasAction = action !== undefined && action !== null && !railed && closeFlyout === null;
+    const flyout = useRailFlyoutOffset();
+    const buttonRef = useMemo(() => mergeRefs(ref, flyout.triggerRef), [ref, flyout.triggerRef]);
+    // The group's own badge, else the total of its items' counts (none when there is no number to add or the total is nothing).
+    const rolledUp = badge === undefined ? rolledUpCount(children) : undefined;
+    const shownBadge = badge !== undefined ? badge : rolledUp ? rolledUp : null;
 
     useEffect(() => {
       if (process.env.NODE_ENV === "production") return;
@@ -913,16 +994,24 @@ const SidebarGroup = forwardRef<HTMLButtonElement, SidebarGroupProps>(
       return (
         // eslint-disable-next-line jsx-a11y/no-redundant-roles
         <li role="listitem" className={styles.listItem}>
-          <Menu dir={dir} open={flyoutOpen} onOpenChange={setFlyoutOpen}>
+          <Menu
+            dir={dir}
+            open={flyoutOpen}
+            onOpenChange={(next) => {
+              if (next) flyout.measure();
+              setFlyoutOpen(next);
+            }}
+          >
             <Tooltip content={label} side={tooltipSide}>
               <Menu.Trigger asChild disabled={disabled}>
-                <button {...props} ref={ref} type="button" disabled={disabled} className={buttonClass(current)}>
+                <button {...props} ref={buttonRef} type="button" disabled={disabled} className={buttonClass(current)}>
                   {iconNode}
                   <span className={cx(styles.label, styles.hiddenText)}>{label}</span>
+                  {renderBadge(shownBadge, true, false)}
                 </button>
               </Menu.Trigger>
             </Tooltip>
-            <Menu.Content side={tooltipSide} align="start" container={menuContainer}>
+            <Menu.Content side={tooltipSide} align="start" sideOffset={flyout.offset} container={menuContainer}>
               <Menu.Label>{label}</Menu.Label>
               <SidebarMenuContext.Provider value={closeThisFlyout}>
                 <SidebarLevelContext.Provider value={level + 1}>{children}</SidebarLevelContext.Provider>
@@ -961,6 +1050,7 @@ const SidebarGroup = forwardRef<HTMLButtonElement, SidebarGroupProps>(
             <span ref={setLabel} className={styles.label}>
               {label}
             </span>
+            {!open && renderBadge(shownBadge, false, current && currentVariant === "solid")}
             <Icon icon={CaretDownIcon} size={externalIconSizeFor[size]} className={styles.caret} />
           </button>
         </Tooltip>
@@ -990,8 +1080,10 @@ const SidebarAccount = forwardRef<HTMLButtonElement, SidebarAccountProps>(
     const { railed, dir, menuContainer } = useSidebarContext("Sidebar.Account");
     const outward = useOutwardSide();
     const [menuOpen, setMenuOpen] = useState(false);
+    const flyout = useRailFlyoutOffset();
+    const buttonRef = useMemo(() => mergeRefs(ref, flyout.triggerRef), [ref, flyout.triggerRef]);
     const button = (
-      <button {...props} ref={ref} type="button" className={cx(styles.item, styles.account, railed && styles.railItem, className)}>
+      <button {...props} ref={buttonRef} type="button" className={cx(styles.item, styles.account, railed && styles.railItem, className)}>
         <span className={styles.accountAvatar}>{avatar ?? <Avatar name={name} src={src} size="xs" />}</span>
         <span className={cx(styles.accountText, railed && styles.hiddenText)}>
           <span className={styles.accountName}>{name}</span>
@@ -1011,9 +1103,21 @@ const SidebarAccount = forwardRef<HTMLButtonElement, SidebarAccountProps>(
       );
     if (children === undefined || children === null) return withTooltip(button);
     return (
-      <Menu dir={dir} open={menuOpen} onOpenChange={setMenuOpen}>
+      <Menu
+        dir={dir}
+        open={menuOpen}
+        onOpenChange={(next) => {
+          if (next) flyout.measure();
+          setMenuOpen(next);
+        }}
+      >
         {withTooltip(<Menu.Trigger asChild>{button}</Menu.Trigger>)}
-        <Menu.Content side={menuSide ?? (railed ? outward : "top")} align="start" container={menuContainer}>
+        <Menu.Content
+          side={menuSide ?? (railed ? outward : "top")}
+          align="start"
+          sideOffset={menuSide === undefined && railed ? flyout.offset : undefined}
+          container={menuContainer}
+        >
           <SidebarMenuContext.Provider value={() => setMenuOpen(false)}>{children}</SidebarMenuContext.Provider>
         </Menu.Content>
       </Menu>
@@ -1109,6 +1213,7 @@ type SidebarComponent = typeof SidebarRoot & {
   Group: typeof SidebarGroup;
   Account: typeof SidebarAccount;
   Separator: typeof SidebarSeparator;
+  Skeleton: typeof SidebarSkeleton;
   Toggle: typeof SidebarToggle;
   MenuButton: typeof SidebarMenuButton;
 };
@@ -1124,6 +1229,7 @@ export const Sidebar: SidebarComponent = Object.assign(SidebarRoot, {
   Group: SidebarGroup,
   Account: SidebarAccount,
   Separator: SidebarSeparator,
+  Skeleton: SidebarSkeleton,
   Toggle: SidebarToggle,
   MenuButton: SidebarMenuButton,
 });

@@ -11,6 +11,11 @@ const meta: Meta<typeof Sidebar.Group> = {
     label: { control: "text", description: "The group's text, on the button that opens it. In the rail it is the title of the flyout and the button's tooltip." },
     children: { control: false, description: "The group's Sidebar.Items, and Sidebar.Groups nested in it (up to three levels)." },
     icon: { control: false, description: "An icon before the label. It is all the rail shows, so give every top-level group one." },
+    badge: {
+      control: false,
+      description:
+        "A badge for the group, shown while its items are out of sight: after the label while the group is shut, and on the icon in the rail. Anything Sidebar.Item's badge takes. Left out, it is the sum of the numeric badges of the items written inside it (none when there is no number among them); null shows nothing.",
+    },
     action: {
       control: false,
       description: "A control drawn at the end of the group's button, outside it, such as an add IconButton: as Sidebar.Item's action. Not drawn in the rail.",

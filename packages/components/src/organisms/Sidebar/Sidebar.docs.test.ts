@@ -63,6 +63,7 @@ const parts: Array<[string, string, string]> = [
   ["SidebarGroupProps", "groupPropOrder", "SidebarGroup.stories.tsx"],
   ["SidebarAccountProps", "accountPropOrder", "SidebarAccount.stories.tsx"],
   ["SidebarSeparatorProps", "separatorPropOrder", "SidebarSeparator.stories.tsx"],
+  ["SidebarSkeletonProps", "skeletonPropOrder", "SidebarSkeleton.stories.tsx"],
   ["SidebarToggleProps", "togglePropOrder", "SidebarToggle.stories.tsx"],
   ["SidebarMenuButtonProps", "menuButtonPropOrder", "SidebarMenuButton.stories.tsx"],
 ];

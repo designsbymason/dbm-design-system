@@ -97,8 +97,9 @@ ${demoBody(options)}
 </Sidebar>`;
 
 export const sidebarSnippets = {
-  variants: `{/* variant: "outlined" (default) | "filled" | "ghost". outlined draws a line along the edge the sidebar does not sit against;
-    filled is the same surface with no line; ghost has nothing of its own, so the items sit on the page. */}
+  variants: `{/* variant: "outlined" (default) | "filled" | "ghost" | "floating". outlined draws a line along the edge the sidebar does not sit against;
+    filled is the same surface with no line; ghost has nothing of its own, so the items sit on the page; floating is an inset card, set in from the
+    page's edges with rounded corners, a line all round and a soft shadow. */}
 ${sidebar('variant="filled"')}`,
 
   sizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" sets the height of an item, its icon and its text. The collapsed rail is one item wide. */}
@@ -261,10 +262,10 @@ ${sidebar("defaultCollapsed peek")}`,
     button (right for a footer); give "bottom" for one in the header. Give avatar your own (a logo) or leave it for one made from name and src. */}
 <Sidebar>
   <Sidebar.Header>
-    <Sidebar.Account name="Acme Inc" description="Workspace · Pro plan" menuSide="bottom" avatar={<Avatar name="Acme" shape="square" colorful size="xs" />}>
+    <Sidebar.Account name="dbM" description="Workspace · Pro plan" menuSide="bottom" avatar={<Avatar name="dbM" shape="square" colorful size="xs" />}>
       <Menu.Label>Workspaces</Menu.Label>
-      <Menu.Item>Acme Inc</Menu.Item>
-      <Menu.Item>Acme Labs</Menu.Item>
+      <Menu.Item>dbM</Menu.Item>
+      <Menu.Item>dbM System</Menu.Item>
       <Menu.Separator />
       <Menu.Item icon={PlusIcon}>New workspace</Menu.Item>
     </Sidebar.Account>
@@ -297,6 +298,94 @@ ${sidebar("defaultCollapsed peek")}`,
         <Sidebar.Item href="/settings/profile">Profile</Sidebar.Item>
       </Sidebar.Group>
     </Sidebar.Nav>
+  </Sidebar.Content>
+</Sidebar>`,
+
+  groupBadges: `{/* A group shows a badge while its items are out of sight: after its label while it is shut, and on its icon in the rail. Left out, it is the
+    total of its items' numeric badges; badge={120} sets it, badge={null} shows none. In the rail a number over 99 reads "99+". */}
+<Sidebar.Nav>
+  <Sidebar.Group label="Inbox" icon={TrayIcon}>
+    <Sidebar.Item href="/inbox/mentions" badge={3}>Mentions</Sidebar.Item>
+    <Sidebar.Item href="/inbox/assigned" badge={9}>Assigned</Sidebar.Item>
+    <Sidebar.Item href="/inbox/drafts">Drafts</Sidebar.Item>
+  </Sidebar.Group>
+  <Sidebar.Group label="Alerts" icon={BellIcon} badge={120}>
+    <Sidebar.Item href="/alerts/errors">Errors</Sidebar.Item>
+    <Sidebar.Item href="/alerts/warnings">Warnings</Sidebar.Item>
+  </Sidebar.Group>
+</Sidebar.Nav>`,
+
+  loading: `{/* Sidebar.Skeleton stands in for the items while they load: rows the height of an item that pulse, announced once as "Loading" (the loading label).
+    Swap it for the real items when they arrive. */}
+<Sidebar.Nav>
+  {isLoading ? (
+    <Sidebar.Skeleton rows={6} />
+  ) : (
+    items.map((item) => (
+      <Sidebar.Item key={item.href} href={item.href} icon={item.icon}>
+        {item.label}
+      </Sidebar.Item>
+    ))
+  )}
+</Sidebar.Nav>`,
+
+  rememberCollapsed: `{/* The sidebar keeps no preference of its own: hold collapsed yourself and put it where your app keeps such things. Here collapsed and
+    setCollapsed come from a hook that saves to localStorage (the Docs page's recipe shows it); a cookie your server reads works too, and avoids the
+    brief flash of the default on a server-rendered page, when you pass it as defaultCollapsed instead. */}
+<Sidebar collapsed={collapsed} onCollapsedChange={setCollapsed}>
+  <Sidebar.Content>
+    <Sidebar.Nav>
+      <Sidebar.Item href="/" icon={HouseIcon} current>
+        Home
+      </Sidebar.Item>
+      <Sidebar.Item href="/inbox" icon={TrayIcon}>
+        Inbox
+      </Sidebar.Item>
+    </Sidebar.Nav>
+  </Sidebar.Content>
+  <Sidebar.Footer>
+    <Sidebar.Toggle />
+  </Sidebar.Footer>
+</Sidebar>`,
+
+  filter: `{/* A filter box in the header narrows the navigation as you type. The sidebar needs nothing for it: filter your own data (the Docs page's recipe
+    shows how), open the groups that still have a match (open={query ? true : undefined}, so an untouched group goes back to its own state when the box
+    is cleared), and announce the count in a status region. In the rail the box has no room, so an item takes its place and expands the sidebar. */}
+<Sidebar>
+  <Sidebar.Header>
+    {collapsed ? (
+      <Sidebar.Item icon={MagnifyingGlassIcon} onClick={() => setCollapsed(false)}>
+        Search
+      </Sidebar.Item>
+    ) : (
+      <SearchInput
+        size="sm"
+        aria-label="Filter navigation"
+        placeholder="Filter…"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        onClear={() => setQuery("")}
+      />
+    )}
+  </Sidebar.Header>
+  <Sidebar.Content>
+    <Sidebar.Nav aria-label="Main">
+      {links.map((link) => (
+        <Sidebar.Item key={link.label} href={link.href} icon={link.icon}>
+          {link.label}
+        </Sidebar.Item>
+      ))}
+      {groups.map((group) => (
+        <Sidebar.Group key={group.label} label={group.label} icon={group.icon} open={needle ? true : undefined}>
+          {group.shown.map((item) => (
+            <Sidebar.Item key={item.href} href={item.href}>
+              {item.label}
+            </Sidebar.Item>
+          ))}
+        </Sidebar.Group>
+      ))}
+    </Sidebar.Nav>
+    <VisuallyHidden role="status">{needle ? \`\${count} \${count === 1 ? "match" : "matches"}\` : ""}</VisuallyHidden>
   </Sidebar.Content>
 </Sidebar>`,
 

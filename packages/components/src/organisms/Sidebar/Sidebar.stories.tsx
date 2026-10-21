@@ -19,7 +19,15 @@ import type {
   SidebarSize,
   SidebarVariant,
 } from "./Sidebar.types";
-import { DemoSidebar, DemoTopBar, SidebarFrame, SidebarStage, SidebarViewModeContext } from "./SidebarStoryKit";
+import {
+  DemoSidebar,
+  DemoTopBar,
+  FilterableSidebar,
+  SidebarFrame,
+  SidebarStage,
+  SidebarViewModeContext,
+  useRememberedCollapsed,
+} from "./SidebarStoryKit";
 
 // Sidebar's root-level args in one Playground, every prop listed in the one order the Docs table uses: the ones a person can
 // edit have a control, and the rest (children, callbacks, objects, the standard attributes) show as "–". Each sub-part
@@ -107,9 +115,9 @@ const meta: Meta<PlaygroundArgs> = {
     ),
     variant: {
       control: "select",
-      options: ["outlined", "filled", "ghost"],
+      options: ["outlined", "filled", "ghost", "floating"],
       description:
-        "How the sidebar itself is drawn: a surface with a line along its inner edge, the same surface with no line, or nothing of its own so the items sit on the page.",
+        "How the sidebar itself is drawn: a surface with a line along its inner edge, the same surface with no line, nothing of its own so the items sit on the page, or a floating card set in from the page's edges with rounded corners and a shadow.",
       table: { defaultValue: { summary: '"outlined"' } },
     },
     size: {
@@ -211,7 +219,7 @@ const meta: Meta<PlaygroundArgs> = {
       description: "The reading direction, passed to the sidebar and the phone panel. Not read from the page.",
       table: { defaultValue: { summary: '"ltr"' } },
     },
-    labels: readOnly("The text the sidebar supplies itself: navigation, collapse, expand, menu, close and externalLink."),
+    labels: readOnly("The text the sidebar supplies itself: navigation, collapse, expand, menu, close, externalLink and loading."),
     id: { control: "text", description: "Standard DOM id. Empty leaves it out. Avoid it: the sidebar's children are drawn twice while the phone panel is open." },
     className: readOnly("Additional CSS classes, on the sidebar's root."),
     style: readOnly("Inline styles, merged onto the component's own internal styles."),
@@ -305,8 +313,8 @@ export const Variants: Story = {
   render: (args) => (
     <SidebarStage minBlockSize="30rem">
       {(menuContainer) => (
-        <Gallery>
-          {(["outlined", "filled", "ghost"] as const).map((variant) => (
+        <Gallery columns={4}>
+          {(["outlined", "filled", "ghost", "floating"] as const).map((variant) => (
             <Labelled key={variant} name={`${variant} sidebar`}>
               <SidebarFrame height="26rem" contentLabel="">
                 <DemoSidebar
@@ -691,10 +699,10 @@ export const Accounts: Story = {
         <SidebarFrame height="30rem" contentLabel="The workspace in the header and the account in the footer each open a menu. In the rail they are the avatar alone.">
           <Sidebar collapseBelow={args.collapseBelow} menuContainer={menuContainer} width="16rem">
             <Sidebar.Header>
-              <Sidebar.Account name="Acme Inc" description="Workspace · Pro plan" menuSide="bottom" avatar={<Avatar name="Acme" shape="square" colorful size="xs" />}>
+              <Sidebar.Account name="dbM" description="Workspace · Pro plan" menuSide="bottom" avatar={<Avatar name="dbM" shape="square" colorful size="xs" />}>
                 <Menu.Label>Workspaces</Menu.Label>
-                <Menu.Item>Acme Inc</Menu.Item>
-                <Menu.Item>Acme Labs</Menu.Item>
+                <Menu.Item>dbM</Menu.Item>
+                <Menu.Item>dbM System</Menu.Item>
                 <Menu.Separator />
                 <Menu.Item icon={PlusIcon}>New workspace</Menu.Item>
               </Sidebar.Account>
@@ -796,6 +804,131 @@ export const CollapsibleSections: Story = {
               </Sidebar.Nav>
             </Sidebar.Content>
           </Sidebar>
+        </SidebarFrame>
+      )}
+    </SidebarStage>
+  ),
+};
+
+const noNavigation = (event: { preventDefault: () => void }) => event.preventDefault();
+
+// One sidebar's worth of groups with counts, drawn twice: expanded (a shut group shows its total) and as a rail (the count is on the icon).
+function CountedGroups({ collapsed, menuContainer, collapseBelow }: { collapsed?: boolean; menuContainer: HTMLElement | null; collapseBelow?: SidebarCollapseBelow }) {
+  return (
+    <Sidebar defaultCollapsed={collapsed} menuContainer={menuContainer} collapseBelow={collapseBelow} width="15rem">
+      <Sidebar.Content>
+        <Sidebar.Nav aria-label={collapsed ? "Rail with counts" : "Groups with counts"}>
+          <Sidebar.Group label="Inbox" icon={TrayIcon}>
+            <Sidebar.Item href="#mentions" badge={3} onClick={noNavigation}>
+              Mentions
+            </Sidebar.Item>
+            <Sidebar.Item href="#assigned" badge={9} onClick={noNavigation}>
+              Assigned
+            </Sidebar.Item>
+            <Sidebar.Item href="#drafts" onClick={noNavigation}>
+              Drafts
+            </Sidebar.Item>
+          </Sidebar.Group>
+          <Sidebar.Group label="Alerts" icon={BellIcon} badge={120}>
+            <Sidebar.Item href="#errors" onClick={noNavigation}>
+              Errors
+            </Sidebar.Item>
+            <Sidebar.Item href="#warnings" onClick={noNavigation}>
+              Warnings
+            </Sidebar.Item>
+          </Sidebar.Group>
+          <Sidebar.Group label="Reports" icon={ChartBarIcon}>
+            <Sidebar.Item href="#sales" onClick={noNavigation}>
+              Sales
+            </Sidebar.Item>
+          </Sidebar.Group>
+          <Sidebar.Item href="#messages" icon={UsersIcon} badge={250} onClick={noNavigation}>
+            Messages
+          </Sidebar.Item>
+        </Sidebar.Nav>
+      </Sidebar.Content>
+    </Sidebar>
+  );
+}
+
+export const GroupBadges: Story = {
+  name: "Counts on a group",
+  parameters: { docs: { source: { code: sidebarSnippets.groupBadges } } },
+  argTypes: { ...noControls },
+  render: (args) => (
+    <SidebarStage minBlockSize="22rem">
+      {(menuContainer) => (
+        <Gallery columns={2}>
+          <Labelled name="Expanded: a shut group shows the total of its items">
+            <SidebarFrame height="18rem" contentLabel="">
+              <CountedGroups menuContainer={menuContainer} collapseBelow={args.collapseBelow} />
+            </SidebarFrame>
+          </Labelled>
+          <Labelled name="Rail: the count is on the icon, and over 99 reads 99+">
+            <SidebarFrame height="18rem" contentLabel="">
+              <CountedGroups collapsed menuContainer={menuContainer} collapseBelow={args.collapseBelow} />
+            </SidebarFrame>
+          </Labelled>
+        </Gallery>
+      )}
+    </SidebarStage>
+  ),
+};
+
+export const Loading: Story = {
+  name: "While the navigation loads",
+  parameters: { docs: { source: { code: sidebarSnippets.loading } } },
+  argTypes: { ...noControls },
+  render: (args) => (
+    <SidebarStage minBlockSize="22rem">
+      {(menuContainer) => (
+        <Gallery columns={2}>
+          {[false, true].map((rail) => (
+            <Labelled key={String(rail)} name={rail ? "Rail" : "Expanded"}>
+              <SidebarFrame height="18rem" contentLabel="">
+                <Sidebar defaultCollapsed={rail} menuContainer={menuContainer} collapseBelow={args.collapseBelow} width="15rem">
+                  <Sidebar.Content>
+                    <Sidebar.Nav aria-label={rail ? "Loading rail" : "Loading navigation"}>
+                      <Sidebar.Skeleton rows={6} />
+                    </Sidebar.Nav>
+                  </Sidebar.Content>
+                </Sidebar>
+              </SidebarFrame>
+            </Labelled>
+          ))}
+        </Gallery>
+      )}
+    </SidebarStage>
+  ),
+};
+
+export const RememberCollapsed: Story = {
+  name: "Recipe: remember the collapsed state",
+  parameters: { docs: { source: { code: sidebarSnippets.rememberCollapsed } } },
+  argTypes: { ...noControls },
+  render: function Render(args) {
+    const [collapsed, setCollapsed] = useRememberedCollapsed("dbm-sidebar-story-collapsed");
+    return (
+      <SidebarStage minBlockSize="34rem">
+        {(menuContainer) => (
+          <SidebarFrame height="32rem" contentLabel="Collapse the sidebar and reload the page: it comes back the way you left it.">
+            <DemoSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} menuContainer={menuContainer} collapseBelow={args.collapseBelow} />
+          </SidebarFrame>
+        )}
+      </SidebarStage>
+    );
+  },
+};
+
+export const FilterRecipe: Story = {
+  name: "Recipe: filter the navigation",
+  parameters: { docs: { source: { code: sidebarSnippets.filter } } },
+  argTypes: { ...noControls },
+  render: (args) => (
+    <SidebarStage minBlockSize="30rem">
+      {(menuContainer) => (
+        <SidebarFrame height="28rem" contentLabel="Type in the box: the navigation narrows, and the groups with a match open.">
+          <FilterableSidebar menuContainer={menuContainer} collapseBelow={args.collapseBelow} width="16rem" />
         </SidebarFrame>
       )}
     </SidebarStage>

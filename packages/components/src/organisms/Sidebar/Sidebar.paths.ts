@@ -44,3 +44,20 @@ export function holdsPath(children: ReactNode, currentPath: string | undefined):
   }
   return false;
 }
+
+/**
+ * The total of the numeric `badge`s of the items among some children (through groups, fragments and any element with children), for the badge
+ * a group shows while its items are out of sight. Only numbers are added; an item whose badge is text, a `Badge` element or a dot has no count
+ * to add. `undefined` when there is no number to add, so a group of items with no counts shows no badge. It reads the elements as written.
+ */
+export function rolledUpCount(children: ReactNode): number | undefined {
+  let total: number | undefined;
+  for (const child of Children.toArray(children)) {
+    if (!isValidElement(child)) continue;
+    const props = child.props as { badge?: unknown; children?: ReactNode };
+    if (typeof props.badge === "number" && Number.isFinite(props.badge)) total = (total ?? 0) + props.badge;
+    const inner = rolledUpCount(props.children);
+    if (inner !== undefined) total = (total ?? 0) + inner;
+  }
+  return total;
+}

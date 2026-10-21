@@ -1,6 +1,6 @@
 import { createElement, Fragment } from "react";
 import { describe, expect, it } from "vitest";
-import { holdsPath, matchesPath, pathOf } from "./Sidebar.paths";
+import { holdsPath, matchesPath, pathOf, rolledUpCount } from "./Sidebar.paths";
 
 describe("pathOf", () => {
   it("reads the path of an address, without its query, hash or trailing slash", () => {
@@ -62,5 +62,32 @@ describe("holdsPath", () => {
 
   it("holds nothing with no path", () => {
     expect(holdsPath(item("/a"), undefined)).toBe(false);
+  });
+});
+
+describe("rolledUpCount", () => {
+  const item = (badge?: unknown, key?: string) => createElement("li", { badge, key });
+  const group = (...children: unknown[]) => createElement("section", null, ...(children as never[]));
+
+  it("adds the numeric badges of the items written inside, through groups and fragments", () => {
+    const tree = createElement(
+      Fragment,
+      null,
+      item(3, "a"),
+      group(item(4, "b"), item(undefined, "c")),
+      createElement(Fragment, { key: "d" }, item(5)),
+    );
+    expect(rolledUpCount(tree)).toBe(12);
+  });
+
+  it("ignores badges that are not numbers, and is undefined when there is no number", () => {
+    expect(rolledUpCount(item("New"))).toBeUndefined();
+    expect(rolledUpCount(item())).toBeUndefined();
+    expect(rolledUpCount(null)).toBeUndefined();
+    expect(rolledUpCount([item(2, "a"), item("New", "b")])).toBe(2);
+  });
+
+  it("counts a zero, which the group then leaves unshown", () => {
+    expect(rolledUpCount(item(0))).toBe(0);
   });
 });
