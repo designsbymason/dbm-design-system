@@ -1095,7 +1095,7 @@ describe("DatePicker by month", () => {
     await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).queryByRole("grid", { name: "Calendar" })).toBeNull();
-    await userEvent.click(within(dialog).getByRole("button", { name: "March" }));
+    await userEvent.click(within(dialog).getByRole("button", { name: "Mar, March" }));
     expect(onValueChange).toHaveBeenLastCalledWith("2026-03");
     expect(texts()).toEqual(["03", "2026"]);
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
@@ -1105,7 +1105,7 @@ describe("DatePicker by month", () => {
     render(<DatePicker aria-label="d" granularity="month" defaultValue="2026-10" />);
     await userEvent.click(screen.getByRole("button", { name: "Choose date" }));
     await screen.findByRole("dialog");
-    await waitFor(() => expect(screen.getByRole("button", { name: "October" })).toHaveFocus());
+    await waitFor(() => expect(screen.getByRole("button", { name: "Oct, October" })).toHaveFocus());
     await userEvent.keyboard("{ArrowLeft}{Enter}");
     expect(texts()).toEqual(["09", "2026"]);
   });
@@ -1118,9 +1118,9 @@ describe("DatePicker by month", () => {
     // the grid opens on the year of the chosen month; step back to 2026
     await userEvent.click(within(dialog).getByRole("button", { name: /Previous year/ }));
     const cell = (name: string) => within(dialog).getByRole("button", { name }).closest("[role=gridcell]");
-    expect(cell("April")).toHaveAttribute("aria-disabled", "true");
+    expect(cell("Apr, April")).toHaveAttribute("aria-disabled", "true");
     expect(cell("May")).not.toHaveAttribute("aria-disabled", "true");
-    expect(cell("December")).not.toHaveAttribute("aria-disabled", "true");
+    expect(cell("Dec, December")).not.toHaveAttribute("aria-disabled", "true");
   });
 
   it('reads "today" as this month, and says the bound as a month', () => {

@@ -41,6 +41,16 @@ export interface CalendarPickerProps {
  * grid on show, the year it is looking at, the cell that has focus — begins afresh each time. It is as tall as the six
  * rows of days it replaces.
  */
+/**
+ * A month button's accessible name. The button shows the short name ("Jan"), and a speech-control user says what they see, so the name holds it
+ * as a word of its own before the full one ("Jan, January", WCAG 2.5.3); a month whose short and full names match ("May") needs only the one.
+ */
+function monthName(short: string | undefined, full: string | undefined): string {
+  if (!short) return full ?? "";
+  if (!full || short.toLowerCase() === full.toLowerCase()) return short;
+  return `${short}, ${full}`;
+}
+
 export function CalendarPicker({
   shown,
   today,
@@ -221,7 +231,7 @@ export function CalendarPicker({
                     type="button"
                     data-picker-cell={value}
                     tabIndex={value === tabbable ? 0 : -1}
-                    aria-label={view === "months" ? (labels.months[value - 1] ?? "") : undefined}
+                    aria-label={view === "months" ? monthName(labels.monthsShort[value - 1], labels.months[value - 1]) : undefined}
                     aria-current={current ? "date" : undefined}
                     className={cx(styles.day, chosen && styles.selected, current && styles.today, !allowed && styles.unavailable)}
                     onClick={() => (view === "months" ? pickMonth(value) : pickYear(value))}

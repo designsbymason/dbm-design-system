@@ -150,3 +150,6 @@ selection; on the first bulk action when there is none; a mouse press is left al
 
 The component JSDoc, the Docs page intro, a snippet comment and the story kit's comment now say a `DataTable` (which draws the bar as `DataTable.Toolbar`) can sit under it,
 instead of "a future `DataTable`". Wording only, so the component stays Finalized (question 1 of the three-question test, `06-engineering-standards.md` §9).
+
+## Post-Finalization follow-up (2026-10-21, at explicit direction) — Label in Name
+`TableToolbar.Filter`'s button showed "Status2" (no space before the badge) and named itself "Status, 2 active", which axe 4.14 reads as a mismatch. A space now separates them, and past `max` the name holds the badge's text and the real number ("Tags 99+, 1,284 active"). Two tests changed. See [ADR-0112](../adr/0112-an-interactive-controls-accessible-name-holds-its-visible-text-as-whole-words-in-order-over-a-name-that-only-means-the-same.md). A fix to a defect in a finalized component, not a change of preference, so it **stays finalized**.

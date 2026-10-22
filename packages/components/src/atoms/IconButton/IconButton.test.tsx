@@ -344,7 +344,18 @@ describe("IconButton", () => {
         expect(warn.mock.calls.some(([message]) => String(message).includes("isn't part of the accessible name"))).toBe(true);
         unmount();
         warn.mockClear();
-        render(<IconButton icon={HeartIcon} aria-label="Add to favorites" label="Favorite" />);
+        render(<IconButton icon={HeartIcon} aria-label="Add to Favorite, now" label="Favorite" />);
+        expect(warn.mock.calls.some(([message]) => String(message).includes("isn't part of the accessible name"))).toBe(false);
+        warn.mockRestore();
+      });
+
+      it("reads the caption as whole words, as speech control does: a part of a word is not in the name", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const { unmount } = render(<IconButton icon={HeartIcon} aria-label="Add to favorites" label="Favorite" />);
+        expect(warn.mock.calls.some(([message]) => String(message).includes("isn't part of the accessible name"))).toBe(true);
+        unmount();
+        warn.mockClear();
+        render(<IconButton icon={HeartIcon} aria-label="Save (to favourites)" label="Save to" />);
         expect(warn.mock.calls.some(([message]) => String(message).includes("isn't part of the accessible name"))).toBe(false);
         warn.mockRestore();
       });

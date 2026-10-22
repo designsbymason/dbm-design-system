@@ -134,8 +134,8 @@ screen the row wraps: the search field takes a line of its own and the toolbars 
 ### Filters
 
 `TableToolbar.Filter` is a button that opens a panel of the controls you put in it. `count` says how many values of the filter
-are applied: the button shows it, its accessible name says it ("Status, 2 active"), and the panel offers **Clear** when you give
-it `onClear`. A count above `max` (99 by default) reads "99+" on the badge; the name still says the real number. Inside a `Toolbar` it takes the toolbar's `variant` and `size`; wrap it in a `Toolbar.Item` so it joins the
+are applied: the button shows it, its accessible name says it ("Status, 2 active", which holds the "Status 2" the button shows), and the panel offers **Clear** when you give
+it `onClear`. A count above `max` (99 by default) reads "99+" on the badge; the name says both, "Tags 99+, 1,284 active", so it holds what is shown and the real number. Inside a `Toolbar` it takes the toolbar's `variant` and `size`; wrap it in a `Toolbar.Item` so it joins the
 arrow-key order.
 
 <Canvas of={TableToolbarStories.Filters} />

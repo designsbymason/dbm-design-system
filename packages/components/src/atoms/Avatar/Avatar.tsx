@@ -265,10 +265,15 @@ const AvatarImpl = forwardRef<HTMLElement, AvatarProps<ElementType>>(
     // merging was added — folding it away in that case would silently
     // drop the only accessible signal this avatar has.
     const statusIsMerged = Boolean(resolvedAlt && resolvedStatus);
-    const computedLabel =
-      resolvedAlt && resolvedStatus
-        ? `${resolvedAlt}, ${statusLabel[resolvedStatus]}`
+    // An interactive avatar that shows initials has visible text ("JD"), and a speech-control user says what they see: its name has to contain
+    // those letters (WCAG 2.5.3, Label in Name). So a name the avatar works out itself reads "Jane Doe, JD", and the initials follow it, not
+    // lead it, so the person's name is still the first thing a screen reader says. An image shows no text, and a name you pass is left as written.
+    const initialsInName =
+      isInteractive && !showImage && !ariaLabelProp && resolvedAlt && resolvedInitials && resolvedAlt !== resolvedInitials
+        ? `${resolvedAlt}, ${resolvedInitials}`
         : resolvedAlt;
+    const computedLabel =
+      initialsInName && resolvedStatus ? `${initialsInName}, ${statusLabel[resolvedStatus]}` : initialsInName;
     // An explicit `aria-label` always wins over the computed name — but an
     // *empty string* is treated the same as not having provided one at all
     // (falls through to `computedLabel`), not as "deliberately blank."

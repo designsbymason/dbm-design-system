@@ -437,7 +437,7 @@ same function.
   that moves onto a day in the next month moves focus there without turning the page; the page turns when focus leaves
   the months on show. The months on show are announced together ("November 2026 – December 2026").
 - The Today and Clear buttons are `aria-disabled`, not natively disabled, when they can't be used, so focus is never
-  dropped from a button that has just emptied the calendar. A marker's `label` is added to the day's name ("…, 2 events");
+  dropped from a button that has just emptied the calendar. A marker's `label` is added to the day's name ("…, 2 events"); a marker that draws text of its own (a price) opens the name with the day's number and that label ("20 $80, Tuesday, October 20, 2026"), so what is on screen is in the name, in order. Each month button in the months grid shows the short name and is named "Jan, January";
   the dot or content itself is hidden from assistive technology. While the end of a range is being chosen, the dates
   the limits rule out are `aria-disabled` like any other unavailable date.
 - Every day is a target of at least 30 × 30 CSS pixels at the smallest size, above the 24px minimum, and the calendar

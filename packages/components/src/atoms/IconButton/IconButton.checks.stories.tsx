@@ -146,7 +146,7 @@ export const CaptionedBoxIsTallerAndNeverNarrower: Story = {
       <IconButton icon={HeartIcon} aria-label="Plain favorite" />
       <IconButton icon={HeartIcon} aria-label="Always favorite" label="Favorite" />
       <IconButton icon={HeartIcon} aria-label="Wide favorite" label="Favorite" hideLabelBelow="3xl" />
-      <IconButton icon={HeartIcon} aria-label="Narrow favorite" label="Fav" size="xs" />
+      <IconButton icon={HeartIcon} aria-label="Narrow Fav" label="Fav" size="xs" />
     </div>
   ),
   play: async ({ canvasElement }) => {
@@ -169,7 +169,7 @@ export const CaptionedBoxIsTallerAndNeverNarrower: Story = {
     expect(Math.round(wide.getBoundingClientRect().width)).toBe(Math.round(plain.width));
     expect(Math.round(wide.getBoundingClientRect().height)).toBe(Math.round(plain.height));
     // a short caption on a small button doesn't make it narrower than the square of its step
-    const small = canvas.getByRole("button", { name: "Narrow favorite" });
+    const small = canvas.getByRole("button", { name: "Narrow Fav" });
     expect(small.getBoundingClientRect().width).toBeGreaterThanOrEqual(px(getComputedStyle(document.documentElement).getPropertyValue("--dbm-icon-button-size-xs")) - 0.5);
   },
 };

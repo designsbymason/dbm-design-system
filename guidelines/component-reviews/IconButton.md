@@ -67,3 +67,6 @@ At explicit direction ([ADR-0098](../adr/0098-iconbutton-takes-an-optional-label
 ## Hover fill of `secondary` and `tertiary`, 2026-10-19 (visual change; stays Finalized)
 
 At explicit direction: as for `Button`, the `secondary` and `tertiary` hover fill is `bg.brand-subtle` (`bg.neutral-subtle` in the neutral tone) in place of the `-hover` step; `ghost` and the pressed states are unchanged. See [Button](Button.md) for the detail and the check.
+
+## Post-Finalization follow-up (2026-10-21, at explicit direction) — Label in Name
+No change to behaviour. The development warning for a `label` missing from `aria-label` now compares whole words, in order, as the checker does (it matched a substring, so "Fav" passed inside "favorite"); the check story's captioned demo was named "Narrow favorite" for the caption "Fav" and is now "Narrow Fav". Two tests changed or added. See [ADR-0112](../adr/0112-an-interactive-controls-accessible-name-holds-its-visible-text-as-whole-words-in-order-over-a-name-that-only-means-the-same.md). A fix to a defect in a finalized component, not a change of preference, so it **stays finalized**.

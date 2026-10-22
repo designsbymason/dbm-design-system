@@ -1104,6 +1104,13 @@ describe("Calendar", () => {
       expect(screen.getByTestId("calendar")).toHaveClass(styles.contentMarkers ?? "");
     });
 
+    it("opens the name with the number and the label when the marker shows text, so what is on screen is in the name in order", () => {
+      renderCalendar({ getMarker: (date: string) => (date === "2026-10-20" ? { content: <span>$80</span>, label: "$80" } : undefined) });
+      expect(day("2026-10-20")).toHaveAccessibleName("20 $80, Tuesday, October 20, 2026");
+      // a day with no marker, or only a dot, is named as before
+      expect(day("2026-10-21")).toHaveAccessibleName("Wednesday, October 21, 2026");
+    });
+
     it("leaves the numbers centred when the markers are only dots", () => {
       renderCalendar({ getMarker: (date: string) => (date === "2026-10-20" ? { tone: "info" } : undefined) });
       expect(screen.getByTestId("calendar")).not.toHaveClass(styles.contentMarkers ?? "");
@@ -1852,7 +1859,7 @@ describe("Calendar", () => {
       await openMonths();
       const cells = cellsOf(monthsGrid());
       expect(cells.map((cell) => cell.textContent)).toEqual(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]);
-      expect(cells[9]).toHaveAccessibleName("October");
+      expect(cells[9]).toHaveAccessibleName("Oct, October");
       expect(cells[9]?.closest("[role=gridcell]")).toHaveAttribute("aria-selected", "true");
       expect(cells[9]).toHaveAttribute("aria-current", "date");
       expect(cells[3]?.closest("[role=gridcell]")).toHaveAttribute("aria-selected", "false");
@@ -1869,7 +1876,7 @@ describe("Calendar", () => {
       const onMonthChange = vi.fn();
       views({ onMonthChange });
       await openMonths();
-      await userEvent.click(screen.getByRole("button", { name: "March" }));
+      await userEvent.click(screen.getByRole("button", { name: "Mar, March" }));
       expect(onMonthChange).toHaveBeenCalledWith("2026-03");
       expect(screen.getByRole("grid", { name: "March 2026" })).toBeInTheDocument();
       expect(document.activeElement?.hasAttribute("data-date")).toBe(true);
@@ -1913,7 +1920,7 @@ describe("Calendar", () => {
       await userEvent.click(screen.getByRole("button", { name: "2023" }));
       expect(monthsGrid(2023)).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "2023, choose a year" })).toBeInTheDocument();
-      await userEvent.click(screen.getByRole("button", { name: "June" }));
+      await userEvent.click(screen.getByRole("button", { name: "Jun, June" }));
       expect(screen.getByRole("grid", { name: "June 2023" })).toBeInTheDocument();
       expect(onMonthChange).toHaveBeenLastCalledWith("2023-06");
     });
@@ -2035,9 +2042,9 @@ describe("Calendar", () => {
     it("rules out the months and years that min and max leave no day in", async () => {
       views({ min: "2026-03-10", max: "2027-05-20" });
       await openMonths();
-      expect(screen.getByRole("button", { name: "February" }).closest("[role=gridcell]")).toHaveAttribute("aria-disabled", "true");
-      expect(screen.getByRole("button", { name: "March" }).closest("[role=gridcell]")).not.toHaveAttribute("aria-disabled");
-      await userEvent.click(screen.getByRole("button", { name: "February" }));
+      expect(screen.getByRole("button", { name: "Feb, February" }).closest("[role=gridcell]")).toHaveAttribute("aria-disabled", "true");
+      expect(screen.getByRole("button", { name: "Mar, March" }).closest("[role=gridcell]")).not.toHaveAttribute("aria-disabled");
+      await userEvent.click(screen.getByRole("button", { name: "Feb, February" }));
       expect(monthsGrid()).toBeInTheDocument();
       await userEvent.click(screen.getByRole("button", { name: "2026, choose a year" }));
       expect(screen.getByRole("button", { name: "2025" }).closest("[role=gridcell]")).toHaveAttribute("aria-disabled", "true");

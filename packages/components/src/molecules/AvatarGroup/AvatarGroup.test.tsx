@@ -335,7 +335,7 @@ describe("AvatarGroup", () => {
           </Tooltip>
         </AvatarGroup>,
       );
-      expect(screen.getByRole("button", { name: "Jane Doe" }).style.getPropertyValue("--avatar-dimension-base")).toBe(
+      expect(screen.getByRole("button", { name: "Jane Doe, JD" }).style.getPropertyValue("--avatar-dimension-base")).toBe(
         "var(--dbm-avatar-size-xl)",
       );
     });

@@ -87,7 +87,7 @@ describe("TableToolbar", () => {
   describe("Filter", () => {
     it("caps a large count on the badge at max, and keeps the real number in the name", () => {
       render(<TableToolbar.Filter label="Tags" count={1284} formatNumber={(n) => n.toLocaleString("en-US")} />);
-      const button = screen.getByRole("button", { name: "Tags, 1,284 active" });
+      const button = screen.getByRole("button", { name: "Tags 99+, 1,284 active" });
       expect(button).toHaveTextContent("99+");
       expect(button).not.toHaveTextContent("1,284");
     });
@@ -131,7 +131,8 @@ describe("TableToolbar", () => {
         </TableToolbar>,
       );
       const trigger = screen.getByRole("button", { name: "Status, 2 active" });
-      expect(trigger).toHaveTextContent("Status2");
+      // a space before the count, so the words it shows ("Status 2") are the words in its name (WCAG 2.5.3)
+      expect(trigger).toHaveTextContent("Status 2");
       expect(trigger).toHaveAttribute("data-active");
       await user.click(trigger);
       await user.click(await screen.findByRole("button", { name: "Clear" }));

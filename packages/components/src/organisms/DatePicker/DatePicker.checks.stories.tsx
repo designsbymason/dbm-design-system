@@ -568,7 +568,7 @@ export const MonthGridWithARealMouse: Story = {
     await realClick(await body().findByRole("button", { name: "Choose date" }));
     const dialog = await body().findByRole("dialog", { name: "Choose a date" });
     await settled(dialog);
-    const month = within(dialog).getByRole("button", { name: "July" });
+    const month = within(dialog).getByRole("button", { name: "Jul, July" });
     const r = month.getBoundingClientRect();
     await expect(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)).toBe(month);
     await realClick(month);

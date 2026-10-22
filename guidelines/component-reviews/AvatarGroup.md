@@ -65,3 +65,6 @@ A full `06-engineering-standards.md` §9 pass against the code and the running c
 ## Finalized, 2026-09-26
 
 Declared Finalized by the user after the final review above. Left open, as recorded there: no real-screen-reader check, the forced-colours ring, and the `labels` spread in `Pagination`, `Alert`, `RangeSlider` and `Breadcrumb` (Finalized components, untouched pending a decision).
+
+## Post-Finalization follow-up (2026-10-21, at explicit direction) — Label in Name
+No change to the component: its avatar buttons are `Avatar`'s, whose name now holds the initials they show, so one test's query is "Jane Doe, JD". See [ADR-0112](../adr/0112-an-interactive-controls-accessible-name-holds-its-visible-text-as-whole-words-in-order-over-a-name-that-only-means-the-same.md). A fix to a defect in a finalized component, not a change of preference, so it **stays finalized**.

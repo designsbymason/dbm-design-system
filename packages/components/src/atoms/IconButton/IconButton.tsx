@@ -34,6 +34,24 @@ const sizeClass: Record<ButtonSize, string | undefined> = {
   xl: styles.sizeXl,
 };
 
+/** The words of some text: lower case, with punctuation and spacing as the only separators, as a speech-control tool and an accessibility checker read it. */
+function wordsOf(text: string): string[] {
+  return text
+    .normalize("NFKD")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .split(" ")
+    .filter(Boolean);
+}
+
+/** Whether an accessible name holds a visible label: its words, whole and in order (WCAG 2.5.3, Label in Name). */
+function nameHoldsLabel(name: string, label: string): boolean {
+  const nameWords = wordsOf(name);
+  const labelWords = wordsOf(label);
+  if (labelWords.length === 0) return true;
+  return nameWords.some((_, start) => labelWords.every((word, offset) => nameWords[start + offset] === word));
+}
+
 /**
  * An icon-only button. Shares Button's variant/size scale and loading
  * behavior, but always requires `aria-label` since there's no visible text
@@ -155,10 +173,10 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
           console.warn(`IconButton: ${ignored}`);
         }
       }
-      if (label && ariaLabel && !ariaLabel.toLowerCase().includes(label.toLowerCase()) && !hasWarnedLabelNameRef.current) {
+      if (label && ariaLabel && !nameHoldsLabel(ariaLabel, label) && !hasWarnedLabelNameRef.current) {
         hasWarnedLabelNameRef.current = true;
         console.warn(
-          "IconButton: the visible `label` isn't part of the accessible name (`aria-label`) — a speech-control user says what they see, so the name must contain it (WCAG 2.5.3). Make `aria-label` contain the `label` text.",
+          "IconButton: the visible `label` isn't part of the accessible name (`aria-label`) — a speech-control user says what they see, so the name must contain it as whole words, in order (WCAG 2.5.3: \"Fav\" is not in \"Favorite\"). Make `aria-label` contain the `label` text.",
         );
       }
       if (asChild && isToggle && !hasWarnedAsChildPressedRef.current) {

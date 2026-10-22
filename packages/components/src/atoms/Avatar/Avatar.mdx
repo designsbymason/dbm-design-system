@@ -191,6 +191,9 @@ below for why it's gated on `as` being interactive.
   `role="img"` stops — confirmed live that back-to-back separate announcements were noisy,
   especially across a list of avatars. Without a name, the status dot keeps its own separate
   announcement instead, since there's nothing to merge it into.
+- **An interactive avatar's name holds the initials it shows.** A button that shows "JD" is said by a speech-control user as "click JD", so
+  the name it works out reads "Jane Doe, JD" (and "Jane Doe, JD, Online" with a status): the person's name first, the visible letters after.
+  An image shows no text, so it adds nothing, and an `aria-label` you pass is left as written (WCAG 2.5.3, Label in Name).
 - **`role="img"` is skipped when `as` renders a native interactive element** (e.g. `as="button"`)
   — overriding a `<button>`'s own role with `img` is an "aria-allowed-role" violation (confirmed
   via a live `axe` run), since it would hide the element's real interactive semantics from

@@ -140,3 +140,6 @@ A full `06-engineering-standards.md` §9 pass over the component as it stands, w
 - The slide animation and the dark and Emerald themes of the newest grids were looked at on a few stories, not all.
 - `getMarker`, `isDateDisabled` and the markers run for every day of every month on every render, and a hover over a day re-renders the calendar in range and week modes. Fine at the sizes tested; not profiled with four months on show.
 - The two `TimePicker` browser checks that fail intermittently under load are not Calendar's (see the project notes).
+
+## Post-Finalization follow-up (2026-10-21, at explicit direction) — Label in Name
+Two names failed axe 4.14: a month button showing "Jan" named "January" (now "Jan, January", or the one name where they match), and a day showing its number and a marker's text named only by its date (now "20 $80, Tuesday, October 20, 2026" when the marker has `content` and a `label`). `CalendarMarker.label` documents starting with the content's text. Month queries in the `Calendar` and `DatePicker` tests changed, and one test added. See [ADR-0112](../adr/0112-an-interactive-controls-accessible-name-holds-its-visible-text-as-whole-words-in-order-over-a-name-that-only-means-the-same.md). A fix to a defect in a finalized component, not a change of preference, so it **stays finalized**.

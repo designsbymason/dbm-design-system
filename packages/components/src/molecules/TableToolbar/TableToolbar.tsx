@@ -197,13 +197,20 @@ const TableToolbarFilter = forwardRef<HTMLButtonElement, TableToolbarFilterProps
             size={size ?? (group ? undefined : bar.size)}
             leadingIcon={icon}
             trailingIcon={CaretDownIcon}
-            // The visible words ("Status") are inside this name ("Status, 2 active"), so what the button says is what it is
-            // called (WCAG 2.5.3).
-            aria-label={count > 0 ? `${label}, ${labels.activeCount(count)}` : label}
+            // What the button shows ("Status 2", or "Status 99+" past `max`) is inside this name, as whole words in order, so what the
+            // button says is what it is called (WCAG 2.5.3). The true count still follows: "Tags 99+, 1,284 active".
+            aria-label={
+              count === 0
+                ? label
+                : count > max
+                  ? `${label} ${formatNumber(max)}+, ${labels.activeCount(count)}`
+                  : `${label}, ${labels.activeCount(count)}`
+            }
             data-active={count > 0 ? "" : undefined}
             className={className}
           >
             {label}
+            {count > 0 && " "}
             {count > 0 && (
               <span className={cx(styles.filterCount, (size ?? group?.size ?? bar.size) === "xs" && styles.filterCountXs)} aria-hidden="true">
                 <Badge tone="brand" size="xs">

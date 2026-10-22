@@ -356,7 +356,38 @@ describe("Avatar", () => {
     );
     const avatar = screen.getByTestId("avatar");
     expect(avatar).not.toHaveAttribute("role");
-    expect(avatar).toHaveAttribute("aria-label", "Jane Doe");
+    // the initials it shows are in its name (WCAG 2.5.3), after the person's
+    expect(avatar).toHaveAttribute("aria-label", "Jane Doe, JD");
+  });
+
+  describe("an interactive avatar's name holds the initials it shows", () => {
+    it("adds the initials after the name, and before a status", () => {
+      render(<Avatar as="button" name="Jane Doe" status="online" data-testid="avatar" />);
+      expect(screen.getByTestId("avatar")).toHaveAttribute("aria-label", "Jane Doe, JD, Online");
+    });
+
+    it("leaves a name you pass as written", () => {
+      render(<Avatar as="button" name="Jane Doe" aria-label="Open profile" data-testid="avatar" />);
+      expect(screen.getByTestId("avatar")).toHaveAttribute("aria-label", "Open profile");
+    });
+
+    it("adds nothing when an image is shown, since the button shows no text", () => {
+      render(<Avatar as="button" name="Jane Doe" src="/jane.png" data-testid="avatar" />);
+      // the image's own alt names the button, with no initials added
+      expect(screen.getByRole("img", { name: "Jane Doe" })).toBeInTheDocument();
+      expect(screen.getByTestId("avatar")).not.toHaveAttribute("aria-label");
+    });
+
+    it("adds nothing for a plain avatar, which is an image and not a control", () => {
+      render(<Avatar name="Jane Doe" data-testid="avatar" />);
+      expect(screen.getByTestId("avatar")).toHaveAttribute("aria-label", "Jane Doe");
+    });
+
+    it("adds nothing when the initials are all the name there is: they are read as they are", () => {
+      render(<Avatar as="button" initials="JD" data-testid="avatar" />);
+      expect(screen.getByTestId("avatar")).not.toHaveAttribute("aria-label");
+      expect(screen.getByRole("button", { name: "JD" })).toBeInTheDocument();
+    });
   });
 
   it("has no accessibility violations when rendered as a button", async () => {

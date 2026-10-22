@@ -879,12 +879,17 @@ export const Calendar = forwardRef<HTMLDivElement, CalendarProps>((calendarProps
                         const bandStart = bandTo !== "" && bandFrom !== "" && date === bandFrom;
                         const bandStop = bandTo !== "" && bandFrom !== "" && date === bandTo;
                         const marker = markers.get(date);
+                        // A marker that draws its own content puts text beside the day's number ("20" and "$80"), and what a person sees is
+                        // what a speech-control user says, so the name has to hold those words together and in order (WCAG 2.5.3): it opens
+                        // with the number and the marker's label. A dot says nothing on screen, so its label follows the date as before.
+                        const markerShowsText = Boolean(marker?.content && marker.label);
                         const name = [
+                          markerShowsText ? `${formatNumber(civil.day)} ${marker?.label}` : "",
                           labels.day({ year: civil.year, month: civil.month, day: civil.day, weekday: weekdayOf(civil) }),
                           isToday ? labels.today : "",
                           isRange && isStart ? labels.rangeStart : "",
                           isRange && isEnd ? labels.rangeEnd : "",
-                          marker?.label ?? "",
+                          markerShowsText ? "" : (marker?.label ?? ""),
                         ]
                           .filter(Boolean)
                           .join(", ");

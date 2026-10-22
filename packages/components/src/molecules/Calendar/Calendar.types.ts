@@ -59,7 +59,9 @@ export interface CalendarMarker {
    */
   content?: ReactNode;
   /**
-   * What the marker means, added to the day's accessible name ("…, 2 events"). Without it the marker is decorative.
+   * What the marker means, added to the day's accessible name ("…, 2 events"). Without it the marker is decorative. When `content`
+   * shows text, start `label` with those same words ("$80"): the name then opens with the day's number and this label, so what is
+   * on screen is in the name, in order (WCAG 2.5.3).
    */
   label?: string;
 }
