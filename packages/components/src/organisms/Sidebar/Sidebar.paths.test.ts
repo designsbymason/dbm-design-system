@@ -11,6 +11,14 @@ describe("pathOf", () => {
     expect(pathOf("//")).toBeNull();
   });
 
+  it("drops every trailing slash, and only the trailing ones, however many there are", () => {
+    expect(pathOf("/reports///")).toBe("/reports");
+    expect(pathOf("/a//b//")).toBe("/a//b");
+    expect(pathOf("/".repeat(1))).toBe("/");
+    expect(pathOf(`/a${"/".repeat(50_000)}`)).toBe("/a");
+    expect(pathOf(`/a${"/".repeat(50_000)}b`)).toBe(`/a${"/".repeat(50_000)}b`);
+  });
+
   it("has no path for an address on another site, or with only a hash or a query", () => {
     expect(pathOf("https://example.com/a")).toBeNull();
     expect(pathOf("//cdn.example.com/a")).toBeNull();

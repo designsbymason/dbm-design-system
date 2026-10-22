@@ -67,6 +67,9 @@ A full pass against `06` §9, with the findings fixed:
 - **Magic numbers:** the rail flyout's gap is `Menu`'s own default (`MENU_SIDE_OFFSET`, shared by path and not exported from the package), and the peek delays are named.
 - **Coverage:** the StrictMode and server-render/hydration tests now include `exclusive`, `peek`, collapsible sections, descriptions, group badges, `Account`, `Skeleton` and `floating` (a probe had shown they already worked).
 
+## Post-Finalization (2026-10-22)
+CodeQL alert `js/polynomial-redos` on `pathOf`: stripping trailing slashes with `/\/+$/` is quadratic on a long run of slashes that does not end the string. It is now a loop, with the same results; `Sidebar.paths.test.ts` pins them for long runs. Hrefs and the current path come from the app, so this was a hardening fix; Finalized status unchanged.
+
 ## Checks run
 - 203 unit tests in the folder (component, path helpers, server render and hydration, and the Docs guards that hold the token table, the prop order and the snippets to the code), and 79 real-browser tests in it: layout, the rail, `peek`, the panel and its spacing, group badges, floating, skeleton, the focus hand-off on a resize, and both recipes.
 - The whole library: lint (ESLint and both typechecks), unit and real-browser suites, build, the static Storybook build and both bundle checks (Sidebar JS 20.9KB of 22KB, CSS 9.9KB of 10KB), `pnpm audit` and `check-guidelines`.

@@ -11,7 +11,10 @@ export function pathOf(address: string | undefined): string | null {
   if (/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(address)) return null;
   const path = address.split(/[?#]/)[0] ?? "";
   if (path === "") return null;
-  return path.length > 1 ? path.replace(/\/+$/, "") || "/" : path;
+  // A loop, not `/\/+$/`: that pattern retries from every slash of a long run and is quadratic on one that doesn't end the string.
+  let end = path.length;
+  while (end > 1 && path.charCodeAt(end - 1) === 47) end -= 1;
+  return path.slice(0, end);
 }
 
 /**
