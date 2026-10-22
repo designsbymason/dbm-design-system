@@ -196,6 +196,9 @@ function MenuViewport({ children }: { children: ReactNode }) {
   );
 }
 
+/** The gap in pixels between a menu's trigger and its panel along `side`, when `sideOffset` is not given. Shared with `Sidebar`, whose rail menus measure from the rail's edge. */
+export const MENU_SIDE_OFFSET = 4;
+
 /**
  * The floating panel, rendered in a portal on the document body. It scrolls when taller than the room there is, is
  * named after its trigger, and takes the row size for every item inside it.
@@ -206,7 +209,7 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
       size = "md",
       side = "bottom",
       align = "start",
-      sideOffset = 4,
+      sideOffset = MENU_SIDE_OFFSET,
       alignOffset = 0,
       avoidCollisions = true,
       collisionPadding = 8,

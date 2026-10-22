@@ -26,6 +26,11 @@ const meta: Meta<typeof Sidebar.Section> = {
       table: { defaultValue: { summary: "true" } },
     },
     onOpenChange: { control: false, description: "Called with the new value when a collapsible section's heading is pressed." },
+    value: {
+      control: "text",
+      description:
+        "A name for this section's fold, kept for the whole sidebar so the page and the phone panel share it. Left out, it is the label, which is enough unless two sections have the same label, or the label is not plain text (then the page's copy and the panel's keep a fold each).",
+    },
     children: { control: false, description: "The section's Sidebar.Items and Sidebar.Groups." },
     id: { control: "text", description: "Standard DOM id." },
     className: { control: false, description: "Additional CSS classes for customization." },

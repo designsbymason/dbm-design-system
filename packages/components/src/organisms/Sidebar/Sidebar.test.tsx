@@ -1666,3 +1666,98 @@ describe("useSidebar().inPanel", () => {
     expect(screen.getAllByTestId("probe").map((probe) => probe.textContent).sort()).toEqual(["page", "panel"]);
   });
 });
+
+describe("Sidebar.Section value", () => {
+  function TwoNavs({ valueA, valueB }: { valueA?: string; valueB?: string }) {
+    return (
+      <Sidebar collapseBelow="never">
+        <Sidebar.Nav aria-label="First">
+          <Sidebar.Section label="Settings" collapsible value={valueA}>
+            <Sidebar.Item href="/a">First item</Sidebar.Item>
+          </Sidebar.Section>
+        </Sidebar.Nav>
+        <Sidebar.Nav aria-label="Second">
+          <Sidebar.Section label="Settings" collapsible value={valueB}>
+            <Sidebar.Item href="/b">Second item</Sidebar.Item>
+          </Sidebar.Section>
+        </Sidebar.Nav>
+      </Sidebar>
+    );
+  }
+
+  it("shares one fold between two sections with the same label and no value", async () => {
+    const user = userEvent.setup();
+    render(<TwoNavs />);
+    await user.click(screen.getAllByRole("button", { name: "Settings" })[0]!);
+    await waitFor(() => expect(screen.queryByRole("link", { name: "First item" })).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByRole("link", { name: "Second item" })).not.toBeInTheDocument());
+  });
+
+  it("keeps two sections with the same label apart when each has its own value", async () => {
+    const user = userEvent.setup();
+    render(<TwoNavs valueA="first" valueB="second" />);
+    await user.click(screen.getAllByRole("button", { name: "Settings" })[0]!);
+    await waitFor(() => expect(screen.queryByRole("link", { name: "First item" })).not.toBeInTheDocument());
+    expect(screen.getByRole("link", { name: "Second item" })).toBeInTheDocument();
+  });
+
+  it("warns that a collapsible section with a label that is not text keeps a fold in each copy, and not when it has a value", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { unmount } = render(
+      <Sidebar collapseBelow="never">
+        <Sidebar.Nav>
+          <Sidebar.Section label={<span>Rich heading</span>} collapsible>
+            <Sidebar.Item href="/a">A</Sidebar.Item>
+          </Sidebar.Section>
+        </Sidebar.Nav>
+      </Sidebar>,
+    );
+    expect(warn.mock.calls.some(([message]) => String(message).includes("Pass a `value`"))).toBe(true);
+    unmount();
+    warn.mockClear();
+    render(
+      <Sidebar collapseBelow="never">
+        <Sidebar.Nav>
+          <Sidebar.Section label={<span>Rich heading</span>} collapsible value="rich">
+            <Sidebar.Item href="/a">A</Sidebar.Item>
+          </Sidebar.Section>
+        </Sidebar.Nav>
+      </Sidebar>,
+    );
+    expect(warn.mock.calls.some(([message]) => String(message).includes("Pass a `value`"))).toBe(false);
+    warn.mockRestore();
+  });
+});
+
+describe("Sidebar under StrictMode, with its stateful parts", () => {
+  it("keeps one group open at a time with exclusive, and folds a collapsible section", async () => {
+    const user = userEvent.setup();
+    render(
+      <StrictMode>
+        <Sidebar collapseBelow="never" exclusive peek>
+          <Sidebar.Nav>
+            <Sidebar.Section label="Work" collapsible>
+              <Sidebar.Group label="Reports" icon={ChartBarIcon}>
+                <Sidebar.Item href="/a" badge={5}>
+                  A
+                </Sidebar.Item>
+              </Sidebar.Group>
+              <Sidebar.Group label="Alerts" icon={HouseIcon}>
+                <Sidebar.Item href="/b">B</Sidebar.Item>
+              </Sidebar.Group>
+            </Sidebar.Section>
+          </Sidebar.Nav>
+        </Sidebar>
+      </StrictMode>,
+    );
+    const reports = screen.getByRole("button", { name: /Reports/ });
+    const alerts = screen.getByRole("button", { name: /Alerts/ });
+    await user.click(reports);
+    expect(reports).toHaveAttribute("aria-expanded", "true");
+    await user.click(alerts);
+    expect(alerts).toHaveAttribute("aria-expanded", "true");
+    expect(reports).toHaveAttribute("aria-expanded", "false");
+    await user.click(screen.getByRole("button", { name: "Work" }));
+    expect(screen.getByRole("button", { name: "Work" })).toHaveAttribute("aria-expanded", "false");
+  });
+});

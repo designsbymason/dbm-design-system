@@ -81,7 +81,7 @@ export const headerPropOrder = ["children", "id", "className", "style", "data-te
 export const contentPropOrder = ["children", "id", "className", "style", "data-testid"];
 export const footerPropOrder = ["children", "id", "className", "style", "data-testid"];
 export const navPropOrder = ["children", "aria-label", "aria-labelledby", "id", "className", "style", "data-testid"];
-export const sectionPropOrder = ["label", "action", "collapsible", "open", "defaultOpen", "onOpenChange", "children", "id", "className", "style", "data-testid"];
+export const sectionPropOrder = ["label", "action", "collapsible", "open", "defaultOpen", "onOpenChange", "value", "children", "id", "className", "style", "data-testid"];
 export const itemPropOrder = ["children", "href", "icon", "description", "badge", "action", "external", "current", "match", "disabled", "asChild", "aria-label", "id", "className", "style", "data-testid"];
 export const groupPropOrder = ["label", "children", "icon", "badge", "action", "current", "open", "defaultOpen", "onOpenChange", "disabled", "value", "id", "className", "style", "data-testid"];
 export const accountPropOrder = ["name", "description", "avatar", "src", "menuSide", "children", "id", "className", "style", "data-testid"];
@@ -351,7 +351,8 @@ so the page and the phone panel agree, and a rail that expands again keeps what 
 ### Sections that fold
 
 `collapsible` makes a section's heading a button that folds its list away and brings it back, and `defaultOpen={false}` starts one folded. The
-rail has no headings, so it always shows every list. The fold is kept for the whole sidebar, like a group's.
+rail has no headings, so it always shows every list. The fold is kept for the whole sidebar, like a group's, under the section's label: give two sections that
+share a label (or a label that is not plain text) their own `value`.
 
 <Canvas of={SidebarStories.CollapsibleSections} />
 
@@ -602,7 +603,8 @@ changed.
   "Menu" with focus held inside; `Escape`, the scrim and the close button close it, and focus returns to the button that opened it, even one
   outside the sidebar.
 - Below the collapse width the sidebar on the page is `display: none`, so it leaves the tab order and the accessibility tree; the panel's
-  copy is what a screen reader finds.
+  copy is what a screen reader finds. If the window shrinks past that width while focus is in the sidebar, focus moves to the menu button
+  (when there is one) and does not fall to the top of the page.
 - Every control is at least 24 by 24 pixels, in the rail too. The focus ring is the standard two-pixel outline in `border.focus`, drawn
   inside the item because the content scrolls and would clip a ring drawn outside it.
 - The motion is the width changing as the rail opens and closes, a short fade of the tint on hover, a group's height, the caret turning, and

@@ -1112,6 +1112,7 @@ export const SectionsFold: Story = {
               <Sidebar collapseBelow="never" defaultCollapsed={collapsed} menuContainer={menuContainer} width="14rem">
                 <Sidebar.Content>
                   <Sidebar.Nav aria-label={collapsed ? "Rail" : "Expanded"}>
+                    {!collapsed && <Sidebar.Section label="Plain">{null}</Sidebar.Section>}
                     <Sidebar.Section label="Workspace" collapsible defaultOpen={collapsed}>
                       <Sidebar.Item href="#a" icon={HouseIcon} onClick={(event) => event.preventDefault()}>
                         Home
@@ -1133,6 +1134,12 @@ export const SectionsFold: Story = {
     expect(within(rail).getByRole("link", { name: "Home" })).toBeInTheDocument();
     // expanded, it starts folded (defaultOpen false), and the heading opens it
     const heading = within(expanded).getByRole("button", { name: "Workspace" });
+    // the button brings no padding of its own: its label starts where a plain heading's does, and it is as tall
+    const plainLabel = within(expanded).getByText("Plain").getBoundingClientRect();
+    const foldLabel = within(heading).getByText("Workspace").getBoundingClientRect();
+    expect(Math.abs(foldLabel.left - plainLabel.left)).toBeLessThanOrEqual(0.5);
+    expect(getComputedStyle(heading).paddingLeft).toBe("0px");
+    expect(Math.abs(heading.getBoundingClientRect().height - plainLabel.height)).toBeLessThanOrEqual(0.5);
     expect(heading).toHaveAttribute("aria-expanded", "false");
     expect(within(expanded).queryByRole("link", { name: "Home" })).not.toBeInTheDocument();
     await userEvent.click(heading);
@@ -1415,5 +1422,76 @@ export const PanelContentAlignsWithTitle: Story = {
     // the same distance from the far edge, whether or not the row has a badge
     expect(Math.abs(edges.right - home.right - inset)).toBeLessThanOrEqual(1);
     expect(Math.abs(edges.right - inbox.right - inset)).toBeLessThanOrEqual(1);
+  },
+};
+
+export const AccountScalesWithSize: Story = {
+  name: "An account in the rail is as wide as an item at every size, with its picture as wide as its button",
+  render: () => (
+    <SidebarStage minBlockSize="30rem">
+      {(menuContainer) => (
+        <div style={{ display: "flex", gap: "1rem" }}>
+          {(["xs", "sm", "md", "lg"] as const).map((size) => (
+            <SidebarFrame key={size} height="12rem" contentLabel="">
+              <Sidebar collapseBelow="never" defaultCollapsed size={size} menuContainer={menuContainer}>
+                <Sidebar.Footer>
+                  <Sidebar.Account name={`Account ${size}`} description="john@acme.com">
+                    <Menu.Item>Profile</Menu.Item>
+                  </Sidebar.Account>
+                </Sidebar.Footer>
+              </Sidebar>
+            </SidebarFrame>
+          ))}
+        </div>
+      )}
+    </SidebarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const roots = [...canvasElement.querySelectorAll<HTMLElement>("[data-variant]")];
+    for (const [index, size] of (["xs", "sm", "md", "lg"] as const).entries()) {
+      const root = roots[index]!;
+      const button = within(root).getByRole("button", { name: new RegExp(`Account ${size}`) });
+      const picture = button.querySelector<HTMLElement>("[class*='accountAvatar']")!.getBoundingClientRect();
+      const box = itemBox(steps[size].icon, steps[size].pad);
+      expect(Math.abs(button.getBoundingClientRect().width - box)).toBeLessThanOrEqual(1);
+      expect(Math.abs(picture.width - box)).toBeLessThanOrEqual(1);
+      expect(picture.left).toBeGreaterThanOrEqual(button.getBoundingClientRect().left - 0.5);
+      expect(picture.right).toBeLessThanOrEqual(button.getBoundingClientRect().right + 0.5);
+      expect(picture.right).toBeLessThanOrEqual(root.getBoundingClientRect().right);
+    }
+  },
+};
+
+export const FocusSurvivesTheCollapse: Story = {
+  name: "When the window shrinks past the collapse step with focus in the sidebar, focus goes to the menu button and not to the top of the page",
+  render: () => (
+    <SidebarStage minBlockSize="26rem">
+      {(menuContainer) => (
+        <Sidebar.Provider>
+          <div style={{ inlineSize: "100%", alignSelf: "start", display: "flex", gap: "0.5rem" }}>
+            <Sidebar.MenuButton />
+            <DemoSidebar menuContainer={menuContainer} navLabel="Resizing" />
+          </div>
+        </Sidebar.Provider>
+      )}
+    </SidebarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const frame = window.frameElement as HTMLElement | null;
+    expect(frame).not.toBeNull();
+    const before = frame!.style.width;
+    try {
+      const canvas = within(canvasElement);
+      expect(window.innerWidth).toBeGreaterThanOrEqual(768);
+      const link = within(rootOf(canvasElement)).getByRole("link", { name: "Home" });
+      link.focus();
+      expect(link).toHaveFocus();
+      // the iframe the story is drawn in is the window it measures: make it phone-wide, as a resized browser would
+      frame!.style.width = "480px";
+      await waitFor(() => expect(getComputedStyle(rootOf(canvasElement)).display).toBe("none"));
+      await waitFor(() => expect(canvas.getByRole("button", { name: "Menu" })).toHaveFocus(), { timeout: 5000 });
+    } finally {
+      frame!.style.width = before;
+    }
   },
 };

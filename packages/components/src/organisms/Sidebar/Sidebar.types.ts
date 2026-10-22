@@ -311,6 +311,11 @@ export interface SidebarSectionProps extends Omit<HTMLAttributes<HTMLLIElement>,
   defaultOpen?: boolean;
   /** Called with the new value when a collapsible section's heading is pressed. */
   onOpenChange?: (open: boolean) => void;
+  /**
+   * A name for this section's fold, kept for the whole sidebar so the page and the phone panel share it. Left out, it is the label, which is enough
+   * unless two sections have the same label, or the label is not plain text (then the page's copy and the panel's keep a fold each).
+   */
+  value?: string;
   /** The section's `Sidebar.Item`s and `Sidebar.Group`s. */
   children?: ReactNode;
   /** Standard DOM id. */

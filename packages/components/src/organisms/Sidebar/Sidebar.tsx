@@ -23,6 +23,8 @@ import type { TooltipSide } from "../../atoms/Tooltip";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import { Drawer } from "../Drawer";
 import { Menu } from "../Menu";
+// Not part of the package's public surface: shared by path, so the rail's flyout gap is `Menu`'s own.
+import { MENU_SIDE_OFFSET } from "../Menu/Menu";
 import styles from "./Sidebar.module.css";
 import { holdsPath, matchesPath, rolledUpCount } from "./Sidebar.paths";
 import {
@@ -149,8 +151,12 @@ function useOutwardSide(): Extract<TooltipSide, "left" | "right"> {
   return (side === "start") === (dir === "ltr") ? "right" : "left";
 }
 
-/** The gap, in pixels, between a rail's edge and the flyout or menu that opens beside it: `Menu`'s own default, which a flyout measures from the rail and not from the icon. */
-const FLYOUT_GAP = 4;
+/** The gap, in pixels, between a rail's edge and the flyout or menu that opens beside it: `Menu`'s own default (so the two cannot drift), measured from the rail and not from the icon. */
+const FLYOUT_GAP = MENU_SIDE_OFFSET;
+
+/** How long a mouse rests on a rail before it peeks open, and how long after it leaves (or focus does) before it closes: long enough that crossing the rail does not open it and a short slip does not close it. */
+const PEEK_OPEN_DELAY = 120;
+const PEEK_CLOSE_DELAY = 200;
 
 /** The most a rail's count shows before it reads "99+": three digits would be a wider mark than the rail has room for beside the icon. */
 const RAIL_COUNT_MAX = 99;
@@ -321,6 +327,10 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
     const peekOpen = peek && state.collapsed && peeking;
     const railed = state.collapsed && !peekOpen;
     const closeMenu = useCallback(() => changeMenu(false, { reason: "close" }), [changeMenu]);
+    const rootRef = useRef<HTMLDivElement | null>(null);
+    // Whether focus is inside the column. Kept from the focus events and not read from the document when the width changes, because the browser
+    // drops focus from a hidden element as soon as anything reads the page's layout, which can be before the width change is reported.
+    const focusInside = useRef(false);
 
     useEffect(() => {
       if (process.env.NODE_ENV === "production" || parent === null) return;
@@ -338,17 +348,30 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
       }
     });
 
-    // Past the width where the sidebar is back on the page, a panel left open would sit over a column already on show.
+    // Past the width where the sidebar is back on the page, a panel left open would sit over a column already on show. And below it the column
+    // leaves the page (`display: none`): focus inside it would fall to the top of the document, so it goes to the menu button, which takes
+    // the column's place.
     const menuIsOpen = state.menuOpen;
     useEffect(() => {
-      if (!menuIsOpen || collapseBelow === "never" || typeof window === "undefined" || !window.matchMedia) return undefined;
+      if (collapseBelow === "never" || typeof window === "undefined" || !window.matchMedia) return undefined;
       const query = window.matchMedia(collapseQuery[collapseBelow]);
       const handleChange = (event: MediaQueryListEvent) => {
-        if (event.matches) closeMenu();
+        if (event.matches) {
+          if (menuIsOpen) closeMenu();
+          return;
+        }
+        const root = rootRef.current;
+        const active = document.activeElement;
+        if (!root || !focusInside.current || !(active === document.body || active === null || root.contains(active))) return;
+        const button = menuButtonRef.current;
+        if (button?.isConnected && getComputedStyle(root).display === "none" && button.offsetParent !== null) {
+          focusInside.current = false;
+          button.focus();
+        }
       };
       query.addEventListener("change", handleChange);
       return () => query.removeEventListener("change", handleChange);
-    }, [menuIsOpen, collapseBelow, closeMenu]);
+    }, [menuIsOpen, collapseBelow, closeMenu, menuButtonRef]);
 
     // Which groups and collapsible sections are open, kept here (not in each copy) so the page and the phone panel agree and a rail that
     // expands keeps them; and the groups registered under each parent, so `exclusive` can shut a group's siblings.
@@ -377,7 +400,6 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
       };
     }, []);
 
-    const rootRef = useRef<HTMLDivElement | null>(null);
     const rootMergedRef = useMemo(() => mergeRefs(ref, rootRef), [ref]);
     const peekTimer = useRef<number | undefined>(undefined);
     useEffect(() => () => window.clearTimeout(peekTimer.current), []);
@@ -477,19 +499,24 @@ const SidebarRoot = forwardRef<HTMLDivElement, SidebarProps>(
             data-peeking={peekOpen ? "" : undefined}
             onPointerEnter={(event) => {
               props.onPointerEnter?.(event);
-              if (event.pointerType === "mouse") askPeek(true, 120);
+              if (event.pointerType === "mouse") askPeek(true, PEEK_OPEN_DELAY);
             }}
             onPointerLeave={(event) => {
               props.onPointerLeave?.(event);
-              askPeek(false, 200);
+              askPeek(false, PEEK_CLOSE_DELAY);
             }}
             onFocus={(event) => {
               props.onFocus?.(event);
+              focusInside.current = true;
               if (event.target.matches(":focus-visible")) askPeek(true, 0);
             }}
             onBlur={(event) => {
               props.onBlur?.(event);
-              if (!event.currentTarget.contains(event.relatedTarget)) askPeek(false, 200);
+              if (!event.currentTarget.contains(event.relatedTarget)) {
+                // A blur because the column was hidden by a width change is not the reader moving on: focus is still theirs to be handed over.
+                if (getComputedStyle(event.currentTarget).display !== "none") focusInside.current = false;
+                askPeek(false, PEEK_CLOSE_DELAY);
+              }
             }}
             onKeyDown={(event) => {
               props.onKeyDown?.(event);
@@ -626,12 +653,20 @@ SidebarNav.displayName = "Sidebar.Nav";
  * one before it.
  */
 const SidebarSection = forwardRef<HTMLLIElement, SidebarSectionProps>(
-  ({ label, action, collapsible = false, open: openProp, defaultOpen = true, onOpenChange, children, className, ...props }, ref) => {
+  ({ label, action, collapsible = false, open: openProp, defaultOpen = true, onOpenChange, value, children, className, ...props }, ref) => {
     const headingId = useId();
     const listId = useId();
     const { railed, size, openState, setOpenState } = useSidebarContext("Sidebar.Section");
-    // A collapsible section's fold is kept for the whole sidebar, by its label, so the page and the phone panel agree.
-    const key = typeof label === "string" ? `section:${label}` : undefined;
+    // A collapsible section's fold is kept for the whole sidebar, by its `value` or its label, so the page and the phone panel agree.
+    const key = value !== undefined ? `section:${value}` : typeof label === "string" ? `section:${label}` : undefined;
+    useEffect(() => {
+      if (process.env.NODE_ENV === "production") return;
+      if (collapsible && key === undefined) {
+        console.warn(
+          "Sidebar.Section: a collapsible section whose `label` is not plain text keeps a separate fold on the page and in the phone panel. Pass a `value` (any string) to share it.",
+        );
+      }
+    }, [collapsible, key]);
     const [localOpen, setLocalOpen] = useState(defaultOpen);
     const stored = key !== undefined ? openState[key] : undefined;
     const open = openProp ?? stored ?? (key !== undefined ? defaultOpen : localOpen);
@@ -1075,6 +1110,10 @@ SidebarGroup.displayName = "Sidebar.Group";
  * it is the avatar alone, with the name as its tooltip and its accessible name, and the menu opens beside the rail. With no children it is a
  * plain button for your own `onClick`.
  */
+// The default avatar is as wide as an item at every step (its own `xs` is 36px, an item's `md` box), so the rail's account is one item wide and
+// its button is as wide as the picture in it.
+const accountAvatarStyle = { "--avatar-dimension-base": "var(--sidebar-item-box)" } as CSSProperties;
+
 const SidebarAccount = forwardRef<HTMLButtonElement, SidebarAccountProps>(
   ({ name, description, avatar, src, menuSide, children, className, ...props }, ref) => {
     const { railed, dir, menuContainer } = useSidebarContext("Sidebar.Account");
@@ -1084,7 +1123,7 @@ const SidebarAccount = forwardRef<HTMLButtonElement, SidebarAccountProps>(
     const buttonRef = useMemo(() => mergeRefs(ref, flyout.triggerRef), [ref, flyout.triggerRef]);
     const button = (
       <button {...props} ref={buttonRef} type="button" className={cx(styles.item, styles.account, railed && styles.railItem, className)}>
-        <span className={styles.accountAvatar}>{avatar ?? <Avatar name={name} src={src} size="xs" />}</span>
+        <span className={styles.accountAvatar}>{avatar ?? <Avatar name={name} src={src} size="xs" style={accountAvatarStyle} />}</span>
         <span className={cx(styles.accountText, railed && styles.hiddenText)}>
           <span className={styles.accountName}>{name}</span>
           {description && <span className={styles.accountDescription}>{description}</span>}

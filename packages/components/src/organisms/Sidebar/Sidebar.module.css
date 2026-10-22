@@ -203,6 +203,8 @@
   justify-content: space-between;
   gap: var(--dbm-space-2);
   min-inline-size: 0;
+  /* A native button brings its own padding; the label carries the padding, so the heading is the size and place a plain one is. */
+  padding: 0;
   border: 0;
   border-radius: var(--dbm-radius-sm);
   background-color: transparent;

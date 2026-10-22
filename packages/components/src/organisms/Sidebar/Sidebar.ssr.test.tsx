@@ -1,8 +1,9 @@
-import { ChartBarIcon, HouseIcon } from "@dbm-design-system/icons";
+import { BellIcon, ChartBarIcon, HouseIcon } from "@dbm-design-system/icons";
 import { act, screen } from "@testing-library/react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { Menu } from "../Menu";
 import { Sidebar } from "./Sidebar";
 import type { SidebarProps } from "./Sidebar.types";
 
@@ -27,7 +28,7 @@ function Tree({ defaultCollapsed, defaultMenuOpen, collapseBelow, ...props }: Si
         <Sidebar.Header>Acme</Sidebar.Header>
         <Sidebar.Content>
           <Sidebar.Nav>
-            <Sidebar.Section label="Workspace">
+            <Sidebar.Section label="Workspace" collapsible>
               <Sidebar.Item href="/" icon={HouseIcon} current badge="3">
                 Home
               </Sidebar.Item>
@@ -36,10 +37,19 @@ function Tree({ defaultCollapsed, defaultMenuOpen, collapseBelow, ...props }: Si
                   Sales
                 </Sidebar.Item>
               </Sidebar.Group>
+              <Sidebar.Group label="Alerts" icon={BellIcon}>
+                <Sidebar.Item href="/alerts" description="What needs a look" badge={4}>
+                  Errors
+                </Sidebar.Item>
+              </Sidebar.Group>
             </Sidebar.Section>
+            <Sidebar.Skeleton rows={2} />
           </Sidebar.Nav>
         </Sidebar.Content>
         <Sidebar.Footer>
+          <Sidebar.Account name="John Doe" description="john@acme.com">
+            <Menu.Item>Profile</Menu.Item>
+          </Sidebar.Account>
           <Sidebar.Toggle />
         </Sidebar.Footer>
       </Sidebar>
@@ -53,6 +63,7 @@ const variants: Array<[string, SidebarProps]> = [
   ["filled and large, never collapsing", { variant: "filled", size: "lg", collapseBelow: "never" }],
   ["right to left, on the end side", { dir: "rtl", side: "end", width: "18rem" }],
   ["with the panel open by default", { defaultMenuOpen: true }],
+  ["floating, exclusive and peeking, as a rail", { variant: "floating", exclusive: true, peek: true, defaultCollapsed: true }],
 ];
 
 afterEach(() => {
