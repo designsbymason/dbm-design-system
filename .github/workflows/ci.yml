@@ -73,23 +73,13 @@ jobs:
   # packages for Chromium and compares a screenshot against a baseline, so it
   # is the one job that can notice an OS change. `ubuntu-latest` moves to
   # 26.04 gradually between 2026-10-19 and 2026-11-19, so leaving it floating
-  # could flip between images from one push to the next. 26.04 became the
-  # required leg on 2026-10-22 (the -linux baseline matched on both images);
-  # the ubuntu-24.04 leg is informational (continue-on-error) until it is
-  # dropped. After 2026-11-19, drop the pin and the 24.04 leg and return to
-  # ubuntu-latest (guidelines/02-tech-stack-and-structure.md).
+  # could flip between images from one push to the next. Moved here from
+  # 24.04 on 2026-10-22; the 24.04 leg was dropped the same day. After
+  # 2026-11-19, return to ubuntu-latest
+  # (guidelines/02-tech-stack-and-structure.md).
   browser-tests:
-    name: browser-tests (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.experimental }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-26.04
-            experimental: false
-          - os: ubuntu-24.04
-            experimental: true
+    name: browser-tests (ubuntu-26.04)
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -121,7 +111,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-report-${{ matrix.os }}
+          name: playwright-report-ubuntu-26.04
           path: packages/components/playwright-report/
           retention-days: 14
 
