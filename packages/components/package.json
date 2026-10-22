@@ -76,10 +76,10 @@
     "@dbm-design-system/eslint-config": "workspace:*",
     "@dbm-design-system/tsconfig": "workspace:*",
     "@playwright/test": "^1.62.0",
-    "@storybook/addon-a11y": "^10.5.6",
-    "@storybook/addon-docs": "^10.5.6",
-    "@storybook/addon-vitest": "^10.5.7",
-    "@storybook/react-vite": "^10.5.6",
+    "@storybook/addon-a11y": "^10.6.3",
+    "@storybook/addon-docs": "^10.6.3",
+    "@storybook/addon-vitest": "^10.6.3",
+    "@storybook/react-vite": "^10.6.3",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
@@ -88,8 +88,8 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
-    "@vitest/browser": "^4.1.10",
-    "@vitest/browser-playwright": "^4.1.10",
+    "@vitest/browser": "^4.1.12",
+    "@vitest/browser-playwright": "^4.1.12",
     "eslint": "^10.7.0",
     "jest-axe": "^10.0.0",
     "jsdom": "^29.1.1",
@@ -97,9 +97,9 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "remark-gfm": "^4.0.1",
-    "storybook": "^10.5.6",
+    "storybook": "^10.6.3",
     "tsup": "^8.5.1",
     "typescript": "5.9.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.12"
   }
 }

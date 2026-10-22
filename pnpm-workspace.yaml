@@ -28,6 +28,10 @@ overrides:
   # passed clean at 0.28.1 before this cap existed, confirming the two are
   # compatible in practice. Bumped floor to the latest 0.28.x patch, 0.28.2.
   esbuild: ">=0.28.2 <0.29.0"
+  # Five advisories (one high) against vite `>=8.0.0 <=8.1.5`, patched in 8.1.6; flagged by `pnpm audit` in CI on 2026-10-21. Reached through
+  # Storybook, `@vitejs/plugin-react` and `@vitest/mocker` (dev/test-only, never shipped). The lockfile kept 8.1.5 under a plain `pnpm update`, so
+  # the floor is forced here; capped at `<9.0.0` as the other overrides are, since the plugins above declare the 8.x line.
+  vite: ">=8.1.6 <9.0.0"
   # CVE-2026-14257 / GHSA-mh99-v99m-4gvg: brace-expansion DoS via unbounded
   # expansion length, patched in 5.0.8. Two copies existed: one reached via
   # ESLint core + Storybook's docgen-typescript plugin (minimatch@10.2.5, a
