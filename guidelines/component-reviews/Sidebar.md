@@ -1,6 +1,6 @@
 # Sidebar — review findings
 
-Twelfth organism, built 2026-10-19 with the `06-engineering-standards.md` §9 checklist applied as it was written. **Not yet Finalized:** only the maintainer declares that, and the open items at the end are what a Finalization should read first.
+Twelfth organism, built 2026-10-19 with the `06-engineering-standards.md` §9 checklist applied as it was written. **Finalized 2026-10-21**, at the maintainer's declaration after the first-look changes, three rounds of additions and a final review pass (below). The open items at the end are what a later pass should read first; per `06` §9, further changes to the Sidebar's code, stories, docs or tokens need the maintainer's go-ahead first.
 
 ## Decisions
 - Optional `Sidebar.Provider` holds the collapsed and open state so a toggle and a menu button can sit outside the sidebar (in a `Navbar`); a `Sidebar` with none holds its own: [ADR-0104](../adr/0104-sidebar-holds-its-collapsed-and-open-state-in-an-optional-provider-that-a-toggle-and-a-menu-button-outside-it-read-over-props-only-or-an-imperative-ref.md).
