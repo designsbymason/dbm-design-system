@@ -69,15 +69,15 @@ jobs:
   # same setup (workspace build + a real Chromium via Playwright) and a
   # second full checkout/install/build cycle would just duplicate that cost.
   #
-  # Pinned to ubuntu-24.04 rather than ubuntu-latest: this job installs OS
-  # packages for Chromium and compares a screenshot against a baseline
-  # rendered on 24.04, so it is the one job that can notice an OS change.
-  # `ubuntu-latest` moves to 26.04 gradually between 2026-10-19 and
-  # 2026-11-19, so leaving it floating could flip between images from one push
-  # to the next. The ubuntu-26.04 leg is informational (continue-on-error)
-  # until it is known to pass; then either move the required leg to it
-  # (regenerating the -linux baseline if the screenshot differs — see
-  # guidelines/02-tech-stack-and-structure.md) or drop the leg.
+  # Pinned to ubuntu-26.04 rather than ubuntu-latest: this job installs OS
+  # packages for Chromium and compares a screenshot against a baseline, so it
+  # is the one job that can notice an OS change. `ubuntu-latest` moves to
+  # 26.04 gradually between 2026-10-19 and 2026-11-19, so leaving it floating
+  # could flip between images from one push to the next. 26.04 became the
+  # required leg on 2026-10-22 (the -linux baseline matched on both images);
+  # the ubuntu-24.04 leg is informational (continue-on-error) until it is
+  # dropped. After 2026-11-19, drop the pin and the 24.04 leg and return to
+  # ubuntu-latest (guidelines/02-tech-stack-and-structure.md).
   browser-tests:
     name: browser-tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -86,9 +86,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-24.04
-            experimental: false
           - os: ubuntu-26.04
+            experimental: false
+          - os: ubuntu-24.04
             experimental: true
     steps:
       - name: Checkout
