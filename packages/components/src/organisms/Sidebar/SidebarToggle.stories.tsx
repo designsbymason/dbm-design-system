@@ -7,6 +7,15 @@ const meta: Meta<typeof Sidebar.Toggle> = {
   component: Sidebar.Toggle,
   tags: ["!dev"],
   argTypes: {
+    collapseIcon: {
+      control: false,
+      description:
+        "The icon while the sidebar is expanded, on the button that collapses it. Left out it is a caret pointing toward the edge the sidebar sits against (mirrored for side end and right-to-left text), so give one that does not depend on direction or mirror it yourself.",
+    },
+    expandIcon: {
+      control: false,
+      description: "The icon while the sidebar is a rail, on the button that expands it. Left out it is a caret pointing away from the edge the sidebar sits against.",
+    },
     variant: {
       control: "select",
       options: ["primary", "secondary", "tertiary", "ghost", "destructive"],

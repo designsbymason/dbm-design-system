@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
 import type { MutableRefObject } from "react";
 import type { DrawerOpenChangeDetails } from "../Drawer";
 import type {
@@ -24,7 +24,7 @@ export const defaultLabels: SidebarLabels = {
 /** The state a `Sidebar.Provider` (or a `Sidebar` with no provider around it) holds, and what the buttons outside it need to act on it. */
 export interface SidebarStateContextValue {
   /** Whether the sidebar is a rail, and the phone panel's open state, with the functions that change them. */
-  state: SidebarState;
+  state: SidebarOwnState;
   /** The same change as `state.setMenuOpen`, but with the reason, for the panel's own `onOpenChange`. */
   changeMenu: (open: boolean, details: DrawerOpenChangeDetails) => void;
   collapseBelow: SidebarCollapseBelow;
@@ -95,6 +95,9 @@ export function useSidebarStateContext(part: string): SidebarStateContextValue {
   return context;
 }
 
+/** What the sidebar holds itself: `SidebarState` without `inPanel`, which `useSidebar()` works out for the part calling it. */
+export type SidebarOwnState = Omit<SidebarState, "inPanel">;
+
 /**
  * The sidebar's state and the functions that change it, from inside a `Sidebar` or a `Sidebar.Provider`. `collapsed` is what the part
  * calling it sees: a header drawn in the phone panel is never in a rail.
@@ -102,6 +105,8 @@ export function useSidebarStateContext(part: string): SidebarStateContextValue {
 export function useSidebar(): SidebarState {
   const { state } = useSidebarStateContext("useSidebar");
   const sidebar = useContext(SidebarContext);
+  const inPanel = useContext(SidebarPanelContext);
   // A part drawn expanded (in the phone panel, or in a rail that is peeking open) sees a sidebar that is not collapsed.
-  return sidebar !== null && !sidebar.railed && state.collapsed ? { ...state, collapsed: false } : state;
+  const collapsed = sidebar !== null && !sidebar.railed ? false : state.collapsed;
+  return useMemo(() => ({ ...state, collapsed, inPanel }), [state, collapsed, inPanel]);
 }

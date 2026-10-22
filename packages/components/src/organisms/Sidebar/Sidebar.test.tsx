@@ -1609,3 +1609,60 @@ describe("Sidebar rail flyout offset", () => {
     expect(await screen.findByRole("menu")).toBeInTheDocument();
   });
 });
+
+describe("Sidebar.Toggle icons", () => {
+  it("draws your own icon for each state, in place of the caret", async () => {
+    const user = userEvent.setup();
+    render(
+      <Sidebar collapseBelow="never">
+        <Sidebar.Footer>
+          <Sidebar.Toggle collapseIcon={HouseIcon} expandIcon={UsersIcon} />
+        </Sidebar.Footer>
+      </Sidebar>,
+    );
+    const button = screen.getByRole("button", { name: "Collapse sidebar" });
+    const before = button.innerHTML;
+    await user.click(button);
+    const after = screen.getByRole("button", { name: "Expand sidebar" }).innerHTML;
+    expect(after).not.toBe(before);
+    // neither is the default caret: a caret is a single path, and these icons are drawn differently
+    const caret = render(
+      <Sidebar collapseBelow="never">
+        <Sidebar.Footer>
+          <Sidebar.Toggle />
+        </Sidebar.Footer>
+      </Sidebar>,
+    );
+    expect(caret.container.querySelector("button")!.innerHTML).not.toBe(before);
+  });
+});
+
+describe("useSidebar().inPanel", () => {
+  function Probe() {
+    const { inPanel } = useSidebar();
+    return <span data-testid="probe">{inPanel ? "panel" : "page"}</span>;
+  }
+
+  it("is false on the page, and there is no panel to read true from when the sidebar never collapses", () => {
+    render(
+      <Sidebar collapseBelow="never">
+        <Sidebar.Header>
+          <Probe />
+        </Sidebar.Header>
+      </Sidebar>,
+    );
+    expect(screen.getAllByTestId("probe").map((probe) => probe.textContent)).toEqual(["page"]);
+  });
+
+  it("is true for the copy drawn in the open phone panel, beside the page's copy", async () => {
+    render(
+      <Sidebar defaultMenuOpen>
+        <Sidebar.Header>
+          <Probe />
+        </Sidebar.Header>
+      </Sidebar>,
+    );
+    await waitFor(() => expect(screen.getAllByTestId("probe")).toHaveLength(2));
+    expect(screen.getAllByTestId("probe").map((probe) => probe.textContent).sort()).toEqual(["page", "panel"]);
+  });
+});

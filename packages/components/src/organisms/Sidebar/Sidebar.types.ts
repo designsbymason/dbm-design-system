@@ -107,6 +107,11 @@ export interface SidebarState {
   setCollapsed: (collapsed: boolean) => void;
   /** Flips `collapsed`. */
   toggleCollapsed: () => void;
+  /**
+   * Whether the part calling it is drawn in the phone panel (below `collapseBelow`) and not on the page. The same children are drawn in both, so a
+   * part can draw something different on a phone: a shorter header, an extra link, a close hint.
+   */
+  inPanel: boolean;
   /** Whether the phone panel is open. */
   menuOpen: boolean;
   /** Opens or closes the phone panel. Reports through `onMenuOpenChange`. */
@@ -481,6 +486,15 @@ export interface SidebarSkeletonProps extends Omit<HTMLAttributes<HTMLLIElement>
 }
 
 export interface SidebarToggleProps extends Omit<ComponentPropsWithoutRef<"button">, "children" | "type"> {
+  /**
+   * The icon while the sidebar is expanded, on the button that collapses it. Left out it is a caret pointing toward the edge the sidebar sits against
+   * (mirrored for `side="end"` and right-to-left text), so give one that does not depend on direction (a sidebar-simple icon, say) or mirror it yourself.
+   */
+  collapseIcon?: PhosphorIcon;
+  /**
+   * The icon while the sidebar is a rail, on the button that expands it. Left out it is a caret pointing away from the edge the sidebar sits against.
+   */
+  expandIcon?: PhosphorIcon;
   /**
    * The button's look: any `IconButton` variant, so it can match the icon buttons beside it.
    * @default 'ghost'

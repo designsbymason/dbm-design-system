@@ -302,16 +302,20 @@ ${sidebar("defaultCollapsed peek")}`,
 </Sidebar>`,
 
   groupBadges: `{/* A group shows a badge while its items are out of sight: after its label while it is shut, and on its icon in the rail. Left out, it is the
-    total of its items' numeric badges; badge={120} sets it, badge={null} shows none. In the rail a number over 99 reads "99+". */}
+    total of its items' numeric badges (Inbox: 3 + 9, Alerts: 80 + 40); badge="New" sets one, badge={null} shows none. The items show their own
+    badges once the group is open. In the rail a number over 99 reads "99+". */}
 <Sidebar.Nav>
   <Sidebar.Group label="Inbox" icon={TrayIcon}>
     <Sidebar.Item href="/inbox/mentions" badge={3}>Mentions</Sidebar.Item>
     <Sidebar.Item href="/inbox/assigned" badge={9}>Assigned</Sidebar.Item>
     <Sidebar.Item href="/inbox/drafts">Drafts</Sidebar.Item>
   </Sidebar.Group>
-  <Sidebar.Group label="Alerts" icon={BellIcon} badge={120}>
-    <Sidebar.Item href="/alerts/errors">Errors</Sidebar.Item>
-    <Sidebar.Item href="/alerts/warnings">Warnings</Sidebar.Item>
+  <Sidebar.Group label="Alerts" icon={BellIcon}>
+    <Sidebar.Item href="/alerts/errors" badge={80}>Errors</Sidebar.Item>
+    <Sidebar.Item href="/alerts/warnings" badge={40}>Warnings</Sidebar.Item>
+  </Sidebar.Group>
+  <Sidebar.Group label="Reports" icon={ChartBarIcon} badge="New">
+    <Sidebar.Item href="/reports/sales">Sales</Sidebar.Item>
   </Sidebar.Group>
 </Sidebar.Nav>`,
 

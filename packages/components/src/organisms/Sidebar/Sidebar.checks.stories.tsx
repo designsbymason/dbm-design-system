@@ -1386,3 +1386,34 @@ export const RememberedCollapsedPersists: Story = {
     await waitFor(() => expect(canvas.getByRole("button", { name: "Collapse sidebar" })).toBeVisible());
   },
 };
+
+export const PanelContentAlignsWithTitle: Story = {
+  name: "In the phone panel an item's box starts where the title's text starts and ends the same distance from the other edge",
+  render: () => (
+    <SidebarStage minBlockSize="30rem">
+      {(menuContainer) => (
+        <Sidebar.Provider collapseBelow="3xl">
+          <div style={{ inlineSize: "100%", alignSelf: "start" }}>
+            <Sidebar.MenuButton />
+            <DemoSidebar collapseBelow="3xl" menuContainer={menuContainer} navLabel="Panel alignment" />
+          </div>
+        </Sidebar.Provider>
+      )}
+    </SidebarStage>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Menu" }));
+    const panel = await canvas.findByRole("dialog", { name: "Menu" });
+    await settled(panel);
+    const title = within(panel).getByRole("heading", { name: "Menu" }).getBoundingClientRect();
+    const edges = panel.getBoundingClientRect();
+    const home = within(panel).getByRole("link", { name: "Home" }).getBoundingClientRect();
+    const inbox = within(panel).getByRole("link", { name: /Inbox/ }).getBoundingClientRect();
+    const inset = title.left - edges.left;
+    expect(Math.abs(home.left - title.left)).toBeLessThanOrEqual(1);
+    // the same distance from the far edge, whether or not the row has a badge
+    expect(Math.abs(edges.right - home.right - inset)).toBeLessThanOrEqual(1);
+    expect(Math.abs(edges.right - inbox.right - inset)).toBeLessThanOrEqual(1);
+  },
+};

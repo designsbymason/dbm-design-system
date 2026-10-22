@@ -1132,7 +1132,7 @@ SidebarAccount.displayName = "Sidebar.Account";
  * in the panel itself. Put it in the header or the footer, or outside the sidebar inside a `Sidebar.Provider`.
  */
 const SidebarToggle = forwardRef<HTMLButtonElement, SidebarToggleProps>(
-  ({ variant = "ghost", tone = "neutral", size: ownSize, className, onClick, "aria-label": ariaLabel, ...props }, ref) => {
+  ({ collapseIcon, expandIcon, variant = "ghost", tone = "neutral", size: ownSize, className, onClick, "aria-label": ariaLabel, ...props }, ref) => {
     const { state, labels, collapseBelow } = useSidebarStateContext("Sidebar.Toggle");
     const sidebar = useContext(SidebarContext);
     const inPanel = useContext(SidebarPanelContext);
@@ -1147,7 +1147,7 @@ const SidebarToggle = forwardRef<HTMLButtonElement, SidebarToggleProps>(
       <IconButton
         {...props}
         ref={ref}
-        icon={pointsLeft ? CaretLeftIcon : CaretRightIcon}
+        icon={(state.collapsed ? expandIcon : collapseIcon) ?? (pointsLeft ? CaretLeftIcon : CaretRightIcon)}
         variant={variant}
         tone={tone}
         size={ownSize ?? sidebar?.size ?? "md"}

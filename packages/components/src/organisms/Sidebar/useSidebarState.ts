@@ -1,10 +1,11 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
 import type { DrawerOpenChangeDetails } from "../Drawer";
-import type { SidebarState, SidebarStateProps } from "./Sidebar.types";
+import type { SidebarOwnState } from "./SidebarContext";
+import type { SidebarStateProps } from "./Sidebar.types";
 
 export interface SidebarStateController {
-  state: SidebarState;
+  state: SidebarOwnState;
   changeMenu: (open: boolean, details: DrawerOpenChangeDetails) => void;
   menuButtonRef: MutableRefObject<HTMLElement | null>;
 }
@@ -52,7 +53,7 @@ export function useSidebarState({
 
   const setMenuOpen = useCallback((next: boolean) => changeMenu(next, { reason: next ? "trigger" : "close" }), [changeMenu]);
 
-  const state = useMemo<SidebarState>(
+  const state = useMemo<SidebarOwnState>(
     () => ({ collapsed: currentCollapsed, setCollapsed, toggleCollapsed, menuOpen: currentMenuOpen, setMenuOpen }),
     [currentCollapsed, setCollapsed, toggleCollapsed, currentMenuOpen, setMenuOpen],
   );

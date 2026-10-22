@@ -87,7 +87,7 @@ export const groupPropOrder = ["label", "children", "icon", "badge", "action", "
 export const accountPropOrder = ["name", "description", "avatar", "src", "menuSide", "children", "id", "className", "style", "data-testid"];
 export const separatorPropOrder = ["id", "className", "style", "data-testid"];
 export const skeletonPropOrder = ["rows", "animated", "id", "className", "style", "data-testid"];
-export const togglePropOrder = ["variant", "tone", "size", "aria-label", "id", "className", "style", "data-testid"];
+export const togglePropOrder = ["collapseIcon", "expandIcon", "variant", "tone", "size", "aria-label", "id", "className", "style", "data-testid"];
 export const menuButtonPropOrder = ["icon", "variant", "tone", "size", "aria-label", "id", "className", "style", "data-testid"];
 
 <Meta of={SidebarStories} />
@@ -227,7 +227,7 @@ The button that opens the phone panel. Also accepts any other native `<button>` 
 
 ### useSidebar
 
-`useSidebar()` returns `{ collapsed, setCollapsed, toggleCollapsed, menuOpen, setMenuOpen }` from inside a `Sidebar` or
+`useSidebar()` returns `{ collapsed, setCollapsed, toggleCollapsed, inPanel, menuOpen, setMenuOpen }` from inside a `Sidebar` or
 a `Sidebar.Provider`, so your own parts can adapt: a header that draws a logo's mark alone in the rail, or a button of your
 own that opens the panel. `collapsed` is what the part calling it sees, so a part drawn in the phone panel, which is never a
 rail, always reads `false`.
@@ -465,6 +465,27 @@ function FilterState() {
 }
 ```
 
+### Different on a desktop and on a phone
+
+The same children are drawn on the page and in the phone panel, so there are two ways to make them differ. `useSidebar().inPanel` is `true` for a
+part drawn in the panel, so a header, a footer or an item can draw something else there (a shorter brand, a link that only a phone needs). And
+`collapseBelow` decides where the line falls: the column on the page is hidden by CSS below it and the panel replaces it, so the two are never both on screen.
+
+```tsx
+function Brand() {
+  const { collapsed, inPanel } = useSidebar();
+  // The panel has a title of its own, so it draws the mark alone; the page draws the name too, except in the rail.
+  return inPanel || collapsed ? <Logo /> : <LogoWithName />;
+}
+
+<Sidebar collapseBelow="lg">
+  <Sidebar.Header>
+    <Brand />
+  </Sidebar.Header>
+  {/* … */}
+</Sidebar>
+```
+
 ### On the end side, and right to left
 
 `side="end"` puts the sidebar against the end edge: its line moves and the phone panel slides in from that side. With
@@ -546,6 +567,8 @@ changed.
 - A sticky sidebar is as tall as the rest of the window (`stickyOffset` is the height of a sticky `Navbar` above it) and scrolls its
   own content, so it needs no height from you. A sidebar that is not sticky takes the height of its row.
 - To make the sidebar resizable, put it in a `Splitter` pane rather than adding a drag handle of its own.
+- `Sidebar.Toggle` takes a `collapseIcon` and an `expandIcon` when the caret is not the mark you want; the default caret mirrors with `side` and
+  `dir`, so a custom one should not depend on direction, or should be mirrored the same way.
 - Use `labels` to translate the collapse and expand names, the menu button's name and the panel's title, the close button, the
   external-link cue and the loading text.
 

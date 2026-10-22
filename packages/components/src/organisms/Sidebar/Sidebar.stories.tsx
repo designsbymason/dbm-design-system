@@ -829,15 +829,15 @@ function CountedGroups({ collapsed, menuContainer, collapseBelow }: { collapsed?
               Drafts
             </Sidebar.Item>
           </Sidebar.Group>
-          <Sidebar.Group label="Alerts" icon={BellIcon} badge={120}>
-            <Sidebar.Item href="#errors" onClick={noNavigation}>
+          <Sidebar.Group label="Alerts" icon={BellIcon}>
+            <Sidebar.Item href="#errors" badge={80} onClick={noNavigation}>
               Errors
             </Sidebar.Item>
-            <Sidebar.Item href="#warnings" onClick={noNavigation}>
+            <Sidebar.Item href="#warnings" badge={40} onClick={noNavigation}>
               Warnings
             </Sidebar.Item>
           </Sidebar.Group>
-          <Sidebar.Group label="Reports" icon={ChartBarIcon}>
+          <Sidebar.Group label="Reports" icon={ChartBarIcon} badge="New">
             <Sidebar.Item href="#sales" onClick={noNavigation}>
               Sales
             </Sidebar.Item>

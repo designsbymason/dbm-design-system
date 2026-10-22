@@ -571,8 +571,16 @@ button.toggleBox {
 
 /* --- The phone panel --- */
 
+/* The panel's padding is the drawer's own (`--overlay-pad`, the same inset as its title), so the sidebar adds none of its own on either side: an item's
+   box starts where the title's text does and ends the same distance from the other edge. The page's copy needs the padding, the panel's does not. */
 .panelBody {
-  padding-inline: var(--dbm-space-2);
+  padding-inline: 0;
+}
+
+.panelRoot .header,
+.panelRoot .footer,
+.panelRoot .nav {
+  padding-inline: 0;
 }
 
 .panelRoot {
