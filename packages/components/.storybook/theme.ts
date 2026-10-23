@@ -70,7 +70,7 @@ function buildStorybookTheme(brand: Brand, mode: Mode): ThemeVars {
     base: mode,
 
     brandTitle: "DBM Design System",
-    brandUrl: "https://github.com/designsbymason/dbm-design-system",
+    brandUrl: "https://github.com/designsbymason/dbm-system",
     brandTarget: "_self",
     // Served from `.storybook/public/logo.svg` via `staticDirs` in
     // main.ts. Fixed brand-purple circle mark (not theme-reactive) — it
