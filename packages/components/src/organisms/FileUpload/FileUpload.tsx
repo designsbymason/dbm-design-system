@@ -3,7 +3,16 @@ import { forwardRef, useCallback, useEffect, useId, useLayoutEffect, useMemo, us
 import type { ChangeEvent } from "react";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";
 import styles from "./FileUpload.module.css";
-import { checkFiles, describeAccept, formatFileSize, isThenable, limitCount, runValidate } from "./FileUpload.files";
+import {
+  checkFiles,
+  describeAccept,
+  dropDuplicates,
+  formatFileSize,
+  isSameFile,
+  isThenable,
+  limitCount,
+  runValidate,
+} from "./FileUpload.files";
 import type {
   FileUploadEntry,
   FileUploadLabels,
@@ -73,6 +82,10 @@ const FileUploadRoot = forwardRef<HTMLDivElement, FileUploadProps>(
       onFilesRejected,
       onRemove,
       onRetry,
+      onCancel,
+      allowDuplicates = false,
+      acceptLabels,
+      triggerIcon,
       hint: hintProp,
       guardPage = false,
       layout = "dropzone",
@@ -105,6 +118,7 @@ const FileUploadRoot = forwardRef<HTMLDivElement, FileUploadProps>(
       choose: (isMultiple) => (isMultiple ? "Choose files" : "Choose a file"),
       listLabel: "Selected files",
       remove: (fileName) => `Remove ${fileName}`,
+      cancel: (fileName) => `Cancel uploading ${fileName}`,
       retry: (fileName) => `Retry ${fileName}`,
       uploading: (fileName) => `Uploading ${fileName}`,
       uploadingStatus: (percent) => (percent === undefined ? "Uploading…" : `Uploading… ${formatNumber(percent)}%`),
@@ -117,6 +131,7 @@ const FileUploadRoot = forwardRef<HTMLDivElement, FileUploadProps>(
       tooLarge: (fileName, limit) => `${fileName} is larger than ${limit}`,
       tooSmall: (fileName, limit) => `${fileName} is smaller than ${limit}`,
       tooMany: (fileName, limit) => `${fileName} was not added: no more than ${formatNumber(limit)} files`,
+      duplicate: (fileName) => `${fileName} is already added`,
       invalid: (fileName, message) => `${fileName}: ${message}`,
       couldNotCheck: "it could not be checked",
       added: (count, first) => (count === 1 ? `${first} added` : `${formatNumber(count)} files added`),
@@ -182,14 +197,12 @@ const FileUploadRoot = forwardRef<HTMLDivElement, FileUploadProps>(
       }
       // Writing the same files again would only churn the browser's selection.
       const current = input.files;
-      const same = (a: File, b: File) =>
-        a.name === b.name && a.size === b.size && a.type === b.type && a.lastModified === b.lastModified;
       if (
         current &&
         current.length === list.length &&
         list.every((entry, index) => {
           const existing = current.item(index);
-          return existing !== null && same(existing, entry.file);
+          return existing !== null && isSameFile(existing, entry.file);
         })
       ) {
         return;
@@ -235,9 +248,12 @@ const FileUploadRoot = forwardRef<HTMLDivElement, FileUploadProps>(
       const { passed, rejected } = checkFiles(incoming, { accept, maxSize, minSize });
       const onFault = (error: unknown) =>
         warnOnce(`FileUpload: \`validate\` threw or rejected (${String(error)}); the file was refused. Return a message instead of throwing.`);
-      const checked = runValidate(passed, validate, onFault);
+      // A single-file field lets the same file replace itself, so it only looks for repeats within the batch.
+      const held = multiple ? entriesRef.current.map((entry) => entry.file) : [];
+      const unique = dropDuplicates(passed, held, allowDuplicates);
+      const checked = runValidate(unique.passed, validate, onFault);
       const complete = (result: { passed: File[]; rejected: FileUploadRejection[] }) =>
-        finishAdding(result.passed, [...rejected, ...result.rejected], source);
+        finishAdding(result.passed, [...rejected, ...unique.rejected, ...result.rejected], source);
       if (isThenable(checked)) void Promise.resolve(checked).then(complete);
       else complete(checked);
     };
@@ -318,13 +334,13 @@ const FileUploadRoot = forwardRef<HTMLDivElement, FileUploadProps>(
     const hint = useMemo(() => {
       if (hintProp !== undefined) return hintProp;
       const parts = [
-        accept && describeAccept(accept) ? labels.acceptedTypes(describeAccept(accept)) : null,
+        accept && describeAccept(accept, acceptLabels) ? labels.acceptedTypes(describeAccept(accept, acceptLabels)) : null,
         maxSize !== undefined ? labels.maxSizeHint(formatSize(maxSize)) : null,
         multiple && maxFiles !== undefined ? labels.maxFilesHint(maxFiles) : null,
       ].filter(Boolean);
       return parts.length > 0 ? parts.join(" · ") : null;
       // eslint-disable-next-line react-hooks/exhaustive-deps -- the labels and formatter are rebuilt every render
-    }, [hintProp, accept, maxSize, maxFiles, multiple, labels.acceptedTypes, labels.maxSizeHint, labels.maxFilesHint]);
+    }, [hintProp, accept, acceptLabels, maxSize, maxFiles, multiple, labels.acceptedTypes, labels.maxSizeHint, labels.maxFilesHint]);
 
     const describedBy =
       [hint !== null && hint !== false && hint !== undefined ? hintId : null, rejections.length > 0 ? rejectionsId : null]
@@ -346,8 +362,10 @@ const FileUploadRoot = forwardRef<HTMLDivElement, FileUploadProps>(
       hintId,
       rejectionsId,
       describedBy,
-      limits: { accept, maxSize, minSize, maxFiles },
+      limits: { accept, acceptLabels, maxSize, minSize, maxFiles },
+      triggerIcon,
       canRetry: onRetry !== undefined,
+      canCancel: onCancel !== undefined,
       triggerRef,
       open: () => {
         if (!disabled && !readOnly) inputRef.current?.click();
@@ -357,7 +375,19 @@ const FileUploadRoot = forwardRef<HTMLDivElement, FileUploadProps>(
       retry: (entry) => {
         if (!disabled && !readOnly) onRetry?.(entry);
       },
+      cancel: (entry) => {
+        if (!disabled && !readOnly) onCancel?.(entry);
+      },
     };
+
+    // The button is the only way in for a keyboard or a screen reader (the drop area is for a pointer), so a field drawn
+    // without one cannot be used by them. Checked after the parts have attached their refs.
+    useEffect(() => {
+      if (process.env.NODE_ENV === "production" || readOnly || triggerRef.current) return;
+      warnOnce(
+        "FileUpload: no `FileUpload.Trigger` was drawn, so there is no button to open the file picker; a keyboard or screen-reader user cannot add files. Put a `FileUpload.Trigger` in your `FileUpload.Dropzone` (or the field), or leave the field's children out to draw the default.",
+      );
+    });
 
     if (process.env.NODE_ENV !== "production") {
       if (!ariaLabel && !ariaLabelledBy) {

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { checkFiles, describeAccept, formatFileSize, limitCount, matchesAccept, runValidate } from "./FileUpload.files";
+import { checkFiles, describeAccept, dropDuplicates, formatFileSize, isSameFile, limitCount, matchesAccept, runValidate } from "./FileUpload.files";
 
 const file = (name: string, size = 10, type = "") => {
   const made = new File(["x"], name, { type });
@@ -62,7 +62,61 @@ describe("matchesAccept", () => {
 
 describe("describeAccept", () => {
   it("trims the pieces and drops the empty ones", () => {
-    expect(describeAccept(" .pdf ,, image/* ,")).toBe(".pdf, image/*");
+    expect(describeAccept(" .pdf ,, image/* ,")).toBe("PDF, images");
+  });
+
+  it.each([
+    [".pdf", "PDF"],
+    [".JPEG", "JPEG"],
+    ["image/*", "images"],
+    ["video/*", "videos"],
+    ["audio/*", "audio"],
+    ["text/*", "text files"],
+    ["text/plain", "plain text"],
+    ["application/pdf", "PDF"],
+    ["text/csv", "CSV"],
+    ["image/png", "PNG"],
+    ["application/*", "application/*"],
+    ["application/vnd.ms-excel", "application/vnd.ms-excel"],
+  ])("names %s as %s", (piece, name) => {
+    expect(describeAccept(piece)).toBe(name);
+  });
+
+  it("drops a name that repeats, whichever piece it came from", () => {
+    expect(describeAccept(".png, image/png, .PNG, .pdf")).toBe("PNG, PDF");
+  });
+
+  it("uses a name it is given, matched without regard to case, over the automatic one", () => {
+    expect(describeAccept(".docx, .PDF", { ".DOCX": "Word documents", ".pdf": "Portable documents" })).toBe(
+      "Word documents, Portable documents",
+    );
+  });
+});
+
+describe("dropDuplicates", () => {
+  const same = (name: string, size: number, modified: number) => {
+    const made = file(name, size, "text/plain");
+    Object.defineProperty(made, "lastModified", { value: modified });
+    return made;
+  };
+
+  it("tells two files apart by name, size, type and modified time", () => {
+    expect(isSameFile(same("a", 1, 5), same("a", 1, 5))).toBe(true);
+    expect(isSameFile(same("a", 1, 5), same("b", 1, 5))).toBe(false);
+    expect(isSameFile(same("a", 1, 5), same("a", 2, 5))).toBe(false);
+    expect(isSameFile(same("a", 1, 5), same("a", 1, 6))).toBe(false);
+    expect(isSameFile(file("a", 1, "x/y"), file("a", 1, "x/z"))).toBe(false);
+  });
+
+  it("refuses a file that is held, and a repeat in the batch, keeping the first", () => {
+    const { passed, rejected } = dropDuplicates([same("a", 1, 5), same("b", 1, 5), same("b", 1, 5)], [same("a", 1, 5)], false);
+    expect(passed.map((f) => f.name)).toEqual(["b"]);
+    expect(rejected.map((r) => [r.file.name, r.reasons])).toEqual([["a", ["duplicate"]], ["b", ["duplicate"]]]);
+  });
+
+  it("lets everything through when it is allowed", () => {
+    const files = [same("a", 1, 5), same("a", 1, 5)];
+    expect(dropDuplicates(files, [same("a", 1, 5)], true)).toEqual({ passed: files, rejected: [] });
   });
 });
 

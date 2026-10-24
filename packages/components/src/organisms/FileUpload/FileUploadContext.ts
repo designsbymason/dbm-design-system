@@ -1,5 +1,6 @@
 import { createContext, useContext } from "react";
 import type { ReactNode, RefObject } from "react";
+import type { ButtonProps } from "../../atoms/Button";
 import type {
   FileUploadEntry,
   FileUploadLabels,
@@ -29,13 +30,17 @@ export interface FileUploadContextValue {
   /** The ids the button is described by: the hint, the refusals and the field's own. */
   describedBy: string | undefined;
   /** The limits the refusal messages quote. */
-  limits: { accept?: string; maxSize?: number; minSize?: number; maxFiles?: number };
+  limits: { accept?: string; acceptLabels?: Record<string, string>; maxSize?: number; minSize?: number; maxFiles?: number };
+  /** The icon the field draws on its button: `undefined` means the default, `null` none. */
+  triggerIcon: ButtonProps["leadingIcon"] | null | undefined;
   canRetry: boolean;
+  canCancel: boolean;
   triggerRef: RefObject<HTMLButtonElement | null>;
   open: () => void;
   addFiles: (files: File[], source: FileUploadSource) => void;
   remove: (entry: FileUploadEntry) => void;
   retry: (entry: FileUploadEntry) => void;
+  cancel: (entry: FileUploadEntry) => void;
 }
 
 export const FileUploadContext = createContext<FileUploadContextValue | null>(null);

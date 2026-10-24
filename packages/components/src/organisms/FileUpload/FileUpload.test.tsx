@@ -46,7 +46,7 @@ describe("FileUpload", () => {
       expect(screen.getByRole("group", { name: "Attachments" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Choose files" })).toBeInTheDocument();
       expect(screen.getByText("Drag and drop files here, or")).toBeInTheDocument();
-      expect(screen.getByText("Accepted: .pdf · Up to 2 KB each")).toBeInTheDocument();
+      expect(screen.getByText("Accepted: PDF · Up to 2 KB each")).toBeInTheDocument();
       expect(screen.queryByRole("list")).toBeNull();
     });
 
@@ -60,12 +60,12 @@ describe("FileUpload", () => {
       render(<FileUpload aria-label="Photos" layout="button" accept="image/*" />);
       expect(screen.getByRole("button", { name: "Choose files" })).toBeInTheDocument();
       expect(screen.queryByText("Drag and drop files here, or")).toBeNull();
-      expect(screen.getByText("Accepted: image/*")).toBeInTheDocument();
+      expect(screen.getByText("Accepted: images")).toBeInTheDocument();
     });
 
     it("describes the button by the hint", () => {
       render(<FileUpload aria-label="Attachments" accept=".pdf" />);
-      const hint = screen.getByText("Accepted: .pdf");
+      const hint = screen.getByText("Accepted: PDF");
       expect(screen.getByRole("button", { name: "Choose files" })).toHaveAttribute("aria-describedby", hint.id);
     });
 
@@ -98,6 +98,23 @@ describe("FileUpload", () => {
 
     it("rejects a part drawn outside the field", () => {
       expect(() => render(<FileUpload.List />)).toThrow(/inside a <FileUpload>/);
+    });
+
+    it("warns, once, when it is drawn with no button to open the picker, and not for the default", () => {
+      render(<FileUpload aria-label="A" />);
+      expect(console.warn).not.toHaveBeenCalledWith(expect.stringContaining("no `FileUpload.Trigger`"));
+      render(
+        <FileUpload aria-label="B">
+          <FileUpload.Dropzone>Drop here</FileUpload.Dropzone>
+        </FileUpload>,
+      );
+      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("no `FileUpload.Trigger` was drawn"));
+    });
+
+    it("does not ask a read-only field for a button", () => {
+      const before = vi.mocked(console.warn).mock.calls.length;
+      render(<FileUpload aria-label="C" readOnly />);
+      expect(vi.mocked(console.warn).mock.calls.length).toBe(before);
     });
 
     it("warns, once, when it has no accessible name", () => {
@@ -170,6 +187,23 @@ describe("FileUpload", () => {
       const customPath = screen.getByRole("button", { name: "Choose files" }).querySelector("path")?.getAttribute("d");
       expect(customPath).toBeTruthy();
       expect(customPath).not.toBe(defaultPath);
+    });
+
+    it("takes the icon from the field's triggerIcon, from the button itself over that, and none for null", () => {
+      const pathOf = () => screen.getByRole("button", { name: "Choose files" }).querySelector("path")?.getAttribute("d");
+      const { rerender } = render(<FileUpload aria-label="A" />);
+      const byDefault = pathOf();
+      rerender(<FileUpload aria-label="A" triggerIcon={PaperclipIcon} />);
+      const byField = pathOf();
+      expect(byField).not.toBe(byDefault);
+      rerender(
+        <FileUpload aria-label="A" triggerIcon={PaperclipIcon}>
+          <FileUpload.Trigger leadingIcon={null} />
+        </FileUpload>,
+      );
+      expect(screen.getByRole("button", { name: "Choose files" }).querySelector("svg")).toBeNull();
+      rerender(<FileUpload aria-label="A" triggerIcon={null} layout="button" />);
+      expect(screen.getByRole("button", { name: "Choose files" }).querySelector("svg")).toBeNull();
     });
 
     it("lets a click handler on the trigger keep the picker closed", async () => {
@@ -298,7 +332,7 @@ describe("FileUpload", () => {
       expect(screen.getAllByRole("listitem").map((item) => item.textContent)).toEqual(
         expect.arrayContaining([expect.stringContaining("a.pdf"), expect.stringContaining("b.png"), expect.stringContaining("c.csv")]),
       );
-      expect(screen.getByRole("alert")).toHaveTextContent("d.exe is not an accepted file type (.PDF, image/*, text/csv)");
+      expect(screen.getByRole("alert")).toHaveTextContent("d.exe is not an accepted file type (PDF, images, CSV)");
       expect(onFilesRejected).toHaveBeenCalledWith([expect.objectContaining({ reasons: ["file-type"] })]);
     });
 
@@ -392,6 +426,70 @@ describe("FileUpload", () => {
     });
   });
 
+  describe("duplicates", () => {
+    const held = () => makeFile("a.txt", 10);
+    const twin = () => {
+      const copy = makeFile("a.txt", 10);
+      Object.defineProperty(copy, "lastModified", { value: held().lastModified });
+      return copy;
+    };
+
+    it("refuses a file that is already in the list, by name, size, type and modified time, and says so", () => {
+      const first = held();
+      const again = makeFile("a.txt", 10);
+      Object.defineProperty(again, "lastModified", { value: first.lastModified });
+      render(<FileUpload aria-label="A" defaultValue={[entryOf(first)]} />);
+      drop([again]);
+      expect(within(screen.getByRole("list", { name: "Selected files" })).getAllByRole("listitem")).toHaveLength(1);
+      expect(screen.getByRole("alert")).toHaveTextContent("a.txt is already added");
+    });
+
+    it("takes a file of the same name that differs, and repeats within one drop are refused", () => {
+      const onFilesRejected = vi.fn();
+      render(<FileUpload aria-label="A" defaultValue={[entryOf(held())]} onFilesRejected={onFilesRejected} />);
+      drop([makeFile("a.txt", 99)]);
+      expect(screen.getAllByText("a.txt")).toHaveLength(2);
+      const one = makeFile("b.txt", 5);
+      const copy = makeFile("b.txt", 5);
+      Object.defineProperty(copy, "lastModified", { value: one.lastModified });
+      drop([one, copy]);
+      expect(onFilesRejected).toHaveBeenCalledWith([expect.objectContaining({ reasons: ["duplicate"] })]);
+    });
+
+    it("lets the same file in again when asked", () => {
+      render(<FileUpload aria-label="A" allowDuplicates defaultValue={[entryOf(twin())]} />);
+      drop([twin()]);
+      expect(screen.getAllByText("a.txt")).toHaveLength(2);
+    });
+
+    it("lets a single-file field be given the same file again", () => {
+      const onFilesAdded = vi.fn();
+      render(<FileUpload aria-label="A" multiple={false} defaultValue={[entryOf(twin())]} onFilesAdded={onFilesAdded} />);
+      drop([twin()]);
+      expect(onFilesAdded).toHaveBeenCalled();
+      expect(screen.queryByRole("alert")).toBeNull();
+    });
+  });
+
+  describe("naming the accepted types", () => {
+    it("names each piece, and uses the names you give", () => {
+      render(
+        <FileUpload
+          aria-label="A"
+          accept=".pdf,.docx,image/*"
+          acceptLabels={{ ".docx": "Word documents" }}
+        />,
+      );
+      expect(screen.getByText("Accepted: PDF, Word documents, images")).toBeInTheDocument();
+    });
+
+    it("uses the names in the message for a refused type too", () => {
+      render(<FileUpload aria-label="A" accept=".pdf" acceptLabels={{ ".pdf": "PDF files" }} />);
+      drop([makeFile("a.exe")]);
+      expect(screen.getByRole("alert")).toHaveTextContent("a.exe is not an accepted file type (PDF files)");
+    });
+  });
+
   describe("controlled and uncontrolled", () => {
     it("keeps what it was given until the value changes, and asks for the change", () => {
       const onValueChange = vi.fn();
@@ -474,6 +572,57 @@ describe("FileUpload", () => {
       rerender(<FileUpload aria-label="A" defaultValue={[failed]} onRetry={onRetry} />);
       await user.click(screen.getByRole("button", { name: "Retry a.txt" }));
       expect(onRetry).toHaveBeenCalledWith(failed);
+    });
+  });
+
+  describe("cancelling", () => {
+    const uploading = () => entryOf(makeFile("a.txt"), { status: "uploading", progress: 30 });
+
+    it("keeps a remove button on an uploading file unless it can be cancelled", () => {
+      render(<FileUpload aria-label="A" defaultValue={[uploading()]} />);
+      expect(screen.getByRole("button", { name: "Remove a.txt" })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /Cancel/ })).toBeNull();
+    });
+
+    it("turns it into a cancel button, which asks the owner and leaves the list alone", async () => {
+      const user = userEvent.setup();
+      const onCancel = vi.fn();
+      const onRemove = vi.fn();
+      const entry = uploading();
+      render(<FileUpload aria-label="A" value={[entry]} onCancel={onCancel} onRemove={onRemove} onValueChange={() => undefined} />);
+      expect(screen.queryByRole("button", { name: "Remove a.txt" })).toBeNull();
+      const cancel = screen.getByRole("button", { name: "Cancel uploading a.txt" });
+      await user.click(cancel);
+      expect(onCancel).toHaveBeenCalledWith(entry);
+      expect(onRemove).not.toHaveBeenCalled();
+      expect(screen.getByText("a.txt")).toBeInTheDocument();
+    });
+
+    it("leaves a file that is not uploading with its remove button, and goes back to it when the upload ends", () => {
+      const idle = entryOf(makeFile("b.txt"));
+      const { rerender } = render(<FileUpload aria-label="A" value={[uploading(), idle]} onCancel={() => undefined} />);
+      expect(screen.getByRole("button", { name: "Remove b.txt" })).toBeInTheDocument();
+      rerender(<FileUpload aria-label="A" value={[{ ...uploading(), status: "done" }, idle]} onCancel={() => undefined} />);
+      expect(screen.getByRole("button", { name: "Remove a.txt" })).toBeInTheDocument();
+    });
+
+    it("keeps focus on the button as it changes from cancel to remove", async () => {
+      const user = userEvent.setup();
+      const { rerender } = render(<FileUpload aria-label="A" value={[uploading()]} onCancel={() => undefined} />);
+      await user.click(screen.getByRole("button", { name: "Cancel uploading a.txt" }));
+      rerender(<FileUpload aria-label="A" value={[{ ...uploading(), status: "error" }]} onCancel={() => undefined} />);
+      expect(screen.getByRole("button", { name: "Remove a.txt" })).toHaveFocus();
+    });
+
+    it("does nothing when disabled", () => {
+      const onCancel = vi.fn();
+      render(<FileUpload aria-label="A" disabled value={[uploading()]} onCancel={onCancel} />);
+      expect(screen.getByRole("button", { name: "Cancel uploading a.txt" })).toBeDisabled();
+    });
+
+    it("writes its name from the labels", () => {
+      render(<FileUpload aria-label="A" value={[uploading()]} onCancel={() => undefined} labels={{ cancel: (name) => `Stop ${name}` }} />);
+      expect(screen.getByRole("button", { name: "Stop a.txt" })).toBeInTheDocument();
     });
   });
 

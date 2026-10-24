@@ -20,12 +20,14 @@ export const fileUploadSnippets = {
 
   states: `{/* Write each entry's status and progress yourself as the file is sent:
     status: "idle" | "uploading" | "done" | "error", progress: 0–100 (leave it out if you can't measure it).
-    A failed entry shows its \`error\` text, and a retry button when you pass \`onRetry\`. */}
+    A failed entry shows its \`error\` text, and a retry button when you pass \`onRetry\`. An uploading entry's
+    button is "cancel" when you pass \`onCancel\` (stop the request there), and "remove" otherwise. */}
 <FileUpload
   aria-label="Attachments"
   value={files}
   onValueChange={setFiles}
   onRetry={(entry) => retry(entry)}
+  onCancel={(entry) => abort(entry)}
 />`,
 
   constraints: `{/* accept, maxSize (bytes), minSize, maxFiles and your own validate rule are applied to every file,
@@ -33,8 +35,10 @@ export const fileUploadSnippets = {
 <FileUpload
   aria-label="Attachments"
   accept="image/*,.pdf"
+  acceptLabels={{ ".pdf": "PDF documents" }}
   maxSize={5 * 1024 * 1024}
   maxFiles={3}
+  allowDuplicates={false}
   validate={(file) => (file.name.includes(" ") ? "Remove the spaces from the name" : undefined)}
   value={files}
   onValueChange={setFiles}
@@ -51,6 +55,10 @@ export const fileUploadSnippets = {
   <Form.Submit>Send</Form.Submit>
 </Form>`,
 
+  buttonIcon: `{/* The icon on the picker button, wherever the field draws one for you; null for none.
+    PaperclipIcon comes from @dbm-system/icons */}
+<FileUpload aria-label="Attachments" triggerIcon={PaperclipIcon} value={files} onValueChange={setFiles} />`,
+
   disabled: `<FileUpload aria-label="Attachments" disabled />`,
 
   readOnly: `{/* Shows the files and nothing to change them with. */}
@@ -66,6 +74,15 @@ export const fileUploadSnippets = {
   onRetry={(entry) => send(entry)}
 />`,
 
+  customTrigger: `{/* Compose the drop area to change the button itself: its text, variant or icon. */}
+<FileUpload aria-label="Attachments" value={files} onValueChange={setFiles}>
+  <FileUpload.Dropzone>
+    <FileUpload.Trigger variant="primary" leadingIcon={PaperclipIcon}>Attach files</FileUpload.Trigger>
+  </FileUpload.Dropzone>
+  <FileUpload.Rejections />
+  <FileUpload.List />
+</FileUpload>`,
+
   customList: `{/* Draw each entry yourself, usually a FileUpload.Item with something added. */}
 <FileUpload aria-label="Attachments" value={files} onValueChange={setFiles}>
   <FileUpload.Dropzone />
@@ -80,6 +97,7 @@ interface PlaygroundArgs {
   size?: FileUploadSize;
   layout?: FileUploadLayout;
   multiple?: boolean;
+  allowDuplicates?: boolean;
   accept?: string;
   maxSizeMb?: number;
   maxFiles?: number;
@@ -96,6 +114,7 @@ export function fileUploadPlaygroundSnippet(args: PlaygroundArgs): string {
   if (args.size && args.size !== "md") attributes.push(`size="${args.size}"`);
   if (args.layout && args.layout !== "dropzone") attributes.push(`layout="${args.layout}"`);
   if (args.multiple === false) attributes.push("multiple={false}");
+  if (args.allowDuplicates) attributes.push("allowDuplicates");
   if (args.accept?.trim()) attributes.push(`accept=${quote(args.accept.trim())}`);
   if (typeof args.maxSizeMb === "number" && args.maxSizeMb > 0) attributes.push(`maxSize={${args.maxSizeMb} * 1024 * 1024}`);
   if (args.multiple !== false && typeof args.maxFiles === "number" && args.maxFiles > 0) attributes.push(`maxFiles={${args.maxFiles}}`);

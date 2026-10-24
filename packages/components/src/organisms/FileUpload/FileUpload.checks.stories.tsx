@@ -173,7 +173,7 @@ export const TargetSizes: Story = {
     frame(
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--dbm-space-6)" }}>
         {allSizes.map((size) => (
-          <FileUpload key={size} aria-label={`Size ${size}`} size={size} defaultValue={demoEntries()} onRetry={() => undefined} />
+          <FileUpload key={size} aria-label={`Size ${size}`} size={size} defaultValue={demoEntries()} onRetry={() => undefined} onCancel={() => undefined} />
         ))}
       </div>,
     ),

@@ -10,7 +10,7 @@ Thirteenth organism, built 2026-10-24 with the `06-engineering-standards.md` §9
 - **`id` goes to the file input, not the button** (see below). `ref`, `className`, `style` and `data-testid` go to the outer group; the `aria-*` props name and describe it.
 - **No new token.** The drop area's dashed edge is `border.neutral-strong` (4.70:1 in light, 6.08:1 in dark against the surface), so the 3:1 floor for a boundary that says where to drop is met by an existing token.
 - **No dependency.** Native drag events and the file input are the whole mechanism. 8.39KB of JS and 3.05KB of CSS gzipped, inside the default budgets.
-- Not built, additive later: image previews, folder drops, chunked or resumable sending, and reordering the list.
+- Not built, additive later: image previews, folder drops, a combined size or count budget, chunked or resumable sending, and reordering the list.
 
 ## What was found while building it
 - **A `<label for>` that points at a button replaces the button's own text as its name.** The first version put `id` on the "Choose files" button, so a `FormField`'s label named it "Résumé" and the visible text was no longer in the name (WCAG 2.5.3). `id` is now on the file input: a label click opens the picker, a form's focus-the-first-invalid-control lands on the input and is handed to the button. A test asserts the button keeps its own name inside a `FormField`.
@@ -20,6 +20,13 @@ Thirteenth organism, built 2026-10-24 with the `06-engineering-standards.md` §9
 - **Testing Library's `fireEvent.drop` copies a `DataTransfer`'s own properties and a real one has none**, so a drop built that way carried no files. The interaction story and the real-browser checks dispatch a real `DragEvent` with a real `DataTransfer`; the unit tests pass a plain object, which the library does copy.
 - **`FieldError` is `role="alert"`**, so a refusal is read out when it appears, and the field does not also announce it (that would be read twice). Added, removed, finished and failed files are announced through a status region that is in the page before it has anything to say.
 - **The once-per-message `DataTransfer` warning is given once per process**, so the unit test that expects it is the first in the file to name the field, and says so.
+
+## Added after the first review
+- **`onCancel`** turns an uploading entry's remove button into cancel ("Cancel uploading report.pdf"), asking the owner to stop the request and leaving the list alone; the same button in the same place, so focus stays on it when the upload ends. Without it, an uploading file keeps its remove button.
+- **Duplicates are refused by default** (`allowDuplicates` to allow): the same name, size, type and modified time, against the list and within one drop, with a message naming the file. A single-file field always lets the same file replace itself. The default is the opposite of the first version, which let a file in twice.
+- **Accepted types are named for people** in the hint and the refusal message: `.pdf` is "PDF", `image/*` is "images", `image/png` is "PNG", and a vendor type stays as written; `acceptLabels` maps a piece of `accept` to its own words and wins. Repeats are dropped ("PNG, PNG" is "PNG").
+- **`triggerIcon`** on the field sets the icon on the button wherever the field draws one (`null` for none); a `FileUpload.Trigger` you draw can set its own `leadingIcon` (also `null`), which wins. The button's text stays `labels.choose`.
+- **A development warning when no `FileUpload.Trigger` is drawn** (not for a read-only field), since a keyboard or screen-reader user then has no way to add a file. The two docs-only part stories that draw a list without a drop area now include a trigger.
 
 ## Verified
 - Unit tests (jsdom): structure and naming, the drop, picker and paste paths, drag state across children, every rule and the reasons a file is refused, an asynchronous `validate`, a rule that throws, controlled and uncontrolled, removal and where focus goes (including not taking it back from where the person has moved on), announcements as changes only and under `StrictMode`, disabled and read-only, the form input's attributes and its validity, a `FormField`, `{...props}` order, a `labels` override with `undefined`, and axe with zero violations on every state. `FileUpload.files.test.ts` covers the pure helpers; `FileUpload.ssr.test.tsx` a server render and a hydration with no mismatch for nine variants.

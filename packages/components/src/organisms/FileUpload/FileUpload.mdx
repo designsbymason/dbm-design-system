@@ -18,7 +18,9 @@ export const rootPropOrder = [
   "defaultValue",
   "onValueChange",
   "accept",
+  "acceptLabels",
   "multiple",
+  "allowDuplicates",
   "maxFiles",
   "maxSize",
   "minSize",
@@ -27,7 +29,9 @@ export const rootPropOrder = [
   "onFilesRejected",
   "onRemove",
   "onRetry",
+  "onCancel",
   "hint",
+  "triggerIcon",
   "layout",
   "size",
   "required",
@@ -54,6 +58,7 @@ export const playgroundPropOrder = [
   "maxSizeMb",
   "maxFiles",
   "multiple",
+  "allowDuplicates",
   "layout",
   "size",
   "required",
@@ -202,6 +207,20 @@ under its `name`.
 
 <Canvas of={FileUploadStories.InAForm} />
 
+### The button's icon
+
+`triggerIcon` sets the icon on the picker button wherever the field draws one for you (`null` for none). The text is
+`labels.choose`.
+
+<Canvas of={FileUploadStories.ButtonIcon} />
+
+### A button of your own
+
+To change more than the icon (the text, the variant), put your own `FileUpload.Trigger` in `FileUpload.Dropzone`.
+It takes the `Button` atom's props and its own `leadingIcon`, which wins over the field's.
+
+<Canvas of={FileUploadStories.CustomTrigger} />
+
 ### Disabled
 
 <Canvas of={FileUploadStories.Disabled} />
@@ -227,6 +246,10 @@ under its `name`.
   after it.
 - Write each entry's `status` and `progress` as the file is sent, and its `error` when it fails, so the list tells the
   truth. Offer `onRetry` for failures a second try can fix.
+- Pass `onCancel` when a request can be stopped: an uploading file's button becomes "cancel" and asks you to abort it.
+  Decide what the entry becomes afterwards (remove it, or set it back to `"idle"` or to `"error"`).
+- Give the accepted types readable names with `acceptLabels` when the automatic ones don't say enough (a `.docx`
+  becomes "Word documents"); they are used in the hint and in the message for a refused type.
 - Put the field in a `FormField` inside a `Form` when it is part of a form: the label, the helper text, the error and
   `required` are then wired for you.
 - Use `multiple={false}` for a field that holds one file (a profile picture): a new file replaces the old one instead
@@ -245,6 +268,10 @@ under its `name`.
   list of links is often better.
 - Don't put the label's text only in the drop area's prompt. The field needs its own name (`aria-label` or a
   `FormField` label).
+- Don't set `allowDuplicates` just to silence the "already added" message: two copies of the same file are almost
+  always a mistake, and the message says which one.
+- Don't draw the field with children and leave out `FileUpload.Trigger`: a keyboard or screen-reader user then has no
+  way to add a file, and the field warns in development.
 - Don't combine `maxFiles` with `multiple={false}`: a single-file field holds one, and the field warns in development.
 - Don't turn on `guardPage` in more than one place on a page, or use it as a general drop handler: it only stops the
   browser opening a stray file.
@@ -290,6 +317,9 @@ under its `name`.
   name, which would hide "Choose files" from a speech-recognition user. A label that points at the file input opens the
   picker when it is clicked, and a form that focuses its first invalid control lands there and is handed on to the
   button.
+- **Cancel is its own button.** For an uploading file with `onCancel`, the button is named "Cancel uploading
+  report.pdf", not "Remove". It is the same button in the same place, so focus stays on it when the upload ends and the
+  name goes back to "Remove".
 - **Messages are read out.** Files that are refused appear as errors (`role="alert"`), each naming the file and the rule.
   Files added, removed, finished and failed are announced through a status region that is in the page before it has
   anything to say, so a change is announced and a first appearance is not.
@@ -315,11 +345,12 @@ under its `name`.
 ## Code examples
 
 ```tsx
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FileUploadEntry } from "@dbm-system/components";
 
 function Attachments() {
   const [files, setFiles] = useState<FileUploadEntry[]>([]);
+  const requests = useRef(new Map<string, XMLHttpRequest>());
   const update = (id: string, patch: Partial<FileUploadEntry>) =>
     setFiles((current) => current.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry)));
 
@@ -327,6 +358,7 @@ function Attachments() {
   const send = (entry: FileUploadEntry) => {
     update(entry.id, { status: "uploading", progress: 0, error: undefined });
     const request = new XMLHttpRequest();
+    requests.current.set(entry.id, request);
     request.open("POST", "/api/attachments");
     request.upload.onprogress = (event) => update(entry.id, { progress: (event.loaded / event.total) * 100 });
     request.onload = () =>
@@ -348,6 +380,10 @@ function Attachments() {
       value={files}
       onValueChange={setFiles}
       onRetry={send}
+      onCancel={(entry) => {
+        requests.current.get(entry.id)?.abort();
+        setFiles((current) => current.filter((item) => item.id !== entry.id));
+      }}
     />
   );
 }

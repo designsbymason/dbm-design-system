@@ -18,13 +18,65 @@ export function formatFileSize(bytes: number, formatNumber: (value: number) => s
   return `${formatNumber(rounded)} ${SIZE_UNITS[unit]}`;
 }
 
-/** The `accept` list as people read it: the pieces, trimmed, joined with commas. */
-export function describeAccept(accept: string): string {
-  return accept
-    .split(",")
-    .map((piece) => piece.trim())
-    .filter(Boolean)
-    .join(", ");
+// Names for the families and the types whose subtype alone reads badly.
+const FAMILY_NAMES: Record<string, string> = {
+  "image/*": "images",
+  "video/*": "videos",
+  "audio/*": "audio",
+  "text/*": "text files",
+  "text/plain": "plain text",
+};
+
+/** One `accept` piece as a person reads it: `.pdf` as "PDF", `image/*` as "images", `image/png` as "PNG". */
+function nameOfAccept(piece: string, names: Record<string, string> | undefined): string {
+  const key = piece.toLowerCase();
+  const given = names && Object.entries(names).find(([token]) => token.trim().toLowerCase() === key);
+  if (given) return given[1];
+  if (key.startsWith(".")) return key.length > 1 ? key.slice(1).toUpperCase() : piece;
+  if (FAMILY_NAMES[key]) return FAMILY_NAMES[key];
+  const subtype = key.split("/")[1];
+  // A plain subtype (pdf, png, csv, json) reads well in capitals; a vendor type or a wildcard stays as written.
+  return subtype && /^[a-z0-9]+$/.test(subtype) ? subtype.toUpperCase() : piece;
+}
+
+/**
+ * The `accept` list as people read it: each piece named (`.pdf` is "PDF", `image/*` is "images"), repeats dropped, joined
+ * with commas. `names` maps a piece of the list to the words to use for it, and wins over the automatic name.
+ */
+export function describeAccept(accept: string, names?: Record<string, string>): string {
+  const seen = new Set<string>();
+  const described: string[] = [];
+  for (const piece of accept.split(",").map((part) => part.trim()).filter(Boolean)) {
+    const name = nameOfAccept(piece, names);
+    if (seen.has(name.toLowerCase())) continue;
+    seen.add(name.toLowerCase());
+    described.push(name);
+  }
+  return described.join(", ");
+}
+
+/** Whether two files are the same file as far as a browser can tell: the same name, size, type and modified time. */
+export const isSameFile = (a: File, b: File) =>
+  a.name === b.name && a.size === b.size && a.type === b.type && a.lastModified === b.lastModified;
+
+/**
+ * Refuses a file that is already held, or that appears twice in the same batch, as a `"duplicate"`. With `allow` every
+ * file passes.
+ */
+export function dropDuplicates(
+  files: File[],
+  held: File[],
+  allow: boolean,
+): { passed: File[]; rejected: FileUploadRejection[] } {
+  if (allow) return { passed: files, rejected: [] };
+  const passed: File[] = [];
+  const rejected: FileUploadRejection[] = [];
+  for (const file of files) {
+    if (held.some((other) => isSameFile(other, file)) || passed.some((other) => isSameFile(other, file))) {
+      rejected.push({ file, reasons: ["duplicate"] });
+    } else passed.push(file);
+  }
+  return { passed, rejected };
 }
 
 /**

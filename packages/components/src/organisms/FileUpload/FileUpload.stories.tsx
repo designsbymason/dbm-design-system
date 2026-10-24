@@ -1,3 +1,4 @@
+import { PaperclipIcon } from "@dbm-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import type { CSSProperties } from "react";
 import { expect, waitFor, within } from "storybook/test";
@@ -15,6 +16,7 @@ interface PlaygroundArgs {
   size: FileUploadSize;
   layout: FileUploadLayout;
   multiple: boolean;
+  allowDuplicates: boolean;
   accept: string;
   maxSizeMb: number;
   maxFiles: number;
@@ -38,6 +40,9 @@ interface DocumentedProps {
   onFilesRejected?: unknown;
   onRemove?: unknown;
   onRetry?: unknown;
+  onCancel?: unknown;
+  acceptLabels?: unknown;
+  triggerIcon?: unknown;
   hint?: unknown;
   name?: unknown;
   form?: unknown;
@@ -64,6 +69,7 @@ const noControls: Record<keyof PlaygroundArgs, { control: false }> = {
   size: { control: false },
   layout: { control: false },
   multiple: { control: false },
+  allowDuplicates: { control: false },
   accept: { control: false },
   maxSizeMb: { control: false },
   maxFiles: { control: false },
@@ -107,6 +113,17 @@ const meta: Meta<PlaygroundArgs & DocumentedProps> = {
       description: "Whether the field takes several files. With false, a new file replaces the one already chosen.",
       table: { defaultValue: { summary: "true" } },
     },
+    acceptLabels: {
+      control: false,
+      description:
+        "Names for pieces of accept, used in the hint and in the message for a refused type: a map from the piece, as written in accept, to the words to use. Pieces without one are named automatically (.pdf is PDF, image/* is images).",
+    },
+    allowDuplicates: {
+      control: "boolean",
+      description:
+        "Whether the same file may be added twice (the same name, size, type and modified time). Refused by default, with a message. A single-file field always lets the same file replace itself.",
+      table: { defaultValue: { summary: "false" } },
+    },
     maxFiles: {
       control: "number",
       description: "The most files the field holds (multiple only). A file past it is refused with a reason. 0 or empty means no limit.",
@@ -139,6 +156,17 @@ const meta: Meta<PlaygroundArgs & DocumentedProps> = {
     onRetry: {
       control: false,
       description: "Called when the person presses retry on a failed entry. Retry buttons are shown only when this is set.",
+    },
+    onCancel: {
+      control: false,
+      description:
+        "Called when the person presses cancel on an uploading entry: stop the request. Setting it turns the button of an uploading entry from remove into cancel; what happens to the entry after is yours. Left out, an uploading entry keeps its remove button.",
+    },
+    triggerIcon: {
+      control: false,
+      description:
+        "The icon on the picker button wherever the field draws one for you, as a Phosphor icon component; null for none. A FileUpload.Trigger you draw yourself can set its own leadingIcon.",
+      table: { defaultValue: { summary: "FileArrowUpIcon" } },
     },
     hint: {
       control: false,
@@ -231,6 +259,7 @@ const meta: Meta<PlaygroundArgs & DocumentedProps> = {
     size: "md",
     layout: "dropzone",
     multiple: true,
+    allowDuplicates: false,
     accept: "",
     maxSizeMb: 0,
     maxFiles: 0,
@@ -247,6 +276,7 @@ const meta: Meta<PlaygroundArgs & DocumentedProps> = {
         size={args.size}
         layout={args.layout}
         multiple={args.multiple}
+        allowDuplicates={args.allowDuplicates}
         accept={args.accept || undefined}
         maxSize={args.maxSizeMb > 0 ? args.maxSizeMb * 1024 * 1024 : undefined}
         maxFiles={args.maxFiles > 0 ? args.maxFiles : undefined}
@@ -333,7 +363,7 @@ export const States: Story = {
   parameters: { docs: { source: { code: fileUploadSnippets.states } } },
   render: () => (
     <div style={frame}>
-      <FileUpload aria-label="Attachments" defaultValue={demoEntries()} onRetry={() => undefined} />
+      <FileUpload aria-label="Attachments" defaultValue={demoEntries()} onRetry={() => undefined} onCancel={() => undefined} />
     </div>
   ),
 };
@@ -358,6 +388,7 @@ export const Constraints: Story = {
       <SimulatedFileUpload
         aria-label="Attachments"
         accept="image/*,.pdf"
+        acceptLabels={{ ".pdf": "PDF documents" }}
         maxSize={5 * 1024 * 1024}
         maxFiles={3}
         validate={(file) => (file.name.includes(" ") ? "Remove the spaces from the name" : undefined)}
@@ -389,6 +420,36 @@ export const InAForm: Story = {
         </FormField>
         <Form.Submit>Send</Form.Submit>
       </Form>
+    </div>
+  ),
+};
+
+export const ButtonIcon: Story = {
+  name: "The button's icon",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: fileUploadSnippets.buttonIcon } } },
+  render: () => (
+    <div style={frame}>
+      <FileUpload aria-label="Attachments" triggerIcon={PaperclipIcon} />
+    </div>
+  ),
+};
+
+export const CustomTrigger: Story = {
+  name: "A button of your own",
+  argTypes: noControls,
+  parameters: { docs: { source: { code: fileUploadSnippets.customTrigger } } },
+  render: () => (
+    <div style={frame}>
+      <FileUpload aria-label="Attachments">
+        <FileUpload.Dropzone>
+          <FileUpload.Trigger variant="primary" leadingIcon={PaperclipIcon}>
+            Attach files
+          </FileUpload.Trigger>
+        </FileUpload.Dropzone>
+        <FileUpload.Rejections />
+        <FileUpload.List />
+      </FileUpload>
     </div>
   ),
 };

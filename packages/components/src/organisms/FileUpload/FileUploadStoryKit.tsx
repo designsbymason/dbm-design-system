@@ -62,6 +62,7 @@ export function SimulatedFileUpload({ failWhenNameIncludes = "fail", ...props }:
       {...props}
       value={entries}
       onValueChange={setEntries}
+      onCancel={(entry) => setEntries((current) => current.filter((item) => item.id !== entry.id))}
       onRetry={(entry) => setEntries((current) => current.map((item) => (item.id === entry.id ? { ...item, status: "idle", error: undefined } : item)))}
     />
   );

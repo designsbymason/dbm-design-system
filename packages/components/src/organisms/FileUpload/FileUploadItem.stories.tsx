@@ -32,6 +32,7 @@ type Story = StoryObj<typeof FileUpload.Item>;
 export const Default: Story = {
   render: (args) => (
     <FileUpload aria-label="Attachments" defaultValue={[args.entry]}>
+      <FileUpload.Trigger />
       <FileUpload.List>{(entry) => <FileUpload.Item key={entry.id} entry={entry} />}</FileUpload.List>
     </FileUpload>
   ),

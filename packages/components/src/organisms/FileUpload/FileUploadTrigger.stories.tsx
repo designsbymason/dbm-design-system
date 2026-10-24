@@ -20,7 +20,7 @@ const meta: Meta<typeof FileUpload.Trigger> = {
     },
     leadingIcon: {
       control: false,
-      description: "An icon before the text, as a Phosphor icon component. Defaults to a file-with-up-arrow icon.",
+      description: "An icon before the text, as a Phosphor icon component; null for none. Defaults to the field's triggerIcon, which is a file with an up arrow.",
       table: { defaultValue: { summary: "FileArrowUpIcon" } },
     },
     onClick: {

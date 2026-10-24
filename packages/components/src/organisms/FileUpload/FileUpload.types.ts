@@ -14,7 +14,7 @@ export type FileUploadStatus = "idle" | "uploading" | "done" | "error";
 export type FileUploadSource = "drop" | "picker" | "paste";
 
 /** Why a file was refused. */
-export type FileUploadRejectionReason = "file-type" | "too-large" | "too-small" | "too-many" | "invalid";
+export type FileUploadRejectionReason = "file-type" | "too-large" | "too-small" | "too-many" | "duplicate" | "invalid";
 
 /** One chosen file and, once the caller starts sending it, where that has got to. */
 export interface FileUploadEntry {
@@ -61,6 +61,8 @@ export interface FileUploadLabels {
   listLabel: string;
   /** The accessible name of an entry's remove button. @default (name) => `Remove ${name}` */
   remove: (name: string) => string;
+  /** The accessible name of the button that stops an uploading file, shown when `onCancel` is set. @default (name) => `Cancel uploading ${name}` */
+  cancel: (name: string) => string;
   /** The accessible name of an entry's retry button. @default (name) => `Retry ${name}` */
   retry: (name: string) => string;
   /** The name of an entry's progress bar. @default (name) => `Uploading ${name}` */
@@ -85,6 +87,8 @@ export interface FileUploadLabels {
   tooSmall: (name: string, min: string) => string;
   /** The refusal for a file past `maxFiles`, or past one in a single-file field. Receives the limit as a plain number. @default (name, max) => `${name} was not added: no more than ${max} files` */
   tooMany: (name: string, max: number) => string;
+  /** The refusal for a file that is already in the list, or twice in one batch. @default (name) => `${name} is already added` */
+  duplicate: (name: string) => string;
   /** The refusal for a file `validate` turned down. Receives the message it gave. @default (name, message) => `${name}: ${message}` */
   invalid: (name: string, message: string) => string;
   /** The reason given for a file whose `validate` rule threw or rejected instead of answering. @default "it could not be checked" */
@@ -163,6 +167,30 @@ export interface FileUploadProps
   onRemove?: (entry: FileUploadEntry) => void;
   /** Called when the person presses retry on a failed entry. Retry buttons are shown only when this is set. */
   onRetry?: (entry: FileUploadEntry) => void;
+  /**
+   * Called when the person presses cancel on an uploading entry: stop the request. Setting it turns the button of an
+   * uploading entry from "remove" into "cancel"; what happens to the entry after is yours (remove it, or set it back to
+   * `"idle"` or to `"error"`). Left out, an uploading entry keeps its remove button.
+   */
+  onCancel?: (entry: FileUploadEntry) => void;
+  /**
+   * Whether the same file may be added twice (the same name, size, type and modified time). Refused by default, with a
+   * message. A single-file field always lets the same file replace itself.
+   * @default false
+   */
+  allowDuplicates?: boolean;
+  /**
+   * Names for pieces of `accept`, used in the hint and in the message for a refused type: a map from the piece, as
+   * written in `accept`, to the words to use. Pieces without one are named automatically (`.pdf` is "PDF", `image/*` is
+   * "images").
+   */
+  acceptLabels?: Record<string, string>;
+  /**
+   * The icon on the picker button, as a Phosphor icon component, wherever the field draws one for you; `null` for none.
+   * A `FileUpload.Trigger` you draw yourself can set its own `leadingIcon`.
+   * @default FileArrowUpIcon
+   */
+  triggerIcon?: ButtonProps["leadingIcon"] | null;
   /**
    * The text under the button naming what is accepted. Left out, it is written from `accept`, `maxSize` and
    * `maxFiles`; pass `null` for none.
@@ -256,14 +284,15 @@ export interface FileUploadDropzoneProps extends Omit<ComponentPropsWithoutRef<"
   "data-testid"?: string;
 }
 
-export interface FileUploadTriggerProps extends Omit<ButtonProps, "onClick" | "type" | "disabled"> {
+export interface FileUploadTriggerProps extends Omit<ButtonProps, "onClick" | "type" | "disabled" | "leadingIcon"> {
   /** The button's text. Left out: "Choose files" (or "Choose a file" in a single-file field). */
   children?: ReactNode;
   /**
-   * An icon before the text, as a Phosphor icon component. Left out: a file with an up arrow (`FileArrowUpIcon`).
+   * An icon before the text, as a Phosphor icon component; `null` for none. Left out: the field's `triggerIcon`, which
+   * is a file with an up arrow (`FileArrowUpIcon`).
    * @default FileArrowUpIcon
    */
-  leadingIcon?: ButtonProps["leadingIcon"];
+  leadingIcon?: ButtonProps["leadingIcon"] | null;
   /** Called when the button is pressed, before the picker opens; `preventDefault()` keeps it closed. */
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
 }

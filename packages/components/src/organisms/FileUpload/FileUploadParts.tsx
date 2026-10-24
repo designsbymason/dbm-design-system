@@ -53,19 +53,21 @@ const actionSize: Record<FileUploadSize, "xs" | "sm" | "md"> = { xs: "xs", sm: "
 const hasFiles = (event: DragEvent) => Array.from(event.dataTransfer?.types ?? []).includes("Files");
 
 /** The sentence for one refusal: each reason in words, with the file's name. */
-function describeRejection(rejection: FileUploadRejection, context: FileUploadContextValue, accept: string | undefined): string[] {
+function describeRejection(rejection: FileUploadRejection, context: FileUploadContextValue): string[] {
   const { labels, formatSize } = context;
   const name = rejection.file.name;
   return rejection.reasons.map((reason) => {
     switch (reason) {
       case "file-type":
-        return labels.fileType(name, accept ? describeAccept(accept) : "");
+        return labels.fileType(name, context.limits.accept ? describeAccept(context.limits.accept, context.limits.acceptLabels) : "");
       case "too-large":
         return labels.tooLarge(name, formatSize(context.limits.maxSize ?? 0));
       case "too-small":
         return labels.tooSmall(name, formatSize(context.limits.minSize ?? 0));
       case "too-many":
         return labels.tooMany(name, context.multiple ? (context.limits.maxFiles ?? 1) : 1);
+      case "duplicate":
+        return labels.duplicate(name);
       default:
         return labels.invalid(name, rejection.message ?? labels.couldNotCheck);
     }
@@ -93,11 +95,13 @@ FileUploadHint.displayName = "FileUpload.Hint";
  * is "Choose files" unless you give children.
  */
 export const FileUploadTrigger = forwardRef<HTMLButtonElement, FileUploadTriggerProps>(
-  ({ children, onClick, variant = "secondary", leadingIcon = FileArrowUpIcon, "aria-describedby": describedBy, ...props }, ref) => {
+  ({ children, onClick, variant = "secondary", leadingIcon, "aria-describedby": describedBy, ...props }, ref) => {
     const context = useFileUpload("FileUpload.Trigger");
     const merged = useMemo(() => mergeRefs(ref, context.triggerRef), [ref, context.triggerRef]);
     if (context.readOnly) return null;
     const described = [context.describedBy, describedBy].filter(Boolean).join(" ") || undefined;
+    // This button's own icon wins over the field's, which wins over the default; `null` means none.
+    const chosen = leadingIcon !== undefined ? leadingIcon : context.triggerIcon !== undefined ? context.triggerIcon : FileArrowUpIcon;
     return (
       <Button
         {...props}
@@ -105,7 +109,7 @@ export const FileUploadTrigger = forwardRef<HTMLButtonElement, FileUploadTrigger
         type="button"
         variant={variant}
         size={context.size}
-        leadingIcon={leadingIcon}
+        leadingIcon={chosen ?? undefined}
         disabled={context.disabled}
         aria-describedby={described}
         onClick={(event) => {
@@ -230,7 +234,7 @@ export const FileUploadRejections = forwardRef<HTMLUListElement, FileUploadRejec
       // eslint-disable-next-line jsx-a11y/no-redundant-roles -- Safari with VoiceOver drops list semantics otherwise
       <ul {...props} ref={ref} role="list" id={context.rejectionsId} className={cx(styles.rejections, className)}>
         {context.rejections.flatMap((rejection, index) =>
-          describeRejection(rejection, context, context.limits.accept).map((message, reasonIndex) => (
+          describeRejection(rejection, context).map((message, reasonIndex) => (
             // eslint-disable-next-line jsx-a11y/no-redundant-roles -- Safari with VoiceOver drops list semantics otherwise
             <li key={`${index}-${reasonIndex}`} role="listitem">
               <FieldError>{message}</FieldError>
@@ -318,16 +322,28 @@ export const FileUploadItem = forwardRef<HTMLLIElement, FileUploadItemProps>(({ 
               onClick={() => context.retry(entry)}
             />
           )}
-          <IconButton
-            icon={XIcon}
-            variant="ghost"
-            tone="neutral"
-            size={actionSize[size]}
-            aria-label={labels.remove(name)}
-            disabled={context.disabled}
-            data-fileupload-remove=""
-            onClick={() => context.remove(entry)}
-          />
+          {status === "uploading" && context.canCancel ? (
+            <IconButton
+              icon={XIcon}
+              variant="ghost"
+              tone="neutral"
+              size={actionSize[size]}
+              aria-label={labels.cancel(name)}
+              disabled={context.disabled}
+              onClick={() => context.cancel(entry)}
+            />
+          ) : (
+            <IconButton
+              icon={XIcon}
+              variant="ghost"
+              tone="neutral"
+              size={actionSize[size]}
+              aria-label={labels.remove(name)}
+              disabled={context.disabled}
+              data-fileupload-remove=""
+              onClick={() => context.remove(entry)}
+            />
+          )}
         </div>
       )}
     </li>
