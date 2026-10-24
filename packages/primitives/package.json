@@ -3,6 +3,11 @@
   "version": "0.0.0",
   "description": "Framework-agnostic utilities and shared hooks for the DBM System (classname/ref merging, responsive-value helpers, overflow/dismissal/announcement hooks).",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/designsbymason/dbm-system.git",
+    "directory": "packages/primitives"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",

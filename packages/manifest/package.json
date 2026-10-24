@@ -3,6 +3,11 @@
   "version": "0.0.0",
   "description": "Build tool that generates the agent-readable JSON component manifest from TypeScript + JSDoc.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/designsbymason/dbm-system.git",
+    "directory": "packages/manifest"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",

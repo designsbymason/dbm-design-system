@@ -3,6 +3,11 @@
   "version": "0.0.0",
   "description": "Design tokens (primitive, semantic, and component layers) for the DBM System.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/designsbymason/dbm-system.git",
+    "directory": "packages/tokens"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
