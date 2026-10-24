@@ -39,7 +39,7 @@ apps/
                      not here)
 packages/
   tokens/           Source of truth for all design tokens (primitive + semantic + component layers)
-  primitives/        Small framework-agnostic utils (classname merging, ref merging,
+  utils/             Small framework-agnostic utils (classname merging, ref merging,
                      the `mergeDefined` helper for `labels` props, responsive style
                      helpers, the `useAnnouncement` live-region hook,
                      the `usePersistentDismiss` hook, token types) — components import

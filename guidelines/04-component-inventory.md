@@ -279,7 +279,7 @@ Dependency order, then priority (🟢 before 🟡 before ⚪). Build one at a ti
 **⚪ deferred**
 22. Menubar (after Menu), 23. EditorTabs (wraps `Tabs`; reordering needs the drag-and-drop decision), 24. Carousel, 25. ImageViewer / Lightbox (Dialog, optionally Carousel), 26. ColorPicker (Popover plus Slider), 27. Tour (Popover-style cards and a spotlight)
 
-**Reordering** (`EditorTabs`, `Tree`, `DataTable` column reordering): one hand-rolled sortable hook in `primitives`, single list, pointer/touch/keyboard, internal for now — [ADR-0043](adr/0043-reordering-is-a-hand-rolled-sortable-hook-in-primitives-for-a-single-list-over-a-drag-and-drop-dependency.md). Build the hook with the first component that needs it.
+**Reordering** (`EditorTabs`, `Tree`, `DataTable` column reordering): one hand-rolled sortable hook in `utils`, single list, pointer/touch/keyboard, internal for now — [ADR-0043](adr/0043-reordering-is-a-hand-rolled-sortable-hook-in-primitives-for-a-single-list-over-a-drag-and-drop-dependency.md). Build the hook with the first component that needs it.
 
 ## Related documents
 - `01-vision-and-goals.md` — why comprehensiveness and agent-legibility are core goals

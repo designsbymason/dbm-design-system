@@ -1,6 +1,8 @@
 # 0080 — Long option lists are drawn a window at a time by a hand-rolled hook with fixed row heights from tokens, over a virtualization dependency or measured rows
 
-**Status:** Accepted · **Date:** 2026-10-16 · **Amended 2026-10-16** — a windowed option carries its group's name; the decision itself is unchanged
+**Status:** Accepted · **Date:** 2026-10-16 · **Amended 2026-10-16** — a windowed option carries its group's name; the decision itself is unchanged · **Amended 2026-10-23** — the package it names was renamed; the decision itself is unchanged
+
+*(Amended 2026-10-23: the `primitives` package was renamed `utils`, see [ADR-0114](./0114-the-shared-helpers-package-is-utils-not-primitives.md). Where this record says `primitives` or `packages/primitives`, read `utils` and `packages/utils`.)*
 
 ## Context
 `06-engineering-standards.md` §4 makes windowing part of the definition of done for any component that can realistically

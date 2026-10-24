@@ -235,7 +235,7 @@ re-checked in Emerald dark (all colours resolve to the dark values; nothing hard
   one and the timing is measured, but this is the one piece of the component whose real-world behaviour rests on unverified assumptions.
   The Docs page says so. Finalizing means accepting that until someone tests it in VoiceOver/NVDA.
 - **A second consumer of the live-region pattern is coming** (`Alert`, `Toast`, `Banner`). Per `06-engineering-standards.md` §1 a shared
-  hook belongs in `packages/primitives` once it's used in two places; it was deliberately not extracted for one. *(Done since: `Pagination`
+  hook belongs in `packages/utils` once it's used in two places; it was deliberately not extracted for one. *(Done since: `Pagination`
   became the second consumer and the timing was extracted as `useAnnouncement`; `EmptyState` was moved onto it — see the last entry below.)*
 
 ## Gaps named, not built
@@ -275,7 +275,7 @@ asking first.
 ## Post-Finalization follow-up (2026-09-20, at explicit direction) — `announce` moved onto the shared `useAnnouncement` hook
 
 `Pagination` needed the same "put text into a live region a moment later, then clear it" timing, which made it a second consumer, so the timing was
-extracted as `useAnnouncement` in `packages/primitives` (`06-engineering-standards.md` §1). `EmptyState`'s inline copy — the message state, the two
+extracted as `useAnnouncement` in `packages/utils` (`06-engineering-standards.md` §1). `EmptyState`'s inline copy — the message state, the two
 timers, their cleanup — was replaced by the hook. What stays in `EmptyState` is what is specific to it: reading the title and description text from
 the DOM (only its own parts, sentence-ended), remembering which text was last announced so it only announces when the text is new, and forgetting
 that on unmount (the `StrictMode` fix). The hook's timings (100ms to fill, 1000ms to clear) are the ones `EmptyState` already had.

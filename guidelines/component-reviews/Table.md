@@ -426,7 +426,7 @@ after the user asked for it — the first of the three-question test (`06-engine
 `useScrollableRegion.ts`'s own overflow-detection (`scrollable`) was a near-duplicate of `ScrollArea`'s own `useIsScrollable` hook —
 flagged as a DRY opportunity in `ScrollArea.md` but left unacted on at the time, since touching a Finalized component without
 authorization isn't allowed even for a zero-behavior-change refactor. Authorized and actioned now: `scrollable` is computed by calling
-the newly-extracted, shared `useIsScrollable(containerRef, "both")` from `@dbm-system/primitives` instead of this file's own
+the newly-extracted, shared `useIsScrollable(containerRef, "both")` from `@dbm-system/utils` instead of this file's own
 local copy of the same `useSyncExternalStore` logic. The separate `captionId` lookup — reading this table's own `<caption>` id, not a
 general scroll-detection concern — stays local and untouched.
 

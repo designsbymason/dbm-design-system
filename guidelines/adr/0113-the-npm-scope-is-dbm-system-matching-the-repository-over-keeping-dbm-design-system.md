@@ -1,6 +1,8 @@
 # 0113 — The npm scope is `@dbm-system`, matching the repository, over keeping `@dbm-design-system`
 
-**Status:** Accepted · **Date:** 2026-10-23
+**Status:** Accepted · **Date:** 2026-10-23 · **Amended 2026-10-23** — one package was renamed afterwards; the decision itself is unchanged
+
+*(Amended 2026-10-23: the package this record lists as `primitives` was renamed `utils`, see [ADR-0114](./0114-the-shared-helpers-package-is-utils-not-primitives.md).)*
 
 ## Context
 The repository was renamed to `dbm-system` on 2026-10-23, and nothing is published yet. The packages were still named `@dbm-design-system/*`, so the scope no longer matched the repository. A published scope is effectively permanent: renaming it afterwards means publishing under the new scope, deprecating the old packages and breaking every consumer's imports. Until the first publish it costs only a mechanical rename.

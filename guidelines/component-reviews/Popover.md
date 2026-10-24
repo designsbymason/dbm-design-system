@@ -532,9 +532,9 @@ here, a value Radix's own JS positioning engine consumes directly, not CSS).
 
 **Extracted a reusable primitive** rather than duplicating Divider's local hook a second time, per
 this project's own DRY rule (`06-engineering-standards.md` §1: shared logic belongs in
-`packages/primitives` once used in 2+ places — this is exactly that second use case):
+`packages/utils` once used in 2+ places — this is exactly that second use case):
 `useResolvedResponsiveValue<T>(value, fallback)` now lives in
-`packages/primitives/src/hooks/useResolvedResponsiveValue.ts`, a direct generalization of
+`packages/utils/src/hooks/useResolvedResponsiveValue.ts`, a direct generalization of
 `useResolvedOrientation` (SSR-safe: resolves to `base`/`fallback` on first render, corrects via
 `matchMedia` in a layout effect). `Divider`'s own `useResolvedOrientation.ts` is deliberately left
 untouched rather than retroactively migrated onto the new shared hook — `Divider` is already

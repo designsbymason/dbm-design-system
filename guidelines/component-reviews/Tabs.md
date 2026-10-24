@@ -598,7 +598,7 @@ verified (mouse wheel and the buttons were).
 ## Overflow hook moved to `primitives`, 2026-10-03 (zero-output refactor; stays Finalized)
 
 At explicit direction, once `Toolbar`'s `overflow="scroll"` needed the same logic: `useTabsOverflow` became the shared
-`useScrollEdges` in `@dbm-system/primitives` (`Tabs` passes `itemSelector: '[role="tab"]'`, so it still measures
+`useScrollEdges` in `@dbm-system/utils` (`Tabs` passes `itemSelector: '[role="tab"]'`, so it still measures
 its first and last tab, not whatever else the list holds). The behaviour is identical (same rectangle comparison with the
 same one-pixel slack, same subscriptions); `useTabsOverflow.ts` is gone. By the three-question test nothing visible or
 behavioural changed, so it stays Finalized. Re-verified: every `Tabs` unit and browser test, including the scroll

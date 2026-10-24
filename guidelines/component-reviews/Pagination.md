@@ -156,7 +156,7 @@ component's own width, and a jump-to-page input. `Pagination` is still not Final
   opts out, and the Docs say when to. This is the *persistent-region* shape the earlier review predicted was different from `EmptyState`'s
   fill-after-mount shape — and it is: the region needs no delay before it exists, only a change. What the two share is the timing (put text in
   after a short delay, take it out again, cancel on unmount), and that is now a real second consumer, so it is extracted:
-  **`useAnnouncement` in `packages/primitives`** (`06-engineering-standards.md` §1's "2+ places"), tested from the components package (primitives
+  **`useAnnouncement` in `packages/utils`** (`06-engineering-standards.md` §1's "2+ places"), tested from the components package (primitives
   has no runner of its own), including under `StrictMode`. **`EmptyState` was moved onto it afterwards** (2026-09-20, at the user's go-ahead, since `EmptyState` is Finalized)
   — an internal refactor that changed no behaviour, recorded in `EmptyState.md`.
 - **`variant` — `ghost` (default), `outlined`, `filled`.** Names follow `Card`'s (no surface / bordered / tinted), mapped onto `Button`'s variants
@@ -295,4 +295,4 @@ The user asked for an optional prop that shows "Previous" and "Next" on the prev
 
 ## Post-Finalization fix (2026-09-26, at explicit direction) — a `labels` entry that is `undefined` keeps its default
 
-Found on `AvatarGroup`'s final review: `labels` was merged as `{ ...defaultLabels, ...labelOverrides }`, so `labels={{ x: t?.x }}` (a missing translation) replaced the default with `undefined`. Probed on this component: `previous`, `previousText`, `next`, `nextText`, `page` and `summary` crashed the render, and `navigation` and `first` left the `<nav>` and the first-page button without an accessible name. Now merged with `mergeDefined` (a new helper in `packages/primitives`, which skips an override that is `undefined`), so each label falls back to its own default. **Finalized status unchanged** — it corrects a genuine defect (`06-engineering-standards.md` §9, question 2), and nothing that rendered correctly changes. A new test fails on the old spread (checked).
+Found on `AvatarGroup`'s final review: `labels` was merged as `{ ...defaultLabels, ...labelOverrides }`, so `labels={{ x: t?.x }}` (a missing translation) replaced the default with `undefined`. Probed on this component: `previous`, `previousText`, `next`, `nextText`, `page` and `summary` crashed the render, and `navigation` and `first` left the `<nav>` and the first-page button without an accessible name. Now merged with `mergeDefined` (a new helper in `packages/utils`, which skips an override that is `undefined`), so each label falls back to its own default. **Finalized status unchanged** — it corrects a genuine defect (`06-engineering-standards.md` §9, question 2), and nothing that rendered correctly changes. A new test fails on the old spread (checked).

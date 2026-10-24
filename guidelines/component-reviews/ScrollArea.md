@@ -88,7 +88,7 @@ keyboard-specific claim was dropped, in the story's own comment.
 
 `useIsScrollable` (this component's folder) and `Table`'s own `useScrollableRegion` are near-identical
 implementations of the same `useSyncExternalStore`-based overflow-detection technique, now used in two
-places — the normal trigger for promoting a hook into `packages/primitives` per `06-engineering-standards.md`
+places — the normal trigger for promoting a hook into `packages/utils` per `06-engineering-standards.md`
 §1. Not done here: `Table` is already Finalized, and touching it (even in a zero-behavior-change way)
 needs the user's go-ahead first per the standing Finalized-components rule. Worth a small follow-up
 session if authorized: extract a shared, axis-parameterized version, have both components call it, and
@@ -358,11 +358,11 @@ comfortably within budget).
 ## Fifth follow-up: `useIsScrollable` extracted to `primitives` (2026-10-02)
 
 Acts on the DRY opportunity flagged above, at explicit direction. `useIsScrollable` moved verbatim
-to `packages/primitives/src/hooks/useIsScrollable.ts` (exported from that package's own `index.ts`,
+to `packages/utils/src/hooks/useIsScrollable.ts` (exported from that package's own `index.ts`,
 not re-exported from `@dbm-system/components`'s top-level index — it's an internal
 implementation detail, not something a consumer calls directly, the same treatment
 `useResolvedResponsiveValue` already gets). `ScrollArea.tsx` now imports it from
-`@dbm-system/primitives` instead of a local file; the local copy
+`@dbm-system/utils` instead of a local file; the local copy
 (`ScrollArea/useIsScrollable.ts`) is deleted.
 
 `Table`'s own `useScrollableRegion` now computes its `scrollable` value by calling
@@ -457,6 +457,6 @@ gzipped, within budget; Foundations token coverage unaffected). Final surface: a
 `overscrollBehavior` (`auto`/`contain`); `maxHeight`; `dir`; `onScroll` and `viewportRef` (routed to
 the real scrolling viewport, distinct from `ref`); the standard `aria-label`/`aria-labelledby`/`id`/
 `className`/`style`/`data-testid` set — 19 props in total. Built on the shared `useIsScrollable`
-hook (`packages/primitives`, also backing `Table`'s own `useScrollableRegion`). Per
+hook (`packages/utils`, also backing `Table`'s own `useScrollableRegion`). Per
 `06-engineering-standards.md` §9, don't make further changes to `ScrollArea` (code, stories, docs,
 or its tokens) without asking first.

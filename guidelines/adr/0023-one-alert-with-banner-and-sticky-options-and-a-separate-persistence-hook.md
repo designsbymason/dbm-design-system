@@ -1,6 +1,8 @@
 # 0023 — One `Alert` with `banner` and `sticky` options, and a separate `usePersistentDismiss` hook, over a separate `Banner` component or built-in persistence
 
-**Status:** Accepted · **Date:** 2026-09-23 · **Amended 2026-10-23** — the npm scope was renamed from `@dbm-design-system` to `@dbm-system`; the decision itself is unchanged
+**Status:** Accepted · **Date:** 2026-09-23 · **Amended 2026-10-23** — the npm scope was renamed from `@dbm-design-system` to `@dbm-system`; the decision itself is unchanged · **Amended 2026-10-23** — the package it names was renamed; the decision itself is unchanged
+
+*(Amended 2026-10-23: the `primitives` package was renamed `utils`, see [ADR-0114](./0114-the-shared-helpers-package-is-utils-not-primitives.md). Where this record says `primitives` or `packages/primitives`, read `utils` and `packages/utils`.)*
 
 ## Context
 `04-component-inventory.md` listed one row, `Alert / Banner`, with no decision on whether those are one component or two. An inline message in the page's content (an `Alert`) and a page-level message across the top (a `Banner`) share almost everything — tones, an icon, a title, a description, actions, a dismiss button — and differ in layout (edge to edge), positioning (sticky), and lifecycle (a dismissal that outlasts the visit). Comparable systems go both ways; there is no standard. Two further constraints applied: the system is dependency-free and SSR-safe (`CLAUDE.md`), and a component with a growing list of flags should become a compound instead (`06-engineering-standards.md` §2).

@@ -27,7 +27,7 @@ dbm-system/
 │   │   ├── style-dictionary.config.js
 │   │   └── build/                # generated: css vars, JS/TS exports, (later) RN objects
 │   │
-│   ├── primitives/               # Small framework-agnostic utils, not a Radix wrapper (see note below)
+│   ├── utils/                    # Small framework-agnostic utils, not a Radix wrapper (see note below)
 │   │   └── src/
 │   │       ├── hooks/            # useResolvedResponsiveValue, useAnnouncement, usePersistentDismiss, useIsScrollable, useScrollEdges
 │   │       ├── utils/            # cx (classname merging), mergeDefined (per-key defaults for a `labels` prop), mergeRefs, responsiveStyle
@@ -62,11 +62,11 @@ dbm-system/
 └── README.md
 ```
 
-**Why this split:** `tokens`, `primitives`, `icons`, and `components` are separately versioned/publishable packages. This lets consumers (or you, later, for React Native) depend on `tokens` and `primitives` independently without pulling in the full styled component set — and keeps the manifest generator decoupled from the components themselves.
+**Why this split:** `tokens`, `utils`, `icons`, and `components` are separately versioned/publishable packages. This lets consumers (or you, later, for React Native) depend on `tokens` and `utils` independently without pulling in the full styled component set — and keeps the manifest generator decoupled from the components themselves.
 
 **Where Storybook actually lives:** `apps/storybook/` was the originally-planned home for a *public-hosted* Storybook instance (Phase 9, not built — the directory is a stub `README.md`). The Storybook that is built and run today (`pnpm --filter @dbm-system/components run storybook`, the Docs pages, the `.storybook/blocks/*` MDX building blocks, everything in `07-storybook-and-documentation-standards.md`) lives entirely under `packages/components/.storybook/`, shipping alongside the component source it documents rather than as a separate app. `apps/storybook/` may later host a deployed build of that same instance; it is not a second Storybook setup.
 
-**What `primitives` holds.** A small set of framework-agnostic utilities and hooks shared across components. It is not a Radix wrapper: every component that needs Radix imports `@radix-ui/react-*` directly as a dependency of `packages/components`, and `primitives` has no Radix dependency of its own. `FocusTrap` and similar components implement their Radix-wrapping logic in `packages/components`.
+**What `utils` holds.** A small set of framework-agnostic utilities and hooks shared across components. It is not a Radix wrapper: every component that needs Radix imports `@radix-ui/react-*` directly as a dependency of `packages/components`, and `utils` has no Radix dependency of its own. `FocusTrap` and similar components implement their Radix-wrapping logic in `packages/components`.
 
 - **Utils:** `cx` (classname merging), `mergeRefs`, `responsiveStyle`, `mergeDefined` (per-key defaults for a `labels` prop), and the shared token types.
 - **Hooks**, each extracted once a second component needed it:
@@ -79,7 +79,7 @@ dbm-system/
 | `useIsScrollable` | Whether a scroll container overflows along an axis, so it is a keyboard-reachable region only while it scrolls (ADR-0019, ADR-0028) | `ScrollArea`, `Table`, `Splitter.Pane` |
 | `useScrollEdges` | Which end of a scrolling container has more, for edge fades and scroll buttons; takes an optional `itemSelector` and `enabled` | `Tabs`, `Toolbar` |
 
-**What `packages/components` re-exports from it:** only what a consumer is meant to call or name — `usePersistentDismiss` with its types, and the helper types `Breakpoint`, `Responsive` and `SpaceValue` that many components' public props use (type-only, no bundle cost; `src/test/publicExports.test.ts` asserts they are the very types `primitives` defines). Never the internals (`cx`, `mergeRefs`, `useAnnouncement`, `useResolvedResponsiveValue`). **Icons are deliberately not re-exported:** `@dbm-system/icons` is the whole Phosphor set, whose `Icon` type would collide with this package's own `Icon` component, so a consumer imports icons from that package (a documented second import, not a second copy of everything).
+**What `packages/components` re-exports from it:** only what a consumer is meant to call or name — `usePersistentDismiss` with its types, and the helper types `Breakpoint`, `Responsive` and `SpaceValue` that many components' public props use (type-only, no bundle cost; `src/test/publicExports.test.ts` asserts they are the very types `utils` defines). Never the internals (`cx`, `mergeRefs`, `useAnnouncement`, `useResolvedResponsiveValue`). **Icons are deliberately not re-exported:** `@dbm-system/icons` is the whole Phosphor set, whose `Icon` type would collide with this package's own `Icon` component, so a consumer imports icons from that package (a documented second import, not a second copy of everything).
 
 ---
 

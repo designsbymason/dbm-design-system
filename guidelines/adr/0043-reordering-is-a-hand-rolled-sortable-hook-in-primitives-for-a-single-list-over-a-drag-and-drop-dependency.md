@@ -1,6 +1,8 @@
 # 0043 — Reordering is a hand-rolled sortable hook in `primitives` for a single list, over a drag-and-drop dependency
 
-**Status:** Accepted · **Date:** 2026-10-05 · **Amended 2026-10-23** — the npm scope was renamed from `@dbm-design-system` to `@dbm-system`; the decision itself is unchanged
+**Status:** Accepted · **Date:** 2026-10-05 · **Amended 2026-10-23** — the npm scope was renamed from `@dbm-design-system` to `@dbm-system`; the decision itself is unchanged · **Amended 2026-10-23** — the package it names was renamed; the decision itself is unchanged
+
+*(Amended 2026-10-23: the `primitives` package was renamed `utils`, see [ADR-0114](./0114-the-shared-helpers-package-is-utils-not-primitives.md). Where this record says `primitives` or `packages/primitives`, read `utils` and `packages/utils`.)*
 
 ## Context
 Several planned organisms let a person change the order of items: `EditorTabs` (a horizontal strip), `DataTable` (column reordering) and, later, `Tree`. Doing this well means pointer, touch and keyboard reordering with screen-reader support. Each component could invent its own, or the system could share one approach. The dependency budget (`CLAUDE.md`) allows only Radix and the optional Motion, and the rest of the system has hand-rolled interaction patterns where a dependency was not justified (`Splitter`, `PinInput`).
