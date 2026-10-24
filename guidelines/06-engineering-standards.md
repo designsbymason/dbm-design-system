@@ -1,4 +1,4 @@
-# DBM Design System — Engineering Standards & Agent Process Rules
+# DBM System — Engineering Standards & Agent Process Rules
 
 This doc covers the engineering discipline that sits underneath `05-component-api-conventions.md` — not what a component's API looks like, but how the code inside it is written, and how Claude Code should operate across sessions. Read alongside `CLAUDE.md`.
 

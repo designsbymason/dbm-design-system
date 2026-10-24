@@ -1,4 +1,4 @@
-# DBM Design System — Storybook & Documentation Standards
+# DBM System — Storybook & Documentation Standards
 
 Companion to `05-component-api-conventions.md` (the API contract) and `06-engineering-standards.md` §9 (the review checklist). This doc covers a third dimension: how a component's *documentation and interactive showcase* meet the same "premium, comprehensive, agent-legible" bar the component code itself must meet.
 

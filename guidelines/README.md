@@ -1,6 +1,6 @@
 # Guidelines
 
-Internal reference documents for the DBM Design System. This is where architecture decisions, specs, and standing context live — for Claude Code, other contributors, and future-you.
+Internal reference documents for the DBM System. This is where architecture decisions, specs, and standing context live — for Claude Code, other contributors, and future-you.
 
 `CLAUDE.md` at the repo root is the short auto-read entry point; these documents are the detail behind it.
 

@@ -1,7 +1,7 @@
 {
   "name": "@dbm-system/components",
   "version": "0.0.0",
-  "description": "The DBM Design System React component library.",
+  "description": "The DBM System React component library.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",

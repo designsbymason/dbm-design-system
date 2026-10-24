@@ -300,7 +300,7 @@ document.addEventListener("keydown", (event) => {
 // `margin-right: 20px`, with no matching left margin, so the wrapper's
 // box itself was never symmetric within the header to begin with —
 // `justify-content: center` was correctly centering the image inside a
-// lopsided box. `div:has(> a[title="DBM Design System"])` targets that
+// lopsided box. `div:has(> a[title="DBM System"])` targets that
 // wrapper without an emotion-hashed class (`:has()` is the only way to
 // select an ancestor by its child in CSS).
 //
@@ -341,7 +341,7 @@ document.addEventListener("keydown", (event) => {
 // drawer's own content, not the persistent page toolbar above it.
 //
 // The logo's vertical breathing room is Storybook's own default
-// `padding: 2px 3px` on this same `a[title="DBM Design System"]` anchor
+// `padding: 2px 3px` on this same `a[title="DBM System"]` anchor
 // (confirmed via computed styles) — widened to 20px top/bottom for a
 // roomier brand row now that the logo is a wide wordmark rather than the
 // old square mark. Left/right stay at Storybook's default 3px; only the
@@ -349,8 +349,8 @@ document.addEventListener("keydown", (event) => {
 const brandChromeStyleEl = document.createElement("style");
 brandChromeStyleEl.id = "dbm-brand-chrome-overrides";
 brandChromeStyleEl.textContent = `
-  a[title="DBM Design System"] { justify-content: center; padding-top: 20px; padding-bottom: 20px; }
-  .sidebar-header div:has(> a[title="DBM Design System"]) { margin-right: 0; }
+  a[title="DBM System"] { justify-content: center; padding-top: 20px; padding-bottom: 20px; }
+  .sidebar-header div:has(> a[title="DBM System"]) { margin-right: 0; }
   .sidebar-header { position: relative; }
 
   body:has(button[aria-label="Settings"]) [role="search"] { padding-right: 38px; }

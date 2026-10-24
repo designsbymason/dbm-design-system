@@ -1,4 +1,4 @@
-# DBM Design System — Monorepo Structure & Tech Stack
+# DBM System — Monorepo Structure & Tech Stack
 
 ## 1. Accessibility primitives
 

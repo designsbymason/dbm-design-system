@@ -1,4 +1,4 @@
-# DBM Design System — Component Inventory
+# DBM System — Component Inventory
 
 Organizing principle: **9 functional categories** for documentation/discoverability (docs site, Storybook sidebar, manifest grouping), with **atomic-design tier** tracked as metadata per component (internal composition concern, not a navigation axis). See `guidelines/adr/0006` for why this hybrid approach.
 

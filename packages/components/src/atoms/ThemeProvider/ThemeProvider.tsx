@@ -24,7 +24,7 @@ function getThemeTransitionDurationMs(): number {
 }
 
 /**
- * Applies a DBM Design System brand + color mode by setting `data-theme` on
+ * Applies a DBM System brand + color mode by setting `data-theme` on
  * the document element (e.g. `data-theme="purple-light"`), matching the
  * `:root[data-theme="..."]`-scoped CSS custom properties emitted by
  * `@dbm-system/tokens`.

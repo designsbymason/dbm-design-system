@@ -69,7 +69,7 @@ function buildStorybookTheme(brand: Brand, mode: Mode): ThemeVars {
   return create({
     base: mode,
 
-    brandTitle: "DBM Design System",
+    brandTitle: "DBM System",
     brandUrl: "https://github.com/designsbymason/dbm-system",
     brandTarget: "_self",
     // Served from `.storybook/public/logo.svg` via `staticDirs` in

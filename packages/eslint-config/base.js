@@ -3,7 +3,7 @@ import eslintConfigPrettier from "eslint-config-prettier";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
-/** Shared base ESLint flat config for non-React DBM Design System packages. */
+/** Shared base ESLint flat config for non-React DBM System packages. */
 export const base = tseslint.config(
   {
     // `storybook-static/**` added alongside the new `build-storybook` CI

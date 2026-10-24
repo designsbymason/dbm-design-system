@@ -3,7 +3,7 @@ description: Run the full review pass on one component and report a prioritized 
 argument-hint: <ComponentName, e.g. Tabs>
 ---
 
-Review this DBM Design System component against the project's review checklist: $ARGUMENTS
+Review this DBM System component against the project's review checklist: $ARGUMENTS
 
 If no component is given, ask for one. Confirm it exists under `packages/components/src/atoms`, `molecules` or `organisms`; if not, say so and stop. This is a read-and-verify step: make no code, test or guideline changes.
 

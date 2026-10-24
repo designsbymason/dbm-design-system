@@ -3,7 +3,7 @@ description: Propose a component's scope, API, tokens and test plan from the inv
 argument-hint: <ComponentName, e.g. Dialog>
 ---
 
-Plan this DBM Design System component: $ARGUMENTS
+Plan this DBM System component: $ARGUMENTS
 
 If no component is given, ask for one. This is a planning step: write no code, tokens, stories or guideline files, and wait for my approval of the plan.
 

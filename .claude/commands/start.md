@@ -3,7 +3,7 @@ description: Load context for a session (reads only the guidelines the task need
 argument-hint: <today's task, e.g. "build the Dialog organism">
 ---
 
-This is the DBM Design System project (@dbm-system npm scope, monorepo at this path). Before any work, get up to speed. This is a context-loading step only: make no code or guideline changes.
+This is the DBM System project (@dbm-system npm scope, monorepo at this path). Before any work, get up to speed. This is a context-loading step only: make no code or guideline changes.
 
 Today's task: $ARGUMENTS
 

@@ -8,6 +8,7 @@ The repository was renamed to `dbm-system` on 2026-10-23, and nothing is publish
 ## Decision
 - **The npm scope is `@dbm-system`.** The seven workspace packages are `@dbm-system/tokens`, `primitives`, `icons`, `components`, `manifest`, `eslint-config` and `tsconfig`; the private workspace root is named `dbm-system`.
 - **It was done as one pure rename before any publish.** Imports, workspace dependencies, "Show code" snippets and their tests, Storybook config and the CI `--filter` lines changed together; the lockfile was regenerated.
+- **The product's display name is "DBM System"** (the Storybook title, the guideline headings, the package descriptions), to match.
 - **The `--dbm-*` custom properties and the `dbm-` class names are unchanged.** They are the design system's own prefix, not the npm scope, and renaming them is a separate decision with a much wider reach.
 - **Five ADRs that named the old scope are amended in place** and marked (0004, 0013, 0020, 0023, 0043): a package name is a detail of those records, not what they decided.
 

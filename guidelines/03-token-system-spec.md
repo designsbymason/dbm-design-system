@@ -1,4 +1,4 @@
-# DBM Design System — Token Spec
+# DBM System — Token Spec
 
 Companion to `packages/tokens/src/` (the actual generated token files in W3C Design Tokens Community Group format — ready to feed into Style Dictionary and, later, the Tokens Studio Figma plugin for design-file sync).
 

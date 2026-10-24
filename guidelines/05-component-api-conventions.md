@@ -1,4 +1,4 @@
-# DBM Design System — Component API & Coding Conventions
+# DBM System — Component API & Coding Conventions
 
 This is the contract every component follows, regardless of which build phase or Claude Code session creates it. Consistency here is what keeps a 100+-component system feeling like one system instead of 100+ one-off decisions.
 

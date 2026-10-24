@@ -1,4 +1,4 @@
-# DBM Design System — Vision & Goals
+# DBM System — Vision & Goals
 
 **Project brief · Status: v1 in progress**
 
@@ -6,7 +6,7 @@
 
 ## 1. Executive summary
 
-DBM Design System is a standalone, dependency-light React component library built from first principles for the age of AI-assisted development. It is designed to be equally usable by human engineers and AI coding agents (like Claude Code) to build web and enterprise applications quickly, consistently, and accessibly. It will ship as a versioned npm package, backed by a token-driven multi-brand theming system, a Storybook workshop, and — later — a documentation website and a companion Figma component library derived from the same design tokens.
+DBM System is a standalone, dependency-light React component library built from first principles for the age of AI-assisted development. It is designed to be equally usable by human engineers and AI coding agents (like Claude Code) to build web and enterprise applications quickly, consistently, and accessibly. It will ship as a versioned npm package, backed by a token-driven multi-brand theming system, a Storybook workshop, and — later — a documentation website and a companion Figma component library derived from the same design tokens.
 
 The system is built and maintained using Claude Code, and its own component APIs, documentation, and metadata are being designed to be legible to AI agents from day one, not retrofitted for it later.
 
@@ -20,7 +20,7 @@ At the same time, most existing design systems fall into one of two traps:
 - **Heavy, opinionated, single-brand systems** that fight you the moment your product needs to look like *your* product, not the system's.
 - **Unopinionated copy-paste collections** that give freedom but no shared upgrade path, no cross-project consistency, and leave accessibility and correctness as each team's individual problem.
 
-DBM Design System exists to avoid both traps: a real, versioned, installable package — not copy-paste — but built dependency-light and token-driven enough that it can carry multiple brands and themes without becoming someone else's product.
+DBM System exists to avoid both traps: a real, versioned, installable package — not copy-paste — but built dependency-light and token-driven enough that it can carry multiple brands and themes without becoming someone else's product.
 
 ---
 

@@ -1,7 +1,7 @@
 {
   "name": "@dbm-system/icons",
   "version": "0.0.0",
-  "description": "Typed Phosphor Icons wrapper for the DBM Design System.",
+  "description": "Typed Phosphor Icons wrapper for the DBM System.",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",

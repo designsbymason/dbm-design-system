@@ -1,4 +1,4 @@
-# DBM Design System
+# DBM System
 
 ## What this is
 An agentic, standalone React component library — built for AI coding agents (and humans) to compose web and enterprise applications. To be published to npm under the `@dbm-system/*` scope (MIT licensed) — not yet published; see `guidelines/01-vision-and-goals.md` §13 (Phase 8) for the publish pipeline's own status. Also home to a documentation site and hosted Storybook (built after the core library stabilizes). A Figma component library is planned as a future, separate deliverable derived from the same tokens.
