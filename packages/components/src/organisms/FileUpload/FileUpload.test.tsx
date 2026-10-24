@@ -1,3 +1,4 @@
+import { PaperclipIcon } from "@dbm-system/icons";
 import { act, createEvent, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
@@ -155,6 +156,20 @@ describe("FileUpload", () => {
       expect(click).toHaveBeenCalledTimes(1);
       await user.keyboard(" ");
       expect(click).toHaveBeenCalledTimes(2);
+    });
+
+    it("draws a file-with-arrow icon on the button, and the one you give it instead", () => {
+      const { rerender } = render(<FileUpload aria-label="A" />);
+      const defaultPath = screen.getByRole("button", { name: "Choose files" }).querySelector("path")?.getAttribute("d");
+      expect(defaultPath).toBeTruthy();
+      rerender(
+        <FileUpload aria-label="A">
+          <FileUpload.Trigger leadingIcon={PaperclipIcon} />
+        </FileUpload>,
+      );
+      const customPath = screen.getByRole("button", { name: "Choose files" }).querySelector("path")?.getAttribute("d");
+      expect(customPath).toBeTruthy();
+      expect(customPath).not.toBe(defaultPath);
     });
 
     it("lets a click handler on the trigger keep the picker closed", async () => {

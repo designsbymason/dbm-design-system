@@ -1,6 +1,7 @@
 import {
   ArrowClockwiseIcon,
   CheckCircleIcon,
+  FileArrowUpIcon,
   FileIcon,
   ImageIcon,
   UploadSimpleIcon,
@@ -92,7 +93,7 @@ FileUploadHint.displayName = "FileUpload.Hint";
  * is "Choose files" unless you give children.
  */
 export const FileUploadTrigger = forwardRef<HTMLButtonElement, FileUploadTriggerProps>(
-  ({ children, onClick, variant = "secondary", leadingIcon = UploadSimpleIcon, "aria-describedby": describedBy, ...props }, ref) => {
+  ({ children, onClick, variant = "secondary", leadingIcon = FileArrowUpIcon, "aria-describedby": describedBy, ...props }, ref) => {
     const context = useFileUpload("FileUpload.Trigger");
     const merged = useMemo(() => mergeRefs(ref, context.triggerRef), [ref, context.triggerRef]);
     if (context.readOnly) return null;

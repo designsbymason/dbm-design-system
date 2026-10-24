@@ -259,6 +259,11 @@ export interface FileUploadDropzoneProps extends Omit<ComponentPropsWithoutRef<"
 export interface FileUploadTriggerProps extends Omit<ButtonProps, "onClick" | "type" | "disabled"> {
   /** The button's text. Left out: "Choose files" (or "Choose a file" in a single-file field). */
   children?: ReactNode;
+  /**
+   * An icon before the text, as a Phosphor icon component. Left out: a file with an up arrow (`FileArrowUpIcon`).
+   * @default FileArrowUpIcon
+   */
+  leadingIcon?: ButtonProps["leadingIcon"];
   /** Called when the button is pressed, before the picker opens; `preventDefault()` keeps it closed. */
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
 }

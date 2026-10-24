@@ -80,7 +80,7 @@
 }
 
 .dropzone:hover:not(.disabled) {
-  background-color: var(--dbm-bg-neutral-subtle);
+  background-color: var(--dbm-bg-brand-subtle);
 }
 
 .dragging,
