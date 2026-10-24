@@ -99,6 +99,7 @@ export * from "./organisms/DataTable";
 export * from "./organisms/DatePicker";
 export * from "./organisms/Dialog";
 export * from "./organisms/Drawer";
+export * from "./organisms/FileUpload";
 export * from "./organisms/Form";
 export * from "./organisms/Menu";
 export * from "./organisms/Navbar";

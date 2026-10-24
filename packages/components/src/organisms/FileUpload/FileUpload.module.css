@@ -1,0 +1,219 @@
+/* The field: an optional drop area, the messages for refused files and the list of chosen ones, stacked. Each size only
+   sets a few local custom properties (the drop area's padding and gap, the list rows' padding), so the rules below are
+   written once. Every value is a semantic or primitive token. */
+.root {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--dbm-font-family-primary);
+  gap: var(--dbm-space-3);
+  min-inline-size: 0;
+  position: relative;
+}
+
+/* The real file input: in the page and in the form, drawn nowhere. Not `display: none` and not read-only, since a
+   control like that is barred from constraint validation, which is its whole job (ADR-0116). */
+.input {
+  block-size: 1px;
+  border: 0;
+  clip-path: inset(50%);
+  inline-size: 1px;
+  margin: 0;
+  opacity: 0;
+  overflow: hidden;
+  padding: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+/* --- Sizes --- */
+
+.sizeXs {
+  --fu-pad: var(--dbm-space-3);
+  --fu-gap: var(--dbm-space-1);
+  --fu-row-pad: var(--dbm-space-1);
+}
+
+.sizeSm {
+  --fu-pad: var(--dbm-space-4);
+  --fu-gap: var(--dbm-space-2);
+  --fu-row-pad: var(--dbm-space-2);
+}
+
+.sizeMd {
+  --fu-pad: var(--dbm-space-6);
+  --fu-gap: var(--dbm-space-3);
+  --fu-row-pad: var(--dbm-space-3);
+}
+
+.sizeLg {
+  --fu-pad: var(--dbm-space-8);
+  --fu-gap: var(--dbm-space-3);
+  --fu-row-pad: var(--dbm-space-4);
+}
+
+.sizeXl {
+  --fu-pad: var(--dbm-space-10);
+  --fu-gap: var(--dbm-space-4);
+  --fu-row-pad: var(--dbm-space-4);
+}
+
+/* --- The drop area. The edge is `border.neutral-strong` (4.70:1 / 6.08:1 against the surface), not `border.default`,
+   because this edge is what tells a person where to drop and has to clear the 3:1 non-text floor. --- */
+
+.dropzone {
+  align-items: center;
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) dashed var(--dbm-border-neutral-strong);
+  border-radius: var(--dbm-radius-lg);
+  box-sizing: border-box;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: var(--fu-gap);
+  justify-content: center;
+  min-inline-size: 0;
+  padding: var(--fu-pad);
+  text-align: center;
+  transition:
+    background-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard),
+    border-color var(--dbm-motion-duration-fast) var(--dbm-motion-easing-standard);
+}
+
+.dropzone:hover:not(.disabled) {
+  background-color: var(--dbm-bg-neutral-subtle);
+}
+
+.dragging,
+.dragging:hover {
+  background-color: var(--dbm-bg-brand-subtle);
+  border-color: var(--dbm-border-brand);
+}
+
+.invalid {
+  border-color: var(--dbm-border-danger);
+}
+
+.disabled {
+  cursor: not-allowed;
+  opacity: var(--dbm-opacity-40);
+}
+
+/* The hint is part of the drop area's column; its width is held to a comfortable line. */
+.dropzoneHint {
+  max-inline-size: 40ch;
+}
+
+.hint {
+  margin: 0;
+}
+
+.buttonRow {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbm-space-3);
+}
+
+/* --- The messages for refused files. `FieldError` draws each one. --- */
+
+.rejections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbm-space-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* --- The list of chosen files --- */
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbm-space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.item {
+  align-items: center;
+  background-color: var(--dbm-bg-surface);
+  border: var(--dbm-border-width-1) solid var(--dbm-border-default);
+  border-radius: var(--dbm-radius-md);
+  box-sizing: border-box;
+  column-gap: var(--dbm-space-3);
+  display: flex;
+  min-inline-size: 0;
+  padding: var(--fu-row-pad) var(--dbm-space-3);
+}
+
+.itemError {
+  border-color: var(--dbm-border-danger);
+}
+
+.entryIcon {
+  flex-shrink: 0;
+}
+
+.entryBody {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--dbm-space-1);
+  min-inline-size: 0;
+}
+
+.entryName {
+  margin: 0;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.entryStatus {
+  align-items: center;
+  display: flex;
+  gap: var(--dbm-space-1);
+  margin: 0;
+}
+
+.statusIcon {
+  flex-shrink: 0;
+}
+
+.entryBar {
+  inline-size: 100%;
+}
+
+.entryActions {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--dbm-space-1);
+}
+
+/* On a phone the rows give their padding back to the filename. */
+@media (max-width: 639px) {
+  .item {
+    column-gap: var(--dbm-space-2);
+    padding-inline: var(--dbm-space-2);
+  }
+}
+
+/* Forced colours replaces every fill, so a drag is told apart by the edge alone: solid instead of dashed. */
+@media (forced-colors: active) {
+  .invalid,
+  .itemError {
+    border-style: double;
+    border-width: var(--dbm-border-width-2);
+  }
+
+  /* After the error rule, so a drag over a field in error still reads as a drag. */
+  .dragging,
+  .dragging:hover {
+    border-color: Highlight;
+    border-style: solid;
+  }
+}

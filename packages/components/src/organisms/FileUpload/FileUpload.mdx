@@ -1,0 +1,432 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
+import { Button } from "../../atoms/Button";
+import { Input } from "../../atoms/Input";
+import { ProgressBar } from "../../atoms/ProgressBar";
+import { VisuallyHidden } from "../../atoms/VisuallyHidden";
+import { FormField } from "../../molecules/FormField";
+import * as FileUploadStories from "./FileUpload.stories";
+import * as FileUploadDropzoneStories from "./FileUploadDropzone.stories";
+import * as FileUploadTriggerStories from "./FileUploadTrigger.stories";
+import * as FileUploadRejectionsStories from "./FileUploadRejections.stories";
+import * as FileUploadListStories from "./FileUploadList.stories";
+import * as FileUploadItemStories from "./FileUploadItem.stories";
+
+export const rootPropOrder = [
+  "children",
+  "value",
+  "defaultValue",
+  "onValueChange",
+  "accept",
+  "multiple",
+  "maxFiles",
+  "maxSize",
+  "minSize",
+  "validate",
+  "onFilesAdded",
+  "onFilesRejected",
+  "onRemove",
+  "onRetry",
+  "hint",
+  "layout",
+  "size",
+  "required",
+  "hasError",
+  "disabled",
+  "readOnly",
+  "guardPage",
+  "name",
+  "form",
+  "formatNumber",
+  "formatSize",
+  "labels",
+  "aria-label",
+  "aria-labelledby",
+  "aria-describedby",
+  "id",
+  "className",
+  "style",
+  "data-testid",
+];
+// The Playground also has one Storybook-only control, `maxSizeMb`, which writes `maxSize` in bytes.
+export const playgroundPropOrder = [
+  "accept",
+  "maxSizeMb",
+  "maxFiles",
+  "multiple",
+  "layout",
+  "size",
+  "required",
+  "hasError",
+  "disabled",
+  "readOnly",
+  "guardPage",
+];
+export const dropzonePropOrder = ["children", "id", "className", "style", "data-testid"];
+export const triggerPropOrder = ["children", "variant", "leadingIcon", "onClick", "id", "className", "style", "data-testid"];
+export const rejectionsPropOrder = ["id", "className", "style", "data-testid"];
+export const listPropOrder = ["children", "id", "className", "style", "data-testid"];
+export const itemPropOrder = ["entry", "id", "className", "style", "data-testid"];
+
+<Meta of={FileUploadStories} />
+
+<VisuallyHidden asChild><h2>Intro</h2></VisuallyHidden>
+
+<ComponentHeader title="FileUpload" tier="Organism" />
+
+A field for choosing files. A person drags files onto the drop area, presses its button, or pastes, and the files
+appear in a list with their name, their size and, as you report it, how far along they are. It is a compound
+component, meaning it is made of named sub-parts you can compose: with no children it draws `FileUpload.Dropzone`
+(or `FileUpload.Trigger` for `layout="button"`), `FileUpload.Rejections` and `FileUpload.List`, and you can put
+those parts in your own order.
+
+**It sends nothing.** Choosing a file adds it to a list; sending it is yours. You start the request, and write each
+entry's `status` and `progress` back into `value` as it goes, and the field shows them and asks for removal and
+retry through callbacks. That keeps the field free of any assumption about your backend, and makes the progress it
+shows always the truth you gave it.
+
+Files are checked against `accept`, `maxSize`, `minSize`, `maxFiles` and your own `validate` rule whether they were
+chosen, dropped or pasted. A refused file never enters the list; it is explained in words, beside the field, with its
+name. The field also submits with its form: it carries a real file input, so `name`, `required` and a surrounding
+`<form>` work, and it sits inside a `FormField`.
+
+### Import
+
+```tsx
+import { FileUpload } from "@dbm-system/components";
+```
+
+## Playground
+
+Choose or drop some files: a pretend uploader sends them, moving each one's progress along (a file whose name
+contains "fail" fails, so the error state and retry can be tried).
+
+<div className="dbm-playground-canvas">
+
+<Canvas of={FileUploadStories.Playground} />
+
+</div>
+<PlaygroundControls of={FileUploadStories.Playground} order={playgroundPropOrder} />
+
+## Properties
+
+`ref` forwards to the outer group `<div>`, and `id` goes to the file input (see Accessibility). Also accepts any other
+native `<div>` attribute beyond what's listed here (e.g. `onMouseEnter`, `title`) — passed straight through to the outer
+group.
+
+<PropertiesTable of={FileUploadStories} order={rootPropOrder} />
+
+### Entries
+
+`value`, `defaultValue` and `onValueChange` hold a list of entries. An entry is `{ id, file, status?, progress?,
+error? }`: `id` is its stable identity; `file` is the `File`; `status` is `"idle"` (the default), `"uploading"`,
+`"done"` or `"error"`; `progress` is 0 to 100 for an uploading file (leave it out for an indeterminate bar); and
+`error` is the text shown for a failed one in place of "Upload failed".
+
+### FileUpload.Dropzone properties
+
+The drop area: a dashed box that takes files dropped on it, files pasted while it has focus, and a click, and holds the
+button that is the keyboard's way in. Only dragged files count, never text or links. Also accepts any other native
+`<div>` attribute beyond what's listed here (e.g. `onMouseEnter`, `title`) — passed straight through.
+
+<PropertiesTable of={FileUploadDropzoneStories} order={dropzonePropOrder} />
+
+### FileUpload.Trigger properties
+
+The button that opens the file picker. Inside `FileUpload.Dropzone` it is the keyboard's way in; on its own it is the
+whole field for `layout="button"`. It takes the `Button` atom's own props (`tone`, `isLoading`, …) beyond what's
+listed here.
+
+<PropertiesTable of={FileUploadTriggerStories} order={triggerPropOrder} />
+
+### FileUpload.Rejections properties
+
+The messages for files that were refused, drawn as errors and read out as they appear. They stay until the next files
+are chosen or an entry is removed. Renders nothing when there are none. Also accepts any other native `<ul>`
+attribute beyond what's listed here (e.g. `title`, `lang`) — passed straight through.
+
+<PropertiesTable of={FileUploadRejectionsStories} order={rejectionsPropOrder} />
+
+### FileUpload.List properties
+
+The list of chosen files, one `FileUpload.Item` each (or whatever your function draws). Renders nothing while it is
+empty. Also accepts any other native `<ul>` attribute beyond what's listed here (e.g. `title`, `lang`) — passed
+straight through.
+
+<PropertiesTable of={FileUploadListStories} order={listPropOrder} />
+
+### FileUpload.Item properties
+
+One chosen file: an icon for its kind, its name and size, where it has got to, and its remove button (and retry
+button, for a failed entry when `onRetry` is set). Also accepts any other native `<li>` attribute beyond what's listed
+here (e.g. `title`, `lang`) — passed straight through.
+
+<PropertiesTable of={FileUploadItemStories} order={itemPropOrder} />
+
+## Variants
+
+### All sizes
+
+<Canvas of={FileUploadStories.Sizes} />
+
+### Dropzone and button layouts
+
+<Canvas of={FileUploadStories.Layouts} />
+
+### Every state of a file
+
+A file is waiting, being sent (with a bar, determinate or not), sent, or failed. Each state says so in words as well as
+colour and icon, and a failed one offers retry when you pass `onRetry`.
+
+<Canvas of={FileUploadStories.States} />
+
+### Sending files (simulated)
+
+The field next to a pretend uploader, which owns the list, starts every file it is given and ends it as done or failed.
+It is the shape of what an app writes around the field, with a request in place of the timer.
+
+<Canvas of={FileUploadStories.Uploading} />
+
+### Types, sizes and counts
+
+<Canvas of={FileUploadStories.Constraints} />
+
+### One file only
+
+<Canvas of={FileUploadStories.SingleFile} />
+
+### In a form
+
+Inside a `Form` and a `FormField`, the field takes the label, helper text and error message, and submits the files
+under its `name`.
+
+<Canvas of={FileUploadStories.InAForm} />
+
+### Disabled
+
+<Canvas of={FileUploadStories.Disabled} />
+
+### Read-only
+
+<Canvas of={FileUploadStories.ReadOnly} />
+
+### Composed from its parts
+
+<Canvas of={FileUploadStories.CustomList} />
+
+## Usage guidelines
+
+<div className="dbm-do-dont-grid">
+<Callout tone="success" title="Do">
+
+- Use `FileUpload` wherever a person hands the app files: attachments, a profile picture, an import. Use
+  `layout="button"` in a toolbar, a comment box or a table row, where a large drop area would be too much.
+- Say what is accepted. The hint under the button is written from `accept`, `maxSize` and `maxFiles` for you; write
+  your own with `hint` when the rule is not a type or a size.
+- Set `accept`, `maxSize` and `maxFiles` to what the server will take, so a person finds out before the request, not
+  after it.
+- Write each entry's `status` and `progress` as the file is sent, and its `error` when it fails, so the list tells the
+  truth. Offer `onRetry` for failures a second try can fix.
+- Put the field in a `FormField` inside a `Form` when it is part of a form: the label, the helper text, the error and
+  `required` are then wired for you.
+- Use `multiple={false}` for a field that holds one file (a profile picture): a new file replaces the old one instead
+  of being refused.
+- Give it a name: `aria-label`, or a `FormField` label. The group of controls is read out by that name.
+
+</Callout>
+<Callout tone="danger" title="Don't">
+
+- Don't expect the field to upload. It never makes a request, and its progress is only what you write.
+- Don't rely on the browser's own filter for `accept`: it does not see dropped or pasted files, which is why the field
+  checks every file itself. Check again on the server, since none of this is a security boundary.
+- Don't hide the button and leave only a drop area. Dragging is not possible for everyone; the button is the way in for
+  a keyboard, a screen reader and a phone.
+- Don't use the field to show files that cannot be changed and have nothing to add: `readOnly` is for that, and a plain
+  list of links is often better.
+- Don't put the label's text only in the drop area's prompt. The field needs its own name (`aria-label` or a
+  `FormField` label).
+- Don't combine `maxFiles` with `multiple={false}`: a single-file field holds one, and the field warns in development.
+- Don't turn on `guardPage` in more than one place on a page, or use it as a general drop handler: it only stops the
+  browser opening a stray file.
+
+</Callout>
+</div>
+
+## Best practices
+
+- Treat the list as yours. `value` is the single source of truth for what is shown, and the file input the form
+  submits is rebuilt from it after every change, so what you see is what is sent.
+- Start sending when files are added (`onFilesAdded`) or when a form is submitted; both work. For a form that sends
+  files with the rest of its fields, leave status alone and let the form submit them.
+- Keep `validate` quick and put the reason in words ("Remove the spaces from the name"): the message is shown with the
+  file's name. A rule that returns a promise (reading the file's header, say) is waited for before anything is added.
+- Show progress as a number when you can measure it and leave `progress` out when you cannot: the bar is then
+  indeterminate and the text says "Uploading…".
+- Sizes are written in bytes, in steps of 1024, with at most one decimal (`1.5 KB`). Pass `formatSize` for another
+  convention, and `formatNumber` to write the digits in another script.
+- On a phone there is no dragging, so the whole area is a tap target and the button is full size; long file names are
+  cut with an ellipsis and the remove button stays in view.
+- Use `size` to match the field to the form around it: `sm` in a dense form, `lg` for an area that is the point of the
+  page.
+- For a drop zone that is the whole page (a document workspace), turn on `guardPage` once so a file dropped just
+  outside the area does not navigate away.
+
+## Accessibility
+
+<Callout tone="info" title="A named group, a real button and a real file input">
+
+- The field is a `role="group"` named by `aria-label` or `aria-labelledby` (a `FormField` sets the latter). Inside it
+  are ordinary controls: a button, a list, and per-file buttons. Nothing about the drop area is required to use the
+  field.
+- **Keyboard.** `Tab` reaches the button; `Enter` or `Space` opens the file picker. Each file has a remove button (and a
+  retry button for a failed one), reached in the normal tab order. Pasting while the button has focus adds the clipboard's
+  files.
+- **The drop area is a convenience for a pointer.** Dragging, dropping and clicking the area are mouse and touch
+  affordances; the same action is always available through the button, so the area itself takes no role and no key
+  handler.
+- **The name is the visible text.** The button is named "Choose files" (or what you write), which is also what it shows.
+  Remove and retry buttons show only an icon and are named with the file ("Remove report.pdf").
+- **`id` goes to the file input, not the button.** A label that points at a button replaces the button's own text as its
+  name, which would hide "Choose files" from a speech-recognition user. A label that points at the file input opens the
+  picker when it is clicked, and a form that focuses its first invalid control lands there and is handed on to the
+  button.
+- **Messages are read out.** Files that are refused appear as errors (`role="alert"`), each naming the file and the rule.
+  Files added, removed, finished and failed are announced through a status region that is in the page before it has
+  anything to say, so a change is announced and a first appearance is not.
+- **Status is never colour alone.** Each file's state is written ("Uploading… 40%", "Uploaded", the error text) and
+  carries an icon; the progress bar has a name and a value.
+- **Targets.** Every button is at least 24 × 24 pixels at every size.
+- **Focus.** After a file is removed, focus goes to the next file's remove button, or to the button when none is left,
+  unless the person has already moved elsewhere.
+- **Contrast.** The drop area's dashed edge is `border.neutral-strong`, 4.70:1 on the surface in light mode and 6.08:1 in
+  dark, above the 3:1 floor for a boundary that identifies where to drop. In forced colours the dashed edge stays, a
+  drag draws it solid and an error draws it double.
+- **Right-to-left.** Layout uses logical properties: the icon leads on the right, the actions sit on the left, and file
+  names are laid out by their own direction.
+
+</Callout>
+
+| Key | What it does |
+|---|---|
+| `Tab` / `Shift+Tab` | Moves between the button and each file's remove (and retry) buttons |
+| `Enter` / `Space` | On the button, opens the file picker; on a file's button, removes or retries |
+| `Ctrl/Cmd+V` | With the button focused, adds the files on the clipboard |
+
+## Code examples
+
+```tsx
+import { useEffect, useState } from "react";
+import type { FileUploadEntry } from "@dbm-system/components";
+
+function Attachments() {
+  const [files, setFiles] = useState<FileUploadEntry[]>([]);
+  const update = (id: string, patch: Partial<FileUploadEntry>) =>
+    setFiles((current) => current.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry)));
+
+  // FileUpload sends nothing: you start the request and write what happens back into the list.
+  const send = (entry: FileUploadEntry) => {
+    update(entry.id, { status: "uploading", progress: 0, error: undefined });
+    const request = new XMLHttpRequest();
+    request.open("POST", "/api/attachments");
+    request.upload.onprogress = (event) => update(entry.id, { progress: (event.loaded / event.total) * 100 });
+    request.onload = () =>
+      update(entry.id, request.status < 300 ? { status: "done", progress: 100 } : { status: "error", error: "The server refused it" });
+    request.onerror = () => update(entry.id, { status: "error", error: "The connection was lost" });
+    request.send(entry.file);
+  };
+
+  // A newly added file arrives as "idle"; sending it moves it on, so each is started once.
+  useEffect(() => {
+    files.filter((entry) => entry.status === "idle").forEach(send);
+  }, [files]);
+
+  return (
+    <FileUpload
+      aria-label="Attachments"
+      accept="image/*,.pdf"
+      maxSize={5 * 1024 * 1024}
+      value={files}
+      onValueChange={setFiles}
+      onRetry={send}
+    />
+  );
+}
+```
+
+```tsx
+{/* In a form: the files are submitted under "documents", and a missing file is refused with a message */}
+<Form onSubmit={handleSubmit}>
+  <FormField label="Supporting documents" name="documents" required helperText="PDF files only">
+    {(fieldProps) => <FileUpload {...fieldProps} accept=".pdf" />}
+  </FormField>
+  <Form.Submit>Send</Form.Submit>
+</Form>
+
+{/* A button only, in a toolbar */}
+<FileUpload aria-label="Photos" layout="button" accept="image/*" multiple />
+
+{/* One file, replacing the last */}
+<FileUpload aria-label="Profile picture" multiple={false} accept="image/*" maxSize={2 * 1024 * 1024} />
+
+{/* Your own rule, and your own wording */}
+<FileUpload
+  aria-label="Import"
+  accept=".csv"
+  validate={async (file) => ((await file.text()).startsWith("id,") ? undefined : "The first column must be id")}
+  labels={{ choose: () => "Pick a CSV", prompt: () => "Drop a CSV here, or" }}
+/>
+
+{/* A native <div> attribute, passed straight through to the outer group */}
+<FileUpload aria-label="Attachments" title="Attachments for this ticket" onMouseEnter={() => prefetchUploadUrl()} />
+```
+
+## Design tokens used
+
+<TokenRow token="bg.surface" usage="the drop area's and each file row's background" />
+<TokenRow token="bg.neutral-subtle" usage="the drop area's hover fill" />
+<TokenRow token="bg.brand-subtle" usage="the drop area's fill while files are dragged over it" />
+<TokenRow token="border.neutral-strong" usage="the drop area's dashed edge, which clears the 3:1 floor for a boundary" />
+<TokenRow token="border.brand" usage="the drop area's edge while files are dragged over it" />
+<TokenRow token="border.danger" usage="the drop area's edge when hasError is set, and a failed file's row" />
+<TokenRow token="border.default" usage="each file row's border" />
+<TokenRow token="border-width.1" usage="the drop area's and the rows' borders" />
+<TokenRow token="border-width.2" usage="the double edge of an error in forced colours" />
+<TokenRow token="radius.lg" usage="the drop area's corners" />
+<TokenRow token="radius.md" usage="each file row's corners" />
+<TokenRow token="font-family.primary" usage="the field's typography" />
+<TokenRow token="motion.duration-fast" usage="the drop area's colour change" />
+<TokenRow token="motion.easing-standard" usage="the drop area's colour change" />
+<TokenRow token="opacity.40" usage="a disabled field" />
+<TokenRow token="space.1" usage="the gap inside a file row's text and between its buttons; the compact row padding" />
+<TokenRow token="space.2" usage="the gap between file rows and between refusal messages; the row padding at sm" />
+<TokenRow token="space.3" usage="the gap between the parts of the field; the drop area's padding at xs; the row padding at md" />
+<TokenRow token="space.4" usage="the drop area's padding at sm; the row padding at lg and xl" />
+<TokenRow token="space.6" usage="the drop area's padding at md" />
+<TokenRow token="space.8" usage="the drop area's padding at lg" />
+<TokenRow token="space.10" usage="the drop area's padding at xl" />
+
+## Related components
+
+<div className="dbm-card-grid">
+<RelatedCard
+  name="Button"
+  description="The picker button is a Button; FileUpload.Trigger takes its props"
+  href="/?path=/docs/atoms-inputs-button--docs"
+>
+  <Button size="sm" variant="secondary">Choose files</Button>
+</RelatedCard>
+<RelatedCard
+  name="FormField"
+  description="Gives the field a label, helper text and an error, and wires them to it"
+  href="/?path=/docs/molecules-inputs-formfield--docs"
+>
+  <FormField label="Name" size="sm">{(field) => <Input {...field} size="xs" />}</FormField>
+</RelatedCard>
+<RelatedCard
+  name="ProgressBar"
+  description="Draws a file's progress, determinate or not"
+  href="/?path=/docs/atoms-feedback-progressbar--docs"
+>
+  <ProgressBar value={40} label="Uploading" size="sm" />
+</RelatedCard>
+</div>
