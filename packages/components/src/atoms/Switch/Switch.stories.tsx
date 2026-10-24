@@ -1,4 +1,4 @@
-import { CheckIcon, MoonIcon, SunIcon, XIcon } from "@dbm-design-system/icons";
+import { CheckIcon, MoonIcon, SunIcon, XIcon } from "@dbm-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { Switch } from "./Switch";

@@ -44,7 +44,7 @@ ${tabs('defaultValue="overview" orientation="vertical"')}`,
     a horizontal strip above it below that. */}
 ${tabs('defaultValue="overview" orientation={{ base: "horizontal", md: "vertical" }}')}`,
 
-  icons: `{/* Icons come from @dbm-design-system/icons. An icon-only tab needs an aria-label. */}
+  icons: `{/* Icons come from @dbm-system/icons. An icon-only tab needs an aria-label. */}
 ${tabs(
   'defaultValue="overview"',
   list(

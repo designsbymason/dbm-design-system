@@ -1,4 +1,4 @@
-import { HeartIcon, WalletIcon } from "@dbm-design-system/icons";
+import { HeartIcon, WalletIcon } from "@dbm-system/icons";
 import { Canvas, Meta } from "@storybook/addon-docs/blocks";
 import { Callout, ComponentHeader, PlaygroundControls, PropertiesTable, RelatedCard, TokenRow } from "../../../.storybook/blocks";
 import { Button } from "../Button";
@@ -30,7 +30,7 @@ export const propOrder = [
 A typed wrapper around [Phosphor Icons](https://phosphoricons.com), the icon set this whole system
 is built on. Renders any Phosphor icon at a token-driven `size` and `tone`, decorative by default
 (hidden from the accessibility tree) unless `label` is set. `icon` takes a **component reference**
-— `import { Wallet } from '@dbm-design-system/icons'; <Icon icon={Wallet} />` — not a string name,
+— `import { Wallet } from '@dbm-system/icons'; <Icon icon={Wallet} />` — not a string name,
 so unused icons stay tree-shaken out of the final bundle and every reference is type-checked at
 compile time. This is the mechanism every icon-rendering component in the system
 ([`Button`](/docs/atoms-inputs-button--docs)'s `leadingIcon`/`trailingIcon`,
@@ -40,8 +40,8 @@ others) ultimately renders through.
 ### Import
 
 ```tsx
-import { Icon } from "@dbm-design-system/components";
-import { Wallet } from "@dbm-design-system/icons";
+import { Icon } from "@dbm-system/components";
+import { Wallet } from "@dbm-system/icons";
 ```
 
 ## Playground
@@ -110,7 +110,7 @@ import { Wallet } from "@dbm-design-system/icons";
 <Callout tone="danger" title="Don't">
 
 - Don't pass a string icon name — `icon` is always a component reference
-  (`import { Wallet } from '@dbm-design-system/icons'`), which is what keeps unused icons
+  (`import { Wallet } from '@dbm-system/icons'`), which is what keeps unused icons
   tree-shaken out of the bundle.
 - Don't set both `label` and rely on adjacent visible text saying the same thing — pick one,
   otherwise assistive tech announces the meaning twice.
@@ -157,7 +157,7 @@ import { Wallet } from "@dbm-design-system/icons";
 ## Code examples
 
 ```tsx
-import { Wallet } from "@dbm-design-system/icons";
+import { Wallet } from "@dbm-system/icons";
 
 <Icon icon={Wallet} size="lg" />
 <Icon icon={Wallet} tone="brand" />

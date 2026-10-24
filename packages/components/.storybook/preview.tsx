@@ -1,12 +1,12 @@
 import type { Decorator, Preview } from "@storybook/react-vite";
 import { DbmDocsContainer } from "./DbmDocsContainer";
 
-import "@dbm-design-system/tokens/css/primitives.css";
-import "@dbm-design-system/tokens/css/component-tokens.css";
-import "@dbm-design-system/tokens/css/purple-light.css";
-import "@dbm-design-system/tokens/css/purple-dark.css";
-import "@dbm-design-system/tokens/css/emerald-light.css";
-import "@dbm-design-system/tokens/css/emerald-dark.css";
+import "@dbm-system/tokens/css/primitives.css";
+import "@dbm-system/tokens/css/component-tokens.css";
+import "@dbm-system/tokens/css/purple-light.css";
+import "@dbm-system/tokens/css/purple-dark.css";
+import "@dbm-system/tokens/css/emerald-light.css";
+import "@dbm-system/tokens/css/emerald-dark.css";
 import "../src/styles/global.css";
 import "./docs.css";
 

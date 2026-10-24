@@ -281,7 +281,7 @@ export function toastPlaygroundSnippet(args: ToastPlaygroundSnippetArgs): string
   if (args.role === "alert" || args.role === "status") fields.push(`role: "${args.role}"`);
 
   const call = fields.length > 0 ? `toast({ ${fields.join(", ")} })` : `toast({ title: "Saved" })`;
-  const icon = iconName ? `{/* ${iconName} comes from @dbm-design-system/icons */}\n` : "";
+  const icon = iconName ? `{/* ${iconName} comes from @dbm-system/icons */}\n` : "";
   return `${icon}${hook}
 ${provider(providerAttributes.join(" "), `  <Button onClick={() => ${call}}>Show toast</Button>`)}`;
 }

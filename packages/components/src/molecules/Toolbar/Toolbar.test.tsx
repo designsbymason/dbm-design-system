@@ -1,4 +1,4 @@
-import { CopyIcon, TextBIcon, TextItalicIcon } from "@dbm-design-system/icons";
+import { CopyIcon, TextBIcon, TextItalicIcon } from "@dbm-system/icons";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";

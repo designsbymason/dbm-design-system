@@ -10,7 +10,7 @@
 // `storySnippets.test.ts` checks that stays true. See
 // `07-storybook-and-documentation-standards.md` §4.2.
 
-import { HeartIcon, StarIcon, XIcon } from "@dbm-design-system/icons";
+import { HeartIcon, StarIcon, XIcon } from "@dbm-system/icons";
 import type { CheckboxSize } from "./Checkbox.types";
 
 export const checkboxSnippets = {
@@ -33,7 +33,7 @@ export const checkboxSnippets = {
 <Checkbox aria-label="Select row" />`,
 
   customIcons: `{/* icon replaces the check mark; indeterminateIcon replaces the dash. StarIcon and XIcon come from
-    @dbm-design-system/icons. */}
+    @dbm-system/icons. */}
 <Checkbox defaultChecked icon={StarIcon}>Custom check icon (Star)</Checkbox>
 <Checkbox checked="indeterminate" indeterminateIcon={XIcon}>Custom indeterminate icon (X)</Checkbox>`,
 

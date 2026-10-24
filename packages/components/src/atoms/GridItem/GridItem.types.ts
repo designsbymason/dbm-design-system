@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef, CSSProperties, ElementType, ReactNode } from "react";
-import type { Responsive } from "@dbm-design-system/primitives";
+import type { Responsive } from "@dbm-system/primitives";
 
 export type GridItemProps<E extends ElementType = "div"> = {
   /** The content to render inside the grid cell. */

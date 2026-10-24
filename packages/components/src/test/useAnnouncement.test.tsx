@@ -1,4 +1,4 @@
-import { useAnnouncement } from "@dbm-design-system/primitives";
+import { useAnnouncement } from "@dbm-system/primitives";
 import { act, render, screen } from "@testing-library/react";
 import { StrictMode, useEffect } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";

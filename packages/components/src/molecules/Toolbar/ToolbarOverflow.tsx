@@ -1,5 +1,5 @@
-import { DotsThreeIcon } from "@dbm-design-system/icons";
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import { DotsThreeIcon } from "@dbm-system/icons";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import * as ToolbarPrimitive from "@radix-ui/react-toolbar";
 import {
   createContext,

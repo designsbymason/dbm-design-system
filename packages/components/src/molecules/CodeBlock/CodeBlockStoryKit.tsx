@@ -31,7 +31,7 @@ registerCodeLanguage(iniLanguage);
 
 /** Demo source text for the stories; not part of the component. */
 export const samples = {
-  tsx: `import { Button } from "@dbm-design-system/components";
+  tsx: `import { Button } from "@dbm-system/components";
 
 export function SaveButton({ onSave }: { onSave: () => void }) {
   // Sends the form, then confirms.
@@ -46,7 +46,7 @@ export function SaveButton({ onSave }: { onSave: () => void }) {
   return items.reduce((sum, item) => sum + (Number(item.price) || 0), 0);
 }`,
   json: `{
-  "name": "@dbm-design-system/components",
+  "name": "@dbm-system/components",
   "version": "1.0.0",
   "private": false,
   "sideEffects": ["**/*.css"],
@@ -67,7 +67,7 @@ export function SaveButton({ onSave }: { onSave: () => void }) {
 <label for="q">Search</label>
 <input id="q" type="search" placeholder="Search &amp; filter" disabled />`,
   bash: `# Install, then run the tests
-$ pnpm add @dbm-design-system/components
+$ pnpm add @dbm-system/components
 if [ -f "$HOME/.npmrc" ]; then echo "found ${"$"}{HOME}"; fi`,
   diff: `diff --git a/Card.tsx b/Card.tsx
 --- a/Card.tsx
@@ -115,7 +115,7 @@ Install the **components** package with \`pnpm add\`, then read [the docs](https
 > A note.
 
 \`\`\`bash
-pnpm add @dbm-design-system/components
+pnpm add @dbm-system/components
 \`\`\``,
   go: `package main
 

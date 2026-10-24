@@ -1,4 +1,4 @@
-import { cx } from "@dbm-design-system/primitives";
+import { cx } from "@dbm-system/primitives";
 import { forwardRef, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ThemeContext } from "./ThemeContext";
 import styles from "./ThemeProvider.module.css";
@@ -27,7 +27,7 @@ function getThemeTransitionDurationMs(): number {
  * Applies a DBM Design System brand + color mode by setting `data-theme` on
  * the document element (e.g. `data-theme="purple-light"`), matching the
  * `:root[data-theme="..."]`-scoped CSS custom properties emitted by
- * `@dbm-design-system/tokens`.
+ * `@dbm-system/tokens`.
  *
  * Theming is applied document-wide — not scoped to this component's own DOM
  * subtree — so that portaled content (dialogs, tooltips, toasts mounted on

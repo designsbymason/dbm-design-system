@@ -74,6 +74,6 @@ export function tooltipPlaygroundSnippet(args: TooltipPlaygroundSnippetArgs, tri
   if (args.hideArrow) attributes.push("hideArrow");
   if (args.defaultOpen) attributes.push("defaultOpen");
   if (args["aria-label"]) attributes.push(`aria-label=${quote(args["aria-label"])}`);
-  const comment = which === "icon" ? "{/* TrashIcon comes from @dbm-design-system/icons */}\n" : "";
+  const comment = which === "icon" ? "{/* TrashIcon comes from @dbm-system/icons */}\n" : "";
   return `${comment}<Tooltip ${attributes.join(" ")}>\n  ${triggers[which]}\n</Tooltip>`;
 }

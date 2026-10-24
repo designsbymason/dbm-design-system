@@ -5,9 +5,9 @@ import {
   WarningIcon,
   WarningOctagonIcon,
   XIcon,
-} from "@dbm-design-system/icons";
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
-import { cx, mergeDefined, mergeRefs } from "@dbm-design-system/primitives";
+} from "@dbm-system/icons";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
+import { cx, mergeDefined, mergeRefs } from "@dbm-system/primitives";
 import { Presence } from "@radix-ui/react-presence";
 import { Slot } from "@radix-ui/react-slot";
 import {

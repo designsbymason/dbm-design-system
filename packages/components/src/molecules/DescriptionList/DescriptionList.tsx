@@ -1,5 +1,5 @@
-import { cx, responsiveStyle, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
-import type { Responsive } from "@dbm-design-system/primitives";
+import { cx, responsiveStyle, useResolvedResponsiveValue } from "@dbm-system/primitives";
+import type { Responsive } from "@dbm-system/primitives";
 import { createContext, forwardRef, useContext, useRef } from "react";
 import styles from "./DescriptionList.module.css";
 import type {

@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type { InputSize } from "../../atoms/Input";
 
 /** The colour a `RatingInput`'s filled icons are drawn in. */

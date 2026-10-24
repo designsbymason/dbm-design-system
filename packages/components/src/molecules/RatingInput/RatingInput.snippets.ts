@@ -47,7 +47,7 @@ export const ratingInputSnippets = {
   clearable: `{/* Pressing the chosen value again, or Backspace, Delete or Escape, takes the rating back. */}
 <RatingInput aria-label="Rating" clearable defaultValue={3} />`,
 
-  customIcon: `{/* HeartIcon comes from @dbm-design-system/icons */}
+  customIcon: `{/* HeartIcon comes from @dbm-system/icons */}
 <RatingInput aria-label="Rating" icon={HeartIcon} tone="danger" defaultValue={3} />`,
 
   inFormField: `<FormField label="How was it?" helperText="Choose a rating from 1 to 5." required>
@@ -113,6 +113,6 @@ export function ratingInputPlaygroundSnippet(args: RatingInputPlaygroundSnippetA
   if (args.required) attributes.push("required");
   if (args.disabled) attributes.push("disabled");
   if (args.name) attributes.push(`name="${args.name}"`);
-  const note = iconName ? `{/* ${iconName} comes from @dbm-design-system/icons */}\n` : "";
+  const note = iconName ? `{/* ${iconName} comes from @dbm-system/icons */}\n` : "";
   return `${note}<RatingInput ${attributes.join(" ")} />`;
 }

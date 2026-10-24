@@ -1,4 +1,4 @@
-import { cx, responsiveStyle } from "@dbm-design-system/primitives";
+import { cx, responsiveStyle } from "@dbm-system/primitives";
 import { forwardRef } from "react";
 import styles from "./Bleed.module.css";
 import type { BleedProps, BleedSide } from "./Bleed.types";

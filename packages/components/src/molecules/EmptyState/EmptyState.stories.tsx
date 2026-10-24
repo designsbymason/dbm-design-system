@@ -6,7 +6,7 @@ import {
   TrayIcon,
   WarningCircleIcon,
   WarningIcon,
-} from "@dbm-design-system/icons";
+} from "@dbm-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, waitFor, within } from "storybook/test";
 import type { CSSProperties } from "react";

@@ -1,4 +1,4 @@
-import { cx } from "@dbm-design-system/primitives";
+import { cx } from "@dbm-system/primitives";
 import { useState } from "react";
 import type { MouseEvent } from "react";
 import { Button } from "../../atoms/Button";

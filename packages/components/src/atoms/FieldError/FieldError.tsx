@@ -1,5 +1,5 @@
-import { WarningCircleIcon } from "@dbm-design-system/icons";
-import { cx } from "@dbm-design-system/primitives";
+import { WarningCircleIcon } from "@dbm-system/icons";
+import { cx } from "@dbm-system/primitives";
 import { forwardRef } from "react";
 import { Icon } from "../Icon";
 import styles from "./FieldError.module.css";

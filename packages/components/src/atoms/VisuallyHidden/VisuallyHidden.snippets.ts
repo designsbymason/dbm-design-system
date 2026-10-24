@@ -11,7 +11,7 @@
 export const visuallyHiddenSnippets = {
   iconOnlyButtonLabel: `{/* IconButton doesn't render children, so the hidden text sits beside it and aria-labelledby points at it —
     it takes precedence over aria-label when the button's name is worked out. XIcon comes from
-    @dbm-design-system/icons. */}
+    @dbm-system/icons. */}
 <VisuallyHidden id="close-label">Close dialog</VisuallyHidden>
 <IconButton icon={XIcon} variant="ghost" aria-label="Close dialog" aria-labelledby="close-label" />`,
 

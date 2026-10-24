@@ -1,5 +1,5 @@
 {
-  "name": "@dbm-design-system/primitives",
+  "name": "@dbm-system/primitives",
   "version": "0.0.0",
   "description": "Framework-agnostic utilities and shared hooks for the DBM Design System (classname/ref merging, responsive-value helpers, overflow/dismissal/announcement hooks).",
   "license": "MIT",
@@ -31,8 +31,8 @@
     "react-dom": ">=18"
   },
   "devDependencies": {
-    "@dbm-design-system/eslint-config": "workspace:*",
-    "@dbm-design-system/tsconfig": "workspace:*",
+    "@dbm-system/eslint-config": "workspace:*",
+    "@dbm-system/tsconfig": "workspace:*",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "eslint": "^10.7.0",

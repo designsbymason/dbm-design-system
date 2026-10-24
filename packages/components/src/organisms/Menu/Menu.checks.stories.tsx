@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { DotsThreeIcon } from "@dbm-design-system/icons";
+import { DotsThreeIcon } from "@dbm-system/icons";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { Button } from "../../atoms/Button";
 import { IconButton } from "../../atoms/IconButton";

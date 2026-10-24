@@ -1,4 +1,4 @@
-import { CaretDownIcon, CheckIcon, PlusIcon, XIcon } from "@dbm-design-system/icons";
+import { CaretDownIcon, CheckIcon, PlusIcon, XIcon } from "@dbm-system/icons";
 import {
   cx,
   mergeDefined,
@@ -6,7 +6,7 @@ import {
   useAnnouncement,
   useResolvedResponsiveValue,
   useWindowedList,
-} from "@dbm-design-system/primitives";
+} from "@dbm-system/primitives";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { forwardRef, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, CSSProperties, FocusEvent, KeyboardEvent, MouseEvent, ReactNode } from "react";

@@ -72,7 +72,7 @@ ${toc(["maxLevel={1}"], nestedItems)}
 
 ${toc(["minLevel={2}"], nestedItems)}`,
 
-  entryExtras: `{/* Each entry can take an icon (from @dbm-design-system/icons), trailing content such as a Badge,
+  entryExtras: `{/* Each entry can take an icon (from @dbm-system/icons), trailing content such as a Badge,
     and disabled — which dims it and blocks it, but leaves it focusable. */}
 <TableOfContents
   items={[

@@ -1,4 +1,4 @@
-import { cx, mergeDefined } from "@dbm-design-system/primitives";
+import { cx, mergeDefined } from "@dbm-system/primitives";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { forwardRef, useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent, ReactElement } from "react";

@@ -1,4 +1,4 @@
-import { useWindowedList } from "@dbm-design-system/primitives";
+import { useWindowedList } from "@dbm-system/primitives";
 import { act, render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 

@@ -1,10 +1,10 @@
-import * as primitives from "@dbm-design-system/primitives";
-import type * as primitiveTypes from "@dbm-design-system/primitives";
+import * as primitives from "@dbm-system/primitives";
+import type * as primitiveTypes from "@dbm-system/primitives";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import * as library from "../index";
 import type { Breakpoint, CodeBlockSize, Responsive, SpaceValue } from "../index";
 
-// What a consumer who installs only `@dbm-design-system/components` can import from it.
+// What a consumer who installs only `@dbm-system/components` can import from it.
 describe("the components package's entry", () => {
   it("re-exports usePersistentDismiss, the same function the primitives package defines", () => {
     expect(library.usePersistentDismiss).toBe(primitives.usePersistentDismiss);

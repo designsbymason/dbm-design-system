@@ -1,5 +1,5 @@
 import type * as DialogPrimitive from "@radix-ui/react-dialog";
-import type { Responsive } from "@dbm-design-system/primitives";
+import type { Responsive } from "@dbm-system/primitives";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode, RefObject } from "react";
 import type { BackdropOpacity } from "../../atoms/Backdrop/Backdrop.types";
 import type { HeadingLevel, HeadingSize } from "../../atoms/Heading/Heading.types";

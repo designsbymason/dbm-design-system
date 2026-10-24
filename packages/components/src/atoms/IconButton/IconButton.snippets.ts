@@ -9,16 +9,16 @@
 // the package, no demo scaffolding — and `storySnippets.test.ts` checks that stays
 // true. See `07-storybook-and-documentation-standards.md` §4.2.
 
-import { HeartIcon, TrashIcon } from "@dbm-design-system/icons";
+import { HeartIcon, TrashIcon } from "@dbm-system/icons";
 import { quote } from "../../snippetHelpers";
 
 export const iconButtonSnippets = {
   allVariants: `{/* variant: "primary" (default) | "secondary" | "tertiary" | "ghost" | "destructive".
-    An icon button has no visible text, so aria-label names it. TrashIcon comes from @dbm-design-system/icons. */}
+    An icon button has no visible text, so aria-label names it. TrashIcon comes from @dbm-system/icons. */}
 <IconButton icon={TrashIcon} aria-label="Delete" variant="secondary" />`,
 
   tones: `{/* tone: "brand" (default) | "neutral". Neutral is a grey look for a control that shouldn't draw the eye to the brand colour;
-    every variant follows it except destructive, which stays danger-coloured. TrashIcon comes from @dbm-design-system/icons. */}
+    every variant follows it except destructive, which stays danger-coloured. TrashIcon comes from @dbm-system/icons. */}
 <IconButton icon={TrashIcon} aria-label="Delete" tone="neutral" />
 <IconButton icon={TrashIcon} aria-label="Delete" tone="neutral" variant="secondary" />
 <IconButton icon={TrashIcon} aria-label="Delete" tone="neutral" variant="tertiary" />
@@ -26,16 +26,16 @@ export const iconButtonSnippets = {
 
   labelled: `{/* label puts a short caption under the icon, so the icon and the caption are one control (hover, pressed, focus and a click
     cover both). aria-label stays required and should contain the caption. tone: "brand" (default) | "neutral". TrashIcon comes from
-    @dbm-design-system/icons. */}
+    @dbm-system/icons. */}
 <IconButton icon={TrashIcon} aria-label="Delete" label="Delete" variant="tertiary" />
 <IconButton icon={TrashIcon} aria-label="Delete" label="Delete" variant="tertiary" tone="neutral" />`,
 
   labelFrom: `{/* hideLabelBelow leaves the caption out below a width, a breakpoint step, so a bar can drop its captions on a phone: below
-    "md" this is the plain icon-only square. A tooltip then serves the icon-only state. HeartIcon comes from @dbm-design-system/icons. */}
+    "md" this is the plain icon-only square. A tooltip then serves the icon-only state. HeartIcon comes from @dbm-system/icons. */}
 <IconButton icon={HeartIcon} aria-label="Favorites" label="Favorites" hideLabelBelow="md" variant="tertiary" tooltip />`,
 
   labelledToggle: `{/* A captioned toggle: the caption goes bold when pressed (without changing the box's width) and takes the colour of the new
-    fill. handlePressedChange is yours. HeartIcon comes from @dbm-design-system/icons. */}
+    fill. handlePressedChange is yours. HeartIcon comes from @dbm-system/icons. */}
 <IconButton
   icon={HeartIcon}
   aria-label="Favorite"
@@ -45,11 +45,11 @@ export const iconButtonSnippets = {
   onPressedChange={handlePressedChange}
 />`,
 
-  allSizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl". HeartIcon comes from @dbm-design-system/icons. */}
+  allSizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl". HeartIcon comes from @dbm-system/icons. */}
 <IconButton icon={HeartIcon} aria-label="Favorite" size="lg" />`,
 
   tooltip: `{/* tooltip: true shows the aria-label; any other content is shown instead. tooltipSide: "top" (default) |
-    "right" | "bottom" | "left". HeartIcon and TrashIcon come from @dbm-design-system/icons. */}
+    "right" | "bottom" | "left". HeartIcon and TrashIcon come from @dbm-system/icons. */}
 <IconButton icon={HeartIcon} aria-label="Favorite" variant="secondary" tooltip />
 <IconButton
   icon={TrashIcon}
@@ -60,11 +60,11 @@ export const iconButtonSnippets = {
 />`,
 
   loading: `{/* isLoading swaps the icon for a spinner and blocks interaction. HeartIcon comes from
-    @dbm-design-system/icons. */}
+    @dbm-system/icons. */}
 <IconButton icon={HeartIcon} aria-label="Favorite" isLoading />`,
 
   toggle: `{/* Setting defaultPressed (or pressed) makes it a toggle button, with aria-pressed. onPressedChange
-    receives the new state — handlePressedChange is yours. HeartIcon comes from @dbm-design-system/icons. */}
+    receives the new state — handlePressedChange is yours. HeartIcon comes from @dbm-system/icons. */}
 <IconButton
   icon={HeartIcon}
   aria-label="Favorite"
@@ -75,7 +75,7 @@ export const iconButtonSnippets = {
 
   asChild: `{/* asChild renders the icon button's styling onto your own element — here a link — which holds the icon.
     icon is a required prop but has no effect under asChild: put the icon in the child.
-    HeartIcon comes from @dbm-design-system/icons. */}
+    HeartIcon comes from @dbm-system/icons. */}
 <IconButton asChild icon={HeartIcon} aria-label="Favorite">
   <a href="/favorite">
     <HeartIcon />
@@ -83,7 +83,7 @@ export const iconButtonSnippets = {
 </IconButton>`,
 
   asChildDisabled: `{/* On an asChild icon button, disabled sets aria-disabled and blocks the click — an <a> has no native
-    disabled attribute. HeartIcon comes from @dbm-design-system/icons. */}
+    disabled attribute. HeartIcon comes from @dbm-system/icons. */}
 <IconButton asChild disabled icon={HeartIcon} aria-label="Favorite">
   <a href="/favorite">
     <HeartIcon />

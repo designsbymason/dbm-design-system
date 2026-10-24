@@ -1,4 +1,4 @@
-import { mergeDefined, useAnnouncement, usePersistentDismiss } from "@dbm-design-system/primitives";
+import { mergeDefined, useAnnouncement, usePersistentDismiss } from "@dbm-system/primitives";
 import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent, ReactNode, RefObject } from "react";
 import { Checkbox } from "../../atoms/Checkbox";

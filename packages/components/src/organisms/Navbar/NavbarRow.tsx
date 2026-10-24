@@ -1,4 +1,4 @@
-import { cx } from "@dbm-design-system/primitives";
+import { cx } from "@dbm-system/primitives";
 import { forwardRef, useContext, useMemo } from "react";
 import type { CSSProperties } from "react";
 import { Container } from "../../atoms/Container";

@@ -18,7 +18,7 @@ export const listItemSnippets = {
 </List>`,
 
   customIconMarker: `{/* icon replaces the bullet — set the List's marker to "none" so it doesn't draw both. CheckIcon comes
-    from @dbm-design-system/icons. */}
+    from @dbm-system/icons. */}
 <List marker="none">
   <ListItem icon={CheckIcon}>Design tokens defined</ListItem>
   <ListItem icon={CheckIcon}>Core atoms shipped</ListItem>
@@ -26,7 +26,7 @@ export const listItemSnippets = {
 </List>`,
 
   trailingContent: `{/* trailing puts something at the end of the row — a count, or a control. GearIcon comes from
-    @dbm-design-system/icons; handleClick is yours. */}
+    @dbm-system/icons; handleClick is yours. */}
 <List marker="none">
   <ListItem trailing={<Badge tone="info">3</Badge>}>Inbox</ListItem>
   <ListItem trailing={<Badge tone="danger">12</Badge>}>Overdue</ListItem>
@@ -41,7 +41,7 @@ export const listItemSnippets = {
 
   interactive: `{/* const [selected, setSelected] = useState("home"); */}
 {/* interactive makes each row a button, and selected marks the current one. HouseIcon and GearIcon come
-    from @dbm-design-system/icons. */}
+    from @dbm-system/icons. */}
 <List marker="none" as="ul">
   <ListItem
     interactive
@@ -62,7 +62,7 @@ export const listItemSnippets = {
 </List>`,
 
   disabled: `{/* disabled sets aria-disabled and blocks the click. HouseIcon and GearIcon come from
-    @dbm-design-system/icons; handleClick is yours. */}
+    @dbm-system/icons; handleClick is yours. */}
 <List marker="none">
   <ListItem interactive icon={HouseIcon} onClick={handleClick}>
     Home

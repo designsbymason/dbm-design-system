@@ -2,7 +2,7 @@ import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { useState } from "react";
 import type { CSSProperties } from "react";
-import { ChartBarIcon, GearIcon, HouseIcon } from "@dbm-design-system/icons";
+import { ChartBarIcon, GearIcon, HouseIcon } from "@dbm-system/icons";
 import { Badge } from "../../atoms/Badge";
 import { Input } from "../../atoms/Input";
 import { Text } from "../../atoms/Text";

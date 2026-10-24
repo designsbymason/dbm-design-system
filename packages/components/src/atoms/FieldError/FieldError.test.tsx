@@ -1,4 +1,4 @@
-import { StarIcon } from "@dbm-design-system/icons";
+import { StarIcon } from "@dbm-system/icons";
 import { render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { createRef } from "react";

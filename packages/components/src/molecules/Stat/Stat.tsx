@@ -1,5 +1,5 @@
-import { cx, mergeDefined, mergeRefs, useAnnouncement } from "@dbm-design-system/primitives";
-import { MinusIcon, TrendDownIcon, TrendUpIcon } from "@dbm-design-system/icons";
+import { cx, mergeDefined, mergeRefs, useAnnouncement } from "@dbm-system/primitives";
+import { MinusIcon, TrendDownIcon, TrendUpIcon } from "@dbm-system/icons";
 import { Children, createContext, forwardRef, isValidElement, useContext, useEffect, useMemo, useRef } from "react";
 import type { ReactNode } from "react";
 import { Icon } from "../../atoms/Icon";
@@ -135,7 +135,7 @@ function defaultFormatTrend(value: number): string {
  *
  * @example
  * ```tsx
- * import { UsersIcon } from "@dbm-design-system/icons";
+ * import { UsersIcon } from "@dbm-system/icons";
  *
  * <Stat>
  *   <Stat.Icon icon={UsersIcon} />

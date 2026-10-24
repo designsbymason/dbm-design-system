@@ -1,7 +1,7 @@
 // Demo code shared by TableToolbar's stories and its hidden real-browser checks: a small set of orders, filtering that works,
 // and the bar composed the way an app would compose it. Docs-only (a stories-support module, not shipped, ADR-0013's way of
 // sharing code between two stories files); the "Show code" snippets are written by hand in `TableToolbar.snippets.ts`.
-import { DownloadSimpleIcon, FunnelSimpleIcon, TrashIcon } from "@dbm-design-system/icons";
+import { DownloadSimpleIcon, FunnelSimpleIcon, TrashIcon } from "@dbm-system/icons";
 import { useMemo, useState } from "react";
 import { Badge } from "../../atoms/Badge";
 import { Checkbox } from "../../atoms/Checkbox";

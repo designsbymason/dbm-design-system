@@ -2,8 +2,8 @@ import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import { useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
-import { StarIcon } from "@dbm-design-system/icons";
-import { usePersistentDismiss } from "@dbm-design-system/primitives";
+import { StarIcon } from "@dbm-system/icons";
+import { usePersistentDismiss } from "@dbm-system/primitives";
 import { Button } from "../../atoms/Button";
 import { Text } from "../../atoms/Text";
 import { Alert } from "./Alert";
@@ -156,7 +156,7 @@ const meta: Meta<PlaygroundArgs> = {
     icon: {
       control: false,
       description:
-        "The icon before the message — a component reference from @dbm-design-system/icons, not a string name. Each tone has its own; pass another to replace it, or false for none. Decorative.",
+        "The icon before the message — a component reference from @dbm-system/icons, not a string name. Each tone has its own; pass another to replace it, or false for none. Decorative.",
     },
     banner: {
       control: "boolean",

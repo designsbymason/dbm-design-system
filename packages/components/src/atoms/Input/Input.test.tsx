@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { MagnifyingGlassIcon } from "@dbm-design-system/icons";
+import { MagnifyingGlassIcon } from "@dbm-system/icons";
 import { Icon } from "../Icon";
 import { Input } from "./Input";
 

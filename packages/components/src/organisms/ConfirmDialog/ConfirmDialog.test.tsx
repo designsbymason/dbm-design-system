@@ -4,7 +4,7 @@ import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
 import type { ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { TrashIcon } from "@dbm-design-system/icons";
+import { TrashIcon } from "@dbm-system/icons";
 import { Button } from "../../atoms/Button";
 import { Dialog } from "../Dialog";
 import { ConfirmDialog } from "./ConfirmDialog";

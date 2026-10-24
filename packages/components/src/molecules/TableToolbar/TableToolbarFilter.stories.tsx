@@ -1,4 +1,4 @@
-import { FunnelSimpleIcon } from "@dbm-design-system/icons";
+import { FunnelSimpleIcon } from "@dbm-system/icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Checkbox } from "../../atoms/Checkbox";
 import { CheckboxGroup } from "../CheckboxGroup";
@@ -43,7 +43,7 @@ const meta: Meta<typeof TableToolbar.Filter> = {
       options: ["xs", "sm", "md", "lg", "xl"],
       description: "The button's size. Inside a Toolbar it follows the toolbar's size when left out; on its own it is the bar's size."
     },
-    icon: { control: false, description: "An icon before the label, a component from @dbm-design-system/icons (a funnel for \"Filter\")." },
+    icon: { control: false, description: "An icon before the label, a component from @dbm-system/icons (a funnel for \"Filter\")." },
     align: {
       control: "select",
       options: ["start", "center", "end"],

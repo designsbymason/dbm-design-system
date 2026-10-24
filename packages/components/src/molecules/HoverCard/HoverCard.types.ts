@@ -1,5 +1,5 @@
 import type * as HoverCardPrimitive from "@radix-ui/react-hover-card";
-import type { Responsive } from "@dbm-design-system/primitives";
+import type { Responsive } from "@dbm-system/primitives";
 import type { ComponentPropsWithoutRef, CSSProperties, HTMLAttributeAnchorTarget, ReactNode } from "react";
 
 type HoverCardPrimitiveContentProps = ComponentPropsWithoutRef<typeof HoverCardPrimitive.Content>;

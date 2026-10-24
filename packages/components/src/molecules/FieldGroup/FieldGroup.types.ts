@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
-import type { Responsive, SpaceValue } from "@dbm-design-system/primitives";
+import type { Responsive, SpaceValue } from "@dbm-system/primitives";
 import type { FieldLabelSize } from "../../atoms/FieldLabel";
 
 /** How the group draws itself: no box, a border, or a tinted fill. */

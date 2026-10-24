@@ -6,7 +6,7 @@ import { FieldLabel } from "../../atoms/FieldLabel";
 import { IconButton } from "../../atoms/IconButton";
 import { Input } from "../../atoms/Input";
 import { Text } from "../../atoms/Text";
-import { GearIcon } from "@dbm-design-system/icons";
+import { GearIcon } from "@dbm-system/icons";
 import { Popover } from "./Popover";
 import { popoverPlaygroundSnippet, popoverSnippets } from "./Popover.snippets";
 import type { PopoverAlign, PopoverContentProps, PopoverSide } from "./Popover.types";

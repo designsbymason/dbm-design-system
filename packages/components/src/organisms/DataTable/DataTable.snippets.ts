@@ -66,7 +66,7 @@ export const dataTableSnippets = {
 </DataTable>`,
 
   rowActions: `${columnsNote}
-{/* DotsThreeIcon comes from @dbm-design-system/icons. rowActions draws a trailing column; the menu is your own. */}
+{/* DotsThreeIcon comes from @dbm-system/icons. rowActions draws a trailing column; the menu is your own. */}
 <DataTable
   aria-label="Team"
   columns={columns}
@@ -231,7 +231,7 @@ export const dataTableSnippets = {
 />`,
 
   pinnedColumns: `${columnsNote}
-{/* DotsThreeIcon comes from @dbm-design-system/icons. A number pins that many data columns beside the checkbox column (and the actions column at the end), up to four at an
+{/* DotsThreeIcon comes from @dbm-system/icons. A number pins that many data columns beside the checkbox column (and the actions column at the end), up to four at an
     edge in all: here the checkbox and the name stay put at the start, and the actions at the end, while the rest scrolls
     sideways. true pins one. */}
 <DataTable

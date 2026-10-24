@@ -1,5 +1,5 @@
 import type * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode, RefObject } from "react";
 import type { BackdropOpacity } from "../../atoms/Backdrop/Backdrop.types";
 import type { ButtonProps } from "../../atoms/Button";

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HouseIcon } from "@dbm-design-system/icons";
+import { HouseIcon } from "@dbm-system/icons";
 import { Breadcrumb } from "./Breadcrumb";
 
 // Docs-only (guidelines/adr/0013) — `Breadcrumb.Link`'s own props get their own
@@ -14,7 +14,7 @@ const meta: Meta<typeof Breadcrumb.Link> = {
     icon: {
       control: false,
       description:
-        "An icon shown before the text — a component reference from @dbm-design-system/icons, not a string name. Decorative. Not drawn with asChild.",
+        "An icon shown before the text — a component reference from @dbm-system/icons, not a string name. Decorative. Not drawn with asChild.",
     },
     external: {
       control: "boolean",

@@ -21,7 +21,7 @@ const meta: Meta<TableOfContentsItem> = {
     icon: {
       control: false,
       description:
-        "An icon shown before the text: a component reference from @dbm-design-system/icons, not a string name. Decorative.",
+        "An icon shown before the text: a component reference from @dbm-system/icons, not a string name. Decorative.",
     },
     trailing: {
       control: false,

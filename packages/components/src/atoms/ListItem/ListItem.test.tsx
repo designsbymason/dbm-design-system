@@ -1,4 +1,4 @@
-import { CheckIcon } from "@dbm-design-system/icons";
+import { CheckIcon } from "@dbm-system/icons";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { createRef } from "react";

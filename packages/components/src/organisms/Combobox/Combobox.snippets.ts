@@ -27,7 +27,7 @@ export const comboboxSnippets = {
 />`,
 
   rich: `{/* A description under the label, a reason for an option that can't be chosen, an icon before the label. */}
-{/* GlobeIcon comes from @dbm-design-system/icons */}
+{/* GlobeIcon comes from @dbm-system/icons */}
 <Combobox
   aria-label="Plan"
   options={[

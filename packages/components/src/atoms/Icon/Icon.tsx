@@ -1,4 +1,4 @@
-import { cx } from "@dbm-design-system/primitives";
+import { cx } from "@dbm-system/primitives";
 import { forwardRef } from "react";
 import styles from "./Icon.module.css";
 import type { IconProps, IconSize, IconTone } from "./Icon.types";
@@ -41,7 +41,7 @@ const toneClass: Record<IconTone, string | undefined> = {
  *
  * @example
  * ```tsx
- * import { Wallet } from '@dbm-design-system/icons';
+ * import { Wallet } from '@dbm-system/icons';
  * <Icon icon={Wallet} size="lg" />
  * <Icon icon={Wallet} label="Wallet balance" />
  * <Icon icon={Wallet} tone="brand" />

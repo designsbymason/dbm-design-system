@@ -9,7 +9,7 @@
 // the package, no demo scaffolding — and `storySnippets.test.ts` checks that stays
 // true. See `07-storybook-and-documentation-standards.md` §4.2.
 
-import { CheckIcon, MoonIcon, SunIcon, XIcon } from "@dbm-design-system/icons";
+import { CheckIcon, MoonIcon, SunIcon, XIcon } from "@dbm-system/icons";
 import type { SwitchSize } from "./Switch.types";
 
 export const switchSnippets = {
@@ -28,7 +28,7 @@ export const switchSnippets = {
 <Switch loading>Loading</Switch>`,
 
   withThumbIcons: `{/* checkedIcon and uncheckedIcon put an icon on the thumb for each state. MoonIcon and SunIcon come from
-    @dbm-design-system/icons. */}
+    @dbm-system/icons. */}
 <Switch defaultChecked checkedIcon={MoonIcon} uncheckedIcon={SunIcon}>Dark mode</Switch>`,
 
   iconOnly: `{/* With no visible label, aria-label is required */}

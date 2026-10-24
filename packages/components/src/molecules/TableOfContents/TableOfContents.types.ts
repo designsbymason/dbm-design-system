@@ -1,5 +1,5 @@
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
-import type { SpaceValue } from "@dbm-design-system/primitives";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
+import type { SpaceValue } from "@dbm-system/primitives";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode, RefObject } from "react";
 
 /**
@@ -29,7 +29,7 @@ export interface TableOfContentsItem {
    * @default 1
    */
   level?: 1 | 2 | 3 | 4;
-  /** An icon shown before the text — a component reference from `@dbm-design-system/icons`, not a string name. Decorative. */
+  /** An icon shown before the text — a component reference from `@dbm-system/icons`, not a string name. Decorative. */
   icon?: PhosphorIcon;
   /** Content shown at the end of the entry, such as a `Badge` ("New"). It is part of the link, so it is read with the label. */
   trailing?: ReactNode;

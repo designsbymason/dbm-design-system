@@ -63,7 +63,7 @@ export const splitterSnippets = {
     collapsedSize: 0 (default, the pane disappears) or a length that stays, such as "48px".
     children can be a function of the pane's state, { collapsed, size, toggle }: toggle collapses or opens the pane, so a
     rail can hold the button that opens it. Keep that one button in the same place in both states, so it keeps focus */}
-{/* CaretLeftIcon and CaretRightIcon come from @dbm-design-system/icons */}
+{/* CaretLeftIcon and CaretRightIcon come from @dbm-system/icons */}
 <div style={{ height: "20rem" }}>
   <Splitter defaultLayout={[25, 75]}>
     <Splitter.Pane collapsible collapsedSize="48px" minSize="180px" label="Sidebar">

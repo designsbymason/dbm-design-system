@@ -349,7 +349,7 @@ export const MinimalHeader: Story = {
     <div style={stack}>
       <DemoBlock {...args} code={samples.ts} language="ts" title="total.ts" showLanguage={false} aria-label="No language label" />
       <DemoBlock {...args} code={samples.ts} language="ts" title="total.ts" showHeader={false} aria-label="No header" />
-      <DemoBlock {...args} code="pnpm add @dbm-design-system/components" language="bash" showHeader={false} copyable={false} aria-label="Nothing but the code" />
+      <DemoBlock {...args} code="pnpm add @dbm-system/components" language="bash" showHeader={false} copyable={false} aria-label="Nothing but the code" />
     </div>
   ),
 };
@@ -402,7 +402,7 @@ export const MaxHeight: Story = {
 export const CopyButton: Story = {
   name: "The copy button",
   parameters: { docs: { source: { code: codeBlockSnippets.copy } } },
-  args: { code: "pnpm add @dbm-design-system/components", language: "bash" },
+  args: { code: "pnpm add @dbm-system/components", language: "bash" },
   argTypes: { code: noControls, language: noControls, copyable: noControls, onCopied: noControls },
   render: (args) => (
     <div style={stack}>
@@ -415,7 +415,7 @@ export const CopyButton: Story = {
 export const ShellPrompt: Story = {
   name: "Shell commands: the prompt is not copied",
   parameters: { docs: { source: { code: codeBlockSnippets.prompt } } },
-  args: { code: "$ pnpm add @dbm-design-system/components\n$ pnpm test", language: "bash" },
+  args: { code: "$ pnpm add @dbm-system/components\n$ pnpm test", language: "bash" },
   argTypes: { code: noControls, language: noControls, "aria-label": noControls },
   render: (args) => <DemoBlock {...args} aria-label="Install and test" />,
 };
@@ -462,7 +462,7 @@ export const RightToLeft: Story = {
 export const LabelledBy: Story = {
   name: "Named by a visible label",
   parameters: { docs: { source: { code: codeBlockSnippets.labelled } } },
-  args: { code: "pnpm add @dbm-design-system/components", language: "bash" },
+  args: { code: "pnpm add @dbm-system/components", language: "bash" },
   argTypes: { code: noControls, language: noControls, "aria-label": noControls, "aria-labelledby": noControls },
   render: ({ "aria-label": _label, ...args }) => (
     <div style={{ ...stack, gap: "var(--dbm-space-2)" }}>

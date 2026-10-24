@@ -1,4 +1,4 @@
-import { cx, responsiveStyle, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
+import { cx, responsiveStyle, useResolvedResponsiveValue } from "@dbm-system/primitives";
 import { forwardRef } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import styles from "./Divider.module.css";

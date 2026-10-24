@@ -14,7 +14,7 @@ import {
   TextItalicIcon,
   TextUnderlineIcon,
   TrashIcon,
-} from "@dbm-design-system/icons";
+} from "@dbm-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useRef, useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";

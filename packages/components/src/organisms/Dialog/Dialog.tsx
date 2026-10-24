@@ -1,5 +1,5 @@
-import { cx, mergeDefined, mergeRefs } from "@dbm-design-system/primitives";
-import type { Breakpoint, Responsive } from "@dbm-design-system/primitives";
+import { cx, mergeDefined, mergeRefs } from "@dbm-system/primitives";
+import type { Breakpoint, Responsive } from "@dbm-system/primitives";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { createContext, forwardRef, useCallback, useContext, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";

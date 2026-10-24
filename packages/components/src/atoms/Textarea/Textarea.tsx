@@ -1,5 +1,5 @@
-import { XIcon } from "@dbm-design-system/icons";
-import { cx, mergeRefs } from "@dbm-design-system/primitives";
+import { XIcon } from "@dbm-system/icons";
+import { cx, mergeRefs } from "@dbm-system/primitives";
 import {
   forwardRef,
   useCallback,

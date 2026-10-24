@@ -1,4 +1,4 @@
-import { cx, mergeRefs } from "@dbm-design-system/primitives";
+import { cx, mergeRefs } from "@dbm-system/primitives";
 import { forwardRef, useEffect, useRef } from "react";
 import type { KeyboardEvent } from "react";
 import styles from "./Indicators.module.css";

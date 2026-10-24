@@ -1,4 +1,4 @@
-import { MagnifyingGlassIcon } from "@dbm-design-system/icons";
+import { MagnifyingGlassIcon } from "@dbm-system/icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect } from "storybook/test";
 import { Icon } from "../Icon";

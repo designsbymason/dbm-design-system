@@ -8,7 +8,7 @@
 import { quote } from "../../snippetHelpers";
 import type { SidebarCollapseBelow, SidebarCurrentVariant, SidebarSide, SidebarSize, SidebarVariant } from "./Sidebar.types";
 
-const iconsNote = `{/* The icons (HouseIcon, TrayIcon, FolderSimpleIcon, ChartBarIcon, UsersIcon, GearIcon, BookOpenIcon) come from @dbm-design-system/icons */}`;
+const iconsNote = `{/* The icons (HouseIcon, TrayIcon, FolderSimpleIcon, ChartBarIcon, UsersIcon, GearIcon, BookOpenIcon) come from @dbm-system/icons */}`;
 
 const indent = (code: string, spaces: number) =>
   code

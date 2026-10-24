@@ -1,6 +1,6 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
-import { BellIcon, BookOpenIcon, GearIcon } from "@dbm-design-system/icons";
+import { BellIcon, BookOpenIcon, GearIcon } from "@dbm-system/icons";
 import { useEffect, useId, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Badge } from "../../atoms/Badge";

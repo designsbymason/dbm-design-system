@@ -1,5 +1,5 @@
-import { CheckCircleIcon, InfoIcon, XCircleIcon } from "@dbm-design-system/icons";
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import { CheckCircleIcon, InfoIcon, XCircleIcon } from "@dbm-system/icons";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type { ReactNode } from "react";
 import { Icon } from "../../src/atoms/Icon";
 

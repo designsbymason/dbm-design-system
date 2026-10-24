@@ -1,5 +1,5 @@
-import { CaretLeftIcon, CaretRightIcon } from "@dbm-design-system/icons";
-import { cx, mergeRefs, useAnnouncement } from "@dbm-design-system/primitives";
+import { CaretLeftIcon, CaretRightIcon } from "@dbm-system/icons";
+import { cx, mergeRefs, useAnnouncement } from "@dbm-system/primitives";
 import { forwardRef, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { CSSProperties, FocusEvent, KeyboardEvent, PointerEvent } from "react";
 import { Button } from "../../atoms/Button";

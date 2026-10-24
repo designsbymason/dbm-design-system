@@ -1,5 +1,5 @@
-import { ArrowUpIcon } from "@dbm-design-system/icons";
-import { cx } from "@dbm-design-system/primitives";
+import { ArrowUpIcon } from "@dbm-system/icons";
+import { cx } from "@dbm-system/primitives";
 import { forwardRef, useEffect, useState } from "react";
 import { IconButton } from "../IconButton";
 import styles from "./BackToTop.module.css";

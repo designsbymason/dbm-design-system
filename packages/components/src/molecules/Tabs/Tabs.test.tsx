@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { HouseIcon } from "@dbm-design-system/icons";
+import { HouseIcon } from "@dbm-system/icons";
 import { Tabs } from "./Tabs";
 import styles from "./Tabs.module.css";
 import type { TabsProps } from "./Tabs.types";

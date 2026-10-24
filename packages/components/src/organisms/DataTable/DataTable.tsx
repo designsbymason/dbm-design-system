@@ -1,5 +1,5 @@
-import { ArrowDownIcon, ArrowUpIcon, CaretDownIcon, CaretRightIcon, CaretUpDownIcon } from "@dbm-design-system/icons";
-import { cx, mergeDefined, useAnnouncement, useWindowedList } from "@dbm-design-system/primitives";
+import { ArrowDownIcon, ArrowUpIcon, CaretDownIcon, CaretRightIcon, CaretUpDownIcon } from "@dbm-system/icons";
+import { cx, mergeDefined, useAnnouncement, useWindowedList } from "@dbm-system/primitives";
 import {
   Children,
   forwardRef,

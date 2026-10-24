@@ -4,7 +4,7 @@
     {
       "name": "storybook",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@dbm-design-system/components", "run", "storybook"],
+      "runtimeArgs": ["--filter", "@dbm-system/components", "run", "storybook"],
       "port": 6006
     }
   ]

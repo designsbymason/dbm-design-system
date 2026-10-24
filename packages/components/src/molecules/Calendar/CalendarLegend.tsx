@@ -1,4 +1,4 @@
-import { cx } from "@dbm-design-system/primitives";
+import { cx } from "@dbm-system/primitives";
 import styles from "./Calendar.module.css";
 
 /** One line of the key: a sample of a look and its words. */

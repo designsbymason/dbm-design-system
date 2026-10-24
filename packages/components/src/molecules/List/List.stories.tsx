@@ -1,4 +1,4 @@
-import { CheckIcon, GearIcon, HouseIcon } from "@dbm-design-system/icons";
+import { CheckIcon, GearIcon, HouseIcon } from "@dbm-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useEffect, useState } from "react";
 import { useArgs } from "storybook/preview-api";

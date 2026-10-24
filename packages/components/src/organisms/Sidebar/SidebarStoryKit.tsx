@@ -7,7 +7,7 @@ import {
   MagnifyingGlassIcon,
   TrayIcon,
   UsersIcon,
-} from "@dbm-design-system/icons";
+} from "@dbm-system/icons";
 import { useCallback, useState, useSyncExternalStore } from "react";
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import { Avatar } from "../../atoms/Avatar";

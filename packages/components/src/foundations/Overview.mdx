@@ -76,7 +76,7 @@ dot-notation name replaced by hyphens: `bg.brand` → `--dbm-bg-brand`, `space.4
 Reference it directly in CSS Modules: `padding: var(--dbm-space-4);`. There is no build step or
 JS import required to use a token inside a component's own `.module.css` file — the custom
 properties are already globally available once the token stylesheets are loaded (handled once, at
-the app root, by `@dbm-design-system/tokens/css/*.css`).
+the app root, by `@dbm-system/tokens/css/*.css`).
 
 ## What's covered here
 
@@ -147,7 +147,7 @@ packages/tokens/
 │   └── component/      One file per component that needs one — avatar.json, badge.json
 ├── build/css/          Generated CSS custom properties (what components actually load)
 └── build/ts/           Generated JS/TS objects (what these Foundations pages read from,
-                        via `@dbm-design-system/tokens`, so every value shown here is
+                        via `@dbm-system/tokens`, so every value shown here is
                         always the real, current, built value)
 ```
 

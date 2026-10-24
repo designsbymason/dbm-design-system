@@ -40,7 +40,7 @@ export const buttonGroupSnippets = {
   <Button>Month</Button>
 </ButtonGroup>`,
 
-  icons: `{/* Icons come from @dbm-design-system/icons: TextBIcon, TextItalicIcon, TextUnderlineIcon */}
+  icons: `{/* Icons come from @dbm-system/icons: TextBIcon, TextItalicIcon, TextUnderlineIcon */}
 <ButtonGroup aria-label="Text style" variant="secondary" size="sm">
   <IconButton icon={TextBIcon} aria-label="Bold" />
   <IconButton icon={TextItalicIcon} aria-label="Italic" />

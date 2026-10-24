@@ -53,7 +53,7 @@ export const imageSnippets = {
   <Image src="/missing.jpg" alt="Product photo" aspectRatio={1} radius="md" />
 </div>`,
 
-  brokenCustomFallback: `{/* fallback replaces that placeholder with your own content. UserIcon comes from @dbm-design-system/icons. */}
+  brokenCustomFallback: `{/* fallback replaces that placeholder with your own content. UserIcon comes from @dbm-system/icons. */}
 <div style={{ width: "12rem" }}>
   <Image
     src="/missing.jpg"

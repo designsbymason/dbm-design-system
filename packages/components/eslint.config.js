@@ -1,3 +1,3 @@
-import { reactConfig } from "@dbm-design-system/eslint-config/react";
+import { reactConfig } from "@dbm-system/eslint-config/react";
 
 export default reactConfig;

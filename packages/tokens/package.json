@@ -1,5 +1,5 @@
 {
-  "name": "@dbm-design-system/tokens",
+  "name": "@dbm-system/tokens",
   "version": "0.0.0",
   "description": "Design tokens (primitive, semantic, and component layers) for the DBM Design System.",
   "license": "MIT",
@@ -26,7 +26,7 @@
     "build": "node style-dictionary.config.js && tsup"
   },
   "devDependencies": {
-    "@dbm-design-system/tsconfig": "workspace:*",
+    "@dbm-system/tsconfig": "workspace:*",
     "culori": "^4.0.2",
     "style-dictionary": "^5.5.0",
     "tsup": "^8.5.1",

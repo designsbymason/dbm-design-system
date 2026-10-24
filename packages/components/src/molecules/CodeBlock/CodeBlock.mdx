@@ -61,9 +61,9 @@ well, and it will not catch every corner of a language.
 ### Import
 
 ```tsx
-import { CodeBlock } from "@dbm-design-system/components";
+import { CodeBlock } from "@dbm-system/components";
 // Only for a language outside the core (python, yaml, sql, markdown, go, rust, java) or one of your own:
-import { pythonLanguage, registerCodeLanguage } from "@dbm-design-system/components";
+import { pythonLanguage, registerCodeLanguage } from "@dbm-system/components";
 ```
 
 ## Playground
@@ -370,7 +370,7 @@ button at the left.
 ```tsx
 <CodeBlock language="tsx" title="SaveButton.tsx" showLineNumbers highlightLines={[2, "4-6"]} code={source} />
 
-<CodeBlock language="bash" code="pnpm add @dbm-design-system/components" />
+<CodeBlock language="bash" code="pnpm add @dbm-system/components" />
 
 {/* An excerpt from further down a file */}
 <CodeBlock language="ts" showLineNumbers startLine={42} highlightLines={[44]} code={excerpt} />

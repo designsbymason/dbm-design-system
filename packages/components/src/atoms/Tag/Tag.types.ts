@@ -1,4 +1,4 @@
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 
 /** Feedback-type coloring, kept separate from visual `variant` per this system's conventions. `brand` and `highlight` are the non-status tones — the system's own identity color, and its general highlight and accent color — matching Badge's own tone scale (which Tag otherwise mirrors) rather than a status. */

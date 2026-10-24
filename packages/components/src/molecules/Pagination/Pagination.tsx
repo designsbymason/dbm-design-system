@@ -1,6 +1,6 @@
-import { CaretDoubleLeftIcon, CaretDoubleRightIcon, CaretLeftIcon, CaretRightIcon } from "@dbm-design-system/icons";
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
-import { cx, mergeDefined, mergeRefs, useAnnouncement } from "@dbm-design-system/primitives";
+import { CaretDoubleLeftIcon, CaretDoubleRightIcon, CaretLeftIcon, CaretRightIcon } from "@dbm-system/icons";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
+import { cx, mergeDefined, mergeRefs, useAnnouncement } from "@dbm-system/primitives";
 import { forwardRef, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ComponentPropsWithoutRef, FormEvent, MouseEvent, ReactNode, SyntheticEvent } from "react";
 import { Button } from "../../atoms/Button";

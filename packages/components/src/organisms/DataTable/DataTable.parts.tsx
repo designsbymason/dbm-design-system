@@ -1,5 +1,5 @@
-import { ColumnsIcon } from "@dbm-design-system/icons";
-import { cx, mergeDefined } from "@dbm-design-system/primitives";
+import { ColumnsIcon } from "@dbm-system/icons";
+import { cx, mergeDefined } from "@dbm-system/primitives";
 import { forwardRef, useContext } from "react";
 import { Button } from "../../atoms/Button";
 import { Pagination } from "../../molecules/Pagination";

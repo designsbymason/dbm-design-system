@@ -42,23 +42,23 @@ jobs:
         run: pnpm build
 
       - name: Check per-component bundle size
-        run: pnpm --filter @dbm-design-system/components check-component-bundle-size
+        run: pnpm --filter @dbm-system/components check-component-bundle-size
 
       - name: Check Foundations token coverage
-        run: pnpm --filter @dbm-design-system/components check-foundations-token-coverage
+        run: pnpm --filter @dbm-system/components check-foundations-token-coverage
 
       # Warn-only (`::warning` annotations, always exits 0): the guideline docs drifting from each
       # other and from the code never fails a build. `continue-on-error` keeps a bug in the script
       # itself from doing so either.
       - name: Check guidelines
-        run: pnpm --filter @dbm-design-system/components check-guidelines
+        run: pnpm --filter @dbm-system/components check-guidelines
         continue-on-error: true
 
       - name: Build Storybook
-        run: pnpm --filter @dbm-design-system/components build-storybook
+        run: pnpm --filter @dbm-system/components build-storybook
 
       - name: Check Storybook bundle size
-        run: pnpm --filter @dbm-design-system/components check-storybook-bundle-size
+        run: pnpm --filter @dbm-system/components check-storybook-bundle-size
 
       - name: Test
         run: pnpm test

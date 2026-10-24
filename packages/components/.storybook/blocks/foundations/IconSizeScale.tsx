@@ -1,5 +1,5 @@
-import { StarIcon } from "@dbm-design-system/icons";
-import { primitives } from "@dbm-design-system/tokens";
+import { StarIcon } from "@dbm-system/icons";
+import { primitives } from "@dbm-system/tokens";
 import { Icon } from "../../../src/atoms/Icon";
 import type { IconSize } from "../../../src/atoms/Icon/Icon.types";
 

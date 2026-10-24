@@ -17,25 +17,25 @@ import {
   TrashIcon,
   WalletIcon,
   type IconWeight,
-} from "@dbm-design-system/icons";
+} from "@dbm-system/icons";
 import type { IconSize, IconTone } from "./Icon.types";
 import { quote } from "../../snippetHelpers";
 
 export const iconSnippets = {
-  default: `{/* icon takes any icon from @dbm-design-system/icons — WalletIcon here. Without a label the icon is
+  default: `{/* icon takes any icon from @dbm-system/icons — WalletIcon here. Without a label the icon is
     decorative and hidden from assistive technology. */}
 <Icon icon={WalletIcon} />`,
 
   allSizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" | "2xl" | "3xl". WalletIcon comes from
-    @dbm-design-system/icons. */}
+    @dbm-system/icons. */}
 <Icon icon={WalletIcon} size="xl" tone="brand" />`,
 
   allWeights: `{/* weight: "thin" | "light" | "regular" | "bold" (default) | "fill" | "duotone". HeartIcon comes from
-    @dbm-design-system/icons. */}
+    @dbm-system/icons. */}
 <Icon icon={HeartIcon} weight="duotone" size="lg" tone="brand" />`,
 
   allTones: `{/* tone: "default" | "secondary" | "brand" | "disabled" | "danger" | "warning" | "success" | "info" | "highlight".
-    Leave it out and the icon takes the surrounding text color. HeartIcon comes from @dbm-design-system/icons. */}
+    Leave it out and the icon takes the surrounding text color. HeartIcon comes from @dbm-system/icons. */}
 <Icon icon={HeartIcon} size="lg" tone="danger" />
 
 {/* The on-* tones are for an icon sitting on that solid fill: "on-brand" | "on-danger" | "on-warning" |
@@ -45,11 +45,11 @@ export const iconSnippets = {
 </div>`,
 
   labeled: `{/* label makes the icon an image (role="img") with that accessible name — use it when the icon carries
-    meaning on its own. HeartIcon comes from @dbm-design-system/icons. */}
+    meaning on its own. HeartIcon comes from @dbm-system/icons. */}
 <Icon icon={HeartIcon} label="Favorite" />`,
 
   mirrored: `{/* mirrored flips a directional icon horizontally, for right-to-left layouts. ArrowRightIcon comes from
-    @dbm-design-system/icons. */}
+    @dbm-system/icons. */}
 <Icon icon={ArrowRightIcon} size="lg" tone="brand" mirrored />`,
 } as const;
 

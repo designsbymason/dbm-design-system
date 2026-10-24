@@ -51,7 +51,7 @@ ${accordion('type="multiple" defaultValue={["shipping", "warranty"]}', faqItems)
   </Accordion.Item>
 </Accordion>`,
 
-  customIcon: `{/* RocketLaunchIcon comes from @dbm-design-system/icons */}
+  customIcon: `{/* RocketLaunchIcon comes from @dbm-system/icons */}
 <Accordion defaultValue="shipping">
   <Accordion.Item value="shipping">
     <Accordion.Trigger icon={RocketLaunchIcon}>How long does shipping take?</Accordion.Trigger>
@@ -60,7 +60,7 @@ ${accordion('type="multiple" defaultValue={["shipping", "warranty"]}', faqItems)
 </Accordion>`,
 
   asChildTrigger: `{/* With asChild the trigger renders your own element, and is responsible for drawing its own
-    disclosure indicator, if any. RocketLaunchIcon comes from @dbm-design-system/icons. */}
+    disclosure indicator, if any. RocketLaunchIcon comes from @dbm-system/icons. */}
 <Accordion defaultValue="shipping">
   <Accordion.Item value="shipping">
     <Accordion.Trigger asChild>

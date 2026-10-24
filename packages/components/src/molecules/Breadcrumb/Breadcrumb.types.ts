@@ -1,4 +1,4 @@
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 import type { LinkProps } from "../../atoms/Link";
 
@@ -173,7 +173,7 @@ export interface BreadcrumbItemProps
 export interface BreadcrumbLinkProps extends Omit<LinkProps, "underline"> {
   /**
    * An icon shown before the text — a component reference from
-   * `@dbm-design-system/icons`, not a string name. Decorative, so the link
+   * `@dbm-system/icons`, not a string name. Decorative, so the link
    * still needs text (or an `aria-label`). Not drawn with `asChild`, since the
    * slotted element owns its own content; put the icon inside it instead.
    */
@@ -185,7 +185,7 @@ export interface BreadcrumbPageProps extends Omit<ComponentPropsWithoutRef<"span
   children?: ReactNode;
   /**
    * An icon shown before the text — a component reference from
-   * `@dbm-design-system/icons`, not a string name. Decorative.
+   * `@dbm-system/icons`, not a string name. Decorative.
    */
   icon?: PhosphorIcon;
   /** Standard DOM id, on the `<span>`. */

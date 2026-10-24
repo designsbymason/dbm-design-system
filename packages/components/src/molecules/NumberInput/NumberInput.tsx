@@ -1,5 +1,5 @@
-import { CaretDownIcon, CaretUpIcon } from "@dbm-design-system/icons";
-import { cx, mergeRefs } from "@dbm-design-system/primitives";
+import { CaretDownIcon, CaretUpIcon } from "@dbm-system/icons";
+import { cx, mergeRefs } from "@dbm-system/primitives";
 import { forwardRef, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { Icon } from "../../atoms/Icon";

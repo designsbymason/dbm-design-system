@@ -1,5 +1,5 @@
-import { ClockIcon, XIcon } from "@dbm-design-system/icons";
-import { cx, mergeDefined, mergeRefs } from "@dbm-design-system/primitives";
+import { ClockIcon, XIcon } from "@dbm-system/icons";
+import { cx, mergeDefined, mergeRefs } from "@dbm-system/primitives";
 import { Fragment, forwardRef, useEffect, useRef, useState } from "react";
 import type { ChangeEvent, CSSProperties, FocusEvent, KeyboardEvent, MouseEvent } from "react";
 import { Icon } from "../../atoms/Icon";

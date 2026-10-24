@@ -1,4 +1,4 @@
-import type { SpaceValue } from "@dbm-design-system/primitives";
+import type { SpaceValue } from "@dbm-system/primitives";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode, RefObject } from "react";
 
 /**

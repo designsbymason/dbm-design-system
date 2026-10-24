@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "@dbm-design-system/tsconfig/tsconfig.react-library.json",
+  "extends": "@dbm-system/tsconfig/tsconfig.react-library.json",
   "compilerOptions": {
     "noEmit": true
   },

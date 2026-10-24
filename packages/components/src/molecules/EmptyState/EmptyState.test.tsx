@@ -1,4 +1,4 @@
-import { TrayIcon } from "@dbm-design-system/icons";
+import { TrayIcon } from "@dbm-system/icons";
 import { act, render, screen } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { createRef, StrictMode } from "react";

@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { CopyIcon } from "@dbm-design-system/icons";
+import { CopyIcon } from "@dbm-system/icons";
 import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";

@@ -1,4 +1,4 @@
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 import type { ButtonSize, ButtonVariant } from "../../atoms/Button";
 import type { TagTone } from "../../atoms/Tag";
@@ -102,7 +102,7 @@ export interface TableToolbarFilterProps extends Omit<ComponentPropsWithoutRef<"
    * @default the bar's `size` ('md')
    */
   size?: TableToolbarSize;
-  /** An icon before the label, a component from `@dbm-design-system/icons` (a funnel for "Filter"). */
+  /** An icon before the label, a component from `@dbm-system/icons` (a funnel for "Filter"). */
   icon?: PhosphorIcon;
   /**
    * Which edge of the button the panel lines up with.

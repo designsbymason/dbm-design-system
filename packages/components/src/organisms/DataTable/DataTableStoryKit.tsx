@@ -2,7 +2,7 @@
 // generator for a long one, and the toolbar, row menu and server-style paging an app would write around the table.
 // Docs-only (a stories-support module, not shipped, ADR-0013's way of sharing code between two stories files); the
 // "Show code" snippets are written by hand in `DataTable.snippets.ts`.
-import { DotsThreeIcon, PencilSimpleIcon, TrashIcon } from "@dbm-design-system/icons";
+import { DotsThreeIcon, PencilSimpleIcon, TrashIcon } from "@dbm-system/icons";
 import { useEffect, useMemo, useState } from "react";
 import { Badge } from "../../atoms/Badge";
 import { Button } from "../../atoms/Button";

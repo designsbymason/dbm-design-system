@@ -1,4 +1,4 @@
-import { TrashIcon } from "@dbm-design-system/icons";
+import { TrashIcon } from "@dbm-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import type { ReactElement } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";

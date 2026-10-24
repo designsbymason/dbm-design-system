@@ -1,4 +1,4 @@
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactElement, ReactNode, RefObject } from "react";
 import type { BackdropOpacity } from "../../atoms/Backdrop/Backdrop.types";
 import type { HeadingSize } from "../../atoms/Heading/Heading.types";

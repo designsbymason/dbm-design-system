@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { CopyIcon, PencilSimpleIcon, TrashIcon } from "@dbm-design-system/icons";
+import { CopyIcon, PencilSimpleIcon, TrashIcon } from "@dbm-system/icons";
 import { Menu } from "./Menu";
 
 // Docs-only — see MenuRoot.stories.tsx's own comment for the full rationale (guidelines/adr/0013).

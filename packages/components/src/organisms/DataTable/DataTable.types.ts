@@ -1,4 +1,4 @@
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type { ComponentPropsWithoutRef, CSSProperties, KeyboardEvent, MouseEvent, ReactNode } from "react";
 import type { ButtonSize, ButtonVariant } from "../../atoms/Button";
 import type { PaginationProps } from "../../molecules/Pagination";

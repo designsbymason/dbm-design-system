@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
-import type { Responsive } from "@dbm-design-system/primitives";
+import type { Responsive } from "@dbm-system/primitives";
 
 export type DividerOrientation = "horizontal" | "vertical";
 export type DividerVariant = "solid" | "dashed" | "dotted" | "double";

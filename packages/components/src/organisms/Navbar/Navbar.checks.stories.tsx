@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
-import { UserCircleIcon, ShoppingCartIcon } from "@dbm-design-system/icons";
+import { UserCircleIcon, ShoppingCartIcon } from "@dbm-system/icons";
 import { Badge } from "../../atoms/Badge";
 import { IconButton } from "../../atoms/IconButton";
 import { send } from "../../molecules/CodeBlock/browserProtocol";

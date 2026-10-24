@@ -15,7 +15,7 @@
  * (packages/tokens/src/primitive/breakpoint.json). If those values ever
  * change, these six blocks must be updated by hand to match. Mirrors
  * Container's/Grid's/Stack's/GridItem's identical responsive-prop
- * mechanism (see `@dbm-design-system/primitives`' `responsiveStyle`).
+ * mechanism (see `@dbm-system/primitives`' `responsiveStyle`).
  */
 .root {
   --bleed-margin: calc(var(--bleed-inset-base, 0) * -1);

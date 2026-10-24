@@ -1,4 +1,4 @@
-import { cx, mergeRefs } from "@dbm-design-system/primitives";
+import { cx, mergeRefs } from "@dbm-system/primitives";
 import { forwardRef, useEffect, useId, type ReactNode } from "react";
 import { Link } from "../../atoms/Link";
 import { useForm } from "../../internal/formContext";

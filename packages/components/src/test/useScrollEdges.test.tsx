@@ -1,4 +1,4 @@
-import { useScrollEdges } from "@dbm-design-system/primitives";
+import { useScrollEdges } from "@dbm-system/primitives";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { useRef } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";

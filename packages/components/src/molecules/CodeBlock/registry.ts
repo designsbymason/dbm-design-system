@@ -29,7 +29,7 @@ const namesOf = (language: CodeLanguage) =>
  * @returns A function that undoes the registration.
  * @example
  * ```ts
- * import { pythonLanguage, registerCodeLanguage } from "@dbm-design-system/components";
+ * import { pythonLanguage, registerCodeLanguage } from "@dbm-system/components";
  * registerCodeLanguage(pythonLanguage);
  * ```
  */

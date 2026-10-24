@@ -1,5 +1,5 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
-import { XIcon } from "@dbm-design-system/icons";
+import { XIcon } from "@dbm-system/icons";
 import { IconButton } from "../IconButton";
 import { VisuallyHidden } from "./VisuallyHidden";
 import { visuallyHiddenPlaygroundSnippet, visuallyHiddenSnippets } from "./VisuallyHidden.snippets";

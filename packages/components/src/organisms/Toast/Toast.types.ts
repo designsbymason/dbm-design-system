@@ -1,5 +1,5 @@
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
-import type { Responsive } from "@dbm-design-system/primitives";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
+import type { Responsive } from "@dbm-system/primitives";
 import type { ComponentPropsWithoutRef, CSSProperties, MouseEvent, ReactNode } from "react";
 import type { ButtonProps } from "../../atoms/Button";
 
@@ -159,7 +159,7 @@ export interface ToastOptions {
   /** Padding and type size. The provider's `size` when left out. */
   size?: ToastSize;
   /**
-   * The icon before the message — a component reference from `@dbm-design-system/icons`, not a string name. Each tone
+   * The icon before the message — a component reference from `@dbm-system/icons`, not a string name. Each tone
    * has its own; pass another to replace it, or `false` for none. Decorative: the tone is not conveyed by the icon
    * alone, so put what matters in the text.
    */
@@ -366,7 +366,7 @@ export interface ToastProps extends Omit<ComponentPropsWithoutRef<"li">, "classN
    */
   size?: ToastSize;
   /**
-   * The icon before the message — a component reference from `@dbm-design-system/icons`. Each tone has its own;
+   * The icon before the message — a component reference from `@dbm-system/icons`. Each tone has its own;
    * pass another to replace it, or `false` for none.
    */
   icon?: PhosphorIcon | false;

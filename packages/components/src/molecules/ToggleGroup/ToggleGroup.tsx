@@ -1,4 +1,4 @@
-import { cx, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
+import { cx, useResolvedResponsiveValue } from "@dbm-system/primitives";
 import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
 import { createContext, forwardRef, useContext, useRef, useState } from "react";
 import type { FocusEvent, KeyboardEvent } from "react";

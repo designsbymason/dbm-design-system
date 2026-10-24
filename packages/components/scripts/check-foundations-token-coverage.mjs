@@ -20,13 +20,13 @@
  * rename). Added 2026-08-16, after `border.danger-subtle` and its three
  * siblings shipped without a Color.mdx entry and had to be caught by hand.
  *
- * Run after `pnpm --filter @dbm-design-system/tokens build`, not as part
+ * Run after `pnpm --filter @dbm-system/tokens build`, not as part
  * of it — this only reads the already-built `dist/` output.
  */
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { emeraldDark, emeraldLight, purpleDark, purpleLight } from "@dbm-design-system/tokens";
+import { emeraldDark, emeraldLight, purpleDark, purpleLight } from "@dbm-system/tokens";
 
 /* eslint-disable no-console -- this CLI script's whole job is printing a
    human-readable coverage report; console.log is the intended output here,

@@ -5,7 +5,7 @@ import { createRef, StrictMode } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import type { ReactNode } from "react";
-import { BellIcon } from "@dbm-design-system/icons";
+import { BellIcon } from "@dbm-system/icons";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TableOfContents } from "./TableOfContents";
 import type { TableOfContentsItem } from "./TableOfContents.types";

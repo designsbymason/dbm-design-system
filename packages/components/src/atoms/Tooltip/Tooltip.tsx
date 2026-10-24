@@ -1,4 +1,4 @@
-import { cx } from "@dbm-design-system/primitives";
+import { cx } from "@dbm-system/primitives";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { useContext } from "react";
 import { TooltipProviderPresenceContext } from "./TooltipProviderContext";

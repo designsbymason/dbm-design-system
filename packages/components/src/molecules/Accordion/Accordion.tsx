@@ -1,5 +1,5 @@
-import { CaretDownIcon } from "@dbm-design-system/icons";
-import { cx } from "@dbm-design-system/primitives";
+import { CaretDownIcon } from "@dbm-system/icons";
+import { cx } from "@dbm-system/primitives";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { createContext, forwardRef, useContext, useRef } from "react";
 import type { ComponentPropsWithoutRef, ElementType } from "react";

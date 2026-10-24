@@ -1,4 +1,4 @@
-import { UsersIcon } from "@dbm-design-system/icons";
+import { UsersIcon } from "@dbm-system/icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Stat } from "./Stat";
 

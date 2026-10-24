@@ -10,7 +10,7 @@
 
 import type { EmptyStateAlign, EmptyStateSize, EmptyStateTone, EmptyStateVariant } from "./EmptyState.types";
 
-const iconNote = "{/* TrayIcon comes from @dbm-design-system/icons */}";
+const iconNote = "{/* TrayIcon comes from @dbm-system/icons */}";
 
 const invoiceText = `  <EmptyState.Icon icon={TrayIcon} />
   <EmptyState.Title>No invoices yet</EmptyState.Title>
@@ -36,7 +36,7 @@ export const emptyStateSnippets = {
 ${emptyState('variant="dashed"', invoiceParts)}`,
 
   tones: `{/* tone tints the icon badge: "neutral" (default) | "brand" | "info" | "success" | "warning" | "danger".
-    CheckCircleIcon comes from @dbm-design-system/icons */}
+    CheckCircleIcon comes from @dbm-system/icons */}
 <EmptyState tone="success">
   <EmptyState.Icon icon={CheckCircleIcon} />
   <EmptyState.Title>You're all caught up</EmptyState.Title>
@@ -75,7 +75,7 @@ ${iconNote}
 </EmptyState>`,
 
   searchNoResults: `{/* announce tells a screen reader about an empty state that appears in response to a
-    search or a filter. Nothing changes visually. MagnifyingGlassIcon comes from @dbm-design-system/icons */}
+    search or a filter. Nothing changes visually. MagnifyingGlassIcon comes from @dbm-system/icons */}
 <EmptyState announce variant="dashed">
   <EmptyState.Icon icon={MagnifyingGlassIcon} />
   <EmptyState.Title>No results for “fjord”</EmptyState.Title>
@@ -99,7 +99,7 @@ ${iconNote}
 </EmptyState>`,
 
   inCard: `{/* A ghost empty state draws no border of its own, so it doesn't double up inside a Card.
-    TrayIcon comes from @dbm-design-system/icons */}
+    TrayIcon comes from @dbm-system/icons */}
 <Card>
   <Card.Header>
     <Heading level={3} size="md">Recent invoices</Heading>
@@ -117,7 +117,7 @@ ${iconNote}
 </Card>`,
 
   inTable: `{/* Table.Empty is the message row of a table with no rows; an EmptyState fits inside it.
-    TrayIcon comes from @dbm-design-system/icons */}
+    TrayIcon comes from @dbm-system/icons */}
 <Table aria-label="Invoices">
   <Table.Header>
     <Table.Row>

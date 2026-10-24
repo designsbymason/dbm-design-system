@@ -1,4 +1,4 @@
-import { HeartIcon, TrashIcon } from "@dbm-design-system/icons";
+import { HeartIcon, TrashIcon } from "@dbm-system/icons";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";

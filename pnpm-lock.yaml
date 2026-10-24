@@ -36,13 +36,13 @@ importers:
 
   packages/components:
     dependencies:
-      '@dbm-design-system/icons':
+      '@dbm-system/icons':
         specifier: workspace:*
         version: link:../icons
-      '@dbm-design-system/primitives':
+      '@dbm-system/primitives':
         specifier: workspace:*
         version: link:../primitives
-      '@dbm-design-system/tokens':
+      '@dbm-system/tokens':
         specifier: workspace:*
         version: link:../tokens
       '@radix-ui/react-accordion':
@@ -115,10 +115,10 @@ importers:
         specifier: ^1.2.7
         version: 1.2.7(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
     devDependencies:
-      '@dbm-design-system/eslint-config':
+      '@dbm-system/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@dbm-design-system/tsconfig':
+      '@dbm-system/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@playwright/test':
@@ -233,10 +233,10 @@ importers:
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
     devDependencies:
-      '@dbm-design-system/eslint-config':
+      '@dbm-system/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@dbm-design-system/tsconfig':
+      '@dbm-system/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/react':
@@ -263,10 +263,10 @@ importers:
 
   packages/manifest:
     devDependencies:
-      '@dbm-design-system/eslint-config':
+      '@dbm-system/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@dbm-design-system/tsconfig':
+      '@dbm-system/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       eslint:
@@ -281,10 +281,10 @@ importers:
 
   packages/primitives:
     devDependencies:
-      '@dbm-design-system/eslint-config':
+      '@dbm-system/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@dbm-design-system/tsconfig':
+      '@dbm-system/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/react':
@@ -311,7 +311,7 @@ importers:
 
   packages/tokens:
     devDependencies:
-      '@dbm-design-system/tsconfig':
+      '@dbm-system/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       culori:

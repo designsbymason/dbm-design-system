@@ -1,5 +1,5 @@
 {
-  "name": "@dbm-design-system/icons",
+  "name": "@dbm-system/icons",
   "version": "0.0.0",
   "description": "Typed Phosphor Icons wrapper for the DBM Design System.",
   "license": "MIT",
@@ -34,8 +34,8 @@
     "@phosphor-icons/react": "^2.1.10"
   },
   "devDependencies": {
-    "@dbm-design-system/eslint-config": "workspace:*",
-    "@dbm-design-system/tsconfig": "workspace:*",
+    "@dbm-system/eslint-config": "workspace:*",
+    "@dbm-system/tsconfig": "workspace:*",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "eslint": "^10.7.0",

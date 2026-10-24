@@ -12,7 +12,7 @@ const meta: Meta<typeof Breadcrumb.Page> = {
     icon: {
       control: false,
       description:
-        "An icon shown before the text — a component reference from @dbm-design-system/icons, not a string name. Decorative.",
+        "An icon shown before the text — a component reference from @dbm-system/icons, not a string name. Decorative.",
     },
     id: { control: false, description: "Standard DOM id, on the span." },
     className: { control: false, description: "Additional CSS classes for customization." },

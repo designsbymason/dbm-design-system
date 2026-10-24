@@ -1,4 +1,4 @@
-import { TagIcon } from "@dbm-design-system/icons";
+import { TagIcon } from "@dbm-system/icons";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";

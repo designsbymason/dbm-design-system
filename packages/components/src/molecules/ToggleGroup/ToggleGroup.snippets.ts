@@ -27,7 +27,7 @@ export const toggleGroupSnippets = {
   <ToggleGroup.Item value="underline">Underline</ToggleGroup.Item>
 </ToggleGroup>`,
 
-  icons: `{/* Icons come from @dbm-design-system/icons: TextBIcon, TextItalicIcon, TextUnderlineIcon, TextAlignLeftIcon,
+  icons: `{/* Icons come from @dbm-system/icons: TextBIcon, TextItalicIcon, TextUnderlineIcon, TextAlignLeftIcon,
     TextAlignCenterIcon, TextAlignRightIcon. An icon-only item needs an aria-label. */}
 <ToggleGroup aria-label="Text style" type="multiple" variant="solid" size="sm">
   <ToggleGroup.Item value="bold" icon={TextBIcon} aria-label="Bold" />

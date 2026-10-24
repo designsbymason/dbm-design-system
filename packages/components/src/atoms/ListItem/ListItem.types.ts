@@ -1,4 +1,4 @@
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 
 export interface ListItemProps extends ComponentPropsWithoutRef<"li"> {
@@ -11,7 +11,7 @@ export interface ListItemProps extends ComponentPropsWithoutRef<"li"> {
    * rendered decoratively before its content instead.
    * @example
    * ```tsx
-   * import { CheckIcon } from '@dbm-design-system/icons';
+   * import { CheckIcon } from '@dbm-system/icons';
    * <ListItem icon={CheckIcon}>Done</ListItem>
    * ```
    */

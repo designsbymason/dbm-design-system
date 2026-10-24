@@ -1,7 +1,7 @@
 import { Slot } from "@radix-ui/react-slot";
 import { forwardRef, useEffect, useRef, useState } from "react";
 import type { ElementType } from "react";
-import { cx } from "@dbm-design-system/primitives";
+import { cx } from "@dbm-system/primitives";
 import styles from "./Affix.module.css";
 import type { AffixAxis, AffixEdge, AffixProps } from "./Affix.types";
 

@@ -4,7 +4,7 @@ import { axe } from "jest-axe";
 import { createRef, StrictMode } from "react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { HouseIcon } from "@dbm-design-system/icons";
+import { HouseIcon } from "@dbm-system/icons";
 import { Breadcrumb } from "./Breadcrumb";
 import type { BreadcrumbProps } from "./Breadcrumb.types";
 

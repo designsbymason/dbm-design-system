@@ -1,5 +1,5 @@
-import { cx, mergeRefs, useResolvedResponsiveValue, useScrollEdges } from "@dbm-design-system/primitives";
-import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, CaretUpIcon } from "@dbm-design-system/icons";
+import { cx, mergeRefs, useResolvedResponsiveValue, useScrollEdges } from "@dbm-system/primitives";
+import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, CaretUpIcon } from "@dbm-system/icons";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { createContext, forwardRef, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "../../atoms/Icon";

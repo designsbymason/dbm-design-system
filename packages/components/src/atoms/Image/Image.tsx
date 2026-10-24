@@ -1,5 +1,5 @@
-import { ImageIcon } from "@dbm-design-system/icons";
-import { cx } from "@dbm-design-system/primitives";
+import { ImageIcon } from "@dbm-system/icons";
+import { cx } from "@dbm-system/primitives";
 import { forwardRef, useRef, useState } from "react";
 import { Icon } from "../Icon";
 import styles from "./Image.module.css";

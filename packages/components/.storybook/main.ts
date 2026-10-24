@@ -29,7 +29,7 @@ const config: StorybookConfig = {
   // top-level `options` field of its own, this addon's own per-addon
   // `options.mdxPluginOptions.mdxCompileOptions` is the documented
   // extension point). Dev-only Storybook tooling, not shipped in
-  // `@dbm-design-system/components` — same category as Storybook itself,
+  // `@dbm-system/components` — same category as Storybook itself,
   // not subject to the runtime dependency budget in `CLAUDE.md`.
   addons: [
     "@storybook/addon-a11y",

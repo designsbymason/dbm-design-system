@@ -1,4 +1,4 @@
-import { useIsScrollable } from "@dbm-design-system/primitives";
+import { useIsScrollable } from "@dbm-system/primitives";
 import { useCallback, useSyncExternalStore } from "react";
 import type { RefObject } from "react";
 

@@ -1,4 +1,4 @@
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type * as AccordionPrimitive from "@radix-ui/react-accordion";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 

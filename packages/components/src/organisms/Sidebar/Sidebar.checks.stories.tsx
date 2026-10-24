@@ -4,7 +4,7 @@ import { Badge } from "../../atoms/Badge";
 import { IconButton } from "../../atoms/IconButton";
 import { Menu } from "../Menu";
 import { Sidebar } from "./Sidebar";
-import { BellIcon, FolderSimpleIcon, GearIcon, HouseIcon, PlusIcon, TrayIcon } from "@dbm-design-system/icons";
+import { BellIcon, FolderSimpleIcon, GearIcon, HouseIcon, PlusIcon, TrayIcon } from "@dbm-system/icons";
 import { send } from "../../molecules/CodeBlock/browserProtocol";
 import { DemoSidebar, FilterableSidebar, SidebarFrame, SidebarStage, SidebarViewModeContext, useRememberedCollapsed } from "./SidebarStoryKit";
 

@@ -5,7 +5,7 @@ import {
   useAnnouncement,
   useResolvedResponsiveValue,
   type SpaceValue,
-} from "@dbm-design-system/primitives";
+} from "@dbm-system/primitives";
 import {
   forwardRef,
   useCallback,

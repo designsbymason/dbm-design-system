@@ -1,6 +1,6 @@
-import type { Responsive } from "@dbm-design-system/primitives";
+import type { Responsive } from "@dbm-system/primitives";
 import type * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 
 type MenuPrimitiveContentProps = ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>;

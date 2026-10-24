@@ -5,7 +5,7 @@ import {
   StarIcon,
   TrashIcon,
   WalletIcon,
-} from "@dbm-design-system/icons";
+} from "@dbm-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Icon } from "./Icon";
 import { iconPlaygroundSnippet, iconSnippets } from "./Icon.snippets";

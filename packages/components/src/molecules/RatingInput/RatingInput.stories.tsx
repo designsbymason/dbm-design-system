@@ -1,4 +1,4 @@
-import { CircleIcon, HeartIcon, SmileyIcon, ThumbsUpIcon } from "@dbm-design-system/icons";
+import { CircleIcon, HeartIcon, SmileyIcon, ThumbsUpIcon } from "@dbm-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Fragment, useState } from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";

@@ -1,4 +1,4 @@
-import { cx, type Breakpoint, type Responsive } from "@dbm-design-system/primitives";
+import { cx, type Breakpoint, type Responsive } from "@dbm-system/primitives";
 import { Slot } from "@radix-ui/react-slot";
 import { forwardRef, useEffect, type MouseEvent } from "react";
 import styles from "./Card.module.css";

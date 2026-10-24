@@ -15,7 +15,7 @@ export const inputSnippets = {
   allSizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" */}
 <Input aria-label="Size lg" size="lg" placeholder="Size lg" />`,
 
-  withPrefixIcon: `{/* prefix takes any node — here an Icon, which follows the input's size when it sets none. MagnifyingGlassIcon comes from @dbm-design-system/icons. */}
+  withPrefixIcon: `{/* prefix takes any node — here an Icon, which follows the input's size when it sets none. MagnifyingGlassIcon comes from @dbm-system/icons. */}
 <Input
   aria-label="Search"
   prefix={<Icon icon={MagnifyingGlassIcon} />}
@@ -26,7 +26,7 @@ export const inputSnippets = {
 <Input aria-label="Username" suffix="@example.com" placeholder="username" />`,
 
   clearable: `{/* You own the value: const [value, setValue] = useState("Search term");
-    onClear is what makes the clear button appear. MagnifyingGlassIcon comes from @dbm-design-system/icons. */}
+    onClear is what makes the clear button appear. MagnifyingGlassIcon comes from @dbm-system/icons. */}
 <Input
   aria-label="Search"
   prefix={<Icon icon={MagnifyingGlassIcon} />}

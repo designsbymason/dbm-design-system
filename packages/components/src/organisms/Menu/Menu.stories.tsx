@@ -5,7 +5,7 @@ import {
   DownloadSimpleIcon,
   PencilSimpleIcon,
   TrashIcon,
-} from "@dbm-design-system/icons";
+} from "@dbm-system/icons";
 import { fn } from "storybook/test";
 import { useState } from "react";
 import { Badge } from "../../atoms/Badge";

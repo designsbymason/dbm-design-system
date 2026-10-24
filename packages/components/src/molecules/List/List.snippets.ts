@@ -41,7 +41,7 @@ ${list("spacing={{ base: 1, lg: 6 }}", ["First item", "Second item", "Third item
   <ListItem>Short item</ListItem>
 </List>`,
 
-  withListItemFeatures: `{/* HouseIcon, GearIcon and CheckIcon come from @dbm-design-system/icons;
+  withListItemFeatures: `{/* HouseIcon, GearIcon and CheckIcon come from @dbm-system/icons;
     const [selected, setSelected] = useState("home"); */}
 <List marker="none">
   <ListItem

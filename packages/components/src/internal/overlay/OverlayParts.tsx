@@ -1,4 +1,4 @@
-import { cx } from "@dbm-design-system/primitives";
+import { cx } from "@dbm-system/primitives";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { forwardRef, useContext, useEffect, useRef } from "react";
 import type { ComponentPropsWithoutRef, ReactNode, RefObject } from "react";

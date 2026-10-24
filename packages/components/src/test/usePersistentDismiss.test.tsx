@@ -1,5 +1,5 @@
-import { usePersistentDismiss } from "@dbm-design-system/primitives";
-import type { UsePersistentDismissOptions } from "@dbm-design-system/primitives";
+import { usePersistentDismiss } from "@dbm-system/primitives";
+import type { UsePersistentDismissOptions } from "@dbm-system/primitives";
 import { act, render, screen } from "@testing-library/react";
 import { StrictMode } from "react";
 import { renderToString } from "react-dom/server";

@@ -39,7 +39,7 @@ ${popover(
     container, instead of leaving it floating. */}
 ${popover("", "hideWhenDetached aria-label=\"Hides when detached example\"", "<Button>Trigger</Button>", `    <Text size="sm">Scroll me out of view.</Text>`)}`,
 
-  withForm: `{/* GearIcon comes from @dbm-design-system/icons; const [name, setName] = useState(""); */}
+  withForm: `{/* GearIcon comes from @dbm-system/icons; const [name, setName] = useState(""); */}
 <Popover>
   <Popover.Trigger asChild>
     <IconButton icon={GearIcon} aria-label="Settings" />

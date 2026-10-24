@@ -4,7 +4,7 @@ import { axe } from "jest-axe";
 import { createRef, StrictMode, useState } from "react";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { StarIcon } from "@dbm-design-system/icons";
+import { StarIcon } from "@dbm-system/icons";
 import { Alert } from "./Alert";
 import type { AlertProps } from "./Alert.types";
 

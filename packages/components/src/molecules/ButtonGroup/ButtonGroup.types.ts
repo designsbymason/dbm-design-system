@@ -1,4 +1,4 @@
-import type { Responsive } from "@dbm-design-system/primitives";
+import type { Responsive } from "@dbm-system/primitives";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 import type { ButtonSize, ButtonTone, ButtonVariant } from "../../atoms/Button";
 

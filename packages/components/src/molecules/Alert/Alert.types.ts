@@ -1,5 +1,5 @@
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
-import type { SpaceValue } from "@dbm-design-system/primitives";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
+import type { SpaceValue } from "@dbm-system/primitives";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode, RefObject } from "react";
 import type { ButtonProps } from "../../atoms/Button";
 
@@ -94,7 +94,7 @@ export interface AlertProps extends Omit<ComponentPropsWithoutRef<"div">, "class
    */
   size?: AlertSize;
   /**
-   * The icon before the message — a component reference from `@dbm-design-system/icons`, not a string name. Each tone
+   * The icon before the message — a component reference from `@dbm-system/icons`, not a string name. Each tone
    * has its own (an info mark, a check, a warning triangle, a stop sign); pass another to replace it, or `false` for
    * none. Decorative: the tone is not conveyed by the icon alone, so put what matters in the text.
    */

@@ -1,4 +1,4 @@
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 import type { HeadingLevel } from "../../atoms/Heading/Heading.types";
 
@@ -132,7 +132,7 @@ export interface EmptyStateIconProps
    * name, so unused icons stay tree-shaken and references are type-checked.
    * @example
    * ```tsx
-   * import { TrayIcon } from '@dbm-design-system/icons';
+   * import { TrayIcon } from '@dbm-system/icons';
    * <EmptyState.Icon icon={TrayIcon} />
    * ```
    */

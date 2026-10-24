@@ -5,10 +5,10 @@ import {
   WarningIcon,
   WarningOctagonIcon,
   XIcon,
-} from "@dbm-design-system/icons";
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
-import { cx, mergeDefined, mergeRefs, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
-import type { Responsive } from "@dbm-design-system/primitives";
+} from "@dbm-system/icons";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
+import { cx, mergeDefined, mergeRefs, useResolvedResponsiveValue } from "@dbm-system/primitives";
+import type { Responsive } from "@dbm-system/primitives";
 import * as ToastPrimitive from "@radix-ui/react-toast";
 import {
   createContext,

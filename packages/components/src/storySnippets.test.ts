@@ -1,4 +1,4 @@
-import * as icons from "@dbm-design-system/icons";
+import * as icons from "@dbm-system/icons";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import * as library from "./index";
@@ -127,7 +127,7 @@ function problemsIn(code: string): string[] {
   }
 
   // The components package, plus the icons package — a snippet's comment says where an
-  // icon comes from (`{/* HeartIcon comes from @dbm-design-system/icons */}`).
+  // icon comes from (`{/* HeartIcon comes from @dbm-system/icons */}`).
   const exported = { ...icons, ...library } as unknown as Record<string, Record<string, unknown> | undefined>;
   const source = ts.createSourceFile("snippet.tsx", wrapped, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   const visit = (node: ts.Node) => {
@@ -927,7 +927,7 @@ describe("Playground snippets for the seven feedback and data-display atoms", ()
   });
 
   it("Tag turns the icon control's component back into its name, and ignores anything else", async () => {
-    const { TagIcon, StarIcon } = await import("@dbm-design-system/icons");
+    const { TagIcon, StarIcon } = await import("@dbm-system/icons");
     expect(tagPlaygroundSnippet({ children: "Design", leadingIcon: TagIcon })).toBe("<Tag leadingIcon={TagIcon}>Design</Tag>");
     expect(tagPlaygroundSnippet({ children: "Design", trailingIcon: StarIcon })).toBe("<Tag trailingIcon={StarIcon}>Design</Tag>");
     expect(tagPlaygroundSnippet({ children: "Design", leadingIcon: "None" })).toBe("<Tag>Design</Tag>");
@@ -983,7 +983,7 @@ describe("Playground snippets for the eleven input and field atoms", () => {
   });
 
   it("Button writes only what differs, and turns an icon component back into its name", async () => {
-    const { WalletIcon, ArrowRightIcon } = await import("@dbm-design-system/icons");
+    const { WalletIcon, ArrowRightIcon } = await import("@dbm-system/icons");
     expect(buttonPlaygroundSnippet({ children: "Button", variant: "primary", size: "md", type: "button", leadingIcon: "None" })).toBe("<Button>Button</Button>");
     expect(buttonPlaygroundSnippet({ children: "Pay", leadingIcon: WalletIcon, trailingIcon: ArrowRightIcon })).toBe(
       "<Button leadingIcon={WalletIcon} trailingIcon={ArrowRightIcon}>Pay</Button>",
@@ -1002,7 +1002,7 @@ describe("Playground snippets for the eleven input and field atoms", () => {
   });
 
   it("IconButton always writes its icon and name, and toggle as defaultPressed plus a handler", async () => {
-    const { TrashIcon } = await import("@dbm-design-system/icons");
+    const { TrashIcon } = await import("@dbm-system/icons");
     expect(iconButtonPlaygroundSnippet({})).toBe('<IconButton icon={HeartIcon} aria-label="Favorite" />');
     expect(iconButtonPlaygroundSnippet({ icon: TrashIcon, "aria-label": "Delete" })).toBe('<IconButton icon={TrashIcon} aria-label="Delete" />');
     expect(iconButtonPlaygroundSnippet({ interactionMode: "Non-toggle", defaultPressed: true })).not.toContain("defaultPressed");
@@ -1018,7 +1018,7 @@ describe("Playground snippets for the eleven input and field atoms", () => {
   });
 
   it("Checkbox writes only what differs, and a label-less one as self-closing", async () => {
-    const { StarIcon, XIcon } = await import("@dbm-design-system/icons");
+    const { StarIcon, XIcon } = await import("@dbm-system/icons");
     expect(checkboxPlaygroundSnippet({ children: "Accept", size: "md", defaultChecked: false })).toBe("<Checkbox>Accept</Checkbox>");
     expect(checkboxPlaygroundSnippet({ children: "", "aria-label": "Select row" })).toBe('<Checkbox aria-label="Select row" />');
     expect(checkboxPlaygroundSnippet({ children: "x", icon: StarIcon, indeterminateIcon: XIcon })).toBe(
@@ -1041,7 +1041,7 @@ describe("Playground snippets for the eleven input and field atoms", () => {
   });
 
   it("FieldError writes the icon as true (nothing), false, or a named component", async () => {
-    const { StarIcon } = await import("@dbm-design-system/icons");
+    const { StarIcon } = await import("@dbm-system/icons");
     for (const args of [{}, { icon: true }, { icon: false }, { icon: StarIcon }, { disabled: true }, { icon: "Default" }]) {
       expect(problemsIn(fieldErrorPlaygroundSnippet(args))).toEqual([]);
     }
@@ -1105,7 +1105,7 @@ describe("Playground snippets for the eleven input and field atoms", () => {
   });
 
   it("Switch writes only what differs, and thumb icons by name", async () => {
-    const { MoonIcon, SunIcon } = await import("@dbm-design-system/icons");
+    const { MoonIcon, SunIcon } = await import("@dbm-system/icons");
     expect(switchPlaygroundSnippet({ children: "Email", size: "md", defaultChecked: false, loading: false })).toBe("<Switch>Email</Switch>");
     expect(switchPlaygroundSnippet({ children: "Dark mode", checkedIcon: MoonIcon, uncheckedIcon: SunIcon })).toBe(
       "<Switch checkedIcon={MoonIcon} uncheckedIcon={SunIcon}>Dark mode</Switch>",
@@ -1245,7 +1245,7 @@ describe("Playground snippets for the eleven media, overlay and utility atoms", 
   });
 
   it("Icon always writes its icon, and only what differs (md, bold, no tone, no label, not mirrored)", async () => {
-    const { StarIcon } = await import("@dbm-design-system/icons");
+    const { StarIcon } = await import("@dbm-system/icons");
     expect(iconPlaygroundSnippet({ icon: "Wallet", size: "md", weight: "bold", label: "", mirrored: false })).toBe("<Icon icon={WalletIcon} />");
     expect(iconPlaygroundSnippet({ icon: StarIcon, size: "lg", tone: "brand" })).toBe('<Icon icon={StarIcon} size="lg" tone="brand" />');
     expect(iconPlaygroundSnippet({ icon: "Nonsense" })).toBe("<Icon icon={WalletIcon} />");
@@ -1345,7 +1345,7 @@ describe("Playground snippets for the eleven media, overlay and utility atoms", 
     );
     const icon = tooltipPlaygroundSnippet({ content: "Delete item", children: "Icon-only trigger" });
     expect(icon).toContain("<IconButton icon={TrashIcon}");
-    expect(icon).toContain("TrashIcon comes from @dbm-design-system/icons");
+    expect(icon).toContain("TrashIcon comes from @dbm-system/icons");
     expect(tooltipPlaygroundSnippet({ content: "Save", children: "Icon-only trigger" }, "save")).toContain("<Button>Save</Button>");
     expect(tooltipPlaygroundSnippet({ content: "x", delayDuration: 0, hideArrow: true })).toContain("delayDuration={0} hideArrow");
   });
@@ -1648,9 +1648,9 @@ describe("Playground snippets for Stat", () => {
   it("Stat writes only what differs from the defaults", () => {
     expect(
       statPlaygroundSnippet({ variant: "ghost", tone: "neutral", size: "md", orientation: "vertical" }),
-    ).toMatch(/^\{\/\* UsersIcon comes from @dbm-design-system\/icons \*\/\}\n<Stat>\n/);
+    ).toMatch(/^\{\/\* UsersIcon comes from @dbm-system\/icons \*\/\}\n<Stat>\n/);
     expect(statPlaygroundSnippet({ variant: "outlined", size: "sm" })).toMatch(
-      /^\{\/\* UsersIcon comes from @dbm-design-system\/icons \*\/\}\n<Stat variant="outlined" size="sm">\n/,
+      /^\{\/\* UsersIcon comes from @dbm-system\/icons \*\/\}\n<Stat variant="outlined" size="sm">\n/,
     );
     expect(statPlaygroundSnippet({ orientation: "horizontal" })).toMatch(/<Stat orientation="horizontal">\n/);
     expect(statPlaygroundSnippet({ announce: true })).toMatch(/<Stat announce>\n/);
@@ -1894,7 +1894,7 @@ describe("Playground snippet for Toast", () => {
     expect(toastPlaygroundSnippet({ hotkey: ["altKey", "KeyT"] })).toContain('hotkey={["altKey", "KeyT"]}');
     expect(toastPlaygroundSnippet({ hotkey: "F8" })).not.toContain("hotkey");
     expect(toastPlaygroundSnippet({ icon: "Star" })).toContain("icon: StarIcon");
-    expect(toastPlaygroundSnippet({ icon: "Star" })).toContain("StarIcon comes from @dbm-design-system/icons");
+    expect(toastPlaygroundSnippet({ icon: "Star" })).toContain("StarIcon comes from @dbm-system/icons");
     expect(toastPlaygroundSnippet({ icon: "None" })).toContain("icon: false");
     expect(toastPlaygroundSnippet({ icon: false })).toContain("icon: false");
     expect(toastPlaygroundSnippet({ icon: "Default" })).not.toContain("icon:");

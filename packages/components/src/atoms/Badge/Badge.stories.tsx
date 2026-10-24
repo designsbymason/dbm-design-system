@@ -1,4 +1,4 @@
-import { Bell } from "@dbm-design-system/icons";
+import { Bell } from "@dbm-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { Button } from "../Button";
 import { Icon } from "../Icon";

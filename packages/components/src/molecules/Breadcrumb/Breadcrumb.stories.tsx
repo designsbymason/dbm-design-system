@@ -1,7 +1,7 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import type { CSSProperties, ReactNode } from "react";
-import { HouseIcon, KeyboardIcon } from "@dbm-design-system/icons";
+import { HouseIcon, KeyboardIcon } from "@dbm-system/icons";
 import { Text } from "../../atoms/Text";
 import { Breadcrumb } from "./Breadcrumb";
 import { breadcrumbPlaygroundSnippet, breadcrumbSnippets } from "./Breadcrumb.snippets";

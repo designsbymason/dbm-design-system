@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
-import { CaretLeftIcon } from "@dbm-design-system/icons";
+import { CaretLeftIcon } from "@dbm-system/icons";
 import { IconButton } from "../../atoms/IconButton";
 import { send } from "../CodeBlock/browserProtocol";
 import { Calendar } from "./Calendar";

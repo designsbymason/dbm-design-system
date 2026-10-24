@@ -1,4 +1,4 @@
-import { GlobeIcon } from "@dbm-design-system/icons";
+import { GlobeIcon } from "@dbm-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { FormField } from "../../molecules/FormField";

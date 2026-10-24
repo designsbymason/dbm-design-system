@@ -4,9 +4,9 @@ import type {
   ElementType,
   ReactNode,
 } from "react";
-import type { Responsive, SpaceValue } from "@dbm-design-system/primitives";
+import type { Responsive, SpaceValue } from "@dbm-system/primitives";
 
-export type { SpaceValue } from "@dbm-design-system/primitives";
+export type { SpaceValue } from "@dbm-system/primitives";
 
 export type StackDirection = "row" | "column" | "row-reverse" | "column-reverse";
 export type StackAlign = "start" | "center" | "end" | "stretch" | "baseline";

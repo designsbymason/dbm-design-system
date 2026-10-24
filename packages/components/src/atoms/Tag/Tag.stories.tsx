@@ -3,7 +3,7 @@ import {
   InfoIcon,
   StarIcon,
   TagIcon,
-} from "@dbm-design-system/icons";
+} from "@dbm-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, userEvent, within } from "storybook/test";

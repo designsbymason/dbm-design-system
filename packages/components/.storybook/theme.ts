@@ -1,5 +1,5 @@
 import { create } from "storybook/theming/create";
-import { primitives, purpleLight, purpleDark, emeraldLight, emeraldDark } from "@dbm-design-system/tokens";
+import { primitives, purpleLight, purpleDark, emeraldLight, emeraldDark } from "@dbm-system/tokens";
 
 type ThemeVars = ReturnType<typeof create>;
 
@@ -20,7 +20,7 @@ type ThemeVars = ReturnType<typeof create>;
  * file used to do exactly that for purple only, and its dark variant had
  * silently gone stale on `appBorderRadius`/`inputBorderRadius`, off by 2px
  * from the `radius.md`/`radius.sm` tokens its own comments named), every
- * value below is read directly from `@dbm-design-system/tokens`'s built
+ * value below is read directly from `@dbm-system/tokens`'s built
  * semantic exports (`purpleLight`/`purpleDark`/`emeraldLight`/
  * `emeraldDark` — already-resolved `{ bg, text, border, icon }` hex maps,
  * confirmed via `node -e "require('./dist/index.cjs')"`) and the

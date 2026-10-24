@@ -1,5 +1,5 @@
-import type { Breakpoint, SpaceValue } from "@dbm-design-system/primitives";
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type { Breakpoint, SpaceValue } from "@dbm-system/primitives";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type { AnchorHTMLAttributes, ComponentPropsWithoutRef, CSSProperties, HTMLAttributes, ReactNode } from "react";
 import type { ButtonSize, ButtonTone, ButtonVariant } from "../../atoms/Button";
 import type { DrawerOpenChangeDetails } from "../Drawer";

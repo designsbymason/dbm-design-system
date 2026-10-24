@@ -1,6 +1,6 @@
 import { addons } from "storybook/manager-api";
 import { DOCS_RENDERED, SET_GLOBALS, UPDATE_GLOBALS } from "storybook/internal/core-events";
-import { primitives } from "@dbm-design-system/tokens";
+import { primitives } from "@dbm-system/tokens";
 import { getSemanticTokens, getStorybookTheme } from "./theme";
 
 // Manager UI chrome (sidebar/toolbar/addon panels) runs outside the preview

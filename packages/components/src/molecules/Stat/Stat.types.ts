@@ -1,4 +1,4 @@
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 
 /**
@@ -159,7 +159,7 @@ export interface StatIconProps
    * type-checked.
    * @example
    * ```tsx
-   * import { CurrencyDollarIcon } from '@dbm-design-system/icons';
+   * import { CurrencyDollarIcon } from '@dbm-system/icons';
    * <Stat.Icon icon={CurrencyDollarIcon} />
    * ```
    */

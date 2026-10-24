@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 import { StrictMode, createRef, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PlusIcon } from "@dbm-design-system/icons";
+import { PlusIcon } from "@dbm-system/icons";
 import { FormField } from "../../molecules/FormField";
 import { Form } from "../Form";
 import { Combobox } from "./Combobox";

@@ -23,11 +23,11 @@ const meta: Meta<typeof Toast.Action> = {
     leadingIcon: {
       control: false,
       description:
-        "An icon before the label, a component reference from @dbm-design-system/icons, not a string name. Takes the label's colour.",
+        "An icon before the label, a component reference from @dbm-system/icons, not a string name. Takes the label's colour.",
     },
     trailingIcon: {
       control: false,
-      description: "An icon after the label, a component reference from @dbm-design-system/icons. Takes the label's colour.",
+      description: "An icon after the label, a component reference from @dbm-system/icons. Takes the label's colour.",
     },
     rounded: {
       control: "boolean",

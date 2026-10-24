@@ -1,7 +1,7 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
-import { CaretLeftIcon, CaretRightIcon } from "@dbm-design-system/icons";
+import { CaretLeftIcon, CaretRightIcon } from "@dbm-system/icons";
 import { Button } from "../../atoms/Button";
 import { IconButton } from "../../atoms/IconButton";
 import { Splitter } from "./Splitter";

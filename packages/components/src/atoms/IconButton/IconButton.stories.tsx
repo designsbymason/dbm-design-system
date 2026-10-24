@@ -1,4 +1,4 @@
-import { HeartIcon, TrashIcon } from "@dbm-design-system/icons";
+import { HeartIcon, TrashIcon } from "@dbm-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { IconButton } from "./IconButton";

@@ -1,4 +1,4 @@
-import { MagnifyingGlassIcon } from "@dbm-design-system/icons";
+import { MagnifyingGlassIcon } from "@dbm-system/icons";
 import { forwardRef, useEffect, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { Icon } from "../../atoms/Icon";

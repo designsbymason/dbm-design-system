@@ -83,7 +83,7 @@ it at the top as the page scrolls. `dismissible` adds a button that closes it, a
 ### Import
 
 ```tsx
-import { Alert, usePersistentDismiss } from "@dbm-design-system/components";
+import { Alert, usePersistentDismiss } from "@dbm-system/components";
 ```
 
 ## Playground
@@ -146,8 +146,8 @@ straight through.
 
 ### usePersistentDismiss
 
-A hook for remembering that a message was dismissed — implemented in `@dbm-design-system/primitives`
-and exported from `@dbm-design-system/components` too, so one install covers it.
+A hook for remembering that a message was dismissed — implemented in `@dbm-system/primitives`
+and exported from `@dbm-system/components` too, so one install covers it.
 `usePersistentDismiss(key, options?)` returns `{ ready, dismissed, dismiss, reset }`.
 
 | Name | Type | Description |
@@ -205,7 +205,7 @@ alert's own tone, and the secondary and tertiary take the tone's own text colour
 
 ### Icons
 
-Each tone has its own icon. `icon` replaces it with any icon from `@dbm-design-system/icons`, or
+Each tone has its own icon. `icon` replaces it with any icon from `@dbm-system/icons`, or
 `false` removes it. The icon is decorative — what matters goes in the text.
 
 <Canvas of={AlertStories.Icons} />

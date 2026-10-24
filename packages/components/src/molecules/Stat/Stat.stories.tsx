@@ -1,4 +1,4 @@
-import { CurrencyDollarIcon, TicketIcon, UsersIcon } from "@dbm-design-system/icons";
+import { CurrencyDollarIcon, TicketIcon, UsersIcon } from "@dbm-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import type { CSSProperties } from "react";

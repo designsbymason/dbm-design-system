@@ -1,4 +1,4 @@
-import { cx, useResolvedResponsiveValue, type SpaceValue } from "@dbm-design-system/primitives";
+import { cx, useResolvedResponsiveValue, type SpaceValue } from "@dbm-system/primitives";
 import { forwardRef, useId, useMemo, useRef, type CSSProperties } from "react";
 import { FieldError } from "../../atoms/FieldError";
 import { FieldHelperText } from "../../atoms/FieldHelperText";

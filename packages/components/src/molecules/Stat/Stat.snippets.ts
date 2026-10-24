@@ -10,7 +10,7 @@
 
 import type { StatOrientation, StatSize, StatTone, StatVariant } from "./Stat.types";
 
-const iconNote = "{/* UsersIcon comes from @dbm-design-system/icons */}";
+const iconNote = "{/* UsersIcon comes from @dbm-system/icons */}";
 
 const usersParts = `  <Stat.Icon icon={UsersIcon} />
   <Stat.Label>Active users</Stat.Label>
@@ -34,7 +34,7 @@ ${stat('tone="brand"', usersParts)}`,
   toneAcrossVariants: `{/* Each variant colours the icon and label the same way — only what sits behind them differs:
     ghost has no fill at all, outlined adds a tone-tinted border, and filled's own icon badge
     becomes a solid tone fill (read against with a matching icon.on-{tone} token) instead of the
-    light one ghost/outlined use. TicketIcon comes from @dbm-design-system/icons */}
+    light one ghost/outlined use. TicketIcon comes from @dbm-system/icons */}
 <Stat variant="filled" tone="danger" size="sm">
   <Stat.Icon icon={TicketIcon} />
   <Stat.Label>Open tickets</Stat.Label>

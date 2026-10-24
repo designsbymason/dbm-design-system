@@ -6,7 +6,7 @@
 // checks that stays true. See `07-storybook-and-documentation-standards.md` §4.2.
 
 export const tableToolbarSnippets = {
-  searchAndActions: `{/* Icons come from @dbm-design-system/icons: FunnelSimpleIcon, DownloadSimpleIcon.
+  searchAndActions: `{/* Icons come from @dbm-system/icons: FunnelSimpleIcon, DownloadSimpleIcon.
     The search field is an ordinary tab stop; the filters and the actions are each a Toolbar (one tab stop, arrow keys). */}
 <TableToolbar aria-label="Orders table tools">
   <TableToolbar.Row>
@@ -266,7 +266,7 @@ const sizes = ["xs", "sm", "md", "lg", "xl"] as const;
 export function tableToolbarPlaygroundSnippet(args: TableToolbarPlaygroundSnippetArgs): string {
   const size = args.size && args.size !== "md" && (sizes as readonly string[]).includes(args.size) ? ` size="${args.size}"` : "";
   const label = args["aria-label"] || "Orders table tools";
-  return `{/* Icons come from @dbm-design-system/icons: FunnelSimpleIcon, DownloadSimpleIcon, TrashIcon. The rows, query, filters and
+  return `{/* Icons come from @dbm-system/icons: FunnelSimpleIcon, DownloadSimpleIcon, TrashIcon. The rows, query, filters and
     selection are the app's own state. */}
 <TableToolbar${size} aria-label="${label}">
   <TableToolbar.Row>

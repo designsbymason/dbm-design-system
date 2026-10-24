@@ -1,4 +1,4 @@
-import { TrayIcon } from "@dbm-design-system/icons";
+import { TrayIcon } from "@dbm-system/icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { EmptyState } from "./EmptyState";
 

@@ -1,4 +1,4 @@
-import { ChartBarIcon, HouseIcon, PlusIcon, UsersIcon } from "@dbm-design-system/icons";
+import { ChartBarIcon, HouseIcon, PlusIcon, UsersIcon } from "@dbm-system/icons";
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";

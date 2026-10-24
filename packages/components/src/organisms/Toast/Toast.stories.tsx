@@ -1,5 +1,5 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
-import { HeartIcon, StarIcon } from "@dbm-design-system/icons";
+import { HeartIcon, StarIcon } from "@dbm-system/icons";
 import { fn } from "storybook/test";
 import { useState } from "react";
 import type { CSSProperties } from "react";
@@ -143,7 +143,7 @@ const meta: Meta<PlaygroundArgs> = {
     icon: {
       control: false,
       description:
-        "The icon before the message, a component reference from @dbm-design-system/icons. Each tone has its own; pass another to replace it, or false for none.",
+        "The icon before the message, a component reference from @dbm-system/icons. Each tone has its own; pass another to replace it, or false for none.",
     },
     loading: {
       control: "boolean",
@@ -331,7 +331,7 @@ export const Playground: Story = {
       options: ["Default", "None", "Star", "Heart"],
       mapping: { Default: undefined, None: false, Star: StarIcon, Heart: HeartIcon },
       description:
-        "The icon before the message, a component reference from @dbm-design-system/icons. Default is the tone's own; None is false; the others are custom ones to try.",
+        "The icon before the message, a component reference from @dbm-system/icons. Default is the tone's own; None is false; the others are custom ones to try.",
     },
     role: {
       control: "select",

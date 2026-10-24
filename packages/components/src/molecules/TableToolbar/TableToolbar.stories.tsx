@@ -1,4 +1,4 @@
-import { DownloadSimpleIcon, FunnelSimpleIcon, TrashIcon } from "@dbm-design-system/icons";
+import { DownloadSimpleIcon, FunnelSimpleIcon, TrashIcon } from "@dbm-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";

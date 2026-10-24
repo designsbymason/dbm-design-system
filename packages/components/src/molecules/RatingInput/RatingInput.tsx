@@ -1,5 +1,5 @@
-import { StarIcon } from "@dbm-design-system/icons";
-import { cx, mergeDefined } from "@dbm-design-system/primitives";
+import { StarIcon } from "@dbm-system/icons";
+import { cx, mergeDefined } from "@dbm-system/primitives";
 import { forwardRef, useEffect, useId, useState } from "react";
 import type { CSSProperties, KeyboardEvent } from "react";
 import { Icon } from "../../atoms/Icon";

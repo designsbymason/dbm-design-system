@@ -5,7 +5,7 @@ import {
   TextBIcon,
   TextItalicIcon,
   TextUnderlineIcon,
-} from "@dbm-design-system/icons";
+} from "@dbm-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { type ComponentType, useState } from "react";
 import { expect, userEvent, within } from "storybook/test";

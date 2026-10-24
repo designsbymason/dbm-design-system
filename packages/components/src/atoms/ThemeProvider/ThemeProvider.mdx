@@ -25,7 +25,7 @@ export const propOrder = [
 
 Applies a DBM Design System brand + color mode by setting `data-theme` (e.g. `data-theme="purple-light"`)
 on `document.documentElement` — matching the `:root[data-theme="..."]`-scoped CSS custom properties
-`@dbm-design-system/tokens` emits. Theming is applied document-wide, not scoped to this component's
+`@dbm-system/tokens` emits. Theming is applied document-wide, not scoped to this component's
 own DOM subtree, so portaled content (dialogs, tooltips, toasts mounted on `document.body`) inherits
 the theme correctly too. `mode="system"` follows `prefers-color-scheme` and updates live if the OS
 preference changes while mounted. Descendants can read the resolved brand/mode reactively via
@@ -36,7 +36,7 @@ preference changes while mounted. Descendants can read the resolved brand/mode r
 ### Import
 
 ```tsx
-import { ThemeProvider, useTheme } from "@dbm-design-system/components";
+import { ThemeProvider, useTheme } from "@dbm-system/components";
 ```
 
 ## Playground
@@ -149,7 +149,7 @@ Each brand/mode combination is its own standalone story:
 
 ```tsx
 // A descendant reactively reading the resolved theme
-import { useTheme } from "@dbm-design-system/components";
+import { useTheme } from "@dbm-system/components";
 
 function ModeToggleIcon() {
   const { resolvedMode } = useTheme();

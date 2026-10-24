@@ -1,4 +1,4 @@
-import { primitives } from "@dbm-design-system/tokens";
+import { primitives } from "@dbm-system/tokens";
 
 /**
  * Foundations-only spacing-scale reference table — one row per step, each

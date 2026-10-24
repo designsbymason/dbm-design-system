@@ -2,7 +2,7 @@ import { act, screen } from "@testing-library/react";
 import { hydrateRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { HouseIcon } from "@dbm-design-system/icons";
+import { HouseIcon } from "@dbm-system/icons";
 import { Badge } from "../../atoms/Badge";
 import { Button } from "../../atoms/Button";
 import { IconButton } from "../../atoms/IconButton";

@@ -1,5 +1,5 @@
 {
-  "extends": "@dbm-design-system/tsconfig/tsconfig.base.json",
+  "extends": "@dbm-system/tsconfig/tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src"

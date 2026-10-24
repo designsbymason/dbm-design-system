@@ -22,7 +22,7 @@ const basicBody = `    <Menu.Item>Edit</Menu.Item>
     <Menu.Item>Archive</Menu.Item>`;
 
 export const menuSnippets = {
-  iconsAndShortcuts: `{/* PencilSimpleIcon, CopyIcon and TrashIcon come from @dbm-design-system/icons.
+  iconsAndShortcuts: `{/* PencilSimpleIcon, CopyIcon and TrashIcon come from @dbm-system/icons.
     A shortcut hint is only displayed: bind the keys yourself. */}
 ${menu(
   "",
@@ -191,7 +191,7 @@ ${menu(
     <Menu.Item>Archive</Menu.Item>`,
 )}`,
 
-  rowActions: `{/* DotsThreeIcon comes from @dbm-design-system/icons. The menu is named after its trigger, so an
+  rowActions: `{/* DotsThreeIcon comes from @dbm-system/icons. The menu is named after its trigger, so an
     icon-only trigger needs an aria-label. */}
 <Menu>
   <Menu.Trigger asChild>

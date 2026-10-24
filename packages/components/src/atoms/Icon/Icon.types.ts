@@ -1,7 +1,7 @@
 import type {
   Icon as PhosphorIcon,
   IconWeight,
-} from "@dbm-design-system/icons";
+} from "@dbm-system/icons";
 import type { ComponentPropsWithoutRef, CSSProperties } from "react";
 
 /** Icon size step, matching the primitive icon-size token scale. */
@@ -37,7 +37,7 @@ export interface IconProps extends Omit<
    * type-checked.
    * @example
    * ```tsx
-   * import { Wallet } from '@dbm-design-system/icons';
+   * import { Wallet } from '@dbm-system/icons';
    * <Icon icon={Wallet} />
    * ```
    */

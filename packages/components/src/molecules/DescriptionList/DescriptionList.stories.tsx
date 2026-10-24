@@ -1,4 +1,4 @@
-import { CheckCircleIcon, UserIcon } from "@dbm-design-system/icons";
+import { CheckCircleIcon, UserIcon } from "@dbm-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, within } from "storybook/test";
 import { Card } from "../Card";

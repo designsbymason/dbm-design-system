@@ -1,4 +1,4 @@
-import { HeartIcon, TrashIcon } from "@dbm-design-system/icons";
+import { HeartIcon, TrashIcon } from "@dbm-system/icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, waitFor, within } from "storybook/test";
 import { send } from "../../molecules/CodeBlock/browserProtocol";

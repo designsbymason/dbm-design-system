@@ -1,5 +1,5 @@
 import type * as PopoverPrimitive from "@radix-ui/react-popover";
-import type { Responsive } from "@dbm-design-system/primitives";
+import type { Responsive } from "@dbm-system/primitives";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 
 type PopoverPrimitiveContentProps = ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>;

@@ -1,4 +1,4 @@
-import { TrashIcon } from "@dbm-design-system/icons";
+import { TrashIcon } from "@dbm-system/icons";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Toolbar } from "../Toolbar";
 import { TableToolbar } from "./TableToolbar";

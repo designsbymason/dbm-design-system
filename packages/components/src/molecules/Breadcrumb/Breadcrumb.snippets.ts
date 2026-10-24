@@ -50,7 +50,7 @@ ${trail("underline")}`,
     It is drawn by the component and hidden from screen readers. */}
 ${trail('separator="slash"')}`,
 
-  icons: `{/* HouseIcon comes from @dbm-design-system/icons. An icon is decorative, so the
+  icons: `{/* HouseIcon comes from @dbm-system/icons. An icon is decorative, so the
     link keeps its text. */}
 ${trail(
   "",

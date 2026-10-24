@@ -1,5 +1,5 @@
-import { ArrowBendDownLeftIcon, CheckIcon, CopyIcon, WarningIcon } from "@dbm-design-system/icons";
-import { cx, mergeDefined } from "@dbm-design-system/primitives";
+import { ArrowBendDownLeftIcon, CheckIcon, CopyIcon, WarningIcon } from "@dbm-system/icons";
+import { cx, mergeDefined } from "@dbm-system/primitives";
 import { forwardRef, useEffect, useId, useMemo, useRef, useSyncExternalStore } from "react";
 import type { CSSProperties } from "react";
 import { Button } from "../../atoms/Button";
@@ -76,7 +76,7 @@ const buttonSize: Record<CodeBlockSize, "xs" | "sm" | "md"> = { xs: "xs", sm: "x
  * @example
  * ```tsx
  * <CodeBlock language="tsx" title="Greeting.tsx" showLineNumbers highlightLines={["2-3"]} code={source} />
- * <CodeBlock language="bash" code="pnpm add @dbm-design-system/components" />
+ * <CodeBlock language="bash" code="pnpm add @dbm-system/components" />
  * <CodeBlock language="json" collapsible collapsedLines={6} code={longJson} />
  * <CodeBlock language="ts" size="sm" wrapToggle showLanguage={false} code={source} />
  * <CodeBlock language="diff" showLineNumbers code={gitDiffOutput} />

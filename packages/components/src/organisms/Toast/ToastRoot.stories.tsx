@@ -31,7 +31,7 @@ const meta: Meta<typeof Toast> = {
     icon: {
       control: false,
       description:
-        "The icon before the message, a component reference from @dbm-design-system/icons. Each tone has its own; pass another to replace it, or false for none.",
+        "The icon before the message, a component reference from @dbm-system/icons. Each tone has its own; pass another to replace it, or false for none.",
     },
     loading: {
       control: "boolean",

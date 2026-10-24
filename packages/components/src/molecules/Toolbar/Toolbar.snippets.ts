@@ -294,7 +294,7 @@ export function toolbarPlaygroundSnippet(args: ToolbarPlaygroundSnippetArgs): st
   if (args.align === "center" || args.align === "end") attributes.push(`align="${args.align}"`);
   // "scroll" is the default, so only the other two are written
   if (args.overflow === "wrap" || args.overflow === "visible") attributes.push(`overflow="${args.overflow}"`);
-  return `{/* Icons come from @dbm-design-system/icons */}
+  return `{/* Icons come from @dbm-system/icons */}
 <Toolbar ${attributes.join(" ")}>
   <Toolbar.IconButton icon={TextBIcon} aria-label="Bold" />
   <Toolbar.IconButton icon={TextItalicIcon} aria-label="Italic" />

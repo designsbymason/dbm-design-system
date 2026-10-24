@@ -1,7 +1,7 @@
 import { DocsContext } from "@storybook/addon-docs/blocks";
 import { useContext } from "react";
-import { LinkIcon } from "@dbm-design-system/icons";
-import { emeraldDark, emeraldLight, primitives, purpleDark, purpleLight } from "@dbm-design-system/tokens";
+import { LinkIcon } from "@dbm-system/icons";
+import { emeraldDark, emeraldLight, primitives, purpleDark, purpleLight } from "@dbm-system/tokens";
 import { Icon } from "../../../src/atoms/Icon";
 import type { SemanticTokens } from "../../theme";
 import { useThemeGlobals } from "./useThemeGlobals";

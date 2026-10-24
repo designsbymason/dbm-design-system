@@ -19,7 +19,7 @@ import {
   StarIcon,
   TrashIcon,
   WalletIcon,
-} from "@dbm-design-system/icons";
+} from "@dbm-system/icons";
 import type { ButtonSize, ButtonTone, ButtonVariant } from "./Button.types";
 
 export const buttonSnippets = {
@@ -42,7 +42,7 @@ export const buttonSnippets = {
 <Button rounded variant="destructive" leadingIcon={TrashIcon}>Delete</Button>`,
 
   withIcons: `{/* leadingIcon and trailingIcon take an icon component. WalletIcon, DownloadIcon, ArrowRightIcon and
-    TrashIcon come from @dbm-design-system/icons. */}
+    TrashIcon come from @dbm-system/icons. */}
 <Button leadingIcon={WalletIcon}>Pay</Button>
 <Button trailingIcon={WalletIcon}>Pay</Button>
 <Button leadingIcon={DownloadIcon} trailingIcon={ArrowRightIcon}>Export</Button>

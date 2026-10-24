@@ -1,4 +1,4 @@
-import { cx } from "@dbm-design-system/primitives";
+import { cx } from "@dbm-system/primitives";
 import { forwardRef } from "react";
 import styles from "./FieldLabel.module.css";
 import type { FieldLabelProps, FieldLabelSize } from "./FieldLabel.types";

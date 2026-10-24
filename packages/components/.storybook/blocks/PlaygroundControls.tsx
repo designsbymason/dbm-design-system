@@ -1,4 +1,4 @@
-import { ArrowCounterClockwiseIcon } from "@dbm-design-system/icons";
+import { ArrowCounterClockwiseIcon } from "@dbm-system/icons";
 import { DocsContext, useOf } from "@storybook/addon-docs/blocks";
 import type { Of } from "@storybook/addon-docs/blocks";
 import { useContext, useState } from "react";

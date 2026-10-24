@@ -11,7 +11,7 @@
 // demo scaffolding — and `storySnippets.test.ts` checks that stays true. See
 // `07-storybook-and-documentation-standards.md` §4.2.
 
-import { CheckCircleIcon, InfoIcon, StarIcon, TagIcon } from "@dbm-design-system/icons";
+import { CheckCircleIcon, InfoIcon, StarIcon, TagIcon } from "@dbm-system/icons";
 import type { TagSize, TagTone, TagVariant } from "./Tag.types";
 
 export const tagSnippets = {
@@ -26,10 +26,10 @@ export const tagSnippets = {
   allSizes: `{/* size: "xs" | "sm" | "md" (default) | "lg" | "xl" */}
 <Tag size="lg">Size lg</Tag>`,
 
-  withIcon: `{/* leadingIcon takes an icon component; TagIcon comes from @dbm-design-system/icons */}
+  withIcon: `{/* leadingIcon takes an icon component; TagIcon comes from @dbm-system/icons */}
 <Tag tone="info" leadingIcon={TagIcon}>Design</Tag>`,
 
-  withTrailingIcon: `{/* trailingIcon puts the icon after the label; StarIcon comes from @dbm-design-system/icons */}
+  withTrailingIcon: `{/* trailingIcon puts the icon after the label; StarIcon comes from @dbm-system/icons */}
 <Tag tone="warning" trailingIcon={StarIcon}>Design</Tag>`,
 
   clickable: `{/* onClick makes the tag a button. handleClick is your handler. */}

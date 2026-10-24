@@ -1,4 +1,4 @@
-import type { Responsive, SpaceValue } from "@dbm-design-system/primitives";
+import type { Responsive, SpaceValue } from "@dbm-system/primitives";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactElement, ReactNode, RefObject } from "react";
 import type { ButtonSize, ButtonVariant } from "../../atoms/Button";
 import type { SpacerProps } from "../../atoms/Spacer";

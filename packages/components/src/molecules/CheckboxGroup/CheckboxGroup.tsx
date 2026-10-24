@@ -1,4 +1,4 @@
-import { cx } from "@dbm-design-system/primitives";
+import { cx } from "@dbm-system/primitives";
 import { forwardRef, useRef, useState } from "react";
 import { CheckboxGroupContext } from "../../atoms/Checkbox/CheckboxGroupContext";
 import { CheckboxGroupSizeContext } from "../../atoms/Checkbox/CheckboxGroupSizeContext";

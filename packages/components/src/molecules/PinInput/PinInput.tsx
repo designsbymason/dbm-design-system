@@ -1,5 +1,5 @@
-import { EyeIcon } from "@dbm-design-system/icons";
-import { cx, mergeDefined, mergeRefs } from "@dbm-design-system/primitives";
+import { EyeIcon } from "@dbm-system/icons";
+import { cx, mergeDefined, mergeRefs } from "@dbm-system/primitives";
 import { Fragment, forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FocusEvent, KeyboardEvent, MouseEvent, SyntheticEvent } from "react";
 import type { InputSize } from "../../atoms/Input";

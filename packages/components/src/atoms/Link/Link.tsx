@@ -1,5 +1,5 @@
-import { ArrowSquareOutIcon } from "@dbm-design-system/icons";
-import { cx } from "@dbm-design-system/primitives";
+import { ArrowSquareOutIcon } from "@dbm-system/icons";
+import { cx } from "@dbm-system/primitives";
 import { Slot } from "@radix-ui/react-slot";
 import { forwardRef } from "react";
 import type { MouseEvent } from "react";

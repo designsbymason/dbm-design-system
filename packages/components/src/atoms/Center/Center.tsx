@@ -1,4 +1,4 @@
-import { cx } from "@dbm-design-system/primitives";
+import { cx } from "@dbm-system/primitives";
 import { forwardRef } from "react";
 import type { ComponentPropsWithRef, ElementType, ReactElement } from "react";
 import styles from "./Center.module.css";

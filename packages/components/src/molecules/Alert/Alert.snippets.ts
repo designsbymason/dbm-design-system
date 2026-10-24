@@ -78,7 +78,7 @@ ${alert('banner actionsPlacement="inline"', withActions)}`,
   plainText: `{/* The shortest alert: plain text */}
 <Alert>Your session will expire in five minutes.</Alert>`,
 
-  icons: `{/* icon: your own (a component from @dbm-design-system/icons), or false for none */}
+  icons: `{/* icon: your own (a component from @dbm-system/icons), or false for none */}
 <Alert icon={false}>
   <Alert.Description>No icon on this one.</Alert.Description>
 </Alert>
@@ -164,6 +164,6 @@ export function alertPlaygroundSnippet(args: AlertPlaygroundSnippetArgs): string
   if (args.dismissible) attributes.push("dismissible");
   if (args.role && args.role !== "Default") attributes.push(`role=${quote(args.role)}`);
   if (args.dir === "rtl") attributes.push('dir="rtl"');
-  const star = attributes.includes("icon={StarIcon}") ? "{/* StarIcon comes from @dbm-design-system/icons */}\n" : "";
+  const star = attributes.includes("icon={StarIcon}") ? "{/* StarIcon comes from @dbm-system/icons */}\n" : "";
   return star + alert(attributes.join(" "), withActions);
 }

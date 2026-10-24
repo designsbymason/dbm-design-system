@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Per-component bundle-size tripwire for the published `@dbm-design-system/
+ * Per-component bundle-size tripwire for the published `@dbm-system/
  * components` package — closes the "remains open" success metric in
  * `01-vision-and-goals.md` §11 ("bundle size per component"), previously
  * tracked nowhere. Same "cheap custom script over a new dependency"

@@ -1,5 +1,5 @@
-import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, CaretUpIcon } from "@dbm-design-system/icons";
-import { cx, mergeDefined, mergeRefs, useResolvedResponsiveValue, useScrollEdges } from "@dbm-design-system/primitives";
+import { CaretDownIcon, CaretLeftIcon, CaretRightIcon, CaretUpIcon } from "@dbm-system/icons";
+import { cx, mergeDefined, mergeRefs, useResolvedResponsiveValue, useScrollEdges } from "@dbm-system/primitives";
 import * as ToolbarPrimitive from "@radix-ui/react-toolbar";
 import { createContext, forwardRef, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import type { Ref } from "react";

@@ -1,7 +1,7 @@
 /*
  * Storybook-only presentational styles for ColumnTrackOverlay's two
  * breakpoint-driven demo stories (ResponsiveColumns, ResponsiveGap) — not
- * shipped in @dbm-design-system/components. Inline styles can't express
+ * shipped in @dbm-system/components. Inline styles can't express
  * @media queries, so the responsive halves of the overlay (which column
  * count or gap applies at which breakpoint) live here instead, mirroring
  * the exact breakpoint thresholds Grid.module.css itself uses (see that

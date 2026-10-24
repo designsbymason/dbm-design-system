@@ -3,9 +3,9 @@ import {
   NoteIcon,
   WarningIcon,
   WarningOctagonIcon,
-} from "@dbm-design-system/icons";
-import type { Icon as PhosphorIcon } from "@dbm-design-system/icons";
-import { cx, mergeRefs } from "@dbm-design-system/primitives";
+} from "@dbm-system/icons";
+import type { Icon as PhosphorIcon } from "@dbm-system/icons";
+import { cx, mergeRefs } from "@dbm-system/primitives";
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 import {
   createContext,

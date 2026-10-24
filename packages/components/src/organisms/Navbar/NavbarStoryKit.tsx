@@ -1,4 +1,4 @@
-import { BellIcon, BookOpenIcon, ShoppingCartIcon, UserCircleIcon } from "@dbm-design-system/icons";
+import { BellIcon, BookOpenIcon, ShoppingCartIcon, UserCircleIcon } from "@dbm-system/icons";
 import { useState } from "react";
 import type { MouseEvent, ReactNode, RefObject } from "react";
 import { Button } from "../../atoms/Button";

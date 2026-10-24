@@ -1,4 +1,4 @@
-import { cx } from "@dbm-design-system/primitives";
+import { cx } from "@dbm-system/primitives";
 import { forwardRef, useEffect, useId } from "react";
 import { FieldError } from "../../atoms/FieldError";
 import { FieldHelperText } from "../../atoms/FieldHelperText";

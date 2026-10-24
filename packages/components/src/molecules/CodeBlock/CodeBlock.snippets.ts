@@ -12,12 +12,12 @@ export const codeBlockSnippets = {
     "typescript", "sh", "svg"). Any other value draws plain text. */}
 <CodeBlock language="ts" code={"const total = items.reduce((sum, item) => sum + item.price, 0);"} />
 <CodeBlock language="json" code={'{ "name": "dbm", "private": true }'} />
-<CodeBlock language="bash" code={"pnpm add @dbm-design-system/components"} />
+<CodeBlock language="bash" code={"pnpm add @dbm-system/components"} />
 <CodeBlock language="diff" code={"- const size = 'md';\\n+ const size = 'lg';"} />`,
 
   moreLanguages: `{/* Python, YAML, SQL, Markdown, Go, Rust and Java are opt-in: register the ones you use once, when the app
     starts, and every block can use them (aliases: "py", "yml", "postgres", "md", "golang", "rs").
-    import { pythonLanguage, yamlLanguage, registerCodeLanguage } from "@dbm-design-system/components";
+    import { pythonLanguage, yamlLanguage, registerCodeLanguage } from "@dbm-system/components";
     registerCodeLanguage(pythonLanguage);
     registerCodeLanguage(yamlLanguage);
     The others are sqlLanguage, markdownLanguage, goLanguage, rustLanguage and javaLanguage. */}
@@ -31,7 +31,7 @@ export const codeBlockSnippets = {
 
   furtherLanguages: `{/* C, C++, C#, Kotlin, Swift, Ruby, PHP and TOML are opt-in too: register each one you use once, when the app starts.
     import { cLanguage, cppLanguage, csharpLanguage, kotlinLanguage, swiftLanguage, rubyLanguage, phpLanguage, tomlLanguage,
-      registerCodeLanguage } from "@dbm-design-system/components";
+      registerCodeLanguage } from "@dbm-system/components";
     registerCodeLanguage(csharpLanguage);
     Aliases: "h", "c++", "cc", "hpp", "cs", "kt", "kts", "rb". */}
 <CodeBlock language="c" code={"#include <stdio.h>\\nint main(void) { return 0; }"} />
@@ -97,7 +97,7 @@ export const codeBlockSnippets = {
     source: the code to show, as a string */}
 <CodeBlock language="ts" title="total.ts" showLanguage={false} code={source} />
 <CodeBlock language="ts" title="total.ts" showHeader={false} code={source} />
-<CodeBlock language="bash" showHeader={false} copyable={false} aria-label="Install command" code={"pnpm add @dbm-design-system/components"} />`,
+<CodeBlock language="bash" showHeader={false} copyable={false} aria-label="Install command" code={"pnpm add @dbm-system/components"} />`,
 
   wrap: `{/* wrap: long lines break instead of scrolling sideways; a wrapped line continues under its own text
     command: the command to show, as a string */}
@@ -125,7 +125,7 @@ export const codeBlockSnippets = {
 <CodeBlock language="json" maxHeight="10rem" code={config} />`,
 
   copy: `{/* onCopied runs after the copy button has copied; copyable={false} removes the button */}
-<CodeBlock language="bash" code={"pnpm add @dbm-design-system/components"} onCopied={() => track("install-copied")} />
+<CodeBlock language="bash" code={"pnpm add @dbm-system/components"} onCopied={() => track("install-copied")} />
 <CodeBlock language="ts" copyable={false} code={"export const version = '1.0.0';"} />`,
 
   plain: `{/* No language, or one without a grammar: plain text (a log, an error, an output)
@@ -150,7 +150,7 @@ export const codeBlockSnippets = {
 
   prompt: `{/* stripPrompt (on by default, for shell code): a leading "$ " is drawn but not copied, so the command pastes
     and runs. Pass stripPrompt={false} to copy the code exactly as written. */}
-<CodeBlock language="bash" code={"$ pnpm add @dbm-design-system/components\\n$ pnpm test"} />`,
+<CodeBlock language="bash" code={"$ pnpm add @dbm-system/components\\n$ pnpm test"} />`,
 
   rtl: `{/* The code stays left to right in a right-to-left page; the header mirrors */}
 <div dir="rtl">
@@ -159,7 +159,7 @@ export const codeBlockSnippets = {
 
   labelled: `{/* A visible label names the block */}
 <span id="install-label">Install</span>
-<CodeBlock aria-labelledby="install-label" language="bash" code={"pnpm add @dbm-design-system/components"} />`,
+<CodeBlock aria-labelledby="install-label" language="bash" code={"pnpm add @dbm-system/components"} />`,
 } as const;
 
 /** The Playground's live controls, as far as the snippet cares. */

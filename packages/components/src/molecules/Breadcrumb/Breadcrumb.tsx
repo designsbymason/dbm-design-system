@@ -1,5 +1,5 @@
-import { CaretLeftIcon, CaretRightIcon, DotsThreeIcon } from "@dbm-design-system/icons";
-import { cx, mergeDefined, mergeRefs } from "@dbm-design-system/primitives";
+import { CaretLeftIcon, CaretRightIcon, DotsThreeIcon } from "@dbm-system/icons";
+import { cx, mergeDefined, mergeRefs } from "@dbm-system/primitives";
 import {
   Children,
   createContext,

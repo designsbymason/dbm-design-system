@@ -1,4 +1,4 @@
-import { cx, useResolvedResponsiveValue } from "@dbm-design-system/primitives";
+import { cx, useResolvedResponsiveValue } from "@dbm-system/primitives";
 import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
 import type { CSSProperties } from "react";
 import { forwardRef, useCallback, useContext, useEffect, useId, useRef, useState } from "react";

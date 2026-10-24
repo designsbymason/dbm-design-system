@@ -7,11 +7,11 @@
 // only exports of the package, no demo scaffolding — and `storySnippets.test.ts`
 // checks that stays true. See `07-storybook-and-documentation-standards.md` §4.2.
 
-import { HeartIcon, StarIcon } from "@dbm-design-system/icons";
+import { HeartIcon, StarIcon } from "@dbm-system/icons";
 
 export const fieldErrorSnippets = {
   customIcon: `{/* icon: true (the default warning icon) | false (no icon) | an icon component.
-    StarIcon comes from @dbm-design-system/icons. */}
+    StarIcon comes from @dbm-system/icons. */}
 <FieldError>Default warning icon</FieldError>
 <FieldError icon={StarIcon}>Custom icon (Star)</FieldError>`,
 } as const;

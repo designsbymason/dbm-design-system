@@ -1,4 +1,4 @@
-import { cx, mergeRefs, useIsScrollable } from "@dbm-design-system/primitives";
+import { cx, mergeRefs, useIsScrollable } from "@dbm-system/primitives";
 import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
 import { forwardRef, useRef } from "react";
 import styles from "./ScrollArea.module.css";

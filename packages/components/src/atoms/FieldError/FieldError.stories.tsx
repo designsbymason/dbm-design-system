@@ -1,4 +1,4 @@
-import { HeartIcon, StarIcon } from "@dbm-design-system/icons";
+import { HeartIcon, StarIcon } from "@dbm-system/icons";
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { FieldError } from "./FieldError";
 import { fieldErrorPlaygroundSnippet, fieldErrorSnippets } from "./FieldError.snippets";

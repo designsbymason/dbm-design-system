@@ -1,5 +1,5 @@
 {
-  "extends": "@dbm-design-system/tsconfig/tsconfig.react-library.json",
+  "extends": "@dbm-system/tsconfig/tsconfig.react-library.json",
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src"

@@ -45,15 +45,15 @@ export const badgeSnippets = {
 <Badge dot tone="success" aria-label="Online" />
 <Badge dot tone="neutral" aria-label="Offline" />`,
 
-  anchorOnIcon: `{/* anchor pins the badge to a corner of another element. Bell comes from @dbm-design-system/icons. */}
+  anchorOnIcon: `{/* anchor pins the badge to a corner of another element. Bell comes from @dbm-system/icons. */}
 <Badge dot tone="danger" anchor={<Icon icon={Bell} size="lg" />} aria-label="Unread notifications" />`,
 
-  anchorWithCount: `{/* An anchored badge can carry a count. Bell comes from @dbm-design-system/icons. */}
+  anchorWithCount: `{/* An anchored badge can carry a count. Bell comes from @dbm-system/icons. */}
 <Badge tone="danger" variant="solid" anchor={<Icon icon={Bell} size="lg" />}>4</Badge>`,
 
   allPositions: `{/* position: which corner of the anchor the badge overlaps — "top-right" (default) | "top-left" |
     "bottom-right" | "bottom-left". Physical corners, so they don't mirror in right-to-left text.
-    Bell comes from @dbm-design-system/icons. */}
+    Bell comes from @dbm-system/icons. */}
 <Badge
   dot
   tone="danger"

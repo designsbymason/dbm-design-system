@@ -2,7 +2,7 @@ import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
 import { useState } from "react";
 import type { CSSProperties } from "react";
-import { RocketLaunchIcon } from "@dbm-design-system/icons";
+import { RocketLaunchIcon } from "@dbm-system/icons";
 import { Heading } from "../../atoms/Heading";
 import { Icon } from "../../atoms/Icon";
 import { Text } from "../../atoms/Text";
