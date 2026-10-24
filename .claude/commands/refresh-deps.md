@@ -16,4 +16,4 @@ Dependabot version updates are off and nothing prompts a refresh, so this is a d
    - for each: the package, from and to, what depends on it, the risk, and anything Storybook-chrome or Playwright-related that `guidelines/07-storybook-and-documentation-standards.md` §9 says to re-verify by hand;
    - anything you recommend skipping or deferring, and why.
 
-After I approve, apply it in small commits and run the full pipeline after each (audit, lint, build, `pnpm test`, and `pnpm --filter @dbm-design-system/components test:storybook`). Never push without showing me exactly what is being pushed and getting an explicit go-ahead.
+After I approve, apply it in small commits and run the full pipeline after each (audit, lint, build, `pnpm test`, and `pnpm --filter @dbm-system/components test:storybook`). Never push without showing me exactly what is being pushed and getting an explicit go-ahead.

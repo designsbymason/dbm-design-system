@@ -1,6 +1,6 @@
 # 0013 — A compound sub-part's own props get their own Properties table via a hidden, docs-only stories file — not a second sidebar entry, and not folded into the umbrella table
 
-**Status:** Accepted · **Date:** 2026-09-14
+**Status:** Accepted · **Date:** 2026-09-14 · **Amended 2026-10-23** — the npm scope was renamed from `@dbm-design-system` to `@dbm-system`; the decision itself is unchanged
 
 ## Context
 
@@ -77,9 +77,9 @@ the hidden-file approach doesn't scale — e.g., several sub-parts each needing 
   §4 item 3) — confirmed on `Select.Option`'s own `value` prop, where the required-prop asterisk
   needed an explicit `type: { required: true }` in the story's own argTypes to render at all,
   despite `value: string` (no `?`) being genuinely required in `SelectOptionProps`.
-- No change to what ships in `@dbm-design-system/components` — the hidden stories file lives beside
+- No change to what ships in `@dbm-system/components` — the hidden stories file lives beside
   the component source but is Storybook-only tooling, same category as every other `*.stories.tsx`
-  file.
+  file. *(Amended 2026-10-23: this originally said `@dbm-design-system/components`; the npm scope was renamed, see ADR-0113.)*
 - `@storybook/addon-vitest`'s full-sweep render now also exercises every hidden sub-part story —
   confirmed live on `Select.Option`'s own story (package-wide suite count moved from 1496 to 1497
   tests, 100 to 101 files, purely from this one addition) — so a future sub-part story that can't

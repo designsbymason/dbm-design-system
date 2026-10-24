@@ -26,7 +26,7 @@ A compact key/value display block: real `<dl>` semantics. `DescriptionList` is t
 ## Verification performed this session
 
 - Unit tests (16, `DescriptionList.test.tsx`): rendering, real `<dl>`/`<dt>`/`<dd>`/wrapping-`<div>` structure, every prop default, variant/size/orientation class application, the columns→dividers interaction, `--dl-cols-*` custom properties (plain number and responsive map), `span`→`grid-column` (including the clamp fix), the non-positive-`span` dev warning (fires once, ignored value), `numeric`, aria-label/labelledby/describedby, ref forwarding (root + all three sub-parts), className/style/id/data-testid passthrough (root + sub-parts), jest-axe (bordered, ghost, vertical, multi-column) — all pass.
-- `pnpm --filter @dbm-design-system/components exec tsc --noEmit` — clean.
+- `pnpm --filter @dbm-system/components exec tsc --noEmit` — clean.
 - `eslint --max-warnings 0` on the new files — clean.
 - `storySnippets.test.ts` (guards every `*.snippets.ts`) — passes with the new file included.
 - Full package unit-test project (`vitest run --project unit`, 90 files / 4603 tests) — all pass, no regressions.

@@ -1,6 +1,6 @@
 # 0020 — "Show code" shows hand-written snippets, not Storybook's own or generated source
 
-**Status:** Accepted · **Date:** 2026-09-19
+**Status:** Accepted · **Date:** 2026-09-19 · **Amended 2026-10-23** — the npm scope was renamed from `@dbm-design-system` to `@dbm-system`; the decision itself is unchanged
 
 ## Context
 Every `<Canvas>` on a component's Docs page has a "Show code" button, and what it shows is meant to be
@@ -64,7 +64,7 @@ of free text, values a component derives from another prop) live in
 - A check of "Show code" has to be a settled read (about 3 seconds after opening it), because the
   swap from story source to generated source happens after the first render.
 - Builders share `src/snippetHelpers.ts` for writing a control's free text safely. Nothing in the
-  snippet files or helpers ships in `@dbm-design-system/components`.
+  snippet files or helpers ships in `@dbm-system/components`. *(Amended 2026-10-23: this originally said `@dbm-design-system/components`; the npm scope was renamed, see ADR-0113.)*
 
 ## Related
 `07-storybook-and-documentation-standards.md` §4.2 (the working rules) and §5 (the per-component

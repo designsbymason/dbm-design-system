@@ -126,7 +126,7 @@ visible/API surface change — the same shape as `Divider`'s own `useResolvedRes
       scrolling (vertical and horizontal), both scrollbars + corner together, dark mode, `dir="rtl"`
       (scrollbar/corner reposition automatically via Radix, confirmed scrolling still works), all 5
       sizes, `variant="ghost"` embedded in a `Card` with no doubled border
-- [x] `pnpm --filter @dbm-design-system/components run check-component-bundle-size` — 0.95KB JS /
+- [x] `pnpm --filter @dbm-system/components run check-component-bundle-size` — 0.95KB JS /
       0.43KB CSS gzipped, comfortably within budget (comparable to `Avatar`'s 1.88KB baseline)
 - [x] Full package `lint`/`typecheck`/`build`/`test` clean (one pre-existing, unrelated flaky timeout
       in `CodeBlock.stories.test.ts`, confirmed passing in isolation, not caused by this change)
@@ -359,10 +359,10 @@ comfortably within budget).
 
 Acts on the DRY opportunity flagged above, at explicit direction. `useIsScrollable` moved verbatim
 to `packages/primitives/src/hooks/useIsScrollable.ts` (exported from that package's own `index.ts`,
-not re-exported from `@dbm-design-system/components`'s top-level index — it's an internal
+not re-exported from `@dbm-system/components`'s top-level index — it's an internal
 implementation detail, not something a consumer calls directly, the same treatment
 `useResolvedResponsiveValue` already gets). `ScrollArea.tsx` now imports it from
-`@dbm-design-system/primitives` instead of a local file; the local copy
+`@dbm-system/primitives` instead of a local file; the local copy
 (`ScrollArea/useIsScrollable.ts`) is deleted.
 
 `Table`'s own `useScrollableRegion` now computes its `scrollable` value by calling

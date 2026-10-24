@@ -9,7 +9,7 @@ Radix UI Primitives (`@radix-ui/react-*`) is the foundational, unstyled dependen
 ## 2. Monorepo layout
 
 ```
-dbm-design-system/
+dbm-system/
 ├── apps/
 │   ├── docs/                    # Documentation website (Next.js, built later) — currently an empty stub
 │   └── storybook/               # Hosted *public* Storybook instance (Phase 9) — currently an empty stub;
@@ -64,7 +64,7 @@ dbm-design-system/
 
 **Why this split:** `tokens`, `primitives`, `icons`, and `components` are separately versioned/publishable packages. This lets consumers (or you, later, for React Native) depend on `tokens` and `primitives` independently without pulling in the full styled component set — and keeps the manifest generator decoupled from the components themselves.
 
-**Where Storybook actually lives:** `apps/storybook/` was the originally-planned home for a *public-hosted* Storybook instance (Phase 9, not built — the directory is a stub `README.md`). The Storybook that is built and run today (`pnpm --filter @dbm-design-system/components run storybook`, the Docs pages, the `.storybook/blocks/*` MDX building blocks, everything in `07-storybook-and-documentation-standards.md`) lives entirely under `packages/components/.storybook/`, shipping alongside the component source it documents rather than as a separate app. `apps/storybook/` may later host a deployed build of that same instance; it is not a second Storybook setup.
+**Where Storybook actually lives:** `apps/storybook/` was the originally-planned home for a *public-hosted* Storybook instance (Phase 9, not built — the directory is a stub `README.md`). The Storybook that is built and run today (`pnpm --filter @dbm-system/components run storybook`, the Docs pages, the `.storybook/blocks/*` MDX building blocks, everything in `07-storybook-and-documentation-standards.md`) lives entirely under `packages/components/.storybook/`, shipping alongside the component source it documents rather than as a separate app. `apps/storybook/` may later host a deployed build of that same instance; it is not a second Storybook setup.
 
 **What `primitives` holds.** A small set of framework-agnostic utilities and hooks shared across components. It is not a Radix wrapper: every component that needs Radix imports `@radix-ui/react-*` directly as a dependency of `packages/components`, and `primitives` has no Radix dependency of its own. `FocusTrap` and similar components implement their Radix-wrapping logic in `packages/components`.
 
@@ -79,7 +79,7 @@ dbm-design-system/
 | `useIsScrollable` | Whether a scroll container overflows along an axis, so it is a keyboard-reachable region only while it scrolls (ADR-0019, ADR-0028) | `ScrollArea`, `Table`, `Splitter.Pane` |
 | `useScrollEdges` | Which end of a scrolling container has more, for edge fades and scroll buttons; takes an optional `itemSelector` and `enabled` | `Tabs`, `Toolbar` |
 
-**What `packages/components` re-exports from it:** only what a consumer is meant to call or name — `usePersistentDismiss` with its types, and the helper types `Breakpoint`, `Responsive` and `SpaceValue` that many components' public props use (type-only, no bundle cost; `src/test/publicExports.test.ts` asserts they are the very types `primitives` defines). Never the internals (`cx`, `mergeRefs`, `useAnnouncement`, `useResolvedResponsiveValue`). **Icons are deliberately not re-exported:** `@dbm-design-system/icons` is the whole Phosphor set, whose `Icon` type would collide with this package's own `Icon` component, so a consumer imports icons from that package (a documented second import, not a second copy of everything).
+**What `packages/components` re-exports from it:** only what a consumer is meant to call or name — `usePersistentDismiss` with its types, and the helper types `Breakpoint`, `Responsive` and `SpaceValue` that many components' public props use (type-only, no bundle cost; `src/test/publicExports.test.ts` asserts they are the very types `primitives` defines). Never the internals (`cx`, `mergeRefs`, `useAnnouncement`, `useResolvedResponsiveValue`). **Icons are deliberately not re-exported:** `@dbm-system/icons` is the whole Phosphor set, whose `Icon` type would collide with this package's own `Icon` component, so a consumer imports icons from that package (a documented second import, not a second copy of everything).
 
 ---
 
@@ -148,7 +148,7 @@ Dependabot version updates are off ([ADR-0022](adr/0022-dependency-updates-are-a
 
 **The pass:**
 1. Review `pnpm outdated -r`, then update.
-2. Run locally what CI runs — `pnpm audit`, `pnpm lint`, `pnpm build`, `pnpm test`, and `pnpm --filter @dbm-design-system/components test:storybook` for the real-browser project — then push and read the CI result.
+2. Run locally what CI runs — `pnpm audit`, `pnpm lint`, `pnpm build`, `pnpm test`, and `pnpm --filter @dbm-system/components test:storybook` for the real-browser project — then push and read the CI result.
 3. **GitHub Actions pins** in `.github/workflows/`: for each `uses:`, check for a newer major and read the `runs.using` runtime in that version's `action.yml`. Every pin should declare a runtime GitHub still supports (`node24` as of 2026-09; a Node 20 removal was what forced the bump on 2026-09-20). Read its release notes against the inputs the workflows actually pass it, not against everything it accepts.
 4. **The Radix packages move together.** Each `@radix-ui/react-*` package pins its own copies of `dismissable-layer`, `focus-scope`, `portal`, `presence` and `primitive`, and two copies of one mean two layer stacks: a popover opened from a dialog stopped being clickable with no error. After any Radix bump, check the lockfile resolves a single version of each (`grep "react-dismissable-layer@" pnpm-lock.yaml`), and move `@radix-ui/react-dialog` and `@radix-ui/react-alert-dialog` (which depends on one exact version of it), both pinned exactly for this reason ([ADR-0052](adr/0052-dialog-wraps-radix-dialog-draws-its-scrim-with-backdrop-inside-radixs-overlay-and-pins-the-radix-family-to-one-release-train.md)), and `@radix-ui/react-toast`, pinned exactly the same way (1.2.23 shares the installed copies; 1.3.0 needs `dismissable-layer` 1.2.0 and would split the stack, [ADR-0069](adr/0069-toast-wraps-radix-toast-pinned-at-1-2-23-on-the-shared-layer-stack-over-a-hand-rolled-toast-or-the-newest-release.md)), with `popover` and the rest.
 5. After a Storybook bump, re-verify per `07-storybook-and-documentation-standards.md` §9, and read the real-browser result before the push: a bump can bring a newer `axe-core` whose new rules fail stories at once (10.6 brought 4.14 and its Label in Name rule). Fix the components ([ADR-0112](adr/0112-an-interactive-controls-accessible-name-holds-its-visible-text-as-whole-words-in-order-over-a-name-that-only-means-the-same.md)); do not pin axe back. After a Playwright bump, confirm it supports the Ubuntu image `browser-tests` runs on (support arrives per Playwright version; Ubuntu 26.04 needed 1.61 or later) and that the visual baseline still matches.

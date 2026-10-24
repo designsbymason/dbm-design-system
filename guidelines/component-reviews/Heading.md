@@ -359,7 +359,7 @@ the incremental follow-ups above to have left everything consistent, and re-ran 
 
 **Fixed:** `index.ts` only re-exported `HeadingLevel`, `HeadingProps`, `HeadingSize` —
 `HeadingAlign` and `HeadingWrap` (both added during the original pass) were never wired into the
-barrel file, so neither was actually reachable from `@dbm-design-system/components`'s public API
+barrel file, so neither was actually reachable from `@dbm-system/components`'s public API
 despite being real, referenced, JSDoc'd prop types — the exact same gap already documented for
 Divider's own review, now a confirmed second instance. Confirmed via a real `tsup` build before the
 fix (both types absent from `dist/index.d.ts`) and after (both present, `grep` count of 5
@@ -468,7 +468,7 @@ doesn't reopen finalized status any more than the trim addition itself did.
 
 Self-verified: `tsc --noEmit`, `eslint` (including `.storybook`), full Vitest suite (985 tests
 package-wide, unit project), a real `pnpm build` (confirmed `HeadingTrim` now appears in the public
-`dist/index.d.ts`), and a real `pnpm --filter @dbm-design-system/tokens build` (confirmed the four
+`dist/index.d.ts`), and a real `pnpm --filter @dbm-system/tokens build` (confirmed the four
 new `--dbm-heading-trim-*` custom properties are generated). `check-component-bundle-size`: 1.42KB
 JS / 0.54KB CSS gzipped (up from 1.37KB/0.38KB, still comfortably within budget) — measured via a
 direct reproduction of the check script's own build logic rather than the script itself, which

@@ -1,12 +1,12 @@
 # 0043 — Reordering is a hand-rolled sortable hook in `primitives` for a single list, over a drag-and-drop dependency
 
-**Status:** Accepted · **Date:** 2026-10-05
+**Status:** Accepted · **Date:** 2026-10-05 · **Amended 2026-10-23** — the npm scope was renamed from `@dbm-design-system` to `@dbm-system`; the decision itself is unchanged
 
 ## Context
 Several planned organisms let a person change the order of items: `EditorTabs` (a horizontal strip), `DataTable` (column reordering) and, later, `Tree`. Doing this well means pointer, touch and keyboard reordering with screen-reader support. Each component could invent its own, or the system could share one approach. The dependency budget (`CLAUDE.md`) allows only Radix and the optional Motion, and the rest of the system has hand-rolled interaction patterns where a dependency was not justified (`Splitter`, `PinInput`).
 
 ## Decision
-Reordering is built once, by hand, as a hook in `packages/primitives`, with no dependency. Components wire it to their own markup; the hook has no styling and is not a visible component. It is **internal** for now (not re-exported from `@dbm-design-system/components`, like `useAnnouncement`) and can be exported once two components have proven its shape.
+Reordering is built once, by hand, as a hook in `packages/primitives`, with no dependency. Components wire it to their own markup; the hook has no styling and is not a visible component. It is **internal** for now (not re-exported from `@dbm-system/components`, like `useAnnouncement`) and can be exported once two components have proven its shape. *(Amended 2026-10-23: this originally said `@dbm-design-system/components`; the npm scope was renamed, see ADR-0113.)*
 
 **Scope of the first version:**
 - One list, one axis at a time (horizontal or vertical). Wrapping layouts are out.

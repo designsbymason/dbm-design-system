@@ -30,7 +30,7 @@ context, not assumed to carry over unchanged.
 `<button aria-label="Show password">` / `<button aria-label="Hide password">` — the label itself
 flips with `visible`, so assistive tech always announces what activating it will do *next*, not a
 generic "Toggle visibility" that goes stale. `EyeIcon`/`EyeSlashIcon` (Phosphor, already available
-via `@dbm-design-system/icons`'s full re-export) — no new dependency.
+via `@dbm-system/icons`'s full re-export) — no new dependency.
 
 **Focus and disabled semantics match `Input`'s own established conventions:** clicking the toggle
 returns focus to the input immediately (same pattern as `Input`'s own clear button), and `disabled`

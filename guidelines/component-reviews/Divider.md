@@ -322,7 +322,7 @@ consistent.
 **Fixed:** `index.ts` only re-exported `DividerOrientation`, `DividerProps`, `DividerVariant` —
 `DividerAlign`, `DividerThickness`, `DividerEmphasis`, and `DividerTone` (added across the six
 follow-ups above) were never wired into the barrel file, so none of them were actually reachable
-from `@dbm-design-system/components`'s public API despite being real, referenced, JSDoc'd prop
+from `@dbm-system/components`'s public API despite being real, referenced, JSDoc'd prop
 types — confirmed by grepping the built `dist/index.d.ts` before the fix and finding them absent
 from the package root's own type exports. Fixed by adding all four; re-verified via a real `tsup`
 build that all seven `Divider*` types now appear in the generated `dist/index.d.ts`.
@@ -388,7 +388,7 @@ finalization test: **stays Finalized** — this is a zero-visible-output interna
 `matchMedia` resolution logic, same SSR-safe first-render behavior, same values `aria-orientation`
 and the CSS-driving `orientationStyle()` ever see), not a behavior or preference change. Changed:
 `Divider.tsx`'s import/call site (`useResolvedOrientation(orientation)` →
-`useResolvedResponsiveValue(orientation, "horizontal")`, now from `@dbm-design-system/primitives`),
+`useResolvedResponsiveValue(orientation, "horizontal")`, now from `@dbm-system/primitives`),
 its own top-level JSDoc's cross-reference, `Divider.module.css`'s own comment pointing at the old
 filename, and deleted the now-unused `useResolvedOrientation.ts` (a single call site, no dedicated
 test file for the hook itself — only exercised indirectly through `Divider.test.tsx`'s own existing
@@ -401,7 +401,7 @@ build`, and `check-component-bundle-size` — Divider actually **dropped** from 
 "zero-visible-output" refactor might suggest by name, but consistent with it: the local
 `useResolvedOrientation.ts` used to bundle its own full copy of the resolution logic inline into
 Divider's own isolated per-component bundle; that logic now lives once in
-`@dbm-design-system/primitives` instead of being duplicated inline.
+`@dbm-system/primitives` instead of being duplicated inline.
 
 ## Post-Finalization follow-up (2026-09-19, at explicit direction) — copy-pasteable "Show code"
 

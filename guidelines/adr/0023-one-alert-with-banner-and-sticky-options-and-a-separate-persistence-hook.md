@@ -1,6 +1,6 @@
 # 0023 — One `Alert` with `banner` and `sticky` options, and a separate `usePersistentDismiss` hook, over a separate `Banner` component or built-in persistence
 
-**Status:** Accepted · **Date:** 2026-09-23
+**Status:** Accepted · **Date:** 2026-09-23 · **Amended 2026-10-23** — the npm scope was renamed from `@dbm-design-system` to `@dbm-system`; the decision itself is unchanged
 
 ## Context
 `04-component-inventory.md` listed one row, `Alert / Banner`, with no decision on whether those are one component or two. An inline message in the page's content (an `Alert`) and a page-level message across the top (a `Banner`) share almost everything — tones, an icon, a title, a description, actions, a dismiss button — and differ in layout (edge to edge), positioning (sticky), and lifecycle (a dismissal that outlasts the visit). Comparable systems go both ways; there is no standard. Two further constraints applied: the system is dependency-free and SSR-safe (`CLAUDE.md`), and a component with a growing list of flags should become a compound instead (`06-engineering-standards.md` §2).
@@ -12,7 +12,7 @@ Build **one component, `Alert`**, and put the page-level treatment on it as opti
 - **`sticky`** (with `stickyOffset` and the shared `scrollContainerRef`) — composes the existing `Affix`, with `Affix`'s `asChild` on the alert's own outermost element, since anything wrapped around a `position: sticky` element becomes the box it sticks within.
 - **`dismissible`** with the full `open` / `defaultOpen` / `onOpenChange` trio (the alert has its own internal trigger, so [ADR-0010](0010-presence-driven-exit-animation-plain-open-boolean.md)'s plain `open` doesn't apply) and a locally built dismiss button ([ADR-0008](0008-closebutton-reserved-for-modal-surfaces.md)).
 
-**Persistence across visits is not in the component.** It is a separate hook, `usePersistentDismiss(key, options)`, in `packages/primitives`, that a consumer pairs with `Alert`'s controlled `open`, and **re-exported from `@dbm-design-system/components`**, so one install covers it. It is safe on the server (`ready` is `false` until the browser has been asked), syncs across tabs, falls back to memory when storage is blocked, and supports an expiry.
+**Persistence across visits is not in the component.** It is a separate hook, `usePersistentDismiss(key, options)`, in `packages/primitives`, that a consumer pairs with `Alert`'s controlled `open`, and **re-exported from `@dbm-system/components`**, so one install covers it. It is safe on the server (`ready` is `false` until the browser has been asked), syncs across tabs, falls back to memory when storage is blocked, and supports an expiry. *(Amended 2026-10-23: this originally said `@dbm-design-system/components`; the npm scope was renamed, see ADR-0113.)*
 
 The name is **`Alert`**, not `Banner`: it sits with `AlertDialog` and the tone scale's own examples, and "banner" collides with the ARIA `banner` landmark (the page header).
 

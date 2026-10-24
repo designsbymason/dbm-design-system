@@ -67,7 +67,7 @@ was effectively invisible against its own default background in every theme — 
 Tests: 21 → 25 (added: the `role`-override regression test, default/custom `size`-class coverage,
 and the out-of-range `activeIndex` dev-warning pair).
 
-Self-verified: `pnpm build` on `@dbm-design-system/tokens` (new `--dbm-indicators-size-*` CSS vars
+Self-verified: `pnpm build` on `@dbm-system/tokens` (new `--dbm-indicators-size-*` CSS vars
 confirmed in `component-tokens.css`), `tsc --noEmit` (both the package and `.storybook`),
 `eslint --max-warnings 0`, full Vitest suite (918 tests package-wide), and a real `tsup` package
 build.

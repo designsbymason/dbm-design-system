@@ -55,7 +55,7 @@ convention):
    `IconButton` `RelatedCard`'s demo initially used an inline arrow function
    (`icon={() => <span>×</span>}`) for the `icon` prop, which doesn't type-check against
    `IconButtonProps`'s real `icon: PhosphorIcon` type — caught via `tsc`, fixed to use the real
-   `XIcon` from `@dbm-design-system/icons` (the same icon `CloseButton` itself already uses).
+   `XIcon` from `@dbm-system/icons` (the same icon `CloseButton` itself already uses).
 
 ## Verification
 
