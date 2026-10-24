@@ -79,7 +79,13 @@ overrides:
   # what pnpm had resolved to, and 7.29.0 itself is vulnerable to this
   # newer advisory. Same dev/test-only path (jsdom, via vitest), same
   # `<8.0.0` cap still required for the jsdom-internals reason above.
-  undici: ">=7.29.1 <8.0.0"
+  #
+  # Bumped floor to >=7.30.1 on 2026-10-23 (GHSA-xjj6-f33q-929c, high: DoS via an
+  # unhandled error on an excessive response; GHSA-4qv8-2p9j-2685 and
+  # GHSA-f72v-6w45-q472, moderate: unbounded memory in event parsing and a
+  # subresource-integrity bypass with non-lowercase algorithms), all patched in
+  # 7.30.1, the latest 7.x. Same dev/test-only path, same `<8.0.0` cap.
+  undici: ">=7.30.1 <8.0.0"
   # GHSA-hp3w-g68c-fv3c: sprintf-js DoS through unbounded precision specifiers,
   # vulnerable `<= 1.1.3` with no patched release (1.1.3 is the latest). Its only
   # consumer was argparse@1, reached through js-yaml@3 <- read-yaml-file@1 <-
@@ -171,6 +177,14 @@ overrides:
   # floor stays within its own major; capped at `<2.0.0` per the §3.1 rule that
   # every override gets an upper bound. Found via `pnpm audit`, 2026-10-06.
   source-map-js: ">=1.2.2 <2.0.0"
+  # GHSA-mrhx-c7xc-m3w5: Zod can exhaust memory validating oversized constrained
+  # collections, vulnerable `<4.6.6`, patched in 4.6.6. Reached only via
+  # eslint-plugin-react-hooks (`packages/eslint-config`), dev-only, never shipped.
+  # That plugin declares `zod: ^3.25.0 || ^4.0.0`, so the floor stays in 4.x and the
+  # cap is `<5.0.0` per the §3.1 rule that every override gets an upper bound
+  # (no 5.x exists). Floor is the latest 4.x patch, 4.6.7. Found via `pnpm audit`,
+  # 2026-10-23.
+  zod: ">=4.6.7 <5.0.0"
 patchedDependencies:
   # Bridges brace-expansion's >=2 export shape (see the brace-expansion
   # override above) so the >=5.0.8 override doesn't crash this package's
