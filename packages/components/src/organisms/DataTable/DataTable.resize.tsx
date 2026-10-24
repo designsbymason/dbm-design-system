@@ -1,4 +1,4 @@
-import { cx } from "@dbm-system/primitives";
+import { cx } from "@dbm-system/utils";
 import { useCallback, useEffect, useRef, useSyncExternalStore, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
 import styles from "./DataTable.module.css";
 import { readLengthToken } from "./DataTable.length";

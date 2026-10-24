@@ -1,4 +1,4 @@
-import { cx } from "@dbm-system/primitives";
+import { cx } from "@dbm-system/utils";
 import { forwardRef } from "react";
 import styles from "./Spinner.module.css";
 import type { SpinnerProps, SpinnerSize } from "./Spinner.types";

@@ -1,4 +1,4 @@
-import { cx, mergeDefined, mergeRefs, useIsScrollable, useResolvedResponsiveValue } from "@dbm-system/primitives";
+import { cx, mergeDefined, mergeRefs, useIsScrollable, useResolvedResponsiveValue } from "@dbm-system/utils";
 import {
   Children,
   createContext,

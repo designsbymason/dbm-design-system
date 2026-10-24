@@ -1,4 +1,4 @@
-import { cx, mergeRefs, useAnnouncement } from "@dbm-system/primitives";
+import { cx, mergeRefs, useAnnouncement } from "@dbm-system/utils";
 import { createContext, forwardRef, useContext, useEffect, useMemo, useRef } from "react";
 import { Heading } from "../../atoms/Heading";
 import type { HeadingSize } from "../../atoms/Heading/Heading.types";

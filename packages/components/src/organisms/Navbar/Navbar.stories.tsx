@@ -3,7 +3,7 @@ import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { Fragment, useRef, useState } from "react";
 import { Badge } from "../../atoms/Badge";
 import type { CSSProperties, ReactNode, RefObject } from "react";
-import type { SpaceValue } from "@dbm-system/primitives";
+import type { SpaceValue } from "@dbm-system/utils";
 import { navbarPlaygroundSnippet, navbarSnippets } from "./Navbar.snippets";
 import type { NavbarCollapseBelow, NavbarCurrentVariant, NavbarLinkSize, NavbarProps, NavbarSize, NavbarVariant } from "./Navbar.types";
 import { DemoColumnsBars, DemoNavbar, DemoRowsNavbar, GalleryBar, NavbarStage, RouterDemoNavbar, NavbarViewModeContext, StickyDemo } from "./NavbarStoryKit";

@@ -1,5 +1,5 @@
 import { CaretLeftIcon, CaretRightIcon } from "@dbm-system/icons";
-import { cx } from "@dbm-system/primitives";
+import { cx } from "@dbm-system/utils";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { Button } from "../../atoms/Button";

@@ -8,9 +8,9 @@ import type {
   Breakpoint,
   Responsive,
   SpaceValue,
-} from "@dbm-system/primitives";
+} from "@dbm-system/utils";
 
-export type { SpaceValue } from "@dbm-system/primitives";
+export type { SpaceValue } from "@dbm-system/utils";
 
 /** A breakpoint step, matching the primitive breakpoint tokens. */
 export type GridBreakpoint = Breakpoint;

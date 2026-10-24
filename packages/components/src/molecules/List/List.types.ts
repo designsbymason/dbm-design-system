@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
-import type { Responsive, SpaceValue } from "@dbm-system/primitives";
+import type { Responsive, SpaceValue } from "@dbm-system/utils";
 
 export type ListMarker = "disc" | "decimal" | "none";
 export type ListElement = "ul" | "ol";

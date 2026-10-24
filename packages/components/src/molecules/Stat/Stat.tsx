@@ -1,4 +1,4 @@
-import { cx, mergeDefined, mergeRefs, useAnnouncement } from "@dbm-system/primitives";
+import { cx, mergeDefined, mergeRefs, useAnnouncement } from "@dbm-system/utils";
 import { MinusIcon, TrendDownIcon, TrendUpIcon } from "@dbm-system/icons";
 import { Children, createContext, forwardRef, isValidElement, useContext, useEffect, useMemo, useRef } from "react";
 import type { ReactNode } from "react";

@@ -1,4 +1,4 @@
-import { useIsScrollable } from "@dbm-system/primitives";
+import { useIsScrollable } from "@dbm-system/utils";
 import { useCallback, useSyncExternalStore } from "react";
 import type { RefObject } from "react";
 
@@ -27,7 +27,7 @@ const readCaptionId = (container: HTMLDivElement | null): string | undefined => 
  * table that happens to fit.
  *
  * `scrollable` itself is `useIsScrollable(containerRef, "both")` — the
- * shared `primitives` hook `ScrollArea` also uses, extracted here
+ * shared `utils` hook `ScrollArea` also uses, extracted here
  * 2026-10-02 (an authorized, zero-behavior-change refactor; this hook's own
  * return shape and every caller are unchanged, so `Table`'s finalized status
  * holds per `06-engineering-standards.md` §9's three-question test). The

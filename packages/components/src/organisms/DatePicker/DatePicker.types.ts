@@ -1,4 +1,4 @@
-import type { Responsive } from "@dbm-system/primitives";
+import type { Responsive } from "@dbm-system/utils";
 import type { ComponentPropsWithoutRef, CSSProperties, FocusEventHandler } from "react";
 import type { InputSize } from "../../atoms/Input";
 import type { DateFormat, DateGranularity } from "../../internal/date/dateEntry";

@@ -1,4 +1,4 @@
-import { cx } from "@dbm-system/primitives";
+import { cx } from "@dbm-system/utils";
 import { forwardRef, useEffect, useRef, useState } from "react";
 import styles from "./Badge.module.css";
 import type {

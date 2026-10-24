@@ -1,5 +1,5 @@
 import { CheckIcon, MinusIcon } from "@dbm-system/icons";
-import { cx } from "@dbm-system/primitives";
+import { cx } from "@dbm-system/utils";
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 import { forwardRef, useContext, useId, useRef } from "react";
 import { Icon } from "../Icon";

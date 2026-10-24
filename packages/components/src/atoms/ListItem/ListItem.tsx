@@ -1,4 +1,4 @@
-import { cx } from "@dbm-system/primitives";
+import { cx } from "@dbm-system/utils";
 import { forwardRef, useContext, useRef } from "react";
 import type { KeyboardEvent, MouseEvent, SyntheticEvent } from "react";
 import { Icon } from "../Icon";

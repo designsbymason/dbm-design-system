@@ -7,8 +7,8 @@ import {
   XIcon,
 } from "@dbm-system/icons";
 import type { Icon as PhosphorIcon } from "@dbm-system/icons";
-import { cx, mergeDefined, mergeRefs, useResolvedResponsiveValue } from "@dbm-system/primitives";
-import type { Responsive } from "@dbm-system/primitives";
+import { cx, mergeDefined, mergeRefs, useResolvedResponsiveValue } from "@dbm-system/utils";
+import type { Responsive } from "@dbm-system/utils";
 import * as ToastPrimitive from "@radix-ui/react-toast";
 import {
   createContext,

@@ -1,5 +1,5 @@
 import { CaretDownIcon, CheckIcon, XIcon } from "@dbm-system/icons";
-import { cx, mergeRefs } from "@dbm-system/primitives";
+import { cx, mergeRefs } from "@dbm-system/utils";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { cloneElement, forwardRef, isValidElement, useId, useRef, useState } from "react";
 import type { ReactElement, ReactNode } from "react";

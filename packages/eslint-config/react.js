@@ -5,7 +5,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 import { base } from "./base.js";
 
-/** Shared ESLint flat config for React DBM System packages (components, primitives, icons). */
+/** Shared ESLint flat config for React DBM System packages (components, utils, icons). */
 export const reactConfig = tseslint.config(
   ...base,
   {

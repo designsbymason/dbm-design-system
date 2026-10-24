@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef, CSSProperties, ElementType, ReactNode } from "react";
-import type { Responsive, SpaceValue } from "@dbm-system/primitives";
+import type { Responsive, SpaceValue } from "@dbm-system/utils";
 
 /** A max-width step, matching the primitive breakpoint tokens, or `'full'` for no constraint. */
 export type ContainerSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "full";

@@ -1,4 +1,4 @@
-import { cx, useResolvedResponsiveValue } from "@dbm-system/primitives";
+import { cx, useResolvedResponsiveValue } from "@dbm-system/utils";
 import { forwardRef, useMemo, useRef } from "react";
 import { ButtonGroupProvider, useButtonGroup } from "../../atoms/Button/buttonGroupContext";
 import styles from "./ButtonGroup.module.css";

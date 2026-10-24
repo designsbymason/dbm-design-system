@@ -1,5 +1,5 @@
 import { CaretRightIcon, CheckIcon, CircleIcon, MinusIcon } from "@dbm-system/icons";
-import { cx, mergeRefs, useResolvedResponsiveValue, useScrollEdges } from "@dbm-system/primitives";
+import { cx, mergeRefs, useResolvedResponsiveValue, useScrollEdges } from "@dbm-system/utils";
 import * as MenuPrimitive from "@radix-ui/react-dropdown-menu";
 import {
   forwardRef,

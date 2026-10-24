@@ -1,4 +1,4 @@
-import { cx, responsiveStyle } from "@dbm-system/primitives";
+import { cx, responsiveStyle } from "@dbm-system/utils";
 import {
   Children,
   cloneElement,

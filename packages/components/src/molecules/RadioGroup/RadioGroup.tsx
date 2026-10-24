@@ -1,4 +1,4 @@
-import { cx } from "@dbm-system/primitives";
+import { cx } from "@dbm-system/utils";
 import { RadioGroupContext } from "../../atoms/Radio/RadioGroupContext";
 import { RadioGroupSizeContext } from "../../atoms/Radio/RadioGroupSizeContext";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";

@@ -3,7 +3,7 @@ import { expect, userEvent, waitFor, within } from "storybook/test";
 import { useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { StarIcon } from "@dbm-system/icons";
-import { usePersistentDismiss } from "@dbm-system/primitives";
+import { usePersistentDismiss } from "@dbm-system/utils";
 import { Button } from "../../atoms/Button";
 import { Text } from "../../atoms/Text";
 import { Alert } from "./Alert";

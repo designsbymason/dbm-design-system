@@ -1,5 +1,5 @@
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
-import type { Responsive } from "@dbm-system/primitives";
+import type { Responsive } from "@dbm-system/utils";
 
 /** `horizontal` puts the panes side by side (the handles are vertical bars); `vertical` stacks them. */
 export type SplitterOrientation = "horizontal" | "vertical";

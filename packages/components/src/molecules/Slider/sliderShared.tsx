@@ -1,4 +1,4 @@
-import { cx } from "@dbm-system/primitives";
+import { cx } from "@dbm-system/utils";
 import { useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { Text } from "../../atoms/Text";

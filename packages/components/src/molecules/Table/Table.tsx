@@ -1,4 +1,4 @@
-import { cx, mergeRefs } from "@dbm-system/primitives";
+import { cx, mergeRefs } from "@dbm-system/utils";
 import { createContext, forwardRef, useContext, useEffect, useId, useMemo, useRef } from "react";
 import { Skeleton } from "../../atoms/Skeleton";
 import { VisuallyHidden } from "../../atoms/VisuallyHidden";

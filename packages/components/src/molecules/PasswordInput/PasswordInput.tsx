@@ -1,5 +1,5 @@
 import { EyeIcon, EyeSlashIcon } from "@dbm-system/icons";
-import { cx, mergeRefs } from "@dbm-system/primitives";
+import { cx, mergeRefs } from "@dbm-system/utils";
 import { forwardRef, useRef, useState } from "react";
 import { Icon } from "../../atoms/Icon";
 import { Input } from "../../atoms/Input";

@@ -1,4 +1,4 @@
-import { cx } from "@dbm-system/primitives";
+import { cx } from "@dbm-system/utils";
 import { Slot } from "@radix-ui/react-slot";
 import { forwardRef, useRef } from "react";
 import type { MouseEvent } from "react";

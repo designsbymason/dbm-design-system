@@ -1,4 +1,4 @@
-import { cx } from "@dbm-system/primitives";
+import { cx } from "@dbm-system/utils";
 import { useCallback, useMemo, useState } from "react";
 import type { OverlayContentContextValue } from "./overlayContext";
 import styles from "./OverlaySections.module.css";

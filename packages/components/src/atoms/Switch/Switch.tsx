@@ -1,4 +1,4 @@
-import { cx } from "@dbm-system/primitives";
+import { cx } from "@dbm-system/utils";
 import * as SwitchPrimitive from "@radix-ui/react-switch";
 import { forwardRef, useId, useRef } from "react";
 import { Icon } from "../Icon";

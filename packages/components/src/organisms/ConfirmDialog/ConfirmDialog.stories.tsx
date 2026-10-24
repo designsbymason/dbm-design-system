@@ -1,7 +1,7 @@
 import type { Meta, StoryContext, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { TrashIcon } from "@dbm-system/icons";
-import { usePersistentDismiss } from "@dbm-system/primitives";
+import { usePersistentDismiss } from "@dbm-system/utils";
 import { useState } from "react";
 import { Button } from "../../atoms/Button";
 import { Text } from "../../atoms/Text";

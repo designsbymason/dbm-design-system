@@ -1,5 +1,5 @@
 import { UserIcon } from "@dbm-system/icons";
-import { cx, responsiveStyle } from "@dbm-system/primitives";
+import { cx, responsiveStyle } from "@dbm-system/utils";
 import { forwardRef, useRef, useState } from "react";
 import type {
   ComponentPropsWithRef,

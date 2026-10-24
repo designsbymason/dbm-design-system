@@ -1,4 +1,4 @@
-import { cx } from "@dbm-system/primitives";
+import { cx } from "@dbm-system/utils";
 import { VisuallyHidden as RadixVisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { forwardRef } from "react";
 import styles from "./VisuallyHidden.module.css";

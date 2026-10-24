@@ -1,4 +1,4 @@
-import type { Responsive } from "@dbm-system/primitives";
+import type { Responsive } from "@dbm-system/utils";
 import { createContext, useContext } from "react";
 import type { AvatarShape, AvatarSize } from "./Avatar.types";
 

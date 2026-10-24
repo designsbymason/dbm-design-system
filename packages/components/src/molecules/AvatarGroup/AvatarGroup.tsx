@@ -1,4 +1,4 @@
-import { cx, mergeDefined } from "@dbm-system/primitives";
+import { cx, mergeDefined } from "@dbm-system/utils";
 import { Children, forwardRef, isValidElement, useEffect, useMemo } from "react";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 import { Avatar } from "../../atoms/Avatar";

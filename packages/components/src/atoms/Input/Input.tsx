@@ -1,5 +1,5 @@
 import { XIcon } from "@dbm-system/icons";
-import { cx, mergeRefs } from "@dbm-system/primitives";
+import { cx, mergeRefs } from "@dbm-system/utils";
 import { cloneElement, forwardRef, isValidElement, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { ChangeEvent, MouseEvent as ReactMouseEvent } from "react";

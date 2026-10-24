@@ -1,5 +1,5 @@
 import { CaretLeftIcon, CaretRightIcon, DotsThreeIcon } from "@dbm-system/icons";
-import { cx, mergeDefined, mergeRefs } from "@dbm-system/primitives";
+import { cx, mergeDefined, mergeRefs } from "@dbm-system/utils";
 import {
   Children,
   createContext,

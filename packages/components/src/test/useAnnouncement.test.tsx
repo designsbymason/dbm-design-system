@@ -1,9 +1,9 @@
-import { useAnnouncement } from "@dbm-system/primitives";
+import { useAnnouncement } from "@dbm-system/utils";
 import { act, render, screen } from "@testing-library/react";
 import { StrictMode, useEffect } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-// The hook lives in the primitives package, which has no test runner of its own — its behaviour is
+// The hook lives in the utils package, which has no test runner of its own — its behaviour is
 // tested here, through a component that uses it the way a real one does.
 function Announcer({ text }: { text?: string }) {
   const { message, announce } = useAnnouncement();

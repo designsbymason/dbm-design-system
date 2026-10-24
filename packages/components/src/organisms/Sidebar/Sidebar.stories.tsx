@@ -3,7 +3,7 @@ import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { Fragment, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { BellIcon, BookOpenIcon, ChartBarIcon, DotsThreeIcon, FolderSimpleIcon, GearIcon, HouseIcon, PlusIcon, ReceiptIcon, TrayIcon, UsersIcon } from "@dbm-system/icons";
-import type { SpaceValue } from "@dbm-system/primitives";
+import type { SpaceValue } from "@dbm-system/utils";
 import { Avatar } from "../../atoms/Avatar";
 import { Badge } from "../../atoms/Badge";
 import { Icon } from "../../atoms/Icon";

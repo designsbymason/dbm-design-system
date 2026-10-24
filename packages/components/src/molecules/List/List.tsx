@@ -1,4 +1,4 @@
-import { cx, responsiveStyle } from "@dbm-system/primitives";
+import { cx, responsiveStyle } from "@dbm-system/utils";
 import { forwardRef, useRef } from "react";
 import type { ComponentPropsWithRef, ElementType, ReactElement } from "react";
 import { ListMarkerContext } from "./ListMarkerContext";

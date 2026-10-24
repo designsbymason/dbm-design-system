@@ -1,4 +1,4 @@
-import { cx } from "@dbm-system/primitives";
+import { cx } from "@dbm-system/utils";
 import { forwardRef, useRef } from "react";
 import styles from "./ProgressBar.module.css";
 import type {

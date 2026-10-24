@@ -1,4 +1,4 @@
-import { cx } from "@dbm-system/primitives";
+import { cx } from "@dbm-system/utils";
 import { forwardRef } from "react";
 import styles from "./Spacer.module.css";
 import type { SpacerProps } from "./Spacer.types";

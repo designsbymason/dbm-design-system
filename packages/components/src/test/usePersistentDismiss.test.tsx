@@ -1,11 +1,11 @@
-import { usePersistentDismiss } from "@dbm-system/primitives";
-import type { UsePersistentDismissOptions } from "@dbm-system/primitives";
+import { usePersistentDismiss } from "@dbm-system/utils";
+import type { UsePersistentDismissOptions } from "@dbm-system/utils";
 import { act, render, screen } from "@testing-library/react";
 import { StrictMode } from "react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// The hook lives in the primitives package, which has no test runner of its own — its behaviour is tested here, through
+// The hook lives in the utils package, which has no test runner of its own — its behaviour is tested here, through
 // a component that uses it the way a real one does.
 // A fresh key per test, so the hook's in-memory fallback (which lives as long as the page) can't carry over.
 let KEY = "promo";

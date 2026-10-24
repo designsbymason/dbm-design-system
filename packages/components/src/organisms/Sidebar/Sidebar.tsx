@@ -6,7 +6,7 @@ import {
   CaretUpDownIcon,
   ListIcon,
 } from "@dbm-system/icons";
-import { cx, mergeDefined, mergeRefs } from "@dbm-system/primitives";
+import { cx, mergeDefined, mergeRefs } from "@dbm-system/utils";
 import { Slot } from "@radix-ui/react-slot";
 import { cloneElement, forwardRef, isValidElement, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ElementType, MouseEvent, ReactElement, ReactNode } from "react";

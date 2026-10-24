@@ -1,5 +1,5 @@
 import type { Icon as PhosphorIcon } from "@dbm-system/icons";
-import type { Breakpoint } from "@dbm-system/primitives";
+import type { Breakpoint } from "@dbm-system/utils";
 import type {
   ComponentPropsWithoutRef,
   CSSProperties,

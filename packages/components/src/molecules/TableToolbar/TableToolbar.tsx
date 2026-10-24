@@ -1,5 +1,5 @@
 import { CaretDownIcon } from "@dbm-system/icons";
-import { cx, mergeDefined, useAnnouncement } from "@dbm-system/primitives";
+import { cx, mergeDefined, useAnnouncement } from "@dbm-system/utils";
 import { createContext, forwardRef, useContext, useEffect, useLayoutEffect, useRef } from "react";
 import { Badge } from "../../atoms/Badge";
 import { Button } from "../../atoms/Button";

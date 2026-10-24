@@ -1,5 +1,5 @@
 import { MagnifyingGlassIcon } from "@dbm-system/icons";
-import { cx } from "@dbm-system/primitives";
+import { cx } from "@dbm-system/utils";
 import { forwardRef, useContext, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { IconButton } from "../../atoms/IconButton";

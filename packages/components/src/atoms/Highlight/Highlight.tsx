@@ -1,4 +1,4 @@
-import { cx } from "@dbm-system/primitives";
+import { cx } from "@dbm-system/utils";
 import { forwardRef, useRef } from "react";
 import styles from "./Highlight.module.css";
 import type { HighlightProps, HighlightTone } from "./Highlight.types";

@@ -1,5 +1,5 @@
 import { ArrowBendDownLeftIcon, CheckIcon, CopyIcon, WarningIcon } from "@dbm-system/icons";
-import { cx, mergeDefined } from "@dbm-system/primitives";
+import { cx, mergeDefined } from "@dbm-system/utils";
 import { forwardRef, useEffect, useId, useMemo, useRef, useSyncExternalStore } from "react";
 import type { CSSProperties } from "react";
 import { Button } from "../../atoms/Button";

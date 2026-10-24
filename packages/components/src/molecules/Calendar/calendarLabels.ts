@@ -1,4 +1,4 @@
-import { mergeDefined } from "@dbm-system/primitives";
+import { mergeDefined } from "@dbm-system/utils";
 import type { CalendarLabels } from "./Calendar.types";
 
 const defaultMonths = [

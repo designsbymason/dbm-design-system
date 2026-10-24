@@ -6,7 +6,7 @@ import {
   useAnnouncement,
   useResolvedResponsiveValue,
   useWindowedList,
-} from "@dbm-system/primitives";
+} from "@dbm-system/utils";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { forwardRef, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, CSSProperties, FocusEvent, KeyboardEvent, MouseEvent, ReactNode } from "react";

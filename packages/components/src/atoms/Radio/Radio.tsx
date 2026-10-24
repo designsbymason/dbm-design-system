@@ -1,4 +1,4 @@
-import { cx } from "@dbm-system/primitives";
+import { cx } from "@dbm-system/utils";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import { forwardRef, useContext, useId, useRef } from "react";
 import styles from "./Radio.module.css";

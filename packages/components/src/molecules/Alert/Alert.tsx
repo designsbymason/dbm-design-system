@@ -7,7 +7,7 @@ import {
   XIcon,
 } from "@dbm-system/icons";
 import type { Icon as PhosphorIcon } from "@dbm-system/icons";
-import { cx, mergeDefined, mergeRefs } from "@dbm-system/primitives";
+import { cx, mergeDefined, mergeRefs } from "@dbm-system/utils";
 import { Presence } from "@radix-ui/react-presence";
 import { Slot } from "@radix-ui/react-slot";
 import {

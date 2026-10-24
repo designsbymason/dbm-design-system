@@ -40,12 +40,12 @@ importers:
       '@dbm-system/icons':
         specifier: workspace:*
         version: link:../icons
-      '@dbm-system/primitives':
-        specifier: workspace:*
-        version: link:../primitives
       '@dbm-system/tokens':
         specifier: workspace:*
         version: link:../tokens
+      '@dbm-system/utils':
+        specifier: workspace:*
+        version: link:../utils
       '@radix-ui/react-accordion':
         specifier: ^1.2.20
         version: 1.2.20(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -280,7 +280,27 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
-  packages/primitives:
+  packages/tokens:
+    devDependencies:
+      '@dbm-system/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      culori:
+        specifier: ^4.0.2
+        version: 4.0.2
+      style-dictionary:
+        specifier: ^5.5.0
+        version: 5.5.0(tslib@2.8.1)
+      tsup:
+        specifier: ^8.5.1
+        version: 8.5.1(postcss@8.5.28)(typescript@5.9.3)
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  packages/tsconfig: {}
+
+  packages/utils:
     devDependencies:
       '@dbm-system/eslint-config':
         specifier: workspace:*
@@ -309,26 +329,6 @@ importers:
       typescript:
         specifier: 5.9.3
         version: 5.9.3
-
-  packages/tokens:
-    devDependencies:
-      '@dbm-system/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      culori:
-        specifier: ^4.0.2
-        version: 4.0.2
-      style-dictionary:
-        specifier: ^5.5.0
-        version: 5.5.0(tslib@2.8.1)
-      tsup:
-        specifier: ^8.5.1
-        version: 8.5.1(postcss@8.5.28)(typescript@5.9.3)
-      typescript:
-        specifier: 5.9.3
-        version: 5.9.3
-
-  packages/tsconfig: {}
 
 packages:
 

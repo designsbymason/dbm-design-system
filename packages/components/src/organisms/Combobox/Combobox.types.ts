@@ -1,5 +1,5 @@
 import type { Icon as PhosphorIcon } from "@dbm-system/icons";
-import type { Responsive } from "@dbm-system/primitives";
+import type { Responsive } from "@dbm-system/utils";
 import type { ComponentPropsWithoutRef, CSSProperties, ReactNode } from "react";
 import type { HighlightTone } from "../../atoms/Highlight";
 

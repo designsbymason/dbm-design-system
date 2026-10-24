@@ -1,4 +1,4 @@
-import type { Responsive, SpaceValue } from "@dbm-system/primitives";
+import type { Responsive, SpaceValue } from "@dbm-system/utils";
 import type {
   ChangeEventHandler,
   ComponentPropsWithoutRef,

@@ -1,4 +1,4 @@
-import { useAnnouncement } from "@dbm-system/primitives";
+import { useAnnouncement } from "@dbm-system/utils";
 import { useEffect, useState } from "react";
 import { copyToClipboard } from "./copyToClipboard";
 import { textToCopy } from "./textToCopy";

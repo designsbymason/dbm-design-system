@@ -1,4 +1,4 @@
-import { cx, useResolvedResponsiveValue } from "@dbm-system/primitives";
+import { cx, useResolvedResponsiveValue } from "@dbm-system/utils";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { forwardRef, useEffect } from "react";
 import { CloseButton } from "../../atoms/CloseButton";

@@ -1,5 +1,5 @@
 import { CaretDownIcon, CaretUpIcon } from "@dbm-system/icons";
-import { cx, mergeDefined, mergeRefs } from "@dbm-system/primitives";
+import { cx, mergeDefined, mergeRefs } from "@dbm-system/utils";
 import { forwardRef, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { CSSProperties, FocusEvent, KeyboardEvent, MouseEvent } from "react";
 import { Affix } from "../../atoms/Affix";

@@ -1,4 +1,4 @@
-import type { Breakpoint, SpaceValue } from "@dbm-system/primitives";
+import type { Breakpoint, SpaceValue } from "@dbm-system/utils";
 import type { Icon as PhosphorIcon } from "@dbm-system/icons";
 import type {
   AnchorHTMLAttributes,

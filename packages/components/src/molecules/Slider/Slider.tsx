@@ -1,4 +1,4 @@
-import { cx } from "@dbm-system/primitives";
+import { cx } from "@dbm-system/utils";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { forwardRef, useEffect, useRef, useState } from "react";
 import { Tooltip } from "../../atoms/Tooltip";

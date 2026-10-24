@@ -1,4 +1,4 @@
-import type { Responsive } from "@dbm-system/primitives";
+import type { Responsive } from "@dbm-system/utils";
 import type { ComponentPropsWithoutRef, CSSProperties, MouseEvent, ReactNode } from "react";
 import type { AvatarShape, AvatarSize } from "../../atoms/Avatar";
 

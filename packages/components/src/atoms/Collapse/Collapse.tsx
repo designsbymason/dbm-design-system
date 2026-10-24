@@ -1,4 +1,4 @@
-import { cx } from "@dbm-system/primitives";
+import { cx } from "@dbm-system/utils";
 import * as CollapsiblePrimitive from "@radix-ui/react-collapsible";
 import { forwardRef, useRef } from "react";
 import styles from "./Collapse.module.css";
